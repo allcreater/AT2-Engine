@@ -13,7 +13,7 @@ public:
 	virtual ~GlRenderer();
 
 public:
-	virtual ITexture* CreateTexture(unsigned int _w, unsigned int _h, unsigned int _d, void* _data);
+	virtual ITexture* CreateTexture(unsigned int w, unsigned int h, unsigned int d, void* data);
 
 	virtual IStateManager* GetStateManager() { return m_stateManager; }
 

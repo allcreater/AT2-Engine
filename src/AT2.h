@@ -96,13 +96,13 @@ public:
 	virtual void BindTextures(const TextureSet& textures) = 0;
 	virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
 	virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
-	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexArray) = 0;
+	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 };
 
 class IRenderer
 {
 public:
-	virtual ITexture* CreateTexture(unsigned int _w, unsigned int _h, unsigned int _d, void* _data) = 0;
+	virtual ITexture* CreateTexture(unsigned int width, unsigned int height, unsigned int depth, void* data) = 0;
 
 	virtual IStateManager* GetStateManager() = 0;
 
