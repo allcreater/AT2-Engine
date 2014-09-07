@@ -1,0 +1,25 @@
+﻿Построение начато 07.09.2014 15:28:59.
+     1>Проект "D:\Programming\Projects\С++\Проекты Крупные\AT2_daily\src\AntonTech2.vcxproj" в узле 2 (целевые объекты Build).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt OpenGL\GlVertexArray.cpp main.cpp
+         main.cpp
+     1>d:\programming\projects\с++\проекты крупные\at2_daily\src\main.cpp(55): warning C4305: +=: усечение из "double" к "GLfloat"
+     1>d:\programming\projects\с++\проекты крупные\at2_daily\src\main.cpp(77): warning C4018: <: несоответствие типов со знаком и без знака
+         GLM: angleAxis function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
+         GlVertexArray.cpp
+         Создание кода...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Programming\Projects\С++\Проекты Крупные\AT2_daily\solution\\..\build\Debug\AntonTech2.exe" /INCREMENTAL /NOLOGO glew32.lib SDL2.lib SDL2main.lib opengl32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Programming\Projects\С++\Проекты Крупные\AT2_daily\solution\\..\build\Debug\AntonTech2.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Programming\Projects\С++\Проекты Крупные\AT2_daily\solution\\..\build\Debug\AntonTech2.lib" /MACHINE:X86 Debug\log.obj
+         Debug\GlRenderer.obj
+         Debug\main.obj
+         Debug\GlShaderProgram.obj
+         Debug\GlFrameBuffer.obj
+         Debug\GlTexture.obj
+         Debug\GlVertexArray.obj
+         Debug\StateManager.obj
+         AntonTech2.vcxproj -> D:\Programming\Projects\С++\Проекты Крупные\AT2_daily\solution\\..\build\Debug\AntonTech2.exe
+     1>Построение проекта "D:\Programming\Projects\С++\Проекты Крупные\AT2_daily\src\AntonTech2.vcxproj" завершено (целевые объекты Build).
+
+Построение успешно завершено.
+
+Затраченное время: 00:00:02.74
