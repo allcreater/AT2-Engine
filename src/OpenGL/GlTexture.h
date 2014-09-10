@@ -16,7 +16,8 @@ namespace AT2
 			Texture1DArray = GL_TEXTURE_1D_ARRAY,
 			Texture2DArray = GL_TEXTURE_2D_ARRAY,
 			CubeMap = GL_TEXTURE_CUBE_MAP,
-			CubeMapArray = GL_TEXTURE_CUBE_MAP_ARRAY
+			CubeMapArray = GL_TEXTURE_CUBE_MAP_ARRAY,
+			Rectangle = GL_TEXTURE_RECTANGLE
 		};
 
 	public:
@@ -26,6 +27,7 @@ namespace AT2
 		virtual void UpdateData(GLenum target, BufferData data) = 0;
 		virtual void Bind(unsigned int module);
 		virtual void Unbind();
+		virtual void BuildMipmaps();
 
 		virtual int GetCurrentModule() const {return m_currentTextureModule;}
 		virtual unsigned int GetId() const {return m_id;}

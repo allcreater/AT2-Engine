@@ -12,9 +12,8 @@ GlRenderer::GlRenderer()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	
-    /* Create our window centered at 512x512 resolution */
     m_window = SDL_CreateWindow("Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-    if (!m_window) /* Die if creation failed */
+    if (!m_window)
         throw AT2Exception(AT2Exception::ErrorCase::Renderer, "SDL: cannot create window");
 
 	CheckSDLError();

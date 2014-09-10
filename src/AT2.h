@@ -52,9 +52,11 @@ class ITexture
 public:
 	virtual void Bind(unsigned int module) = 0;
 	virtual void Unbind() = 0;
+	virtual void BuildMipmaps() = 0;
 
 	virtual int GetCurrentModule() const  = 0;
 	virtual unsigned int GetId() const = 0;
+	
 	virtual ~ITexture(){};
 
 	struct BufferData

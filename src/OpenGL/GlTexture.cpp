@@ -20,8 +20,7 @@ GlTexture::~GlTexture()
 void GlTexture::Bind(unsigned int module)
 {
 	glActiveTexture(GL_TEXTURE0 + module);
-	glBindTexture((GLenum)m_targetType, m_id);
-
+	glBindTexture(static_cast<GLenum>(m_targetType), m_id);
 
 	m_currentTextureModule = module;
 }
@@ -31,6 +30,10 @@ void GlTexture::Unbind()
 	m_currentTextureModule = -1;
 }
 
+void GlTexture::BuildMipmaps()
+{
+	glGenerateTextureMipmapEXT(m_id, static_cast<GLenum>(m_targetType));
+}
 
 //
 
@@ -40,15 +43,11 @@ GlTexture1D::GlTexture1D(GLint numComponents, GLenum format) : GlTexture(GlTextu
 
 void GlTexture1D::UpdateData(GLenum target, BufferData data)
 {
-	//glTextureImage1DEXT(m_id, target, 0, m_numComponents, data.Width, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
-	glBindTexture(static_cast<GLenum>(m_targetType), m_id);
-	glTexImage1D(target, 0, m_numComponents, data.Width, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
-	glGenerateMipmap(target);
+	glTextureImage1DEXT(m_id, target, 0, m_format, data.Width, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
+	BuildMipmaps();
 
-	glTexParameterf(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameterf(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	
+	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 
@@ -58,13 +57,10 @@ GlTexture2D::GlTexture2D(GLint numComponents, GLenum format) : GlTexture(GlTextu
 
 void GlTexture2D::UpdateData(GLenum target, BufferData data)
 {
-	glBindTexture(static_cast<GLenum>(m_targetType), m_id);
-	//glTextureImage2DEXT(m_id, target, 0, m_numComponents, data.Width, data.Height, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
-	glTexImage2D(target, 0, m_numComponents, data.Width, data.Height, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
-	glGenerateMipmap(static_cast<GLenum>(m_targetType));
-	
-	glTexParameterf(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameterf(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureImage2DEXT(m_id, target, 0, m_format, data.Width, data.Height, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
+	BuildMipmaps();
+	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 
@@ -74,15 +70,12 @@ GlTexture3D::GlTexture3D(GLint numComponents, GLenum format) : GlTexture(GlTextu
 
 void GlTexture3D::UpdateData(GLenum target, BufferData data)
 {
-	glBindTexture(static_cast<GLenum>(m_targetType), m_id);
-	//glTextureImage3DEXT(m_id, target, 0, m_numComponents, data.Width, data.Height, data.Depth, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
-	glTexImage3D(target, 0, m_format, data.Width, data.Height, data.Depth, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
-	glGenerateMipmap(static_cast<GLenum>(m_targetType));
+	glTextureImage3DEXT(m_id, target, 0, m_format, data.Width, data.Height, data.Depth, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
+	BuildMipmaps();
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, GL_REPEAT);
 
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_REPEAT);
-
-	glTexParameterf(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameterf(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }

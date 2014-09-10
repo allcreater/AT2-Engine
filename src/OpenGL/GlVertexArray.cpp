@@ -13,7 +13,8 @@ struct GlTypeTraits;
 	}; \
 	const char* GlTypeTraits<T>::name = #T; \
 	const GlVertexBufferBase::GlBufferDataType GlTypeTraits<T>::gl_type = GlType; \
-	const GlVertexBufferBase::GlBufferDataVectorLength GlTypeTraits<T>::gl_vectorLength = GlVecLength
+	const GlVertexBufferBase::GlBufferDataVectorLength GlTypeTraits<T>::gl_vectorLength = GlVecLength; \
+	template class GlVertexBuffer<T>
 
 REGISTER_GL_TYPE(GLbyte,	GlVertexBufferBase::GlBufferDataType::Byte,		GlVertexBufferBase::GlBufferDataVectorLength::One);
 REGISTER_GL_TYPE(GLubyte,	GlVertexBufferBase::GlBufferDataType::UByte,	GlVertexBufferBase::GlBufferDataVectorLength::One);
@@ -151,6 +152,7 @@ std::shared_ptr<GlVertexBufferBase> GlVertexArray::GetVertexBuffer(unsigned int 
 {
 	return m_buffers.at(index);
 }
-
+/*
 template class AT2::GlVertexBuffer<glm::vec3>;
 template class AT2::GlVertexBuffer<GLuint>;
+*/
