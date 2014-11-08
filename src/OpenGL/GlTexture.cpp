@@ -79,3 +79,18 @@ void GlTexture3D::UpdateData(GLenum target, BufferData data)
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
+
+GlTextureCube::GlTextureCube(GLint numComponents, GLenum format) : GlTexture(GlTexture::TextureType::CubeMap, numComponents, format)
+{
+}
+
+void GlTextureCube::UpdateData(GLenum target, BufferData data)
+{
+	glTextureImage2DEXT(m_id, target, 0, m_format, data.Width, data.Height, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
+	//BuildMipmaps();
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}

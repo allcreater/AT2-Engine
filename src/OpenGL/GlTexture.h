@@ -32,6 +32,8 @@ namespace AT2
 		virtual int GetCurrentModule() const {return m_currentTextureModule;}
 		virtual unsigned int GetId() const {return m_id;}
 
+		virtual TextureType GetTargetType() const {return m_targetType; }
+
 	protected:
 		TextureType m_targetType;
 		GLuint m_id;
@@ -59,6 +61,13 @@ namespace AT2
 	{
 	public:
 		GlTexture3D(GLint numComponents, GLenum format);
+		virtual void UpdateData(GLenum target, BufferData data);
+	};
+
+	class GlTextureCube : public GlTexture
+	{
+	public:
+		GlTextureCube(GLint numComponents, GLenum format);
 		virtual void UpdateData(GLenum target, BufferData data);
 	};
 }
