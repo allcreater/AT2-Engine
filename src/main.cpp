@@ -7,14 +7,15 @@
 #include <fstream>
 #include <SDL.h>
 
-#include <gtc\random.hpp>
-#include <gtc\quaternion.hpp>
-#include <gtx\quaternion.hpp>
+#include <glm\gtc\random.hpp>
+#include <glm\gtc\quaternion.hpp>
+#include <glm\gtx\quaternion.hpp>
 
+#include <gli\gli.hpp>
 
-std::shared_ptr<AT2::GlShaderProgram> Shader;
-std::shared_ptr<AT2::ITexture> Noise3Tex;
-std::shared_ptr<AT2::GlVertexArray> VertexArray;
+std::shared_ptr<AT2::GlShaderProgram> Shader, TerrainShader;
+std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, RockTex, GrassTex;
+std::shared_ptr<AT2::GlVertexArray> VertexArray, TerrainVertexArray;
 GLuint vao = 0;
 GLfloat Phase = 0.0;
 
@@ -26,6 +27,55 @@ std::string LoadShader(const char* _filename)
 	return std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 }
 
+std::shared_ptr<AT2::ITexture> LoadTexture (const char* _filename)
+{
+	gli::storage Storage(gli::load_dds(_filename));
+	assert(!Storage.empty());
+
+	if (Storage.layers() > 1)
+	{
+		throw 1; //TODO
+	}
+	else
+	{
+		gli::texture2D Texture(Storage);
+
+		AT2::ITexture::BufferData bd;
+		bd.Height = Texture.dimensions().x;
+		bd.Width = Texture.dimensions().y;
+		bd.Depth = 1;
+		bd.Data = Texture.data();
+
+		auto glTexture = std::make_shared<AT2::GlTexture2D>(gli::internal_format(Texture.format()), gli::external_format(Texture.format()));
+		glTexture->UpdateData(GL_TEXTURE_2D, bd);
+		return glTexture;
+
+	}
+}
+
+std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO()
+{
+	const int segX = 64, segY = 64;
+
+	glm::vec2 texCoords [segX * segY * 4];
+	
+	for (int j = 0; j < segY; ++j)
+	{
+		for (int i = 0; i < segX; ++i)
+		{
+			const int num = (i + j * segX)*4;
+			texCoords[num] = glm::vec2(float(i)/segX, float(j)/segY);
+			texCoords[num+1] = glm::vec2(float(i+1)/segX, float(j)/segY);
+			texCoords[num+2] = glm::vec2(float(i+1)/segX, float(j+1)/segY);
+			texCoords[num+3] = glm::vec2(float(i)/segX, float(j+1)/segY);
+		}
+	}
+	
+	auto vao = std::make_shared<AT2::GlVertexArray>();
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::GlVertexBufferBase::BufferType::ArrayBuffer, segX * segY * 4, texCoords));
+	return vao;
+}
+
 void Render(AT2::GlRenderer* renderer)
 {
 	//matMW = glm::lookAt(glm::vec3(-1.0,0.0,0.0), glm::vec3(0.0,0.0,0.0), glm::vec3(0.0, 1.0, 0.0));
@@ -35,6 +85,9 @@ void Render(AT2::GlRenderer* renderer)
 
 	AT2::TextureSet cloudsTS;
 	cloudsTS.insert(Noise3Tex);
+	cloudsTS.insert(HeightMapTex);
+	cloudsTS.insert(RockTex);
+	cloudsTS.insert(GrassTex);
 	renderer->GetStateManager()->BindTextures(cloudsTS);
 
 	Shader->SetUniform("u_matMW", matMW);
@@ -43,9 +96,30 @@ void Render(AT2::GlRenderer* renderer)
 	Shader->SetUniform("u_matInverseProj", glm::inverse(matProj));
 	Shader->SetUniform("u_phase", Phase);
 	Shader->SetUniform("u_texNoise", Noise3Tex->GetCurrentModule());
-	renderer->GetStateManager()->BindShader(Shader);
+	Shader->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
+	
+	TerrainShader->SetUniform("u_matMW", matMW);
+	TerrainShader->SetUniform("u_matInverseMW", glm::inverse(matMW));
+	TerrainShader->SetUniform("u_matProj", matProj);
+	TerrainShader->SetUniform("u_matInverseProj", glm::inverse(matProj));
+	TerrainShader->SetUniform("u_phase", Phase);
+	TerrainShader->SetUniform("u_scaleH", 10000.0f);
+	TerrainShader->SetUniform("u_scaleV", 1000.0f);
+	TerrainShader->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
+	TerrainShader->SetUniform("u_texGrass", GrassTex->GetCurrentModule());
+	TerrainShader->SetUniform("u_texRock", RockTex->GetCurrentModule());
 
-	//glBindVertexArray(vao);
+
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	renderer->GetStateManager()->BindShader(TerrainShader);
+	renderer->GetStateManager()->BindVertexArray(TerrainVertexArray);
+	glPatchParameteri( GL_PATCH_VERTICES, 4 );
+	glDrawArrays(GL_PATCHES, 0, 64*64*4);
+
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	renderer->GetStateManager()->BindShader(Shader);
 	renderer->GetStateManager()->BindVertexArray(VertexArray);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -62,13 +136,20 @@ int main(int argc, char *argv[])
 		auto renderer = new AT2::GlRenderer();
 
 		Shader = std::make_shared<AT2::GlShaderProgram>(
-			LoadShader("data\\raytrace_sky.vs.glsl"),
+			LoadShader("resources\\shaders\\raytrace_sky.vs.glsl"),
 			"",
 			"",
 			"",
-			LoadShader("data\\raytrace_sky.fs.glsl"));
+			LoadShader("resources\\shaders\\raytrace_sky.fs.glsl"));
 
-		auto texture = new AT2::GlTexture3D(4, GL_RGBA);
+		TerrainShader = std::make_shared<AT2::GlShaderProgram>(
+			LoadShader("resources\\shaders\\terrain.vs.glsl"),
+			LoadShader("resources\\shaders\\terrain.tcs.glsl"),
+			LoadShader("resources\\shaders\\terrain.tes.glsl"),
+			"",
+			LoadShader("resources\\shaders\\terrain.fs.glsl"));
+
+		auto texture = new AT2::GlTexture3D(GL_RGBA, GL_RGBA);
 		AT2::ITexture::BufferData data;
 		data.Height = 256;
 		data.Width = 256;
@@ -82,6 +163,13 @@ int main(int argc, char *argv[])
 
 		Noise3Tex = std::shared_ptr<AT2::ITexture>(texture);
 
+		GrassTex = LoadTexture("resources\\grass03.dds");
+		RockTex = LoadTexture("resources\\rock04.dds");
+
+		HeightMapTex = LoadTexture("resources\\heightmap.dds");
+		TerrainVertexArray = MakeTerrainVAO();
+
+
 		glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
 		GLuint indices[] = {0, 1, 2, 0, 2, 3};
 
@@ -91,35 +179,61 @@ int main(int argc, char *argv[])
 		VertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::BufferType::ElementArrayBuffer, 6, indices));
 		
 		//Init
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
-
 		glEnable(GL_TEXTURE_1D);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_TEXTURE_3D);
 
-		glViewport(0, 0, 1024, 1024);
-		matProj = glm::frustum(0.0, -1.0, 1.0, -1.0, 0.5, 500.0);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		glViewport(0, 0, 1024, 1024);
+		matProj = glm::frustum(1.0, -1.0, -1.0, 1.0, 0.5, 5000.0);
+
+		bool wireframe = false;
 		float heading = 0.0f, pitch = 0.0f;
+		glm::vec3 position = glm::vec3(0.0, 0.0, 0.0), direction;
+
 		while (true)
 		{
 			SDL_Event sdlEvent;
 			//SDL_WaitEvent(&sdlEvent);
+
 			while (SDL_PollEvent(&sdlEvent))
 			{
 				switch (sdlEvent.type)
 				{
 					case SDL_MOUSEMOTION:
 						{
-							heading += sdlEvent.motion.xrel * 0.5f;
-							pitch += sdlEvent.motion.yrel * 0.5f;
-							pitch = glm::clamp(pitch, -90.0f, 90.0f);
-							matMW = glm::toMat4(glm::angleAxis(pitch, glm::vec3(1.0, 0.0, 0.0)) * glm::angleAxis(heading, glm::vec3(0.0, 1.0, 0.0)));
+							heading += sdlEvent.motion.xrel * 0.01f;
+							pitch += sdlEvent.motion.yrel * 0.01f;
+							pitch = glm::clamp(pitch, -glm::pi<float>()/2, glm::pi<float>()/2);
+
+							direction = glm::vec3(cos(pitch) * sin(heading), sin(pitch), cos(pitch) * cos(heading));
+						} break;
+					case SDL_KEYDOWN:
+						{
+							if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_Z && sdlEvent.key.state == SDL_PRESSED)
+								wireframe = !wireframe;
+							glPolygonMode(GL_FRONT_AND_BACK, (wireframe) ? GL_LINE : GL_FILL);
 						} break;
 					case SDL_QUIT:
 						goto QuitLabel;
 				}
+
+				glm::vec3 right(sin(heading - 3.14f/2.0f), 0, cos(heading - 3.14f/2.0f));
+				glm::vec3 up = glm::cross( right, direction);
+
+				const Uint8* keyboardState = SDL_GetKeyboardState(NULL);
+				if (keyboardState[SDL_SCANCODE_W])
+					position += direction;
+				if (keyboardState[SDL_SCANCODE_S])
+					position -= direction;
+				if (keyboardState[SDL_SCANCODE_A])
+					position += right;
+				if (keyboardState[SDL_SCANCODE_D])
+					position -= right;
+
+				matMW = glm::lookAt(position, position+direction, up);
 			}
 			
 			Render(renderer);

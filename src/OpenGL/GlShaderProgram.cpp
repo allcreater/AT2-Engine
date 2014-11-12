@@ -26,7 +26,7 @@ GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _te
 		glAttachShader(m_programId, m_shaderId[2]);
 	}
 
-	if (!_tes.empty())
+	if (!_gs.empty())
 	{
 		m_shaderId[3] = LoadShader(GL_GEOMETRY_SHADER, _gs);
 		glAttachShader(m_programId, m_shaderId[3]);
@@ -84,8 +84,15 @@ GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 	if (status != GL_TRUE)
 	{
+		std::string shaderType = (_shaderType == GL_VERTEX_SHADER)? std::string("vertex") : 
+			(_shaderType == GL_TESS_CONTROL_SHADER)? std::string("tesselation control") :
+			(_shaderType == GL_TESS_EVALUATION_SHADER)? std::string("tesselation evaluation") :
+			(_shaderType == GL_GEOMETRY_SHADER)? std::string("geometry") :
+			(_shaderType == GL_FRAGMENT_SHADER)? std::string("fragment") :
+			std::string("unknown");
+
 		std::stringstream ss;
-		ss << "GlShaderProgram: shader compilation failed!" << std::endl << infoLogBuffer;
+		ss << "GlShaderProgram:" << shaderType << " shader compilation failed!" << std::endl << infoLogBuffer;
 
 		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, ss.str());
 	}

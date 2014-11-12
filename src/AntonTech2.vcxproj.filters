@@ -45,6 +45,9 @@
     <ClCompile Include="OpenGL\GlVertexArray.cpp">
       <Filter>Файлы исходного кода\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="drawable.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AT2.h">
@@ -73,6 +76,9 @@
     </ClInclude>
     <ClInclude Include="OpenGL\GlVertexArray.h">
       <Filter>Заголовочные файлы\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="drawable.h">
+      <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

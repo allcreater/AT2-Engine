@@ -41,7 +41,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\..\libs\glew-1.10.0\include;$(SolutionDir)\..\libs\glm-0.9.5.4\glm;$(SolutionDir)\..\libs\SDL2-2.0.3\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\..\libs\glew-1.10.0\include;$(SolutionDir)\..\libs\glm-0.9.5.4\;$(SolutionDir)\..\libs\SDL2-2.0.3\include;$(SolutionDir)\..\libs\gli-0.5.1.1\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\..\libs\SDL2-2.0.3\lib\x86;$(SolutionDir)\..\libs\glew-1.10.0\lib\Release\Win32;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\..\build\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -81,6 +81,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="log.cpp" />
+    <ClCompile Include="drawable.cpp" />
     <ClCompile Include="OpenGL/GlRenderer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OpenGL/GlShaderProgram.cpp" />
@@ -92,6 +93,7 @@
   <ItemGroup>
     <ClInclude Include="AT2.h" />
     <ClInclude Include="log.h" />
+    <ClInclude Include="drawable.h" />
     <ClInclude Include="OpenGL/AT2lowlevel.h" />
     <ClInclude Include="OpenGL/GlRenderer.h" />
     <ClInclude Include="OpenGL/GlShaderProgram.h" />

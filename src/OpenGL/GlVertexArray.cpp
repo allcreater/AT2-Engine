@@ -110,7 +110,8 @@ GlVertexArray::GlVertexArray()
 void GlVertexArray::Bind()
 {
 	glBindVertexArray(m_id);
-	m_indexBuffer->Bind();
+	if (m_indexBuffer)
+		m_indexBuffer->Bind();
 }
 
 GlVertexArray::~GlVertexArray()

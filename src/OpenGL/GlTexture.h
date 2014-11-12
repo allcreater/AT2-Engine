@@ -39,7 +39,7 @@ namespace AT2
 		GLuint m_id;
 		int m_currentTextureModule;
 
-		GLint m_numComponents;
+		GLint m_internalFormat;
 		GLenum m_format;
 	};
 

@@ -2,9 +2,9 @@
 
 using namespace AT2;
 
-GlTexture::GlTexture(TextureType type, GLint numComponents, GLenum format) :
+GlTexture::GlTexture(TextureType type, GLint internalFormat, GLenum format) :
 	m_targetType(type),
-	m_numComponents(numComponents),
+	m_internalFormat(internalFormat),
 	m_format(format),
 	m_currentTextureModule(-1)
 {
@@ -43,7 +43,7 @@ GlTexture1D::GlTexture1D(GLint numComponents, GLenum format) : GlTexture(GlTextu
 
 void GlTexture1D::UpdateData(GLenum target, BufferData data)
 {
-	glTextureImage1DEXT(m_id, target, 0, m_format, data.Width, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
+	glTextureImage1DEXT(m_id, target, 0, m_internalFormat, data.Width, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
 	BuildMipmaps();
 
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -57,7 +57,7 @@ GlTexture2D::GlTexture2D(GLint numComponents, GLenum format) : GlTexture(GlTextu
 
 void GlTexture2D::UpdateData(GLenum target, BufferData data)
 {
-	glTextureImage2DEXT(m_id, target, 0, m_format, data.Width, data.Height, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
+	glTextureImage2DEXT(m_id, target, 0, m_internalFormat, data.Width, data.Height, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
 	BuildMipmaps();
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -70,7 +70,7 @@ GlTexture3D::GlTexture3D(GLint numComponents, GLenum format) : GlTexture(GlTextu
 
 void GlTexture3D::UpdateData(GLenum target, BufferData data)
 {
-	glTextureImage3DEXT(m_id, target, 0, m_format, data.Width, data.Height, data.Depth, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
+	glTextureImage3DEXT(m_id, target, 0, m_internalFormat, data.Width, data.Height, data.Depth, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
 	BuildMipmaps();
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -86,7 +86,7 @@ GlTextureCube::GlTextureCube(GLint numComponents, GLenum format) : GlTexture(GlT
 
 void GlTextureCube::UpdateData(GLenum target, BufferData data)
 {
-	glTextureImage2DEXT(m_id, target, 0, m_format, data.Width, data.Height, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
+	glTextureImage2DEXT(m_id, target, 0, m_internalFormat, data.Width, data.Height, 0, m_format, GL_UNSIGNED_BYTE, data.Data);
 	//BuildMipmaps();
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);
