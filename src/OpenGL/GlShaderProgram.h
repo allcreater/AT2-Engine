@@ -8,6 +8,23 @@ namespace AT2
 	class GlShaderProgram : public IShaderProgram
 	{
 	public:
+		class UniformBufferInfo
+		{
+		friend class GlShaderProgram;
+
+		public:
+			GLuint	GetBlockIndex() const {return m_blockIndex;}
+			GLint	GetBlockSize() const {return m_blockSize; }
+
+		private:
+			GLuint m_blockIndex; 
+			GLint m_blockSize;
+
+			GLint m_numActiveUniforms;
+			std::vector<GLint> m_activeUniformIndices;
+		};
+
+	public:
 		GlShaderProgram(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs);
 		virtual ~GlShaderProgram();
 
@@ -30,6 +47,8 @@ namespace AT2
 		void SetUniform(const str& name, const glm::mat2& value);
 		void SetUniform(const str& name, const glm::mat3& value);
 		void SetUniform(const str& name, const glm::mat4& value);
+
+		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName) const;
 
 	protected:
 		GLuint LoadShader(GLenum _shaderType, const str& _text);

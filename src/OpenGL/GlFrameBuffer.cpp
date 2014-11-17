@@ -19,7 +19,7 @@ void GlFrameBuffer::BindColorAttachement(unsigned int attachementNumber, const s
 	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachements);
 	if (attachementNumber >= maxColorAttachements)
 		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "FrameBuffer: unsupported attachement number");
-
+	
 	if (dynamic_cast<GlTexture1D*>(texture.get()) != nullptr)
 		glNamedFramebufferTexture1DEXT (m_id, GL_COLOR_ATTACHMENT0 + attachementNumber, static_cast<GLenum>(texture->GetTargetType()), texture->GetId(), 0); //I don't know practical purpose of it, but let it be =)
 	else if (dynamic_cast<GlTexture2D*>(texture.get()) != nullptr)

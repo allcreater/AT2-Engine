@@ -81,13 +81,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="log.cpp" />
-    <ClCompile Include="drawable.cpp" />
     <ClCompile Include="OpenGL/GlRenderer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OpenGL/GlShaderProgram.cpp" />
     <ClCompile Include="OpenGL\GlFrameBuffer.cpp" />
     <ClCompile Include="OpenGL\GlTexture.cpp" />
+    <ClCompile Include="OpenGL\GlUniformBuffer.cpp" />
     <ClCompile Include="OpenGL\GlVertexArray.cpp" />
+    <ClCompile Include="OpenGL\GlVertexBuffer.cpp" />
     <ClCompile Include="StateManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -97,9 +98,12 @@
     <ClInclude Include="OpenGL/AT2lowlevel.h" />
     <ClInclude Include="OpenGL/GlRenderer.h" />
     <ClInclude Include="OpenGL/GlShaderProgram.h" />
+    <ClInclude Include="OpenGL\GlDrawPrimitive.h" />
     <ClInclude Include="OpenGL\GlFrameBuffer.h" />
     <ClInclude Include="OpenGL\GlTexture.h" />
+    <ClInclude Include="OpenGL\GlUniformBuffer.h" />
     <ClInclude Include="OpenGL\GlVertexArray.h" />
+    <ClInclude Include="OpenGL\GlVertexBuffer.h" />
     <ClInclude Include="StateManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

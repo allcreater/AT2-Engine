@@ -2,26 +2,49 @@
 #define AT2_DRAWABLE_CLASS
 
 #include "AT2.h"
-#include "OpenGl\GlVertexArray.h"
 
 using namespace AT2;
 
 class IDrawable
 {
 public:
-	virtual void Draw () = 0;
+	virtual void Draw (IRenderer& renderer) = 0;
 
 private:
 
 };
 
-class GlDrawable : public IDrawable
+
+class StateSet //временный костыль
 {
 public:
-	void Draw();
+
+};
+
+class MeshDrawable : public IDrawable //mesh или не mesh, но определенно что-то похожее
+{
+public:
+	void Draw(IRenderer& renderer)
+	{
+		auto stateManager = renderer.GetStateManager();
+
+		stateManager->BindShader(Shader);
+		stateManager->BindVertexArray(VertexArray);
+		stateManager->BindTextures(Textures);
+		
+		for(auto primitive: Primitives)
+			primitive->Draw();
+	}
+
+	~MeshDrawable() {}
+
+	std::shared_ptr<IShaderProgram> Shader;
+	std::shared_ptr<IVertexArray> VertexArray;
+	TextureSet Textures;
+	PrimitiveList Primitives;
 
 private:
-
+	
 };
 
 #endif

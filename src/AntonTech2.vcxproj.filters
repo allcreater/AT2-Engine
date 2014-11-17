@@ -45,8 +45,11 @@
     <ClCompile Include="OpenGL\GlVertexArray.cpp">
       <Filter>Файлы исходного кода\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="drawable.cpp">
-      <Filter>Файлы исходного кода</Filter>
+    <ClCompile Include="OpenGL\GlVertexBuffer.cpp">
+      <Filter>Файлы исходного кода\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGL\GlUniformBuffer.cpp">
+      <Filter>Файлы исходного кода\OpenGL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +82,15 @@
     </ClInclude>
     <ClInclude Include="drawable.h">
       <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL\GlDrawPrimitive.h">
+      <Filter>Заголовочные файлы\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL\GlVertexBuffer.h">
+      <Filter>Заголовочные файлы\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL\GlUniformBuffer.h">
+      <Filter>Заголовочные файлы\OpenGL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

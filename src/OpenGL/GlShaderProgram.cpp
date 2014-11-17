@@ -172,3 +172,22 @@ void GlShaderProgram::SetUniform(const str& _name, const glm::mat4& _value)
 	if (location >= 0)
 		glProgramUniformMatrix4fv(m_programId, location, 1, GL_FALSE, glm::value_ptr(_value));
 }
+
+
+std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformBlockInfo(const str& blockName) const
+{
+	GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
+
+	if (blockIndex == GL_INVALID_INDEX)
+		return std::shared_ptr<GlShaderProgram::UniformBufferInfo>();
+
+	auto ubi = std::make_shared<UniformBufferInfo>();
+	ubi->m_blockIndex = blockIndex;
+	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE,       &ubi->m_blockSize );
+	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &ubi->m_numActiveUniforms);
+
+	ubi->m_activeUniformIndices.resize(ubi->m_numActiveUniforms);
+	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, reinterpret_cast<GLint*>(&ubi->m_activeUniformIndices));
+
+	return ubi;
+}

@@ -74,6 +74,13 @@ public:
 	virtual ~IShaderProgram() {};
 };
 
+class IDrawPrimitive
+{
+public:
+	virtual void Draw() const = 0;
+	virtual ~IDrawPrimitive() {};
+};
+
 class AT2Exception : public std::exception
 {
 public:
@@ -91,6 +98,7 @@ public:
 };
 
 typedef std::set<std::shared_ptr<ITexture>> TextureSet;
+typedef std::vector<std::shared_ptr<IDrawPrimitive>> PrimitiveList;
 
 class IStateManager
 {

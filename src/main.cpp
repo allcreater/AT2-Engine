@@ -1,5 +1,6 @@
 #include "OpenGl\GlRenderer.h"
 #include "OpenGl\GlShaderProgram.h"
+#include "OpenGl\GlUniformBuffer.h"
 #include "OpenGl\GlTexture.h"
 #include "OpenGl\GlVertexArray.h"
 
@@ -14,7 +15,7 @@
 #include <gli\gli.hpp>
 
 std::shared_ptr<AT2::GlShaderProgram> Shader, TerrainShader;
-std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, RockTex, GrassTex;
+std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex;
 std::shared_ptr<AT2::GlVertexArray> VertexArray, TerrainVertexArray;
 GLuint vao = 0;
 GLfloat Phase = 0.0;
@@ -72,7 +73,7 @@ std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO()
 	}
 	
 	auto vao = std::make_shared<AT2::GlVertexArray>();
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::GlVertexBufferBase::BufferType::ArrayBuffer, segX * segY * 4, texCoords));
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, segX * segY * 4, texCoords));
 	return vao;
 }
 
@@ -86,6 +87,7 @@ void Render(AT2::GlRenderer* renderer)
 	AT2::TextureSet cloudsTS;
 	cloudsTS.insert(Noise3Tex);
 	cloudsTS.insert(HeightMapTex);
+	cloudsTS.insert(NormalMapTex);
 	cloudsTS.insert(RockTex);
 	cloudsTS.insert(GrassTex);
 	renderer->GetStateManager()->BindTextures(cloudsTS);
@@ -106,6 +108,7 @@ void Render(AT2::GlRenderer* renderer)
 	TerrainShader->SetUniform("u_scaleH", 10000.0f);
 	TerrainShader->SetUniform("u_scaleV", 1000.0f);
 	TerrainShader->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
+	TerrainShader->SetUniform("u_texNormalMap", NormalMapTex->GetCurrentModule());
 	TerrainShader->SetUniform("u_texGrass", GrassTex->GetCurrentModule());
 	TerrainShader->SetUniform("u_texRock", RockTex->GetCurrentModule());
 
@@ -165,7 +168,7 @@ int main(int argc, char *argv[])
 
 		GrassTex = LoadTexture("resources\\grass03.dds");
 		RockTex = LoadTexture("resources\\rock04.dds");
-
+		NormalMapTex = LoadTexture("resources\\terrain_normalmap.dds");
 		HeightMapTex = LoadTexture("resources\\heightmap.dds");
 		TerrainVertexArray = MakeTerrainVAO();
 
@@ -175,9 +178,11 @@ int main(int argc, char *argv[])
 
 
 		VertexArray = std::make_shared<AT2::GlVertexArray>();
-		VertexArray->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::BufferType::ArrayBuffer, 4, positions));
-		VertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::BufferType::ElementArrayBuffer, 6, indices));
+		VertexArray->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
+		VertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
 		
+		std::make_shared<AT2::GlUniformBuffer>(*TerrainShader, "MyBlock");
+
 		//Init
 		glEnable(GL_TEXTURE_1D);
 		glEnable(GL_TEXTURE_2D);
