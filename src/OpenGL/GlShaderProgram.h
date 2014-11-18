@@ -2,12 +2,25 @@
 #define AT2_GL_SHADERPROGRAM_H
 
 #include "AT2lowlevel.h"
+#include <map>
 
 namespace AT2
 {
+	class GlUniformBuffer;
+
 	class GlShaderProgram : public IShaderProgram
 	{
 	public:
+		struct UniformInfo
+		{
+			GLint Index;
+			GLint Offset;
+			GLint Type;
+
+			UniformInfo(GLint index, GLint offset, GLint type) : Index(index), Offset(offset), Type(type) {}
+			UniformInfo() : Index(0), Offset(0), Type(0) {}
+		};
+
 		class UniformBufferInfo
 		{
 		friend class GlShaderProgram;
@@ -16,12 +29,20 @@ namespace AT2
 			GLuint	GetBlockIndex() const {return m_blockIndex;}
 			GLint	GetBlockSize() const {return m_blockSize; }
 
+			const UniformInfo* GetUniformInfo(const str& name) const
+			{
+				auto i = m_uniforms.find(name);
+				if (i != m_uniforms.end())
+					return &(i->second);
+				
+				return nullptr;
+			}
 		private:
 			GLuint m_blockIndex; 
 			GLint m_blockSize;
-
 			GLint m_numActiveUniforms;
-			std::vector<GLint> m_activeUniformIndices;
+
+			std::map<str, UniformInfo> m_uniforms;
 		};
 
 	public:
@@ -49,6 +70,7 @@ namespace AT2
 		void SetUniform(const str& name, const glm::mat4& value);
 
 		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName) const;
+		void BindUBO(const str& blockName, unsigned int index, std::shared_ptr<GlUniformBuffer> ubo);
 
 	protected:
 		GLuint LoadShader(GLenum _shaderType, const str& _text);

@@ -2,7 +2,11 @@
 
 layout(quads, equal_spacing, ccw) in;
 
-uniform mat4 u_matMW, u_matProj;
+uniform CameraBlock
+{
+	mat4 u_matMW, u_matInverseMW, u_matProj, u_matInverseProj;
+};
+
 uniform float u_scaleH, u_scaleV;
 uniform sampler2D u_texHeight;
 

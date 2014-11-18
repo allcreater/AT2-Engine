@@ -181,13 +181,50 @@ std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformB
 	if (blockIndex == GL_INVALID_INDEX)
 		return std::shared_ptr<GlShaderProgram::UniformBufferInfo>();
 
-	auto ubi = std::make_shared<UniformBufferInfo>();
+	auto ubi = std::make_shared<GlShaderProgram::UniformBufferInfo>();
 	ubi->m_blockIndex = blockIndex;
 	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE,       &ubi->m_blockSize );
 	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &ubi->m_numActiveUniforms);
 
-	ubi->m_activeUniformIndices.resize(ubi->m_numActiveUniforms);
-	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, reinterpret_cast<GLint*>(&ubi->m_activeUniformIndices));
+	//get active uniforms indices
+	std::vector<GLuint> activeUniformIndices;
+	activeUniformIndices.resize(ubi->m_numActiveUniforms);
+	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, reinterpret_cast<GLint*>(activeUniformIndices.data()));
+
+	//read uniform offsets
+	std::vector<GLint> activeUniformOffsets;
+	activeUniformOffsets.resize(ubi->m_numActiveUniforms);
+	glGetActiveUniformsiv (m_programId, activeUniformIndices.size(), activeUniformIndices.data(), GL_UNIFORM_OFFSET, activeUniformOffsets.data());
+		
+	//read uniform types
+	std::vector<GLint> activeUniformTypes;
+	activeUniformTypes.resize(ubi->m_numActiveUniforms);
+	glGetActiveUniformsiv (m_programId, activeUniformIndices.size(), activeUniformIndices.data(), GL_UNIFORM_TYPE, activeUniformTypes.data());
+	
+	//read uniform names and collect all data into map
+	const int BUFFER_SIZE = 512;
+	GLchar buffer[BUFFER_SIZE];
+	for (int i = 0; i < ubi->m_numActiveUniforms; ++i)
+	{
+		GLsizei actualLength = 0;
+		glGetActiveUniformName(m_programId, activeUniformIndices[i], BUFFER_SIZE, &actualLength, buffer);
+
+		ubi->m_uniforms[buffer] = UniformInfo(activeUniformIndices[i], activeUniformOffsets[i], activeUniformTypes[i]);
+	}
+	
 
 	return ubi;
+}
+
+#include "GlUniformBuffer.h"
+
+void GlShaderProgram::BindUBO(const str& blockName, unsigned int index, std::shared_ptr<GlUniformBuffer> ubo)
+{
+	GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
+	if (blockIndex == GL_INVALID_INDEX)
+		throw AT2::AT2Exception(AT2Exception::ErrorCase::Buffer, "uniform block not found");
+
+	ubo->SetBindingPoint(index);
+	ubo->Bind();
+	glUniformBlockBinding(m_programId, blockIndex, index);
 }

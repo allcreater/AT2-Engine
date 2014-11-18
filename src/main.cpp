@@ -14,6 +14,7 @@
 
 #include <gli\gli.hpp>
 
+std::shared_ptr<AT2::GlUniformBuffer> TerrainUB;
 std::shared_ptr<AT2::GlShaderProgram> Shader, TerrainShader;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex;
 std::shared_ptr<AT2::GlVertexArray> VertexArray, TerrainVertexArray;
@@ -74,6 +75,7 @@ std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO()
 	
 	auto vao = std::make_shared<AT2::GlVertexArray>();
 	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, segX * segY * 4, texCoords));
+
 	return vao;
 }
 
@@ -83,6 +85,12 @@ void Render(AT2::GlRenderer* renderer)
 
 
 	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
+
+
+	TerrainUB->SetUniform("u_matMW", matMW);
+	TerrainUB->SetUniform("u_matInverseMW", glm::inverse(matMW));
+	TerrainUB->SetUniform("u_matProj", matProj);
+	TerrainUB->SetUniform("u_matInverseProj", glm::inverse(matProj));
 
 	AT2::TextureSet cloudsTS;
 	cloudsTS.insert(Noise3Tex);
@@ -111,7 +119,7 @@ void Render(AT2::GlRenderer* renderer)
 	TerrainShader->SetUniform("u_texNormalMap", NormalMapTex->GetCurrentModule());
 	TerrainShader->SetUniform("u_texGrass", GrassTex->GetCurrentModule());
 	TerrainShader->SetUniform("u_texRock", RockTex->GetCurrentModule());
-
+	TerrainShader->BindUBO("CameraBlock", 0, TerrainUB);
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
@@ -171,7 +179,7 @@ int main(int argc, char *argv[])
 		NormalMapTex = LoadTexture("resources\\terrain_normalmap.dds");
 		HeightMapTex = LoadTexture("resources\\heightmap.dds");
 		TerrainVertexArray = MakeTerrainVAO();
-
+		TerrainUB = std::make_shared<AT2::GlUniformBuffer>(TerrainShader->GetUniformBlockInfo("CameraBlock"));
 
 		glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
 		GLuint indices[] = {0, 1, 2, 0, 2, 3};
@@ -180,8 +188,6 @@ int main(int argc, char *argv[])
 		VertexArray = std::make_shared<AT2::GlVertexArray>();
 		VertexArray->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
 		VertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
-		
-		std::make_shared<AT2::GlUniformBuffer>(*TerrainShader, "MyBlock");
 
 		//Init
 		glEnable(GL_TEXTURE_1D);
