@@ -173,6 +173,12 @@ void GlShaderProgram::SetUniform(const str& _name, const glm::mat4& _value)
 		glProgramUniformMatrix4fv(m_programId, location, 1, GL_FALSE, glm::value_ptr(_value));
 }
 
+void GlShaderProgram::SetUBO(const str& blockName, unsigned int index)
+{
+	GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
+	if (blockIndex != GL_INVALID_INDEX)
+		glUniformBlockBinding(m_programId, blockIndex, index);
+}
 
 std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformBlockInfo(const str& blockName) const
 {
@@ -214,17 +220,4 @@ std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformB
 	
 
 	return ubi;
-}
-
-#include "GlUniformBuffer.h"
-
-void GlShaderProgram::BindUBO(const str& blockName, unsigned int index, std::shared_ptr<GlUniformBuffer> ubo)
-{
-	GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
-	if (blockIndex == GL_INVALID_INDEX)
-		throw AT2::AT2Exception(AT2Exception::ErrorCase::Buffer, "uniform block not found");
-
-	ubo->SetBindingPoint(index);
-	ubo->Bind();
-	glUniformBlockBinding(m_programId, blockIndex, index);
 }

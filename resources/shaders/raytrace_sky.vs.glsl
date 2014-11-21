@@ -2,9 +2,6 @@
 
 layout(location = 1) in vec4 a_Position;
 
-uniform mat4 u_matMW, u_matProj;
-uniform float u_phase;
-
 out vec4 v_color;
 out vec2 v_texCoord;
 

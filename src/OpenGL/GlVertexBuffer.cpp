@@ -59,6 +59,9 @@ GlVertexBuffer<T>::GlVertexBuffer(GlBufferType _type, GLsizeiptr _size, const T*
 template <typename T>
 GlVertexBuffer<T>::~GlVertexBuffer()
 {
+	if (m_mappedData)
+		Unlock();
+
 	glDeleteBuffers(1, &m_id);
 }
 
@@ -79,7 +82,7 @@ template <typename T>
 T* GlVertexBuffer<T>::Lock()
 {
 	if (!m_mappedData)
-		m_mappedData = reinterpret_cast<T*>(glMapNamedBufferEXT(m_id, static_cast<GLenum>(UsageHint)));
+		m_mappedData = reinterpret_cast<T*>(glMapNamedBufferEXT(m_id, GL_READ_WRITE));
 	else
 		Log::Warning() << "VertexBuffer: redundant Lock() call" << std::endl;
 

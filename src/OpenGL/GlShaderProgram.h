@@ -69,9 +69,9 @@ namespace AT2
 		void SetUniform(const str& name, const glm::mat3& value);
 		void SetUniform(const str& name, const glm::mat4& value);
 
-		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName) const;
-		void BindUBO(const str& blockName, unsigned int index, std::shared_ptr<GlUniformBuffer> ubo);
+		void SetUBO(const str& blockName, unsigned int index);
 
+		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName) const;
 	protected:
 		GLuint LoadShader(GLenum _shaderType, const str& _text);
 

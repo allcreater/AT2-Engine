@@ -92,6 +92,9 @@ void Render(AT2::GlRenderer* renderer)
 	TerrainUB->SetUniform("u_matProj", matProj);
 	TerrainUB->SetUniform("u_matInverseProj", glm::inverse(matProj));
 
+	TerrainUB->SetBindingPoint(1);
+	TerrainUB->Bind();
+
 	AT2::TextureSet cloudsTS;
 	cloudsTS.insert(Noise3Tex);
 	cloudsTS.insert(HeightMapTex);
@@ -100,26 +103,20 @@ void Render(AT2::GlRenderer* renderer)
 	cloudsTS.insert(GrassTex);
 	renderer->GetStateManager()->BindTextures(cloudsTS);
 
-	Shader->SetUniform("u_matMW", matMW);
-	Shader->SetUniform("u_matInverseMW", glm::inverse(matMW));
-	Shader->SetUniform("u_matProj", matProj);
-	Shader->SetUniform("u_matInverseProj", glm::inverse(matProj));
+
 	Shader->SetUniform("u_phase", Phase);
 	Shader->SetUniform("u_texNoise", Noise3Tex->GetCurrentModule());
 	Shader->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
-	
-	TerrainShader->SetUniform("u_matMW", matMW);
-	TerrainShader->SetUniform("u_matInverseMW", glm::inverse(matMW));
-	TerrainShader->SetUniform("u_matProj", matProj);
-	TerrainShader->SetUniform("u_matInverseProj", glm::inverse(matProj));
+	Shader->SetUBO("CameraBlock", 1);
+
 	TerrainShader->SetUniform("u_phase", Phase);
 	TerrainShader->SetUniform("u_scaleH", 10000.0f);
-	TerrainShader->SetUniform("u_scaleV", 1000.0f);
+	TerrainShader->SetUniform("u_scaleV", 2000.0f);
 	TerrainShader->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
 	TerrainShader->SetUniform("u_texNormalMap", NormalMapTex->GetCurrentModule());
 	TerrainShader->SetUniform("u_texGrass", GrassTex->GetCurrentModule());
 	TerrainShader->SetUniform("u_texRock", RockTex->GetCurrentModule());
-	TerrainShader->BindUBO("CameraBlock", 0, TerrainUB);
+	TerrainShader->SetUBO("CameraBlock", 1);
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
@@ -204,6 +201,9 @@ int main(int argc, char *argv[])
 		float heading = 0.0f, pitch = 0.0f;
 		glm::vec3 position = glm::vec3(0.0, 0.0, 0.0), direction;
 
+		Uint32 startTime = SDL_GetTicks(); 
+		Uint32 fpsCount = 0;
+
 		while (true)
 		{
 			SDL_Event sdlEvent;
@@ -246,7 +246,18 @@ int main(int argc, char *argv[])
 
 				matMW = glm::lookAt(position, position+direction, up);
 			}
-			
+
+			Uint32 time = SDL_GetTicks();
+			if (time - startTime > 1000)
+			{
+				std::cout << fpsCount << " ";
+
+				startTime = time;
+				fpsCount = 0;
+			}
+			fpsCount++;
+
+
 			Render(renderer);
 		}
 

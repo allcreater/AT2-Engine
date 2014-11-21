@@ -2,7 +2,11 @@
 
 precision mediump float;
 
-uniform mat4 u_matInverseMW, u_matInverseProj;
+uniform CameraBlock
+{
+	mat4 u_matMW, u_matInverseMW, u_matProj, u_matInverseProj;
+};
+
 uniform float u_phase;
 uniform sampler3D u_texNoise;
 
