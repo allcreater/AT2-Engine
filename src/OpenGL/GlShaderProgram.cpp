@@ -2,9 +2,28 @@
 
 using namespace AT2;
 
-GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _tes, const str& _gs, const str& _fs)
+GlShaderProgram::GlShaderProgram()
 {
 	m_programId = glCreateProgram();
+
+	m_shaderId[0] = m_shaderId[1] = m_shaderId[2] = m_shaderId[3] = m_shaderId[4] = 0;
+}
+
+GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _tes, const str& _gs, const str& _fs) : GlShaderProgram()
+{
+	Reload(_vs, _tcs, _tes, _gs, _fs);
+}
+
+GlShaderProgram::~GlShaderProgram()
+{
+	glDeleteProgram(m_programId);
+
+	CleanUp();
+}
+
+void GlShaderProgram::Reload(const str& _vs, const str& _tcs, const str& _tes, const str& _gs, const str& _fs)
+{
+	CleanUp();
 
 	if (!_vs.empty())
 	{
@@ -37,10 +56,12 @@ GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _te
 		m_shaderId[4] = LoadShader(GL_FRAGMENT_SHADER, _fs);
 		glAttachShader(m_programId, m_shaderId[4]);
 	}
+	else
+		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: empty fragment shader");
 
-	glLinkProgram (m_programId);
+	glLinkProgram(m_programId);
 	GLint linked = 0;
-	glGetProgramiv  (m_programId, GL_LINK_STATUS, &linked );
+	glGetProgramiv(m_programId, GL_LINK_STATUS, &linked);
 
 	//log
 	GLchar infoLogBuffer[2048];
@@ -52,15 +73,6 @@ GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _te
 
 	if (!linked)
 		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: program not linked");
-}
-
-GlShaderProgram::~GlShaderProgram()
-{
-	glDeleteProgram(m_programId);
-
-	for (int i = 0; i < 5; ++i)
-		if (m_shaderId[i] != 0)
-			glDeleteShader(m_shaderId[i]);
 }
 
 GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
@@ -98,6 +110,19 @@ GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
 	}
 
 	return shader;
+}
+
+void GlShaderProgram::CleanUp()
+{
+	for (int i = 0; i < 5; ++i)
+	{
+		if (m_shaderId[i] != 0)
+		{
+			glDetachShader(m_programId, m_shaderId[i]);
+			glDeleteShader(m_shaderId[i]);
+		}
+		m_shaderId[i] = 0;
+	}
 }
 
 void GlShaderProgram::Bind()

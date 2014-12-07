@@ -44,7 +44,7 @@ float getDensity(vec3 pos)
     }
 
     float cloudDensity = smoothstep(0.5, 1.0, summ)*0.4;
-    return smoothstep(-0.01,0.01,pos.y*10.0)*smoothstep(-0.01,0.01,(0.1-pos.y)*10.0)*cloudDensity;
+    return smoothstep(-0.01,0.01,pos.y*10.0)*smoothstep(-0.01,0.01,(0.1-pos.y)*2.0)*cloudDensity;
 }
 
 float traceAttenuation(in vec3 pos, in vec3 dpos)

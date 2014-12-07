@@ -29,5 +29,18 @@ private:
 	glm::ivec2 m_size;
 };
 
+class GlScreenFrameBuffer : public IFrameBuffer
+{
+public:
+	virtual void Bind()
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	virtual unsigned int GetId() const
+	{
+		return 0;
+	}
+};
+
 }
 #endif

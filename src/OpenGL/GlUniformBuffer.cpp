@@ -7,9 +7,10 @@ GlUniformBuffer::GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferI
 	m_ubi(ubi)
 {
 	UsageHint = GlBufferUsageHint::StreamDraw;
+	m_length = m_ubi->GetBlockSize();
 
 	glGenBuffers(1, &m_id);
-	glNamedBufferDataEXT(m_id, m_ubi->GetBlockSize(), 0, static_cast<GLenum>(UsageHint));
+	glNamedBufferDataEXT(m_id, m_length, 0, static_cast<GLenum>(UsageHint));
 }
 
 GlUniformBuffer::~GlUniformBuffer()

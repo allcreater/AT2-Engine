@@ -18,7 +18,7 @@ public:
 	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexArray);
 
 private:
-	std::vector<std::shared_ptr<ITexture>> m_bindedTextures;
+	Utils::dynarray<std::shared_ptr<ITexture>> m_bindedTextures;
 	std::shared_ptr<IShaderProgram> m_activeShader;
 	std::shared_ptr<IFrameBuffer> m_activeFramebuffer;
 	std::shared_ptr<IVertexArray> m_activeVertexArray;

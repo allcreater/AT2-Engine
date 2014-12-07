@@ -26,6 +26,8 @@ void GlFrameBuffer::BindColorAttachement(unsigned int attachementNumber, const s
 		glNamedFramebufferTexture2DEXT (m_id, GL_COLOR_ATTACHMENT0 + attachementNumber, static_cast<GLenum>(texture->GetTargetType()), texture->GetId(), 0);
 	else if (dynamic_cast<GlTexture3D*>(texture.get()) != nullptr)
 		glNamedFramebufferTexture3DEXT (m_id, GL_COLOR_ATTACHMENT0 + attachementNumber, static_cast<GLenum>(texture->GetTargetType()), texture->GetId(), 0, 0); //TODO: zoffset controlling
+	else
+		return;
 }
 
 void GlFrameBuffer::BindDepthAttachement(const std::shared_ptr<GlTexture> texture)

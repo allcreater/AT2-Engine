@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "log.h"
+#include "utils.hpp"
 
 namespace AT2
 {
@@ -36,6 +37,7 @@ class IVertexBuffer
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
+	virtual unsigned int GetLength() = 0;
 	virtual ~IVertexBuffer() {};
 };
 
@@ -117,6 +119,13 @@ public:
 	virtual IStateManager* GetStateManager() = 0;
 
 	virtual void Shutdown() = 0;
+};
+
+//Interface for all resources which can be dynamically reloaded from file
+class IReloadable
+{
+public:
+	virtual void Reload() = 0;
 };
 
 }

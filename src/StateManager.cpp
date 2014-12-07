@@ -5,8 +5,8 @@
 using namespace AT2;
 
 StateManager::StateManager(unsigned int numTexUnits)
+	: m_bindedTextures(numTexUnits)
 {
-	m_bindedTextures.resize(numTexUnits);
 }
 
 void StateManager::BindTextures(const TextureSet& _textures)

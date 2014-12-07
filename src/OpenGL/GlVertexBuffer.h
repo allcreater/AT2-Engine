@@ -70,10 +70,12 @@ public:
 public:
 	virtual unsigned int GetId() const { return m_id; }
 	virtual GlBufferType GetType() const = 0;
+	unsigned int GetLength() { return m_length; }
 	GlBufferTypeInfo ElementTypeInfo;
 
 protected:
 	GLuint m_id;
+	GLuint m_length;
 };
 
 

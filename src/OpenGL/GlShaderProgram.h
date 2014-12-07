@@ -46,11 +46,14 @@ namespace AT2
 		};
 
 	public:
+		GlShaderProgram();
 		GlShaderProgram(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs);
 		virtual ~GlShaderProgram();
 
 		virtual void Bind();
 		virtual unsigned int GetId() const { return m_programId; }
+
+		virtual void Reload(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs); //TODO maybe we need to make it more flexible
 
 		//floats
 		void SetUniform(const str& name, GLfloat value);
@@ -74,6 +77,7 @@ namespace AT2
 		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName) const;
 	protected:
 		GLuint LoadShader(GLenum _shaderType, const str& _text);
+		void CleanUp();
 
 	private:
 		GLuint m_programId;

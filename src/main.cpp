@@ -1,3 +1,5 @@
+//This file is something like sandbox. It is just functionality test, not example.
+
 #include "OpenGl\GlRenderer.h"
 #include "OpenGl\GlShaderProgram.h"
 #include "OpenGl\GlUniformBuffer.h"
@@ -23,11 +25,73 @@ GLfloat Phase = 0.0;
 
 glm::mat4 matMW, matProj;
 
-std::string LoadShader(const char* _filename)
+namespace AT2
 {
-	std::ifstream t(_filename);
-	return std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+
+class GlShaderProgramFromFile : public GlShaderProgram, public virtual IReloadable
+{
+public:
+	GlShaderProgramFromFile(const str& vsFilename, const str& tcsFilename, const str& tesFilename, const str& gsFilename, const str& fsFilename) : GlShaderProgram()
+	{
+		m_filenames[0] = vsFilename;
+		m_filenames[1] = tcsFilename;
+		m_filenames[2] = tesFilename;
+		m_filenames[3] = gsFilename;
+		m_filenames[4] = fsFilename;
+
+		Reload();
+	}
+
+	void Reload()
+	{
+		GlShaderProgram::Reload(
+			LoadShader(m_filenames[0]),
+			LoadShader(m_filenames[1]),
+			LoadShader(m_filenames[2]),
+			LoadShader(m_filenames[3]),
+			LoadShader(m_filenames[4]));
+	}
+
+	~GlShaderProgramFromFile()
+	{
+	}
+
+private:
+	std::string LoadShader(const str& _filename)
+	{
+		if (_filename.empty())
+			return "";
+
+		std::ifstream t(_filename);
+		return std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+	}
+
+private:
+	str m_filenames[5];
+
+private: //static
+	static std::map<unsigned int, std::weak_ptr<GlShaderProgramFromFile>> s_allShaderPrograms;
+	
+public: //static
+	static std::shared_ptr<GlShaderProgramFromFile> CreateShader(const str& vsFilename, const str& tcsFilename, const str& tesFilename, const str& gsFilename, const str& fsFilename)
+	{
+		auto shader = std::make_shared<AT2::GlShaderProgramFromFile>(vsFilename, tcsFilename, tesFilename, gsFilename, fsFilename);
+		s_allShaderPrograms[shader->GetId()] = shader;
+
+		return shader;
+	}
+	static void ReloadAll()
+	{
+		for (auto element : s_allShaderPrograms)
+		{
+			element.second.lock()->Reload();
+		}
+	}
+};
+std::map<unsigned int, std::weak_ptr<GlShaderProgramFromFile>> GlShaderProgramFromFile::s_allShaderPrograms;
+
 }
+
 
 std::shared_ptr<AT2::ITexture> LoadTexture (const char* _filename)
 {
@@ -79,10 +143,14 @@ std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO()
 	return vao;
 }
 
+void fileChangedFunc(const std::wstring& filename)
+{
+	std::wcout << filename << std::endl;
+}
+
 void Render(AT2::GlRenderer* renderer)
 {
 	//matMW = glm::lookAt(glm::vec3(-1.0,0.0,0.0), glm::vec3(0.0,0.0,0.0), glm::vec3(0.0, 1.0, 0.0));
-
 
 	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
 
@@ -141,21 +209,31 @@ int main(int argc, char *argv[])
 {
 	try
 	{
+		/*
+		auto fsl = AT2::Utils::IFileSystemListener::GetInstance();
+		fsl->SetFolderCallback(L"D:\\Temp", fileChangedFunc);
+
+		while (true)
+		{
+
+		}
+		*/
+
 		auto renderer = new AT2::GlRenderer();
 
-		Shader = std::make_shared<AT2::GlShaderProgram>(
-			LoadShader("resources\\shaders\\raytrace_sky.vs.glsl"),
+		Shader = AT2::GlShaderProgramFromFile::CreateShader(
+			"resources\\shaders\\raytrace_sky.vs.glsl",
 			"",
 			"",
 			"",
-			LoadShader("resources\\shaders\\raytrace_sky.fs.glsl"));
+			"resources\\shaders\\raytrace_sky.fs.glsl");
 
-		TerrainShader = std::make_shared<AT2::GlShaderProgram>(
-			LoadShader("resources\\shaders\\terrain.vs.glsl"),
-			LoadShader("resources\\shaders\\terrain.tcs.glsl"),
-			LoadShader("resources\\shaders\\terrain.tes.glsl"),
+		TerrainShader = AT2::GlShaderProgramFromFile::CreateShader(
+			"resources\\shaders\\terrain.vs.glsl",
+			"resources\\shaders\\terrain.tcs.glsl",
+			"resources\\shaders\\terrain.tes.glsl",
 			"",
-			LoadShader("resources\\shaders\\terrain.fs.glsl"));
+			"resources\\shaders\\terrain.fs.glsl");
 
 		auto texture = new AT2::GlTexture3D(GL_RGBA, GL_RGBA);
 		AT2::ITexture::BufferData data;
@@ -229,6 +307,13 @@ int main(int argc, char *argv[])
 						} break;
 					case SDL_QUIT:
 						goto QuitLabel;
+					case SDL_WINDOWEVENT:
+					{
+						if (sdlEvent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+						{
+							AT2::GlShaderProgramFromFile::ReloadAll();
+						}
+					} break;
 				}
 
 				glm::vec3 right(sin(heading - 3.14f/2.0f), 0, cos(heading - 3.14f/2.0f));

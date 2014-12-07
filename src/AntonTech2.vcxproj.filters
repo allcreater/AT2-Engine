@@ -51,6 +51,9 @@
     <ClCompile Include="OpenGL\GlUniformBuffer.cpp">
       <Filter>Файлы исходного кода\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="utils_fileSystemListener.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AT2.h">
@@ -91,6 +94,9 @@
     </ClInclude>
     <ClInclude Include="OpenGL\GlUniformBuffer.h">
       <Filter>Заголовочные файлы\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.hpp">
+      <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
