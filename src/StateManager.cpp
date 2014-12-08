@@ -4,8 +4,8 @@
 
 using namespace AT2;
 
-StateManager::StateManager(unsigned int numTexUnits)
-	: m_bindedTextures(numTexUnits)
+StateManager::StateManager(const IRendererCapabilities* rendererCapabilities)
+	: m_bindedTextures(rendererCapabilities->GetMaxNumberOfTextureUnits())
 {
 }
 

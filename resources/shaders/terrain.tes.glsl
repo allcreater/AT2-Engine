@@ -9,6 +9,7 @@ uniform CameraBlock
 
 uniform float u_scaleH, u_scaleV;
 uniform sampler2D u_texHeight;
+uniform sampler2D u_texNoise;
 
 in	tcsResult {
 	vec2 texCoord;
@@ -27,12 +28,17 @@ out tesResult {
 		gl_TessCoord.y ) )
 
 
+float getHeight (vec2 texCoord)
+{
+	return texture(u_texHeight, texCoord).r * u_scaleV + texture(u_texNoise, texCoord*10.0).r * 3.0;
+}
+
 void main()
 {
 	vec4	worldPos 	= Interpolate( gl_in, .gl_Position );
 	vec2	texCoord 	= Interpolate( input, .texCoord );
 
-	worldPos.y += texture(u_texHeight, texCoord).r * u_scaleV;
+	worldPos.y += getHeight(texCoord);
 
 	output.texCoord = texCoord;
 	output.position = vec3(u_matMW * worldPos);

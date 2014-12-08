@@ -9,7 +9,7 @@ namespace AT2
 class GlVertexArray : public IVertexArray
 {
 public:
-	GlVertexArray();
+	GlVertexArray(IRendererCapabilities* rendererCapabilities);
 	~GlVertexArray();
 
 public:
@@ -24,7 +24,7 @@ public:
 	
 private:
 	GLuint m_id;
-	std::vector<std::shared_ptr<GlVertexBufferBase>> m_buffers;
+	Utils::dynarray<std::shared_ptr<GlVertexBufferBase>> m_buffers;
 	std::shared_ptr<GlVertexBufferBase> m_indexBuffer;
 };
 

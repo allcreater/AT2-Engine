@@ -27,6 +27,11 @@ public:
 class IFrameBuffer
 {
 public:
+	IFrameBuffer() = default;
+	IFrameBuffer(const IFrameBuffer& other) = delete;
+	IFrameBuffer& operator= (const IFrameBuffer& other) = delete;
+
+public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 	virtual ~IFrameBuffer() {};
@@ -34,6 +39,11 @@ public:
 
 class IVertexBuffer
 {
+public:
+	IVertexBuffer() = default;
+	IVertexBuffer(const IVertexBuffer& other) = delete;
+	IVertexBuffer& operator= (const IVertexBuffer& other) = delete;
+
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
@@ -44,6 +54,11 @@ public:
 class IVertexArray
 {
 public:
+	IVertexArray() = default;
+	IVertexArray(const IVertexArray& other) = delete;
+	IVertexArray& operator= (const IVertexArray& other) = delete;
+
+public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 	virtual ~IVertexArray() {};
@@ -51,6 +66,11 @@ public:
 
 class ITexture
 {
+public:
+	ITexture() = default;
+	ITexture(const ITexture& other) = delete;
+	ITexture& operator= (const ITexture& other) = delete;
+
 public:
 	virtual void Bind(unsigned int module) = 0;
 	virtual void Unbind() = 0;
@@ -70,6 +90,11 @@ public:
 
 class IShaderProgram
 {
+public:
+	IShaderProgram() = default;
+	IShaderProgram(const IShaderProgram& other) = delete;
+	IShaderProgram& operator= (const IShaderProgram& other) = delete;
+
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
@@ -99,6 +124,15 @@ public:
 	AT2Exception(ErrorCase _case, const std::string& _message) : std::exception(_message.c_str()), Case(_case) {};
 };
 
+class IRendererCapabilities
+{
+public:
+	virtual unsigned int GetMaxNumberOfTextureUnits() const = 0;
+	virtual unsigned int GetMaxTextureSize() const = 0;
+	virtual unsigned int GetMaxNumberOfVertexAttributes() const = 0;
+	virtual unsigned int GetMaxNumberOfColorAttachements() const = 0;
+};
+
 typedef std::set<std::shared_ptr<ITexture>> TextureSet;
 typedef std::vector<std::shared_ptr<IDrawPrimitive>> PrimitiveList;
 
@@ -116,7 +150,8 @@ class IRenderer
 public:
 	virtual ITexture* CreateTexture(unsigned int width, unsigned int height, unsigned int depth, void* data) = 0;
 
-	virtual IStateManager* GetStateManager() = 0;
+	virtual IStateManager* GetStateManager() const = 0;
+	virtual IRendererCapabilities* GetRendererCapabilities() const = 0;
 
 	virtual void Shutdown() = 0;
 };

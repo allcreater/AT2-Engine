@@ -6,6 +6,15 @@
 namespace AT2
 {
 
+class GlRendererCapabilities : public IRendererCapabilities
+{
+public:
+	unsigned int GetMaxNumberOfTextureUnits() const;
+	unsigned int GetMaxNumberOfColorAttachements() const;
+	unsigned int GetMaxTextureSize() const;
+	unsigned int GetMaxNumberOfVertexAttributes() const;
+};
+
 class GlRenderer : public IRenderer
 {
 public:
@@ -13,11 +22,12 @@ public:
 	virtual ~GlRenderer();
 
 public:
-	virtual ITexture* CreateTexture(unsigned int w, unsigned int h, unsigned int d, void* data);
+	ITexture* CreateTexture(unsigned int w, unsigned int h, unsigned int d, void* data) override;
 
-	virtual IStateManager* GetStateManager() { return m_stateManager; }
+	IStateManager* GetStateManager() const override { return m_stateManager; }
+	IRendererCapabilities* GetRendererCapabilities() const override { return m_rendererCapabilities; }
 
-	virtual void Shutdown();
+	void Shutdown() override;
 
 	virtual void ClearBuffer(const glm::vec4& color);
 	virtual void SwapBuffers();
@@ -30,6 +40,7 @@ private:
     SDL_GLContext m_context;
 
 	IStateManager* m_stateManager;
+	GlRendererCapabilities* m_rendererCapabilities;
 };
 
 }

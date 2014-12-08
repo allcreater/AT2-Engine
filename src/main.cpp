@@ -119,7 +119,7 @@ std::shared_ptr<AT2::ITexture> LoadTexture (const char* _filename)
 	}
 }
 
-std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO()
+std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO(AT2::GlRenderer* renderer)
 {
 	const int segX = 64, segY = 64;
 
@@ -137,7 +137,7 @@ std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO()
 		}
 	}
 	
-	auto vao = std::make_shared<AT2::GlVertexArray>();
+	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
 	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, segX * segY * 4, texCoords));
 
 	return vao;
@@ -209,24 +209,14 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		/*
-		auto fsl = AT2::Utils::IFileSystemListener::GetInstance();
-		fsl->SetFolderCallback(L"D:\\Temp", fileChangedFunc);
-
-		while (true)
-		{
-
-		}
-		*/
-
 		auto renderer = new AT2::GlRenderer();
 
 		Shader = AT2::GlShaderProgramFromFile::CreateShader(
-			"resources\\shaders\\raytrace_sky.vs.glsl",
+			"resources\\shaders\\postprocess.vs.glsl",
 			"",
 			"",
 			"",
-			"resources\\shaders\\raytrace_sky.fs.glsl");
+			"resources\\shaders\\postprocess.fs.glsl");
 
 		TerrainShader = AT2::GlShaderProgramFromFile::CreateShader(
 			"resources\\shaders\\terrain.vs.glsl",
@@ -253,14 +243,14 @@ int main(int argc, char *argv[])
 		RockTex = LoadTexture("resources\\rock04.dds");
 		NormalMapTex = LoadTexture("resources\\terrain_normalmap.dds");
 		HeightMapTex = LoadTexture("resources\\heightmap.dds");
-		TerrainVertexArray = MakeTerrainVAO();
+		TerrainVertexArray = MakeTerrainVAO(renderer);
 		TerrainUB = std::make_shared<AT2::GlUniformBuffer>(TerrainShader->GetUniformBlockInfo("CameraBlock"));
 
 		glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
 		GLuint indices[] = {0, 1, 2, 0, 2, 3};
 
 
-		VertexArray = std::make_shared<AT2::GlVertexArray>();
+		VertexArray = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
 		VertexArray->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
 		VertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
 

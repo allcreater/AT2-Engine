@@ -2,6 +2,47 @@
 #include "../StateManager.h"
 using namespace AT2;
 
+unsigned int GlRendererCapabilities::GetMaxNumberOfTextureUnits() const
+{
+	GLint numTexUnits = 0;
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &numTexUnits); //GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS ???
+
+	if (numTexUnits < 0)
+		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
+
+	return numTexUnits;
+}
+unsigned int GlRendererCapabilities::GetMaxNumberOfColorAttachements() const
+{
+	GLint numRenderTargets = 0;
+	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &numRenderTargets);
+
+	if (numRenderTargets < 0)
+		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
+
+	return numRenderTargets;
+}
+unsigned int GlRendererCapabilities::GetMaxTextureSize() const
+{
+	GLint maxTextureSize = 0;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+
+	if (maxTextureSize < 0)
+		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
+
+	return maxTextureSize;
+}
+unsigned int GlRendererCapabilities::GetMaxNumberOfVertexAttributes() const
+{
+	GLint maxVertexAttribs = 0;
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+
+	if (maxVertexAttribs < 0)
+		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
+
+	return maxVertexAttribs;
+}
+
 GlRenderer::GlRenderer()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) /* Initialize SDL's Video subsystem */
@@ -29,15 +70,14 @@ GlRenderer::GlRenderer()
 	if(err != GLEW_OK)
 		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GLEW: cannot init");
 
-
-	GLint numTexUnits = 0;
-	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &numTexUnits); //GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS ???
-	m_stateManager = new StateManager(numTexUnits);
-	
+	m_rendererCapabilities = new GlRendererCapabilities();
+	m_stateManager = new StateManager(m_rendererCapabilities);
 }
 
 GlRenderer::~GlRenderer()
 {
+	delete m_rendererCapabilities;
+	delete m_stateManager;
 }
 
 void GlRenderer::CheckSDLError()

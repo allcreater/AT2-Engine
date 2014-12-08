@@ -13,6 +13,6 @@ out vec4 FragColor;
 
 void main()
 {
-	FragColor.rgb = texture(u_texNormalMap, input.texCoord).bgr;
+	FragColor.rgb = texture(u_texNormalMap, input.texCoord).bgr*0.5 + texture(u_texGrass, input.texCoord*50.0).rgb*0.5;
 	FragColor.a = 1.0;
 }

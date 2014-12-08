@@ -20,7 +20,7 @@ public:
 
 	~dynarray()
 	{
-		delete m_data;
+		delete [] m_data;
 	}
 
 	dynarray (const dynarray<T>& other)
@@ -105,6 +105,52 @@ private:
 	T* m_data;
 	size_t m_size;
 
+};
+
+template <typename C, typename T>
+class ControlledList
+{
+public:
+	typedef std::function<void(size_t, const T&)> ControlCallback;
+
+public:
+	ControlledList() = default;
+	ControlledList(const ControlledList& other) = delete;
+	const ControlledList& operator= (const ControlledList& other) = delete;
+
+	ControlledList(C& collection, ControlCallback setCallback, ControlCallback getCallback, ControlCallback removeCallback)
+		: m_collection(collection),
+		m_setCallback(setCallback),
+		m_getCallback(getCallback),
+		m_removeCallback(removeCallback)
+	{
+	}
+
+	T& operator [] (size_t index)
+	{
+		T& element = m_collection[index];
+
+		m_setCallback(index, element);
+		return element;
+	}
+	const T& operator [] (size_t index) const
+	{
+		T& element = m_collection[index];
+
+		m_getCallback(index, element);
+		return element;
+	}
+
+	void Remove(size_t index)
+	{
+		m_removeCallback(index, m_collection[index]);
+
+		m_collection[index] = default(T);
+	}
+
+private:
+	C& m_collection;
+	ControlCallback m_setCallback, m_getCallback, m_removeCallback;
 };
 
 class IFileSystemListener

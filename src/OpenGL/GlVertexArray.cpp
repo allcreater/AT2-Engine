@@ -3,13 +3,10 @@
 
 using namespace AT2;
 
-GlVertexArray::GlVertexArray()
+GlVertexArray::GlVertexArray(IRendererCapabilities* rendererCapabilities) :
+	m_buffers(rendererCapabilities->GetMaxNumberOfVertexAttributes())
 {
 	glGenVertexArrays(1, &m_id);
-
-	GLint maxAttribs;
-	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
-	m_buffers.resize(maxAttribs);
 }
 
 void GlVertexArray::Bind()
