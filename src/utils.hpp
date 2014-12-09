@@ -107,6 +107,7 @@ private:
 
 };
 
+//I'm afraid, it need to be removed
 template <typename C, typename T>
 class ControlledList
 {

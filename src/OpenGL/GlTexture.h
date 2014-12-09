@@ -21,7 +21,7 @@ namespace AT2
 		};
 
 	public:
-		GlTexture(TextureType type, GLint numComponents, GLenum format);
+		GlTexture(TextureType type, GLint internalFormat, GLenum format, GLenum dataType);
 		virtual ~GlTexture();
 
 		virtual void UpdateData(GLenum target, BufferData data) = 0;
@@ -40,34 +40,34 @@ namespace AT2
 		int m_currentTextureModule;
 
 		GLint m_internalFormat;
-		GLenum m_format;
+		GLenum m_format, m_dataType;
 	};
 
 	class GlTexture1D : public GlTexture
 	{
 	public:
-		GlTexture1D(GLint numComponents, GLenum format);
+		GlTexture1D(GLint internalFormat, GLenum format, GLenum dataType = GL_UNSIGNED_BYTE);
 		virtual void UpdateData(GLenum target, BufferData data);
 	};
 
 	class GlTexture2D : public GlTexture
 	{
 	public:
-		GlTexture2D(GLint numComponents, GLenum format);
+		GlTexture2D(GLint internalFormat, GLenum format, GLenum dataType = GL_UNSIGNED_BYTE);
 		virtual void UpdateData(GLenum target, BufferData data);
 	};
 
 	class GlTexture3D : public GlTexture
 	{
 	public:
-		GlTexture3D(GLint numComponents, GLenum format);
+		GlTexture3D(GLint internalFormat, GLenum format, GLenum dataType = GL_UNSIGNED_BYTE);
 		virtual void UpdateData(GLenum target, BufferData data);
 	};
 
 	class GlTextureCube : public GlTexture
 	{
 	public:
-		GlTextureCube(GLint numComponents, GLenum format);
+		GlTextureCube(GLint internalFormat, GLenum format, GLenum dataType = GL_UNSIGNED_BYTE);
 		virtual void UpdateData(GLenum target, BufferData data);
 	};
 }

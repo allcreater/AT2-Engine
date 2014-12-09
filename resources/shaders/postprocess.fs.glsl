@@ -9,7 +9,8 @@ uniform CameraBlock
 
 uniform float u_phase;
 uniform sampler3D u_texNoise;
-
+uniform sampler2D u_colorMap;
+uniform sampler2D u_depthMap;
 
 in vec4 v_color;
 in vec2 v_texCoord;
@@ -31,5 +32,7 @@ void main()
 {
 	vec3 dir = getEyeDir();
 
-	FragColor = vec4(texture(u_texNoise, dir*0.1).rgb, 1.0);
+	//FragColor = texture(u_colorMap, v_texCoord);//vec4(texture(u_texNoise, dir*0.1).rgb, 1.0);
+	float depth = texture(u_depthMap, v_texCoord);
+	FragColor = vec4(sin(vec3(depth*10000.0)), 1.0);
 }

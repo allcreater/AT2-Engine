@@ -5,6 +5,7 @@
 #include "OpenGl\GlUniformBuffer.h"
 #include "OpenGl\GlTexture.h"
 #include "OpenGl\GlVertexArray.h"
+#include "OpenGl\GlFrameBuffer.h"
 
 #include <iostream>
 #include <fstream>
@@ -17,9 +18,14 @@
 #include <gli\gli.hpp>
 
 std::shared_ptr<AT2::GlUniformBuffer> TerrainUB;
-std::shared_ptr<AT2::GlShaderProgram> Shader, TerrainShader;
+std::shared_ptr<AT2::GlShaderProgram> PostprocessShader, TerrainShader;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex;
 std::shared_ptr<AT2::GlVertexArray> VertexArray, TerrainVertexArray;
+
+std::shared_ptr<AT2::GlFrameBuffer> MyFBO;
+std::shared_ptr<AT2::IFrameBuffer> NullFBO;
+
+
 GLuint vao = 0;
 GLfloat Phase = 0.0;
 
@@ -152,9 +158,6 @@ void Render(AT2::GlRenderer* renderer)
 {
 	//matMW = glm::lookAt(glm::vec3(-1.0,0.0,0.0), glm::vec3(0.0,0.0,0.0), glm::vec3(0.0, 1.0, 0.0));
 
-	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
-
-
 	TerrainUB->SetUniform("u_matMW", matMW);
 	TerrainUB->SetUniform("u_matInverseMW", glm::inverse(matMW));
 	TerrainUB->SetUniform("u_matProj", matProj);
@@ -163,19 +166,12 @@ void Render(AT2::GlRenderer* renderer)
 	TerrainUB->SetBindingPoint(1);
 	TerrainUB->Bind();
 
-	AT2::TextureSet cloudsTS;
-	cloudsTS.insert(Noise3Tex);
-	cloudsTS.insert(HeightMapTex);
-	cloudsTS.insert(NormalMapTex);
-	cloudsTS.insert(RockTex);
-	cloudsTS.insert(GrassTex);
-	renderer->GetStateManager()->BindTextures(cloudsTS);
+	//Scene stage
+	MyFBO->Bind();
+	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
 
-
-	Shader->SetUniform("u_phase", Phase);
-	Shader->SetUniform("u_texNoise", Noise3Tex->GetCurrentModule());
-	Shader->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
-	Shader->SetUBO("CameraBlock", 1);
+	AT2::TextureSet sceneTS = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
+	renderer->GetStateManager()->BindTextures(sceneTS);
 
 	TerrainShader->SetUniform("u_phase", Phase);
 	TerrainShader->SetUniform("u_scaleH", 10000.0f);
@@ -193,9 +189,21 @@ void Render(AT2::GlRenderer* renderer)
 	glPatchParameteri( GL_PATCH_VERTICES, 4 );
 	glDrawArrays(GL_PATCHES, 0, 64*64*4);
 
+	//Postprocess stage
+	NullFBO->Bind();
+
+	AT2::TextureSet postprocessTS = { MyFBO->GetColorAttachement(0), MyFBO->GetDepthAttachement(), Noise3Tex };
+	renderer->GetStateManager()->BindTextures(postprocessTS);
+
+	PostprocessShader->SetUniform("u_phase", Phase);
+	PostprocessShader->SetUniform("u_texNoise", Noise3Tex->GetCurrentModule());
+	PostprocessShader->SetUniform("u_colorMap", MyFBO->GetColorAttachement(0)->GetCurrentModule());
+	PostprocessShader->SetUniform("u_depthMap", MyFBO->GetDepthAttachement()->GetCurrentModule());
+	PostprocessShader->SetUBO("CameraBlock", 1);
+
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
-	renderer->GetStateManager()->BindShader(Shader);
+	renderer->GetStateManager()->BindShader(PostprocessShader);
 	renderer->GetStateManager()->BindVertexArray(VertexArray);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -211,7 +219,7 @@ int main(int argc, char *argv[])
 	{
 		auto renderer = new AT2::GlRenderer();
 
-		Shader = AT2::GlShaderProgramFromFile::CreateShader(
+		PostprocessShader = AT2::GlShaderProgramFromFile::CreateShader(
 			"resources\\shaders\\postprocess.vs.glsl",
 			"",
 			"",
@@ -243,16 +251,32 @@ int main(int argc, char *argv[])
 		RockTex = LoadTexture("resources\\rock04.dds");
 		NormalMapTex = LoadTexture("resources\\terrain_normalmap.dds");
 		HeightMapTex = LoadTexture("resources\\heightmap.dds");
+		HeightMapTex->BuildMipmaps();
 		TerrainVertexArray = MakeTerrainVAO(renderer);
 		TerrainUB = std::make_shared<AT2::GlUniformBuffer>(TerrainShader->GetUniformBlockInfo("CameraBlock"));
 
 		glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
 		GLuint indices[] = {0, 1, 2, 0, 2, 3};
-
-
 		VertexArray = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
 		VertexArray->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
 		VertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
+
+
+		data.Height = 1024;
+		data.Width = 1024;
+		data.Depth = 1;
+		data.Data = 0;
+
+		auto texRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA, GL_RGBA);
+		texRT->UpdateData(GL_TEXTURE_2D, data);
+		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
+		texDepthRT->UpdateData(GL_TEXTURE_2D, data);
+
+		MyFBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+		MyFBO->SetColorAttachement(0, texRT);
+		MyFBO->SetDepthAttachement(texDepthRT);
+
+		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
 
 		//Init
 		glEnable(GL_TEXTURE_1D);

@@ -20,16 +20,17 @@ public:
 
 	virtual void Resize (const glm::ivec2& size);
 
-	//virtual void BindColorAttachement(unsigned int attachementNumber, const std::shared_ptr<GlTexture> texture);
-	virtual void BindDepthAttachement(const std::shared_ptr<GlTexture> texture);
-
+	virtual void SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<GlTexture> texture);
+	virtual std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const;
+	virtual void SetDepthAttachement(const std::shared_ptr<GlTexture> texture);
+	virtual std::shared_ptr<ITexture> GetDepthAttachement() const;
+	/*
 	Utils::ControlledList<Utils::dynarray<std::shared_ptr<GlTexture>>, std::shared_ptr<GlTexture>>& GetColorAttachementsList()
 	{
 		return m_attachementsView; 
-	}
+	}*/
 private:
-	void BindAttachement(unsigned int number, const std::shared_ptr<GlTexture> texture);
-	void UnbindAttachement(unsigned int number);
+	void Validate();
 
 private:
 	GLuint m_id;
@@ -37,7 +38,9 @@ private:
 	glm::ivec2 m_size;
 
 	Utils::dynarray<std::shared_ptr<GlTexture>> m_colorAttachements;
-	Utils::ControlledList<Utils::dynarray<std::shared_ptr<GlTexture>>, std::shared_ptr<GlTexture>> m_attachementsView;
+	std::shared_ptr<GlTexture> m_depthAttachement;
+
+	//Utils::ControlledList<Utils::dynarray<std::shared_ptr<GlTexture>>, std::shared_ptr<GlTexture>> m_attachementsView;
 };
 
 class GlScreenFrameBuffer : public IFrameBuffer
