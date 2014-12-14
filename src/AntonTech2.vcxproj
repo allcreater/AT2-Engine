@@ -41,8 +41,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\..\libs\glew-1.10.0\include;$(SolutionDir)\..\libs\glm-0.9.5.4\;$(SolutionDir)\..\libs\SDL2-2.0.3\include;$(SolutionDir)\..\libs\gli-0.5.1.1\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\..\libs\SDL2-2.0.3\lib\x86;$(SolutionDir)\..\libs\glew-1.10.0\lib\Release\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\..\libs\glew-1.10.0\include;$(SolutionDir)\..\libs\glm-0.9.5.4\;$(SolutionDir)\..\libs\SDL2-2.0.3\include;$(SolutionDir)\..\libs\gli-0.5.1.1\;$(SolutionDir)\..\libs\boost_1_57_0\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\..\libs\SDL2-2.0.3\lib\x86;$(SolutionDir)\..\libs\glew-1.10.0\lib\Release\Win32;C:\Users\allcreater\Documents\GitHub\AT2-Engine\libs\boost_1_57_0\stage\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\..\build\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -85,6 +85,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OpenGL/GlShaderProgram.cpp" />
     <ClCompile Include="OpenGL\GlFrameBuffer.cpp" />
+    <ClCompile Include="OpenGL\GlUniformContainer.cpp" />
     <ClCompile Include="OpenGL\GlTexture.cpp" />
     <ClCompile Include="OpenGL\GlUniformBuffer.cpp" />
     <ClCompile Include="OpenGL\GlVertexArray.cpp" />
@@ -103,6 +104,7 @@
     <ClInclude Include="OpenGL\GlFrameBuffer.h" />
     <ClInclude Include="OpenGL\GlTexture.h" />
     <ClInclude Include="OpenGL\GlUniformBuffer.h" />
+    <ClInclude Include="OpenGL\GlUniformContainer.h" />
     <ClInclude Include="OpenGL\GlVertexArray.h" />
     <ClInclude Include="OpenGL\GlVertexBuffer.h" />
     <ClInclude Include="StateManager.h" />

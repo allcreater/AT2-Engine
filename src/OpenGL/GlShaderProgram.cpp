@@ -17,7 +17,7 @@ GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _te
 GlShaderProgram::~GlShaderProgram()
 {
 	glDeleteProgram(m_programId);
-
+	
 	CleanUp();
 }
 
@@ -130,6 +130,14 @@ void GlShaderProgram::Bind()
 	glUseProgram(m_programId);
 }
 
+bool GlShaderProgram::IsActive() const
+{
+	GLint activeProgramId;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &activeProgramId);
+
+	return m_programId == activeProgramId;
+}
+/*
 //WARNING: copypaste!
 void GlShaderProgram::SetUniform(const str& _name, GLfloat _value)
 {
@@ -197,6 +205,7 @@ void GlShaderProgram::SetUniform(const str& _name, const glm::mat4& _value)
 	if (location >= 0)
 		glProgramUniformMatrix4fv(m_programId, location, 1, GL_FALSE, glm::value_ptr(_value));
 }
+*/
 
 void GlShaderProgram::SetUBO(const str& blockName, unsigned int index)
 {
@@ -232,6 +241,16 @@ std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformB
 	activeUniformTypes.resize(ubi->m_numActiveUniforms);
 	glGetActiveUniformsiv (m_programId, activeUniformIndices.size(), activeUniformIndices.data(), GL_UNIFORM_TYPE, activeUniformTypes.data());
 	
+	//read array strides
+	std::vector<GLint> activeUniformArrayStrides;
+	activeUniformArrayStrides.resize(ubi->m_numActiveUniforms);
+	glGetActiveUniformsiv(m_programId, activeUniformIndices.size(), activeUniformIndices.data(), GL_UNIFORM_ARRAY_STRIDE, activeUniformArrayStrides.data());
+
+	//read matrix strides
+	std::vector<GLint> activeUniformMatrixStrides;
+	activeUniformMatrixStrides.resize(ubi->m_numActiveUniforms);
+	glGetActiveUniformsiv(m_programId, activeUniformIndices.size(), activeUniformIndices.data(), GL_UNIFORM_MATRIX_STRIDE, activeUniformMatrixStrides.data());
+
 	//read uniform names and collect all data into map
 	const int BUFFER_SIZE = 512;
 	GLchar buffer[BUFFER_SIZE];
@@ -240,7 +259,7 @@ std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformB
 		GLsizei actualLength = 0;
 		glGetActiveUniformName(m_programId, activeUniformIndices[i], BUFFER_SIZE, &actualLength, buffer);
 
-		ubi->m_uniforms[buffer] = UniformInfo(activeUniformIndices[i], activeUniformOffsets[i], activeUniformTypes[i]);
+		ubi->m_uniforms[buffer] = UniformInfo(activeUniformIndices[i], activeUniformOffsets[i], activeUniformTypes[i], activeUniformArrayStrides[i], activeUniformMatrixStrides[i]);
 	}
 	
 

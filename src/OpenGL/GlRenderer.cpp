@@ -60,6 +60,7 @@ GlRenderer::GlRenderer()
 	CheckSDLError();
 
 	m_context = SDL_GL_CreateContext(m_window);
+	SDL_GL_SetSwapInterval(0);
 
 	CheckSDLError();
 

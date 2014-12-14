@@ -4,10 +4,9 @@
 #include "AT2lowlevel.h"
 #include <map>
 
+
 namespace AT2
 {
-	class GlUniformBuffer;
-
 	class GlShaderProgram : public IShaderProgram
 	{
 	public:
@@ -15,10 +14,11 @@ namespace AT2
 		{
 			GLint Index;
 			GLint Offset;
+			GLint ArrayStride, MatrixStride;
 			GLint Type;
 
-			UniformInfo(GLint index, GLint offset, GLint type) : Index(index), Offset(offset), Type(type) {}
-			UniformInfo() : Index(0), Offset(0), Type(0) {}
+			UniformInfo(GLint index, GLint offset, GLint type, GLint arrayStride, GLint matrixStride) : Index(index), Offset(offset), Type(type), ArrayStride(arrayStride), MatrixStride(matrixStride) {}
+			UniformInfo() : Index(0), Offset(0), Type(0), ArrayStride(0), MatrixStride(0){}
 		};
 
 		class UniformBufferInfo
@@ -50,31 +50,17 @@ namespace AT2
 		GlShaderProgram(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs);
 		virtual ~GlShaderProgram();
 
-		virtual void Bind();
-		virtual unsigned int GetId() const { return m_programId; }
+	public:
+		void			Bind() override;
+		unsigned int	GetId() const override { return m_programId; }
+		bool			IsActive() const override;
 
-		virtual void Reload(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs); //TODO maybe we need to make it more flexible
+		virtual void	Reload(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs); //TODO maybe we need to make it more flexible
 
-		//floats
-		void SetUniform(const str& name, GLfloat value);
-		void SetUniform(const str& name, const glm::vec2& alue);
-		void SetUniform(const str& name, const glm::vec3& alue);
-		void SetUniform(const str& name, const glm::vec4& alue);
-
-		//integers
-		void SetUniform(const str& name, GLint value);
-		void SetUniform(const str& name, const glm::ivec2& value);
-		void SetUniform(const str& name, const glm::ivec3& value);
-		void SetUniform(const str& name, const glm::ivec4& value);
-
-		//matrices
-		void SetUniform(const str& name, const glm::mat2& value);
-		void SetUniform(const str& name, const glm::mat3& value);
-		void SetUniform(const str& name, const glm::mat4& value);
-
-		void SetUBO(const str& blockName, unsigned int index);
+		virtual void	SetUBO(const str& blockName, unsigned int index);
 
 		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName) const;
+
 	protected:
 		GLuint LoadShader(GLenum _shaderType, const str& _text);
 		void CleanUp();

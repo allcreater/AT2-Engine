@@ -22,6 +22,8 @@ public:
 	virtual void SetData(unsigned int length, const T* data) = 0;
 	virtual T* Lock() = 0;
 	virtual void Unlock() = 0;
+
+	virtual ~IBuffer() {};
 };
 
 class IFrameBuffer
@@ -98,6 +100,7 @@ public:
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
+	virtual bool IsActive() const = 0;
 	virtual ~IShaderProgram() {};
 };
 

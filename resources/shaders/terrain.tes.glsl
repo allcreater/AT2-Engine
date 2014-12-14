@@ -5,6 +5,7 @@ layout(quads, equal_spacing, ccw) in;
 uniform CameraBlock
 {
 	mat4 u_matMW, u_matInverseMW, u_matProj, u_matInverseProj;
+	mat3 u_matNormal;
 };
 
 uniform float u_scaleH, u_scaleV;

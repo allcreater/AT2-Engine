@@ -6,6 +6,7 @@
 #include "OpenGl\GlTexture.h"
 #include "OpenGl\GlVertexArray.h"
 #include "OpenGl\GlFrameBuffer.h"
+#include "OpenGl\GlUniformContainer.h"
 
 #include <iostream>
 #include <fstream>
@@ -17,10 +18,12 @@
 
 #include <gli\gli.hpp>
 
-std::shared_ptr<AT2::GlUniformBuffer> TerrainUB;
+#include <chrono>
+
+std::shared_ptr<AT2::GlUniformBuffer> CameraUB;
 std::shared_ptr<AT2::GlShaderProgram> PostprocessShader, TerrainShader;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex;
-std::shared_ptr<AT2::GlVertexArray> VertexArray, TerrainVertexArray;
+std::shared_ptr<AT2::GlVertexArray> PostprocessQuadVertexArray, TerrainVertexArray, SphereVertexArray;
 
 std::shared_ptr<AT2::GlFrameBuffer> MyFBO;
 std::shared_ptr<AT2::IFrameBuffer> NullFBO;
@@ -149,68 +152,103 @@ std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO(AT2::GlRenderer* renderer)
 	return vao;
 }
 
+std::shared_ptr<AT2::GlVertexArray> MakeSphereVAO(AT2::GlRenderer* renderer)
+{
+	const int segX = 16, segY = 8;
+
+	glm::vec3 normals[segX * segY * 4];
+
+	for (int j = 0; j < segY; ++j)
+	{
+		double angV = j*M_PI / segY, angV2 = (j+1)*M_PI / segY;
+		for (int i = 0; i < segX; ++i)
+		{
+			double angH = i*M_PI * 2 / segX, angH2 = (i+1)*M_PI * 2 / segX;
+
+			const int num = (i + j * segX) * 4;
+			normals[num] = glm::vec3(cos(angH)*cos(angV), sin(angV), sin(angH)*cos(angV));
+			normals[num+1] = glm::vec3(cos(angH2)*cos(angV), sin(angV), sin(angH2)*cos(angV));
+			normals[num+2] = glm::vec3(cos(angH2)*cos(angV2), sin(angV2), sin(angH2)*cos(angV2));
+			normals[num+3] = glm::vec3(cos(angH)*cos(angV2), sin(angV2), sin(angH)*cos(angV2));
+		}
+	}
+
+	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, segX * segY * 4, normals));
+
+	return vao;
+}
+
 void fileChangedFunc(const std::wstring& filename)
 {
 	std::wcout << filename << std::endl;
 }
 
-void Render(AT2::GlRenderer* renderer)
+//returns frame time
+float Render(AT2::GlRenderer* renderer)
 {
-	//matMW = glm::lookAt(glm::vec3(-1.0,0.0,0.0), glm::vec3(0.0,0.0,0.0), glm::vec3(0.0, 1.0, 0.0));
-
-	TerrainUB->SetUniform("u_matMW", matMW);
-	TerrainUB->SetUniform("u_matInverseMW", glm::inverse(matMW));
-	TerrainUB->SetUniform("u_matProj", matProj);
-	TerrainUB->SetUniform("u_matInverseProj", glm::inverse(matProj));
-
-	TerrainUB->SetBindingPoint(1);
-	TerrainUB->Bind();
-
+	auto timeBefore = std::chrono::high_resolution_clock::now();
+	CameraUB->SetUniform("u_matMW", matMW);
+	CameraUB->SetUniform("u_matInverseMW", glm::inverse(matMW));
+	CameraUB->SetUniform("u_matProj", matProj);
+	CameraUB->SetUniform("u_matInverseProj", glm::inverse(matProj));
+	CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(matMW))));
+	
+	CameraUB->SetBindingPoint(1);
+	CameraUB->Bind();
+	
 	//Scene stage
 	MyFBO->Bind();
 	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
-
+	
 	AT2::TextureSet sceneTS = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 	renderer->GetStateManager()->BindTextures(sceneTS);
-
-	TerrainShader->SetUniform("u_phase", Phase);
-	TerrainShader->SetUniform("u_scaleH", 10000.0f);
-	TerrainShader->SetUniform("u_scaleV", 2000.0f);
-	TerrainShader->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
-	TerrainShader->SetUniform("u_texNormalMap", NormalMapTex->GetCurrentModule());
-	TerrainShader->SetUniform("u_texGrass", GrassTex->GetCurrentModule());
-	TerrainShader->SetUniform("u_texRock", RockTex->GetCurrentModule());
+	auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(TerrainShader);
+	uniformStorage->SetUniform("u_phase", Phase);
+	uniformStorage->SetUniform("u_scaleH", 10000.0f);
+	uniformStorage->SetUniform("u_scaleV", 2000.0f);
+	uniformStorage->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
+	uniformStorage->SetUniform("u_texNormalMap", NormalMapTex->GetCurrentModule());
+	uniformStorage->SetUniform("u_texGrass", GrassTex->GetCurrentModule());
+	uniformStorage->SetUniform("u_texRock", RockTex->GetCurrentModule());
 	TerrainShader->SetUBO("CameraBlock", 1);
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	renderer->GetStateManager()->BindShader(TerrainShader);
+	uniformStorage->Bind();
 	renderer->GetStateManager()->BindVertexArray(TerrainVertexArray);
 	glPatchParameteri( GL_PATCH_VERTICES, 4 );
 	glDrawArrays(GL_PATCHES, 0, 64*64*4);
-
+	
 	//Postprocess stage
 	NullFBO->Bind();
 
-	AT2::TextureSet postprocessTS = { MyFBO->GetColorAttachement(0), MyFBO->GetDepthAttachement(), Noise3Tex };
+	AT2::TextureSet postprocessTS = { MyFBO->GetColorAttachement(0), MyFBO->GetColorAttachement(1), MyFBO->GetDepthAttachement(), Noise3Tex };
 	renderer->GetStateManager()->BindTextures(postprocessTS);
 
-	PostprocessShader->SetUniform("u_phase", Phase);
-	PostprocessShader->SetUniform("u_texNoise", Noise3Tex->GetCurrentModule());
-	PostprocessShader->SetUniform("u_colorMap", MyFBO->GetColorAttachement(0)->GetCurrentModule());
-	PostprocessShader->SetUniform("u_depthMap", MyFBO->GetDepthAttachement()->GetCurrentModule());
+	uniformStorage = std::make_shared<AT2::GlUniformContainer>(PostprocessShader);
+	uniformStorage->SetUniform("u_phase", Phase);
+	uniformStorage->SetUniform("u_texNoise", Noise3Tex->GetCurrentModule());
+	uniformStorage->SetUniform("u_colorMap", MyFBO->GetColorAttachement(0)->GetCurrentModule());
+	uniformStorage->SetUniform("u_normalMap", MyFBO->GetColorAttachement(1)->GetCurrentModule());
+	uniformStorage->SetUniform("u_depthMap", MyFBO->GetDepthAttachement()->GetCurrentModule());
+	uniformStorage->Bind();
 	PostprocessShader->SetUBO("CameraBlock", 1);
-
+	
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 	renderer->GetStateManager()->BindShader(PostprocessShader);
-	renderer->GetStateManager()->BindVertexArray(VertexArray);
+	renderer->GetStateManager()->BindVertexArray(PostprocessQuadVertexArray);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+	glFinish();
 	renderer->SwapBuffers();
-	
-
 	Phase += 0.0001;
+
+	float frameTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - timeBefore).count() * 0.001;
+
+	return frameTime;
 }
 
 int main(int argc, char *argv[])
@@ -253,27 +291,32 @@ int main(int argc, char *argv[])
 		HeightMapTex = LoadTexture("resources\\heightmap.dds");
 		HeightMapTex->BuildMipmaps();
 		TerrainVertexArray = MakeTerrainVAO(renderer);
-		TerrainUB = std::make_shared<AT2::GlUniformBuffer>(TerrainShader->GetUniformBlockInfo("CameraBlock"));
+		CameraUB = std::make_shared<AT2::GlUniformBuffer>(TerrainShader->GetUniformBlockInfo("CameraBlock"));
 
 		glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
 		GLuint indices[] = {0, 1, 2, 0, 2, 3};
-		VertexArray = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-		VertexArray->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
-		VertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
+		PostprocessQuadVertexArray = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
+		PostprocessQuadVertexArray->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
+		PostprocessQuadVertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
 
+		SphereVertexArray = MakeSphereVAO(renderer);
 
 		data.Height = 1024;
 		data.Width = 1024;
 		data.Depth = 1;
 		data.Data = 0;
 
-		auto texRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA, GL_RGBA);
-		texRT->UpdateData(GL_TEXTURE_2D, data);
+		auto texDiffuse = std::make_shared<AT2::GlTexture2D>(GL_RGBA, GL_RGBA);
+		texDiffuse->UpdateData(GL_TEXTURE_2D, data);
+		auto texNormal = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, GL_RGBA, GL_FLOAT);//(GL_RG16F, GL_RG, GL_HALF_FLOAT);
+		texNormal->UpdateData(GL_TEXTURE_2D, data);
 		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
 		texDepthRT->UpdateData(GL_TEXTURE_2D, data);
 
+
 		MyFBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
-		MyFBO->SetColorAttachement(0, texRT);
+		MyFBO->SetColorAttachement(0, texDiffuse);
+		MyFBO->SetColorAttachement(1, texNormal);
 		MyFBO->SetDepthAttachement(texDepthRT);
 
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
@@ -296,6 +339,7 @@ int main(int argc, char *argv[])
 		Uint32 startTime = SDL_GetTicks(); 
 		Uint32 fpsCount = 0;
 
+		double framesSummaryTime = 0.0;
 		while (true)
 		{
 			SDL_Event sdlEvent;
@@ -317,6 +361,7 @@ int main(int argc, char *argv[])
 						{
 							if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_Z && sdlEvent.key.state == SDL_PRESSED)
 								wireframe = !wireframe;
+							
 							glPolygonMode(GL_FRONT_AND_BACK, (wireframe) ? GL_LINE : GL_FILL);
 						} break;
 					case SDL_QUIT:
@@ -329,35 +374,37 @@ int main(int argc, char *argv[])
 						}
 					} break;
 				}
-
-				glm::vec3 right(sin(heading - 3.14f/2.0f), 0, cos(heading - 3.14f/2.0f));
-				glm::vec3 up = glm::cross( right, direction);
-
-				const Uint8* keyboardState = SDL_GetKeyboardState(NULL);
-				if (keyboardState[SDL_SCANCODE_W])
-					position += direction;
-				if (keyboardState[SDL_SCANCODE_S])
-					position -= direction;
-				if (keyboardState[SDL_SCANCODE_A])
-					position += right;
-				if (keyboardState[SDL_SCANCODE_D])
-					position -= right;
-
-				matMW = glm::lookAt(position, position+direction, up);
 			}
+			glm::vec3 right(sin(heading - 3.14f / 2.0f), 0, cos(heading - 3.14f / 2.0f));
+			glm::vec3 up = glm::cross(right, direction);
+
+			const Uint8* keyboardState = SDL_GetKeyboardState(NULL);
+			if (keyboardState[SDL_SCANCODE_W])
+				position += direction;
+			if (keyboardState[SDL_SCANCODE_S])
+				position -= direction;
+			if (keyboardState[SDL_SCANCODE_A])
+				position += right;
+			if (keyboardState[SDL_SCANCODE_D])
+				position -= right;
+
+			matMW = glm::lookAt(position, position + direction, up);
+
 
 			Uint32 time = SDL_GetTicks();
 			if (time - startTime > 1000)
 			{
-				std::cout << fpsCount << " ";
+				//std::cout << fpsCount << " ";
+				std::cout << framesSummaryTime/fpsCount << "ms ";
+
 
 				startTime = time;
 				fpsCount = 0;
+				framesSummaryTime = 0.0;
 			}
 			fpsCount++;
 
-
-			Render(renderer);
+			framesSummaryTime += Render(renderer);
 		}
 
 QuitLabel:

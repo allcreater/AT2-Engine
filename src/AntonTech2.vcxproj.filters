@@ -54,6 +54,9 @@
     <ClCompile Include="utils_fileSystemListener.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
+    <ClCompile Include="OpenGL\GlUniformContainer.cpp">
+      <Filter>Файлы исходного кода\OpenGL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AT2.h">
@@ -97,6 +100,9 @@
     </ClInclude>
     <ClInclude Include="utils.hpp">
       <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL\GlUniformContainer.h">
+      <Filter>Заголовочные файлы\OpenGL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

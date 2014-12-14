@@ -7,7 +7,7 @@
 namespace AT2
 {
 
-class GlUniformBuffer : public GlVertexBufferBase
+class GlUniformBuffer : public GlVertexBufferBase, public IUniformBuffer
 {
 public:
 	GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi);
@@ -15,22 +15,38 @@ public:
 
 public:
 	virtual GlBufferType GetType() const { return GlBufferType::UniformBuffer; }
+	
+	//doubles
+	void SetUniform(const str& name, const GLdouble& value)		override;
+	void SetUniform(const str& name, const glm::dvec2& value)	override;
+	void SetUniform(const str& name, const glm::dvec3& value)	override;
+	void SetUniform(const str& name, const glm::dvec4& value)	override;
 
-	virtual void Bind();
+	void SetUniform(const str& name, const glm::dmat2& value)	override;
+	void SetUniform(const str& name, const glm::dmat3& value)	override;
+	void SetUniform(const str& name, const glm::dmat4& value)	override;
 
-	template <typename T>
-	void SetUniform(const str& name, const T& value)
-	{
-		const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
-		if (!ui)
-			return;
+	//floats
+	void SetUniform(const str& name, const GLfloat& value)		override;
+	void SetUniform(const str& name, const glm::vec2& value)	override;
+	void SetUniform(const str& name, const glm::vec3& value)	override;
+	void SetUniform(const str& name, const glm::vec4& value)	override;
 
-		auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
-		memcpy(data + ui->Offset, glm::value_ptr(value), sizeof(T));
-		glUnmapNamedBufferEXT(m_id);
-	}
+	void SetUniform(const str& name, const glm::mat2& value)	override;
+	void SetUniform(const str& name, const glm::mat3& value)	override;
+	void SetUniform(const str& name, const glm::mat4& value)	override;
 
+	//integers
+	void SetUniform(const str& name, const GLint& value)		override;
+	void SetUniform(const str& name, const glm::ivec2& value)	override;
+	void SetUniform(const str& name, const glm::ivec3& value)	override;
+	void SetUniform(const str& name, const glm::ivec4& value)	override;
+
+	virtual void Bind() override;
 	void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
+
+private:
+	template <typename T> void SetUniformInternal(const str& name, const T& value, size_t size);
 
 private:
 	std::shared_ptr<GlShaderProgram::UniformBufferInfo> m_ubi;
