@@ -40,6 +40,8 @@ void main()
 	vec2	texCoord 	= Interpolate( input, .texCoord );
 
 	worldPos.y += getHeight(texCoord);
+	//worldPos.y = 0.0;
+
 
 	output.texCoord = texCoord;
 	output.position = vec3(u_matMW * worldPos);

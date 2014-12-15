@@ -53,7 +53,7 @@ GlVertexBuffer<T>::GlVertexBuffer(GlBufferType _type, GLsizeiptr _size, const T*
 
 	m_length = _size;
 	const GLsizeiptr dataLength = sizeof(T) * m_length;
-
+	
 	glGenBuffers(1, &m_id);
 	glNamedBufferDataEXT(m_id, dataLength, _data, static_cast<GLenum>(UsageHint));
 }

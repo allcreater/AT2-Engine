@@ -1,6 +1,11 @@
 #ifndef AT2_MAIN_HEADER_H
 #define AT2_MAIN_HEADER_H
 
+#include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtc\type_ptr.hpp>
+
+
 #include <exception>
 #include <string>
 #include <vector>
@@ -111,6 +116,41 @@ public:
 	virtual ~IDrawPrimitive() {};
 };
 
+class IUniformContainer
+{
+public:
+	//doubles
+	virtual void SetUniform(const str& name, const double& value) = 0;
+	virtual void SetUniform(const str& name, const glm::dvec2& value) = 0;
+	virtual void SetUniform(const str& name, const glm::dvec3& value) = 0;
+	virtual void SetUniform(const str& name, const glm::dvec4& value) = 0;
+
+	virtual void SetUniform(const str& name, const glm::dmat2& value) = 0;
+	virtual void SetUniform(const str& name, const glm::dmat3& value) = 0;
+	virtual void SetUniform(const str& name, const glm::dmat4& value) = 0;
+
+	//floats
+	virtual void SetUniform(const str& name, const float& value) = 0;
+	virtual void SetUniform(const str& name, const glm::vec2& value) = 0;
+	virtual void SetUniform(const str& name, const glm::vec3& value) = 0;
+	virtual void SetUniform(const str& name, const glm::vec4& value) = 0;
+
+	virtual void SetUniform(const str& name, const glm::mat2& value) = 0;
+	virtual void SetUniform(const str& name, const glm::mat3& value) = 0;
+	virtual void SetUniform(const str& name, const glm::mat4& value) = 0;
+
+	//integers
+	virtual void SetUniform(const str& name, const int& value) = 0;
+	virtual void SetUniform(const str& name, const glm::ivec2& value) = 0;
+	virtual void SetUniform(const str& name, const glm::ivec3& value) = 0;
+	virtual void SetUniform(const str& name, const glm::ivec4& value) = 0;
+
+	//texture
+	virtual void SetUniform(const str& name, std::weak_ptr<const ITexture> value) = 0;
+
+	virtual void Bind() = 0;
+};
+
 class AT2Exception : public std::exception
 {
 public:
@@ -137,7 +177,7 @@ public:
 };
 
 typedef std::set<std::shared_ptr<ITexture>> TextureSet;
-typedef std::vector<std::shared_ptr<IDrawPrimitive>> PrimitiveList;
+typedef std::vector<IDrawPrimitive*> PrimitiveList;
 
 class IStateManager
 {

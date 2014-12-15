@@ -83,3 +83,4 @@ void GlUniformBuffer::SetUniform(const str& name, const glm::ivec3& value) { Set
 void GlUniformBuffer::SetUniform(const str& name, const glm::ivec4& value) { SetUniformInternal(name, value, sizeof(ivec4)); }
 
 
+void GlUniformBuffer::SetUniform(const str& name, std::weak_ptr<const ITexture> value) { throw std::logic_error("not implemented"); }

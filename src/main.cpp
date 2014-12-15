@@ -8,6 +8,9 @@
 #include "OpenGl\GlFrameBuffer.h"
 #include "OpenGl\GlUniformContainer.h"
 
+#include "drawable.h"
+#include "OpenGl\GlDrawPrimitive.h"
+
 #include <iostream>
 #include <fstream>
 #include <SDL.h>
@@ -20,14 +23,14 @@
 
 #include <chrono>
 
-std::shared_ptr<AT2::GlUniformBuffer> CameraUB;
-std::shared_ptr<AT2::GlShaderProgram> PostprocessShader, TerrainShader;
+std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
+std::shared_ptr<AT2::GlShaderProgram> PostprocessShader, TerrainShader, SphereLightShader;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex;
-std::shared_ptr<AT2::GlVertexArray> PostprocessQuadVertexArray, TerrainVertexArray, SphereVertexArray;
 
 std::shared_ptr<AT2::GlFrameBuffer> MyFBO;
 std::shared_ptr<AT2::IFrameBuffer> NullFBO;
 
+std::shared_ptr<AT2::MeshDrawable> QuadDrawable, TerrainDrawable, SphereLightDrawable;
 
 GLuint vao = 0;
 GLfloat Phase = 0.0;
@@ -128,126 +131,140 @@ std::shared_ptr<AT2::ITexture> LoadTexture (const char* _filename)
 	}
 }
 
-std::shared_ptr<AT2::GlVertexArray> MakeTerrainVAO(AT2::GlRenderer* renderer)
+std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(AT2::GlRenderer* renderer, int segX = 32, int segY = 16)
 {
-	const int segX = 64, segY = 64;
+	std::vector<glm::vec3> normals; normals.reserve(segX * segY);
+	std::vector<GLuint> indices; indices.reserve(segX * segY * 6);
 
-	glm::vec2 texCoords [segX * segY * 4];
-	
 	for (int j = 0; j < segY; ++j)
 	{
+		double angV = j*M_PI / (segY-1);
 		for (int i = 0; i < segX; ++i)
 		{
-			const int num = (i + j * segX)*4;
-			texCoords[num] = glm::vec2(float(i)/segX, float(j)/segY);
-			texCoords[num+1] = glm::vec2(float(i+1)/segX, float(j)/segY);
-			texCoords[num+2] = glm::vec2(float(i+1)/segX, float(j+1)/segY);
-			texCoords[num+3] = glm::vec2(float(i)/segX, float(j+1)/segY);
+			double angH = i*M_PI * 2 / segX;
+
+			normals.push_back(glm::vec3(sin(angV)*cos(angH), sin(angV)*sin(angH), cos(angV)));
 		}
 	}
-	
-	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, segX * segY * 4, texCoords));
 
-	return vao;
+	for (int j = 0; j < segY-1; ++j)
+	{
+		const int nj = j + 1;
+		for (int i = 0; i < segX; ++i)
+		{
+			const int ni = (i + 1) % segX;
+
+			indices.push_back(j * segX + i);
+			indices.push_back(j * segX + ni);
+			indices.push_back(nj * segX + ni);
+			indices.push_back(j * segX + i);
+			indices.push_back(nj * segX + ni);
+			indices.push_back(nj * segX + i);
+		}
+	}
+
+	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, normals.size(), normals.data()));
+	vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, indices.size(), indices.data()));
+
+	auto drawable = std::make_shared<AT2::MeshDrawable>();
+	drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, indices.size(), AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
+	drawable->VertexArray = vao;
+
+	return drawable;
 }
 
-std::shared_ptr<AT2::GlVertexArray> MakeSphereVAO(AT2::GlRenderer* renderer)
+std::shared_ptr<AT2::MeshDrawable> MakeTerrainDrawable(AT2::GlRenderer* renderer, int segX, int segY)
 {
-	const int segX = 16, segY = 8;
-
-	glm::vec3 normals[segX * segY * 4];
+	std::vector<glm::vec2> texCoords(segX * segY * 4);//TODO! GlVertexBuffer - take iterators!
 
 	for (int j = 0; j < segY; ++j)
 	{
-		double angV = j*M_PI / segY, angV2 = (j+1)*M_PI / segY;
 		for (int i = 0; i < segX; ++i)
 		{
-			double angH = i*M_PI * 2 / segX, angH2 = (i+1)*M_PI * 2 / segX;
-
 			const int num = (i + j * segX) * 4;
-			normals[num] = glm::vec3(cos(angH)*cos(angV), sin(angV), sin(angH)*cos(angV));
-			normals[num+1] = glm::vec3(cos(angH2)*cos(angV), sin(angV), sin(angH2)*cos(angV));
-			normals[num+2] = glm::vec3(cos(angH2)*cos(angV2), sin(angV2), sin(angH2)*cos(angV2));
-			normals[num+3] = glm::vec3(cos(angH)*cos(angV2), sin(angV2), sin(angH)*cos(angV2));
+			texCoords[num] = glm::vec2(float(i) / segX, float(j) / segY);
+			texCoords[num + 1] = glm::vec2(float(i + 1) / segX, float(j) / segY);
+			texCoords[num + 2] = glm::vec2(float(i + 1) / segX, float(j + 1) / segY);
+			texCoords[num + 3] = glm::vec2(float(i) / segX, float(j + 1) / segY);
 		}
 	}
 
 	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, segX * segY * 4, normals));
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, texCoords.size(), texCoords.data()));
 
-	return vao;
+
+	auto drawable = std::make_shared<AT2::MeshDrawable>();
+	drawable->Primitives.push_back(new AT2::GlDrawArraysPrimitive(AT2::GlDrawPrimitiveType::Patches, 0, texCoords.size()));
+	drawable->VertexArray = vao;
+
+	return drawable;
 }
 
-void fileChangedFunc(const std::wstring& filename)
+std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::GlRenderer* renderer)
 {
-	std::wcout << filename << std::endl;
+	glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
+	GLuint indices[] = { 0, 1, 2, 0, 2, 3 };
+
+	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
+	vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
+
+	auto drawable = std::make_shared<AT2::MeshDrawable>();
+	drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, 6, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
+	drawable->VertexArray = vao;
+
+	return drawable;
 }
 
 //returns frame time
 float Render(AT2::GlRenderer* renderer)
 {
 	auto timeBefore = std::chrono::high_resolution_clock::now();
+
 	CameraUB->SetUniform("u_matMW", matMW);
 	CameraUB->SetUniform("u_matInverseMW", glm::inverse(matMW));
 	CameraUB->SetUniform("u_matProj", matProj);
 	CameraUB->SetUniform("u_matInverseProj", glm::inverse(matProj));
 	CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(matMW))));
-	
 	CameraUB->SetBindingPoint(1);
 	CameraUB->Bind();
 	
+	LightUB->SetUniform("u_lightPos", glm::vec3(0.0, 0.0, 0.0));
+	LightUB->SetUniform("u_lightRadius", 1000.0f);
+	LightUB->SetBindingPoint(2);
+	LightUB->Bind();
+
 	//Scene stage
 	MyFBO->Bind();
 	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
 	
-	AT2::TextureSet sceneTS = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
-	renderer->GetStateManager()->BindTextures(sceneTS);
-	auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(TerrainShader);
-	uniformStorage->SetUniform("u_phase", Phase);
-	uniformStorage->SetUniform("u_scaleH", 10000.0f);
-	uniformStorage->SetUniform("u_scaleV", 2000.0f);
-	uniformStorage->SetUniform("u_texHeight", HeightMapTex->GetCurrentModule());
-	uniformStorage->SetUniform("u_texNormalMap", NormalMapTex->GetCurrentModule());
-	uniformStorage->SetUniform("u_texGrass", GrassTex->GetCurrentModule());
-	uniformStorage->SetUniform("u_texRock", RockTex->GetCurrentModule());
-	TerrainShader->SetUBO("CameraBlock", 1);
-
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-	renderer->GetStateManager()->BindShader(TerrainShader);
-	uniformStorage->Bind();
-	renderer->GetStateManager()->BindVertexArray(TerrainVertexArray);
 	glPatchParameteri( GL_PATCH_VERTICES, 4 );
-	glDrawArrays(GL_PATCHES, 0, 64*64*4);
+	TerrainShader->SetUBO("CameraBlock", 1);
+	TerrainDrawable->Draw(*renderer);
 	
+	SphereLightShader->SetUBO("CameraBlock", 1);
+	SphereLightShader->SetUBO("LightingBlock", 2);
+	SphereLightDrawable->Draw(*renderer);
 	//Postprocess stage
 	NullFBO->Bind();
-
-	AT2::TextureSet postprocessTS = { MyFBO->GetColorAttachement(0), MyFBO->GetColorAttachement(1), MyFBO->GetDepthAttachement(), Noise3Tex };
-	renderer->GetStateManager()->BindTextures(postprocessTS);
-
-	uniformStorage = std::make_shared<AT2::GlUniformContainer>(PostprocessShader);
-	uniformStorage->SetUniform("u_phase", Phase);
-	uniformStorage->SetUniform("u_texNoise", Noise3Tex->GetCurrentModule());
-	uniformStorage->SetUniform("u_colorMap", MyFBO->GetColorAttachement(0)->GetCurrentModule());
-	uniformStorage->SetUniform("u_normalMap", MyFBO->GetColorAttachement(1)->GetCurrentModule());
-	uniformStorage->SetUniform("u_depthMap", MyFBO->GetDepthAttachement()->GetCurrentModule());
-	uniformStorage->Bind();
-	PostprocessShader->SetUBO("CameraBlock", 1);
 	
+
+
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
-	renderer->GetStateManager()->BindShader(PostprocessShader);
-	renderer->GetStateManager()->BindVertexArray(PostprocessQuadVertexArray);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	PostprocessShader->SetUBO("CameraBlock", 1);
+	PostprocessShader->SetUBO("LightingBlock", 2);
+	QuadDrawable->Draw(*renderer);
+
 
 	glFinish();
 	renderer->SwapBuffers();
-	Phase += 0.0001;
+
 
 	float frameTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - timeBefore).count() * 0.001;
-
 	return frameTime;
 }
 
@@ -271,6 +288,13 @@ int main(int argc, char *argv[])
 			"",
 			"resources\\shaders\\terrain.fs.glsl");
 
+		SphereLightShader = AT2::GlShaderProgramFromFile::CreateShader(
+			"resources\\shaders\\spherelight.vs.glsl",
+			"",
+			"",
+			"",
+			"resources\\shaders\\spherelight.fs.glsl");
+
 		auto texture = new AT2::GlTexture3D(GL_RGBA, GL_RGBA);
 		AT2::ITexture::BufferData data;
 		data.Height = 256;
@@ -290,16 +314,11 @@ int main(int argc, char *argv[])
 		NormalMapTex = LoadTexture("resources\\terrain_normalmap.dds");
 		HeightMapTex = LoadTexture("resources\\heightmap.dds");
 		HeightMapTex->BuildMipmaps();
-		TerrainVertexArray = MakeTerrainVAO(renderer);
+
+
 		CameraUB = std::make_shared<AT2::GlUniformBuffer>(TerrainShader->GetUniformBlockInfo("CameraBlock"));
+		LightUB = std::make_shared<AT2::GlUniformBuffer>(SphereLightShader->GetUniformBlockInfo("LightingBlock"));
 
-		glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
-		GLuint indices[] = {0, 1, 2, 0, 2, 3};
-		PostprocessQuadVertexArray = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-		PostprocessQuadVertexArray->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
-		PostprocessQuadVertexArray->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
-
-		SphereVertexArray = MakeSphereVAO(renderer);
 
 		data.Height = 1024;
 		data.Width = 1024;
@@ -320,6 +339,48 @@ int main(int argc, char *argv[])
 		MyFBO->SetDepthAttachement(texDepthRT);
 
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
+
+		//Postprocess quad
+		QuadDrawable = MakeFullscreenQuadDrawable(renderer);
+		QuadDrawable->Shader = PostprocessShader;
+		QuadDrawable->Textures = { MyFBO->GetColorAttachement(0), MyFBO->GetColorAttachement(1), MyFBO->GetDepthAttachement(), Noise3Tex };
+		{
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(PostprocessShader);
+			uniformStorage->SetUniform("u_phase", Phase);
+			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+			uniformStorage->SetUniform("u_colorMap", MyFBO->GetColorAttachement(0));
+			uniformStorage->SetUniform("u_normalMap", MyFBO->GetColorAttachement(1));
+			uniformStorage->SetUniform("u_depthMap", MyFBO->GetDepthAttachement());
+			QuadDrawable->UniformBuffer = uniformStorage;
+		}
+
+		//terrain
+		TerrainDrawable = MakeTerrainDrawable(renderer, 64, 64);
+		TerrainDrawable->Shader = TerrainShader;
+		TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
+		{
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(TerrainShader);
+			uniformStorage->SetUniform("u_phase", Phase);
+			uniformStorage->SetUniform("u_scaleH", 10000.0f);
+			uniformStorage->SetUniform("u_scaleV", 500.0f);
+			uniformStorage->SetUniform("u_texHeight", HeightMapTex);
+			uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
+			uniformStorage->SetUniform("u_texGrass", GrassTex);
+			uniformStorage->SetUniform("u_texRock", RockTex);
+			TerrainDrawable->UniformBuffer = uniformStorage;
+		}
+
+		SphereLightDrawable = MakeSphereDrawable(renderer);
+		SphereLightDrawable->Shader = SphereLightShader;
+		SphereLightDrawable->Textures = { MyFBO->GetColorAttachement(0), MyFBO->GetColorAttachement(1), MyFBO->GetDepthAttachement(), Noise3Tex };
+		{
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(SphereLightShader);
+			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+			uniformStorage->SetUniform("u_colorMap", MyFBO->GetColorAttachement(0));
+			uniformStorage->SetUniform("u_normalMap", MyFBO->GetColorAttachement(1));
+			uniformStorage->SetUniform("u_depthMap", MyFBO->GetDepthAttachement());
+			SphereLightDrawable->UniformBuffer = uniformStorage;
+		}
 
 		//Init
 		glEnable(GL_TEXTURE_1D);

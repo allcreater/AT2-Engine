@@ -20,8 +20,9 @@ public:
 	void set(const GLdouble& value)	override	{ m_value = value; }
 
 	void Bind() override						{ glUniform1d(GetLocation(), m_value); }
-	void Bind(GLint programID) override			{ glProgramUniform1d(programID, GetLocation(), m_value); }
-
+	void Bind(GLuint programID) override		{ glProgramUniform1d(programID, GetLocation(), m_value); }
+	
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	GLdouble m_value;
@@ -34,8 +35,9 @@ public:
 	void set(const glm::dvec2& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform2dv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform2dv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform2dv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::dvec2 m_value;
@@ -48,8 +50,9 @@ public:
 	void set(const glm::dvec3& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform3dv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform3dv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform3dv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::dvec3 m_value;
@@ -62,8 +65,9 @@ public:
 	void set(const glm::dvec4& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform4dv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform4dv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform4dv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::dvec4 m_value;
@@ -76,8 +80,9 @@ public:
 	void set(const glm::dmat2& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniformMatrix2dv(GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniformMatrix2dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniformMatrix2dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::dmat2 m_value;
@@ -90,8 +95,9 @@ public:
 	void set(const glm::dmat3& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniformMatrix3dv(GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniformMatrix3dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniformMatrix3dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::dmat3 m_value;
@@ -104,8 +110,9 @@ public:
 	void set(const glm::dmat4& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniformMatrix4dv(GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniformMatrix4dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniformMatrix4dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::dmat4 m_value;
@@ -119,8 +126,9 @@ public:
 	void set(const GLfloat& value) override		{ m_value = value; }
 
 	void Bind() override						{ glUniform1f(GetLocation(), m_value); }
-	void Bind(GLint programID) override			{ glProgramUniform1f(programID, GetLocation(), m_value); }
+	void Bind(GLuint programID) override		{ glProgramUniform1f(programID, GetLocation(), m_value); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	GLfloat m_value;
@@ -133,8 +141,9 @@ public:
 	void set(const glm::vec2& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform2fv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform2fv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform2fv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::vec2 m_value;
@@ -147,8 +156,9 @@ public:
 	void set(const glm::vec3& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform3fv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform3fv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform3fv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::vec3 m_value;
@@ -161,8 +171,9 @@ public:
 	void set(const glm::vec4& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform4fv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform4fv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform4fv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::vec4 m_value;
@@ -175,8 +186,9 @@ public:
 	void set(const glm::mat2& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniformMatrix2fv(GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniformMatrix2fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniformMatrix2fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::mat2 m_value;
@@ -189,8 +201,9 @@ public:
 	void set(const glm::mat3& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniformMatrix3fv(GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniformMatrix3fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniformMatrix3fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::mat3 m_value;
@@ -203,8 +216,9 @@ public:
 	void set(const glm::mat4& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniformMatrix4fv(GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniformMatrix4fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniformMatrix4fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::mat4 m_value;
@@ -218,8 +232,9 @@ public:
 	void set(const GLint& value) override		{ m_value = value; }
 
 	void Bind() override						{ glUniform1i(GetLocation(), m_value); }
-	void Bind(GLint programID) override			{ glProgramUniform1i(programID, GetLocation(), m_value); }
+	void Bind(GLuint programID) override		{ glProgramUniform1i(programID, GetLocation(), m_value); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	GLint m_value;
@@ -232,8 +247,9 @@ public:
 	void set(const glm::ivec2& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform2iv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform2iv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform2iv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::ivec2 m_value;
@@ -246,8 +262,9 @@ public:
 	void set(const glm::ivec3& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform3iv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform3iv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform3iv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::ivec3 m_value;
@@ -260,13 +277,36 @@ public:
 	void set(const glm::ivec4& value) override	{ m_value = value; }
 
 	void Bind() override						{ glUniform4iv(GetLocation(), 1, glm::value_ptr(m_value)); }
-	void Bind(GLint programID) override			{ glProgramUniform4iv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override		{ glProgramUniform4iv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
 
+	GlUniform() : IGlUniform() {}
 	~GlUniform(){}
 private:
 	glm::ivec4 m_value;
 };
 
+template <>
+class GlUniform<std::weak_ptr<const ITexture>> : public IGlUniform
+{
+public:
+	void set(std::weak_ptr<const ITexture> value) override	{ m_value = value; }
+
+	void Bind() override					
+	{
+		if (auto texture = m_value.lock())
+			glUniform1i(GetLocation(), texture->GetCurrentModule());
+	}
+	void Bind(GLuint programID) override	
+	{
+		if (auto texture = m_value.lock())
+			glProgramUniform1i(programID, GetLocation(), texture->GetCurrentModule());
+	}
+
+	GlUniform() : IGlUniform() {}
+	~GlUniform(){}
+private:
+	std::weak_ptr<const ITexture> m_value;
+};
 
 GlUniformContainer::GlUniformContainer(std::weak_ptr<GlShaderProgram> program) : m_program(program)
 {
@@ -284,11 +324,6 @@ IGlUniform* GlUniformContainer::GetOrCreateUniform(const str& name)
 	auto& value = m_uniformsMap[name];
 	if (value == nullptr)
 		value = new GlUniform<T>();
-	
-	if (auto program = m_program.lock())
-		value->m_location = glGetUniformLocation(program->GetId(), name.c_str());
-	else
-		throw AT2::AT2Exception(AT2Exception::ErrorCase::Shader, "GlUniformContainer: try to get uniform from missing shader program");
 
 	return value;
 }
@@ -318,20 +353,30 @@ void GlUniformContainer::SetUniform(const str& name, const glm::ivec2& value)	{ 
 void GlUniformContainer::SetUniform(const str& name, const glm::ivec3& value)	{ GetOrCreateUniform<ivec3>(name)->set(value); }
 void GlUniformContainer::SetUniform(const str& name, const glm::ivec4& value)	{ GetOrCreateUniform<ivec4>(name)->set(value); }
 
+//texture
+void GlUniformContainer::SetUniform(const str& name, std::weak_ptr<const ITexture> value)	{ GetOrCreateUniform<std::weak_ptr<const ITexture>>(name)->set(value); }
+
 void GlUniformContainer::Bind()
 {
 	auto program = m_program.lock();
 	if (!program)
 		throw AT2::AT2Exception(AT2Exception::ErrorCase::Shader, "GlUniformContainer: try to bind uniform container when parent program is missing");
 
+	
 	if (program->IsActive())
 	{
 		for (auto& uniform : m_uniformsMap)
+		{
+			uniform.second->m_location = glGetUniformLocation(program->GetId(), uniform.first.c_str());
 			uniform.second->Bind();
+		}
 	}
 	else
 	{
 		for (auto& uniform : m_uniformsMap)
+		{
+			uniform.second->m_location = glGetUniformLocation(program->GetId(), uniform.first.c_str());
 			uniform.second->Bind(program->GetId());
+		}
 	}
 }

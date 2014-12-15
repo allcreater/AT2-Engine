@@ -81,7 +81,7 @@ protected:
 
 template <typename T>
 class GlVertexBuffer : public GlVertexBufferBase, public IBuffer<T>
-{
+{ 
 public:
 	GlVertexBuffer(GlBufferType type, GLsizeiptr size, const T* data);
 	~GlVertexBuffer();

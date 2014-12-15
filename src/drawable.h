@@ -3,8 +3,8 @@
 
 #include "AT2.h"
 
-using namespace AT2;
-
+namespace AT2
+{
 class IDrawable
 {
 public:
@@ -14,17 +14,10 @@ private:
 
 };
 
-
-class StateSet //временный костыль
-{
-public:
-
-};
-
 class MeshDrawable : public IDrawable //mesh или не mesh, но определенно что-то похожее
 {
 public:
-	void Draw(IRenderer& renderer)
+	void Draw(IRenderer& renderer) override
 	{
 		auto stateManager = renderer.GetStateManager();
 
@@ -32,6 +25,8 @@ public:
 		stateManager->BindVertexArray(VertexArray);
 		stateManager->BindTextures(Textures);
 		
+		UniformBuffer->Bind();
+
 		for(auto primitive: Primitives)
 			primitive->Draw();
 	}
@@ -40,11 +35,12 @@ public:
 
 	std::shared_ptr<IShaderProgram> Shader;
 	std::shared_ptr<IVertexArray> VertexArray;
+	std::shared_ptr<IUniformContainer> UniformBuffer;
 	TextureSet Textures;
 	PrimitiveList Primitives;
 
 private:
 	
 };
-
+}
 #endif
