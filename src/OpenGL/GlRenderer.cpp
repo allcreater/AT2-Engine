@@ -128,8 +128,15 @@ void GlRenderer::SwapBuffers()
 void GlRenderer::ClearBuffer(const glm::vec4& color)
 {
 	glClearColor(color.r, color.g, color.b, color.a);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
+
+void GlRenderer::ClearDepth(float depth)
+{
+	glClearDepth(depth);
+	glClear(GL_DEPTH_BUFFER_BIT);
+}
+
 
 void GlRenderer::Shutdown()
 {

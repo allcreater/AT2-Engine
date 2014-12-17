@@ -13,8 +13,9 @@ uniform CameraBlock
 
 uniform LightingBlock
 {
-	vec3 u_lightPos; //in view space
+	vec4 u_lightPos; //in view space
 	float u_lightRadius;
+	vec3 u_lightColor;
 };
 
 uniform sampler3D u_texNoise;
@@ -34,21 +35,28 @@ vec3 getEyeDir()
     return world_normal;
 }
 
-vec3 getFragPos(float z)
+vec3 getFragPos(float z, vec2 screenCoord) 
 {
-    vec4 pos = u_matInverseProj * vec4(v_texCoord*2.0-1.0, z*2.0-1.0, 1.0);
+    vec4 pos = u_matInverseProj * vec4(screenCoord*2.0-1.0, z*2.0-1.0, 1.0);
     return pos.xyz/pos.w;
 }
 
 void main()
 {
-	vec3 dir = getEyeDir();
+	vec2 texCoord = gl_FragCoord.xy/1024.0;
 
-	float z = texture (u_depthMap, v_texCoord);
-	vec3 fragPos = getFragPos(z);
+	float z = texture (u_depthMap, texCoord);
+	vec3 fragPos = getFragPos(z, texCoord);
 
-	vec3 normal = texture(u_normalMap, v_texCoord).rgb;
 
-	//FragColor = vec4(normal*0.5 + 0.5, 1.0);
-	FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	
+	vec3 normal = texture(u_normalMap, texCoord).rgb;
+
+	vec4 color = texture(u_colorMap, texCoord);
+
+
+	float attenuation = 1.0 - clamp(length(fragPos - vec3(u_matMW * u_lightPos))/u_lightRadius, 0.0, 1.0);
+
+
+	FragColor = vec4(color.rgb*attenuation, 1.0);
 }

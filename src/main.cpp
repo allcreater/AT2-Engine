@@ -27,7 +27,7 @@ std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
 std::shared_ptr<AT2::GlShaderProgram> PostprocessShader, TerrainShader, SphereLightShader;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex;
 
-std::shared_ptr<AT2::GlFrameBuffer> MyFBO;
+std::shared_ptr<AT2::GlFrameBuffer> Stage1FBO, Stage2FBO;
 std::shared_ptr<AT2::IFrameBuffer> NullFBO;
 
 std::shared_ptr<AT2::MeshDrawable> QuadDrawable, TerrainDrawable, SphereLightDrawable;
@@ -217,6 +217,8 @@ std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::GlRenderer* r
 	return drawable;
 }
 
+std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
+
 //returns frame time
 float Render(AT2::GlRenderer* renderer)
 {
@@ -230,35 +232,66 @@ float Render(AT2::GlRenderer* renderer)
 	CameraUB->SetBindingPoint(1);
 	CameraUB->Bind();
 	
-	LightUB->SetUniform("u_lightPos", glm::vec3(0.0, 0.0, 0.0));
-	LightUB->SetUniform("u_lightRadius", 1000.0f);
-	LightUB->SetBindingPoint(2);
-	LightUB->Bind();
+	//LightUB->SetUniform("u_lightPos", glm::vec3(0.0, -200.0, 0.0));
+	//LightUB->SetUniform("u_lightRadius", 200.0f);
+	//LightUB->SetBindingPoint(2);
+	//LightUB->Bind();
 
 	//Scene stage
-	MyFBO->Bind();
+	Stage1FBO->Bind();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
-	
-	glEnable(GL_CULL_FACE);
+	renderer->ClearDepth(1.0);
+
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glDepthMask(GL_TRUE);
+	glCullFace(GL_BACK);
 	glPatchParameteri( GL_PATCH_VERTICES, 4 );
 	TerrainShader->SetUBO("CameraBlock", 1);
 	TerrainDrawable->Draw(*renderer);
-	
+
+
+	//Light stage
+	Stage2FBO->Bind();
+
+	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
+	//glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_GREATER);
+	glCullFace(GL_FRONT);
+
 	SphereLightShader->SetUBO("CameraBlock", 1);
 	SphereLightShader->SetUBO("LightingBlock", 2);
-	SphereLightDrawable->Draw(*renderer);
+	for (const auto& light : LightsArray)
+	{
+		light->SetBindingPoint(2);
+		light->Bind();
+		SphereLightDrawable->Draw(*renderer);
+	}
+
+	
 	//Postprocess stage
 	NullFBO->Bind();
-	
+	glDepthMask(GL_TRUE);
+	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
 
-
-	glDisable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 	glDisable(GL_DEPTH_TEST);
+
 	PostprocessShader->SetUBO("CameraBlock", 1);
-	PostprocessShader->SetUBO("LightingBlock", 2);
+	//PostprocessShader->SetUBO("LightingBlock", 2);
 	QuadDrawable->Draw(*renderer);
 
+
+	if (Stage1FBO->GetDepthAttachement()->GetCurrentModule() >= 0)
+	{
+		glActiveTexture(GL_TEXTURE0 + Stage1FBO->GetDepthAttachement()->GetCurrentModule());
+		glBindTexture(GL_TEXTURE_2D, 0);
+		Stage1FBO->GetDepthAttachement()->Unbind();
+	}
 
 	glFinish();
 	renderer->SwapBuffers();
@@ -332,27 +365,19 @@ int main(int argc, char *argv[])
 		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
 		texDepthRT->UpdateData(GL_TEXTURE_2D, data);
 
+		Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+		Stage1FBO->SetColorAttachement(0, texDiffuse);
+		Stage1FBO->SetColorAttachement(1, texNormal);
+		Stage1FBO->SetDepthAttachement(texDepthRT);
 
-		MyFBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
-		MyFBO->SetColorAttachement(0, texDiffuse);
-		MyFBO->SetColorAttachement(1, texNormal);
-		MyFBO->SetDepthAttachement(texDepthRT);
+		auto texColor = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+		texColor->UpdateData(GL_TEXTURE_2D, data);
+
+		Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+		Stage2FBO->SetColorAttachement(0, texColor);
+		Stage2FBO->SetDepthAttachement(texDepthRT); //depth is common with previous stage
 
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
-
-		//Postprocess quad
-		QuadDrawable = MakeFullscreenQuadDrawable(renderer);
-		QuadDrawable->Shader = PostprocessShader;
-		QuadDrawable->Textures = { MyFBO->GetColorAttachement(0), MyFBO->GetColorAttachement(1), MyFBO->GetDepthAttachement(), Noise3Tex };
-		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(PostprocessShader);
-			uniformStorage->SetUniform("u_phase", Phase);
-			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-			uniformStorage->SetUniform("u_colorMap", MyFBO->GetColorAttachement(0));
-			uniformStorage->SetUniform("u_normalMap", MyFBO->GetColorAttachement(1));
-			uniformStorage->SetUniform("u_depthMap", MyFBO->GetDepthAttachement());
-			QuadDrawable->UniformBuffer = uniformStorage;
-		}
 
 		//terrain
 		TerrainDrawable = MakeTerrainDrawable(renderer, 64, 64);
@@ -362,7 +387,7 @@ int main(int argc, char *argv[])
 			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(TerrainShader);
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_scaleH", 10000.0f);
-			uniformStorage->SetUniform("u_scaleV", 500.0f);
+			uniformStorage->SetUniform("u_scaleV", 800.0f);
 			uniformStorage->SetUniform("u_texHeight", HeightMapTex);
 			uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
 			uniformStorage->SetUniform("u_texGrass", GrassTex);
@@ -372,14 +397,39 @@ int main(int argc, char *argv[])
 
 		SphereLightDrawable = MakeSphereDrawable(renderer);
 		SphereLightDrawable->Shader = SphereLightShader;
-		SphereLightDrawable->Textures = { MyFBO->GetColorAttachement(0), MyFBO->GetColorAttachement(1), MyFBO->GetDepthAttachement(), Noise3Tex };
+		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex };
 		{
 			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(SphereLightShader);
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-			uniformStorage->SetUniform("u_colorMap", MyFBO->GetColorAttachement(0));
-			uniformStorage->SetUniform("u_normalMap", MyFBO->GetColorAttachement(1));
-			uniformStorage->SetUniform("u_depthMap", MyFBO->GetDepthAttachement());
+			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
+			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
+			uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
 			SphereLightDrawable->UniformBuffer = uniformStorage;
+		}
+
+		//Postprocess quad
+		QuadDrawable = MakeFullscreenQuadDrawable(renderer);
+		QuadDrawable->Shader = PostprocessShader;
+		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex };
+		{
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(PostprocessShader);
+			uniformStorage->SetUniform("u_phase", Phase);
+			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+			uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
+			uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
+			QuadDrawable->UniformBuffer = uniformStorage;
+		}
+
+
+		for (int i = 0; i < 100; ++i)
+		{
+			auto light = std::make_shared<AT2::GlUniformBuffer>(SphereLightShader->GetUniformBlockInfo("LightingBlock"));
+			
+			light->SetUniform("u_lightPos", glm::vec4(glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0), 1.0));
+			light->SetUniform("u_lightRadius", glm::linearRand(300.0f, 700.0f));
+			light->SetUniform("u_lightColor", glm::linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)));
+
+			LightsArray.push_back(light);
 		}
 
 		//Init
@@ -389,6 +439,8 @@ int main(int argc, char *argv[])
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glEnable(GL_CULL_FACE);
 
 		glViewport(0, 0, 1024, 1024);
 		matProj = glm::frustum(1.0, -1.0, -1.0, 1.0, 0.5, 5000.0);

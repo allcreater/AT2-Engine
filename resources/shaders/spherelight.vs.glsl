@@ -10,8 +10,9 @@ uniform CameraBlock
 
 uniform LightingBlock
 {
-	vec3 u_lightPos; //in view space
+	vec4 u_lightPos; //in view space
 	float u_lightRadius;
+	vec3 u_lightColor;
 };
 
 out vec3 v_pos;
@@ -19,10 +20,10 @@ out vec2 v_texCoord;
 
 void main()
 {
-	vec3 pos = u_lightPos + vec3(u_matMW) * (a_Normal * 100.0); //in view space
-	gl_Position = u_matProj * u_matMW * vec4(a_Normal * 100.0, 1.0);//u_matProj * vec4 (pos, 1.0);
+	vec4 pos = u_matMW * (u_lightPos + vec4(a_Normal, 0.0) * u_lightRadius); //in view space
+	gl_Position = u_matProj * pos;
 	
-	v_texCoord = gl_Position.xy;
+	v_texCoord = (gl_Position.xy/gl_Position.w)*0.5 + 0.5;
 
-	v_pos = pos;
+	v_pos = pos.xyz;
 }

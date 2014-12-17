@@ -30,6 +30,7 @@ public:
 	void Shutdown() override;
 
 	virtual void ClearBuffer(const glm::vec4& color);
+	virtual void ClearDepth(float depth);
 	virtual void SwapBuffers();
 
 private:

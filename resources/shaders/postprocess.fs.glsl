@@ -2,6 +2,8 @@
 
 precision mediump float;
 
+in vec2 v_texCoord;
+
 uniform CameraBlock
 {
 	mat4 u_matMW, u_matInverseMW, u_matProj, u_matInverseProj;
@@ -11,11 +13,7 @@ uniform CameraBlock
 uniform float u_phase;
 uniform sampler3D u_texNoise;
 uniform sampler2D u_colorMap;
-uniform sampler2D u_normalMap;
 uniform sampler2D u_depthMap;
-
-in vec4 v_color;
-in vec2 v_texCoord;
 
 layout (location = 0) out vec4 FragColor;
 
@@ -37,13 +35,5 @@ vec3 getFragPos(float z)
 
 void main()
 {
-	vec3 dir = getEyeDir();
-
-	float z = texture (u_depthMap, v_texCoord);
-	vec3 fragPos = getFragPos(z);
-
-	vec3 normal = texture(u_normalMap, v_texCoord).rgb;
-
-	//FragColor = vec4(pp*0.001, 1.0);
-	FragColor = vec4(normal*0.5 + 0.5, 1.0);
+	FragColor = texture(u_colorMap, v_texCoord);
 }
