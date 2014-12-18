@@ -19,8 +19,6 @@
 #include <glm\gtc\quaternion.hpp>
 #include <glm\gtx\quaternion.hpp>
 
-#include <gli\gli.hpp>
-
 #include <chrono>
 
 std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
@@ -102,33 +100,6 @@ public: //static
 };
 std::map<unsigned int, std::weak_ptr<GlShaderProgramFromFile>> GlShaderProgramFromFile::s_allShaderPrograms;
 
-}
-
-
-std::shared_ptr<AT2::ITexture> LoadTexture (const char* _filename)
-{
-	gli::storage Storage(gli::load_dds(_filename));
-	assert(!Storage.empty());
-
-	if (Storage.layers() > 1)
-	{
-		throw 1; //TODO
-	}
-	else
-	{
-		gli::texture2D Texture(Storage);
-
-		AT2::ITexture::BufferData bd;
-		bd.Height = Texture.dimensions().x;
-		bd.Width = Texture.dimensions().y;
-		bd.Depth = 1;
-		bd.Data = Texture.data();
-
-		auto glTexture = std::make_shared<AT2::GlTexture2D>(gli::internal_format(Texture.format()), gli::external_format(Texture.format()));
-		glTexture->UpdateData(GL_TEXTURE_2D, bd);
-		return glTexture;
-
-	}
 }
 
 std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(AT2::GlRenderer* renderer, int segX = 32, int segY = 16)
@@ -328,7 +299,7 @@ int main(int argc, char *argv[])
 			"",
 			"resources\\shaders\\spherelight.fs.glsl");
 
-		auto texture = new AT2::GlTexture3D(GL_RGBA, GL_RGBA);
+		auto texture = new AT2::GlTexture3D(GL_RGBA8);
 		AT2::ITexture::BufferData data;
 		data.Height = 256;
 		data.Width = 256;
@@ -342,10 +313,10 @@ int main(int argc, char *argv[])
 
 		Noise3Tex = std::shared_ptr<AT2::ITexture>(texture);
 
-		GrassTex = LoadTexture("resources\\grass03.dds");
-		RockTex = LoadTexture("resources\\rock04.dds");
-		NormalMapTex = LoadTexture("resources\\terrain_normalmap.dds");
-		HeightMapTex = LoadTexture("resources\\heightmap.dds");
+		GrassTex = renderer->GetResourceFactory()->LoadTexture("resources\\grass03.dds");
+		RockTex = renderer->GetResourceFactory()->LoadTexture("resources\\rock04.dds");
+		NormalMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\terrain_normalmap.dds");
+		HeightMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\heightmap.dds");
 		HeightMapTex->BuildMipmaps();
 
 
@@ -358,11 +329,11 @@ int main(int argc, char *argv[])
 		data.Depth = 1;
 		data.Data = 0;
 
-		auto texDiffuse = std::make_shared<AT2::GlTexture2D>(GL_RGBA, GL_RGBA);
+		auto texDiffuse = std::make_shared<AT2::GlTexture2D>(GL_RGBA);
 		texDiffuse->UpdateData(GL_TEXTURE_2D, data);
-		auto texNormal = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, GL_RGBA, GL_FLOAT);//(GL_RG16F, GL_RG, GL_HALF_FLOAT);
+		auto texNormal = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F);//(GL_RG16F, GL_RG, GL_HALF_FLOAT);
 		texNormal->UpdateData(GL_TEXTURE_2D, data);
-		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
+		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F);
 		texDepthRT->UpdateData(GL_TEXTURE_2D, data);
 
 		Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
@@ -370,7 +341,7 @@ int main(int argc, char *argv[])
 		Stage1FBO->SetColorAttachement(1, texNormal);
 		Stage1FBO->SetDepthAttachement(texDepthRT);
 
-		auto texColor = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+		auto texColor = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F);
 		texColor->UpdateData(GL_TEXTURE_2D, data);
 
 		Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
@@ -426,7 +397,7 @@ int main(int argc, char *argv[])
 			auto light = std::make_shared<AT2::GlUniformBuffer>(SphereLightShader->GetUniformBlockInfo("LightingBlock"));
 			
 			light->SetUniform("u_lightPos", glm::vec4(glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0), 1.0));
-			light->SetUniform("u_lightRadius", glm::linearRand(300.0f, 700.0f));
+			light->SetUniform("u_lightRadius", glm::linearRand(300.0f, 700.0f)*2.0f);
 			light->SetUniform("u_lightColor", glm::linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)));
 
 			LightsArray.push_back(light);

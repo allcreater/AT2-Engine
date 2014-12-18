@@ -3,8 +3,8 @@
 
 using namespace AT2;
 
-GlVertexArray::GlVertexArray(IRendererCapabilities* rendererCapabilities) :
-	m_buffers(rendererCapabilities->GetMaxNumberOfVertexAttributes())
+GlVertexArray::GlVertexArray(IRendererCapabilities* _rendererCapabilities) :
+	m_buffers(_rendererCapabilities->GetMaxNumberOfVertexAttributes())
 {
 	glGenVertexArrays(1, &m_id);
 }
@@ -21,12 +21,12 @@ GlVertexArray::~GlVertexArray()
 	glDeleteVertexArrays(1, &m_id);
 }
 
-void GlVertexArray::SetIndexBuffer(const std::shared_ptr<GlVertexBufferBase>& buffer)
+void GlVertexArray::SetIndexBuffer(const std::shared_ptr<GlVertexBufferBase>& _buffer)
 {
-	if (buffer->GetType() != GlVertexBufferBase::GlBufferType::ElementArrayBuffer)
+	if (_buffer->GetType() != GlVertexBufferBase::GlBufferType::ElementArrayBuffer)
 		throw AT2Exception("GlVertexBuffer: trying to set not index buffer as index buffer");
 
-	m_indexBuffer = buffer;
+	m_indexBuffer = _buffer;
 }
 
 std::shared_ptr<GlVertexBufferBase> GlVertexArray::GetIndexBuffer() const
@@ -34,24 +34,24 @@ std::shared_ptr<GlVertexBufferBase> GlVertexArray::GetIndexBuffer() const
 	return m_indexBuffer;
 }
 
-void GlVertexArray::SetVertexBuffer(unsigned int index, const std::shared_ptr<GlVertexBufferBase>& buffer)
+void GlVertexArray::SetVertexBuffer(unsigned int _index, const std::shared_ptr<GlVertexBufferBase>& _buffer)
 {
-	if (buffer->GetType() == GlVertexBufferBase::GlBufferType::ElementArrayBuffer)
+	if (_buffer->GetType() == GlVertexBufferBase::GlBufferType::ElementArrayBuffer)
 		throw AT2Exception("GlVertexBuffer: trying to set index buffer as attribute buffer");
 
-	m_buffers.at(index) = buffer;
+	m_buffers.at(_index) = _buffer;
 
-	if (buffer)
+	if (_buffer)
 	{
-		glVertexArrayVertexAttribOffsetEXT(m_id, buffer->GetId(), index, static_cast<GLint>(buffer->ElementTypeInfo.VectorLength), static_cast<GLenum>(buffer->ElementTypeInfo.DataType), buffer->ElementTypeInfo.IsNormalized ? GL_TRUE : GL_FALSE, buffer->ElementTypeInfo.Stride, 0);
-		glEnableVertexArrayAttribEXT(m_id, index);
+		glVertexArrayVertexAttribOffsetEXT(m_id, _buffer->GetId(), _index, static_cast<GLint>(_buffer->ElementTypeInfo.VectorLength), static_cast<GLenum>(_buffer->ElementTypeInfo.DataType), _buffer->ElementTypeInfo.IsNormalized ? GL_TRUE : GL_FALSE, _buffer->ElementTypeInfo.Stride, 0);
+		glEnableVertexArrayAttribEXT(m_id, _index);
 	}
 	else
 	{
-		glDisableVertexArrayAttribEXT(m_id, index);
+		glDisableVertexArrayAttribEXT(m_id, _index);
 	}
 }
-std::shared_ptr<GlVertexBufferBase> GlVertexArray::GetVertexBuffer(unsigned int index) const
+std::shared_ptr<GlVertexBufferBase> GlVertexArray::GetVertexBuffer(unsigned int _index) const
 {
-	return m_buffers.at(index);
+	return m_buffers.at(_index);
 }

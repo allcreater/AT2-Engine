@@ -49,14 +49,18 @@ void main()
 	vec3 fragPos = getFragPos(z, texCoord);
 
 
-	
+	vec3 lightDir = fragPos - vec3(u_matMW * u_lightPos);
+	float lightDirLength = length(lightDir);
+	lightDir = lightDir / lightDirLength; //normalize dir vector
+
 	vec3 normal = texture(u_normalMap, texCoord).rgb;
 
-	vec4 color = texture(u_colorMap, texCoord);
+	float Kd = max(dot (normal, -lightDir), 0.0);
 
 
-	float attenuation = 1.0 - clamp(length(fragPos - vec3(u_matMW * u_lightPos))/u_lightRadius, 0.0, 1.0);
-
+	float attenuation = 1.0 - clamp(lightDirLength/u_lightRadius, 0.0, 1.0);
+	
+	vec4 color = texture(u_colorMap, texCoord)*Kd;
 
 	FragColor = vec4(color.rgb*attenuation, 1.0);
 }

@@ -17,22 +17,23 @@ namespace AT2
 			Texture2DArray = GL_TEXTURE_2D_ARRAY,
 			CubeMap = GL_TEXTURE_CUBE_MAP,
 			CubeMapArray = GL_TEXTURE_CUBE_MAP_ARRAY,
-			Rectangle = GL_TEXTURE_RECTANGLE
+			Texture2DRectangle = GL_TEXTURE_RECTANGLE
 		};
 
 	public:
+		GlTexture(TextureType type, GLint internalFormat);
 		GlTexture(TextureType type, GLint internalFormat, GLenum format, GLenum dataType);
 		virtual ~GlTexture();
 
-		virtual void UpdateData(GLenum target, BufferData data) = 0;
-		virtual void Bind(unsigned int module);
-		virtual void Unbind();
-		virtual void BuildMipmaps();
+		virtual void UpdateData(GLenum target, BufferData data, GLint level = 0) = 0;
+		void Bind(unsigned int module) override;
+		void Unbind() override;
+		void BuildMipmaps() override;
 
-		virtual int GetCurrentModule() const {return m_currentTextureModule;}
-		virtual unsigned int GetId() const {return m_id;}
+		int GetCurrentModule() const override	{return m_currentTextureModule;}
+		unsigned int GetId() const override		{return m_id;}
 
-		virtual TextureType GetTargetType() const {return m_targetType; }
+		TextureType GetTargetType() const		{return m_targetType; }
 
 	protected:
 		TextureType m_targetType;
@@ -46,29 +47,33 @@ namespace AT2
 	class GlTexture1D : public GlTexture
 	{
 	public:
+		GlTexture1D(GLint internalFormat);
 		GlTexture1D(GLint internalFormat, GLenum format, GLenum dataType = GL_UNSIGNED_BYTE);
-		virtual void UpdateData(GLenum target, BufferData data);
+		virtual void UpdateData(GLenum target, BufferData data, GLint level = 0);
 	};
 
 	class GlTexture2D : public GlTexture
 	{
 	public:
+		GlTexture2D(GLint internalFormat);
 		GlTexture2D(GLint internalFormat, GLenum format, GLenum dataType = GL_UNSIGNED_BYTE);
-		virtual void UpdateData(GLenum target, BufferData data);
+		virtual void UpdateData(GLenum target, BufferData data, GLint level = 0);
 	};
 
 	class GlTexture3D : public GlTexture
 	{
 	public:
+		GlTexture3D(GLint internalFormat);
 		GlTexture3D(GLint internalFormat, GLenum format, GLenum dataType = GL_UNSIGNED_BYTE);
-		virtual void UpdateData(GLenum target, BufferData data);
+		virtual void UpdateData(GLenum target, BufferData data, GLint level = 0);
 	};
 
 	class GlTextureCube : public GlTexture
 	{
 	public:
+		GlTextureCube(GLint internalFormat);
 		GlTextureCube(GLint internalFormat, GLenum format, GLenum dataType = GL_UNSIGNED_BYTE);
-		virtual void UpdateData(GLenum target, BufferData data);
+		virtual void UpdateData(GLenum target, BufferData data, GLint level = 0);
 	};
 }
 

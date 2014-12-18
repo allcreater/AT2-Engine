@@ -2,6 +2,22 @@
 
 using namespace AT2;
 
+GlTexture::GlTexture(TextureType _type, GLint _internalFormat) :
+m_targetType(_type),
+m_internalFormat(_internalFormat),
+m_currentTextureModule(-1)
+{
+	glGenTextures(1, &m_id);
+
+	GLint value;
+	//auto-detect internal format
+	glGetInternalformativ(static_cast<GLenum>(m_targetType), m_internalFormat, GL_TEXTURE_IMAGE_FORMAT, 1, &value);
+	m_format = value;
+	//auto-detect target type
+	glGetInternalformativ(static_cast<GLenum>(m_targetType), m_internalFormat, GL_TEXTURE_IMAGE_TYPE, 1, &value);
+	m_dataType = value;
+}
+
 GlTexture::GlTexture(TextureType type, GLint internalFormat, GLenum format, GLenum dataType) :
 	m_targetType(type),
 	m_internalFormat(internalFormat),
@@ -37,41 +53,47 @@ void GlTexture::BuildMipmaps()
 }
 
 //
-
+GlTexture1D::GlTexture1D(GLint internalFormat) : GlTexture(GlTexture::TextureType::Texture1D, internalFormat)
+{
+}
 GlTexture1D::GlTexture1D(GLint internalFormat, GLenum format, GLenum dataType) : GlTexture(GlTexture::TextureType::Texture1D, internalFormat, format, dataType)
 {
 }
 
-void GlTexture1D::UpdateData(GLenum target, BufferData data)
+void GlTexture1D::UpdateData(GLenum target, BufferData data, GLint level)
 {
-	glTextureImage1DEXT(m_id, target, 0, m_internalFormat, data.Width, 0, m_format, m_dataType, data.Data);
+	glTextureImage1DEXT(m_id, target, level, m_internalFormat, data.Width, 0, m_format, m_dataType, data.Data);
 	BuildMipmaps();
 
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-
+GlTexture2D::GlTexture2D(GLint internalFormat) : GlTexture(GlTexture::TextureType::Texture2D, internalFormat)
+{
+}
 GlTexture2D::GlTexture2D(GLint internalFormat, GLenum format, GLenum dataType) : GlTexture(GlTexture::TextureType::Texture2D, internalFormat, format, dataType)
 {
 }
 
-void GlTexture2D::UpdateData(GLenum target, BufferData data)
+void GlTexture2D::UpdateData(GLenum target, BufferData data, GLint level)
 {
-	glTextureImage2DEXT(m_id, target, 0, m_internalFormat, data.Width, data.Height, 0, m_format, m_dataType, data.Data);
+	glTextureImage2DEXT(m_id, target, level, m_internalFormat, data.Width, data.Height, 0, m_format, m_dataType, data.Data);
 	BuildMipmaps();
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-
+GlTexture3D::GlTexture3D(GLint internalFormat) : GlTexture(GlTexture::TextureType::Texture3D, internalFormat)
+{
+}
 GlTexture3D::GlTexture3D(GLint internalFormat, GLenum format, GLenum dataType) : GlTexture(GlTexture::TextureType::Texture3D, internalFormat, format, dataType)
 {
 }
 
-void GlTexture3D::UpdateData(GLenum target, BufferData data)
+void GlTexture3D::UpdateData(GLenum target, BufferData data, GLint level)
 {
-	glTextureImage3DEXT(m_id, target, 0, m_internalFormat, data.Width, data.Height, data.Depth, 0, m_format, m_dataType, data.Data);
+	glTextureImage3DEXT(m_id, target, level, m_internalFormat, data.Width, data.Height, data.Depth, 0, m_format, m_dataType, data.Data);
 	BuildMipmaps();
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -81,13 +103,17 @@ void GlTexture3D::UpdateData(GLenum target, BufferData data)
 	glTextureParameterfEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
+
+GlTextureCube::GlTextureCube(GLint internalFormat) : GlTexture(GlTexture::TextureType::CubeMap, internalFormat)
+{
+}
 GlTextureCube::GlTextureCube(GLint internalFormat, GLenum format, GLenum dataType) : GlTexture(GlTexture::TextureType::CubeMap, internalFormat, format, dataType)
 {
 }
 
-void GlTextureCube::UpdateData(GLenum target, BufferData data)
+void GlTextureCube::UpdateData(GLenum target, BufferData data, GLint level)
 {
-	glTextureImage2DEXT(m_id, target, 0, m_internalFormat, data.Width, data.Height, 0, m_format, m_dataType, data.Data);
+	glTextureImage2DEXT(m_id, target, level, m_internalFormat, data.Width, data.Height, 0, m_format, m_dataType, data.Data);
 	//BuildMipmaps();
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);

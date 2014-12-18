@@ -72,12 +72,14 @@ GlRenderer::GlRenderer()
 		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GLEW: cannot init");
 
 	m_rendererCapabilities = new GlRendererCapabilities();
+	m_resourceFactory = new GlResourceFactory();
 	m_stateManager = new StateManager(m_rendererCapabilities);
 }
 
 GlRenderer::~GlRenderer()
 {
 	delete m_rendererCapabilities;
+	delete m_resourceFactory;
 	delete m_stateManager;
 }
 
@@ -95,30 +97,6 @@ void GlRenderer::CheckSDLError()
 		throw AT2Exception(AT2Exception::ErrorCase::Renderer, ss.str());
 	}
 }
-
-ITexture* GlRenderer::CreateTexture(unsigned int _w, unsigned int _h, unsigned int _d, void* _data)
-{
-	if (_w > 0)
-	{
-		if (_h > 0)
-		{
-			if (_d > 0) // TEXTURE_3D
-			{
-			}
-			else //TEXTURE_2D
-			{
-			}
-		}
-		else //TEXTURE_1D
-		{
-			if (_d > 0)
-				std::logic_error("2d texture must have _w and _h");
-		}
-	}
-	else
-		throw std::logic_error("texture width must be positive");
-}
-
 
 void GlRenderer::SwapBuffers()
 {

@@ -57,6 +57,9 @@
     <ClCompile Include="OpenGL\GlUniformContainer.cpp">
       <Filter>Файлы исходного кода\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="OpenGL\GlResourceFactory.cpp">
+      <Filter>Файлы исходного кода\OpenGL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AT2.h">

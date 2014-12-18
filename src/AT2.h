@@ -188,11 +188,17 @@ public:
 	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 };
 
+class IResourceFactory
+{
+public:
+	virtual std::shared_ptr<ITexture> LoadTexture(const str& filename) const = 0; //TODO: maybe I need to detach load functionality 
+	virtual std::shared_ptr<ITexture> CreateTexture() const = 0;
+};
+
 class IRenderer
 {
 public:
-	virtual ITexture* CreateTexture(unsigned int width, unsigned int height, unsigned int depth, void* data) = 0;
-
+	virtual IResourceFactory* GetResourceFactory() const = 0;
 	virtual IStateManager* GetStateManager() const = 0;
 	virtual IRendererCapabilities* GetRendererCapabilities() const = 0;
 

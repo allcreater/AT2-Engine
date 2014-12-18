@@ -9,10 +9,17 @@ namespace AT2
 class GlRendererCapabilities : public IRendererCapabilities
 {
 public:
-	unsigned int GetMaxNumberOfTextureUnits() const;
-	unsigned int GetMaxNumberOfColorAttachements() const;
-	unsigned int GetMaxTextureSize() const;
-	unsigned int GetMaxNumberOfVertexAttributes() const;
+	unsigned int GetMaxNumberOfTextureUnits() const override;
+	unsigned int GetMaxNumberOfColorAttachements() const override;
+	unsigned int GetMaxTextureSize() const override;
+	unsigned int GetMaxNumberOfVertexAttributes() const override;
+};
+
+class GlResourceFactory : public IResourceFactory
+{
+public:
+	std::shared_ptr<ITexture> LoadTexture(const str& filename) const override;
+	std::shared_ptr<ITexture> CreateTexture() const override;
 };
 
 class GlRenderer : public IRenderer
@@ -22,9 +29,8 @@ public:
 	virtual ~GlRenderer();
 
 public:
-	ITexture* CreateTexture(unsigned int w, unsigned int h, unsigned int d, void* data) override;
-
-	IStateManager* GetStateManager() const override { return m_stateManager; }
+	IResourceFactory* GetResourceFactory() const override			{ return m_resourceFactory; }
+	IStateManager* GetStateManager() const override					{ return m_stateManager; }
 	IRendererCapabilities* GetRendererCapabilities() const override { return m_rendererCapabilities; }
 
 	void Shutdown() override;
@@ -41,6 +47,7 @@ private:
     SDL_GLContext m_context;
 
 	IStateManager* m_stateManager;
+	GlResourceFactory* m_resourceFactory;
 	GlRendererCapabilities* m_rendererCapabilities;
 };
 

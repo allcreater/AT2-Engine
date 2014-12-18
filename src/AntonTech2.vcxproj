@@ -85,6 +85,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OpenGL/GlShaderProgram.cpp" />
     <ClCompile Include="OpenGL\GlFrameBuffer.cpp" />
+    <ClCompile Include="OpenGL\GlResourceFactory.cpp" />
     <ClCompile Include="OpenGL\GlUniformContainer.cpp" />
     <ClCompile Include="OpenGL\GlTexture.cpp" />
     <ClCompile Include="OpenGL\GlUniformBuffer.cpp" />
