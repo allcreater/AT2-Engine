@@ -36,4 +36,9 @@ vec3 getFragPos(float z)
 void main()
 {
 	FragColor = texture(u_colorMap, v_texCoord);
+
+/*
+	if (FragColor.r > 1.0 || FragColor.g > 1.0 || FragColor.b > 1.0)
+		FragColor.rgb = vec3(1.0, 0.0, 0.0);
+		*/
 }

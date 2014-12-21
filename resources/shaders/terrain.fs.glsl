@@ -45,6 +45,6 @@ void main()
 	FragColor.rgb = texture(u_texGrass, input.texCoord*50.0).rgb*0.5 + (normalFromMap*0.5+0.5)*0.5;
 	FragColor.a = 1.0;
 
-	vec3 normal = mat3(u_matMW) * normalFromMap;
+	vec3 normal = u_matNormal * normalFromMap;
 	FragNormal = vec4(normal, 1.0);
 }
