@@ -75,8 +75,9 @@ class ITexture
 {
 public:
 	ITexture() = default;
-	ITexture(const ITexture& other) = delete;
-	ITexture& operator= (const ITexture& other) = delete;
+	ITexture(const ITexture& other) = delete; //maybe temporary
+	ITexture& operator= (const ITexture& other) = delete; //maybe temporary
+	virtual ~ITexture(){};
 
 public:
 	virtual void Bind(unsigned int module) = 0;
@@ -85,14 +86,7 @@ public:
 
 	virtual int GetCurrentModule() const  = 0;
 	virtual unsigned int GetId() const = 0;
-	
-	virtual ~ITexture(){};
-
-	struct BufferData
-	{
-		unsigned int Height, Width, Depth;
-		void* Data;
-	};
+	virtual glm::uvec3 GetSize() const = 0;
 };
 
 class IShaderProgram

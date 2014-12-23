@@ -30,7 +30,8 @@ std::shared_ptr<AT2::IFrameBuffer> NullFBO;
 
 std::shared_ptr<AT2::MeshDrawable> QuadDrawable, TerrainDrawable, SphereLightDrawable;
 
-GLuint vao = 0;
+bool WireframeMode = false;
+
 GLfloat Phase = 0.0;
 
 glm::mat4 matMW, matProj;
@@ -188,12 +189,49 @@ std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::GlRenderer* r
 	return drawable;
 }
 
+class GlTimerQuery
+{
+public:
+	GlTimerQuery()
+	{
+		glGenQueries(1, &m_id);
+	}
+	~GlTimerQuery()
+	{
+		glDeleteQueries(1, &m_id);
+	}
+
+	void Begin()
+	{
+		m_resultValue = 0;
+		glBeginQuery(GL_TIME_ELAPSED, m_id);
+	}
+
+	void End()
+	{
+		glEndQuery(GL_TIME_ELAPSED);
+	}
+
+	GLuint64 WaitForResult()
+	{
+		glGetQueryObjectui64v(m_id, GL_QUERY_RESULT, &m_resultValue);
+		return m_resultValue;
+	}
+
+private:
+	GLuint m_id;
+	GLuint64 m_resultValue;
+};
+
 std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 
 //returns frame time
 float Render(AT2::GlRenderer* renderer)
 {
 	auto timeBefore = std::chrono::high_resolution_clock::now();
+
+	GlTimerQuery glTimer;
+	glTimer.Begin();
 
 	CameraUB->SetUniform("u_matMW", matMW);
 	CameraUB->SetUniform("u_matInverseMW", glm::inverse(matMW));
@@ -215,6 +253,8 @@ float Render(AT2::GlRenderer* renderer)
 	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
 	renderer->ClearDepth(1.0);
 
+	glPolygonMode(GL_FRONT_AND_BACK, (WireframeMode) ? GL_LINE : GL_FILL);
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glDepthMask(GL_TRUE);
@@ -223,7 +263,8 @@ float Render(AT2::GlRenderer* renderer)
 	TerrainShader->SetUBO("CameraBlock", 1);
 	TerrainDrawable->Draw(*renderer);
 
-
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	
 	//Light stage
 	Stage2FBO->Bind();
 
@@ -253,22 +294,19 @@ float Render(AT2::GlRenderer* renderer)
 	glDisable(GL_DEPTH_TEST);
 
 	PostprocessShader->SetUBO("CameraBlock", 1);
-	//PostprocessShader->SetUBO("LightingBlock", 2);
 	QuadDrawable->Draw(*renderer);
 
 
-	if (Stage1FBO->GetDepthAttachement()->GetCurrentModule() >= 0)
-	{
-		glActiveTexture(GL_TEXTURE0 + Stage1FBO->GetDepthAttachement()->GetCurrentModule());
-		glBindTexture(GL_TEXTURE_2D, 0);
-		Stage1FBO->GetDepthAttachement()->Unbind();
-	}
+
+
+	glTimer.End();
+	float frameTime = glTimer.WaitForResult() * 0.000001; //in ms
 
 	glFinish();
 	renderer->SwapBuffers();
 
 
-	float frameTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - timeBefore).count() * 0.001;
+	//float frameTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - timeBefore).count() * 0.001;
 	return frameTime;
 }
 
@@ -299,8 +337,8 @@ int main(int argc, char *argv[])
 			"",
 			"resources\\shaders\\spherelight.fs.glsl");
 
-		auto texture = new AT2::GlTexture3D(GL_RGBA8);
-		AT2::ITexture::BufferData data;
+		auto texture = new AT2::GlTexture3D(GL_RGBA8, glm::uvec3(256, 256, 256), 1);
+		AT2::GlTexture::BufferData data;
 		data.Height = 256;
 		data.Width = 256;
 		data.Depth = 256;
@@ -308,7 +346,7 @@ int main(int argc, char *argv[])
 		for (int i = 0; i < data.Height * data.Width * data.Depth * 4; ++i)
 		   arr[i] = (rand() & 0xFF);
 		data.Data = arr;
-		texture->UpdateData(GL_TEXTURE_3D, data);
+		texture->SetData(0, data);
 		delete [] arr;
 
 		Noise3Tex = std::shared_ptr<AT2::ITexture>(texture);
@@ -317,35 +355,24 @@ int main(int argc, char *argv[])
 		RockTex = renderer->GetResourceFactory()->LoadTexture("resources\\rock04.dds");
 		NormalMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\terrain_normalmap.dds");
 		HeightMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\heightmap.dds");
-		HeightMapTex->BuildMipmaps();
 
 
 		CameraUB = std::make_shared<AT2::GlUniformBuffer>(TerrainShader->GetUniformBlockInfo("CameraBlock"));
 		LightUB = std::make_shared<AT2::GlUniformBuffer>(SphereLightShader->GetUniformBlockInfo("LightingBlock"));
 
-
-		data.Height = 1024;
-		data.Width = 1024;
-		data.Depth = 1;
-		data.Data = 0;
-
-		auto texDiffuse = std::make_shared<AT2::GlTexture2D>(GL_RGBA);
-		texDiffuse->UpdateData(GL_TEXTURE_2D, data);
-		auto texNormal = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F);//(GL_RG16F, GL_RG, GL_HALF_FLOAT);
-		texNormal->UpdateData(GL_TEXTURE_2D, data);
-		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F);
-		texDepthRT->UpdateData(GL_TEXTURE_2D, data);
+		auto texDiffuseRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024));
+		auto texNormalRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
+		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(1024, 1024));
 
 		Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
-		Stage1FBO->SetColorAttachement(0, texDiffuse);
-		Stage1FBO->SetColorAttachement(1, texNormal);
+		Stage1FBO->SetColorAttachement(0, texDiffuseRT);
+		Stage1FBO->SetColorAttachement(1, texNormalRT);
 		Stage1FBO->SetDepthAttachement(texDepthRT);
 
-		auto texColor = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F);
-		texColor->UpdateData(GL_TEXTURE_2D, data);
+		auto texColorRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
 
 		Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
-		Stage2FBO->SetColorAttachement(0, texColor);
+		Stage2FBO->SetColorAttachement(0, texColorRT);
 		Stage2FBO->SetDepthAttachement(texDepthRT); //depth is common with previous stage
 
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
@@ -375,13 +402,14 @@ int main(int argc, char *argv[])
 			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
 			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
 			uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
+			
 			SphereLightDrawable->UniformBuffer = uniformStorage;
 		}
 
 		//Postprocess quad
 		QuadDrawable = MakeFullscreenQuadDrawable(renderer);
 		QuadDrawable->Shader = PostprocessShader;
-		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex };
+		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
 		{
 			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(PostprocessShader);
 			uniformStorage->SetUniform("u_phase", Phase);
@@ -416,7 +444,6 @@ int main(int argc, char *argv[])
 		glViewport(0, 0, 1024, 1024);
 		matProj = glm::frustum(1.0, -1.0, -1.0, 1.0, 0.5, 5000.0);
 
-		bool wireframe = false;
 		float heading = 0.0f, pitch = 0.0f;
 		glm::vec3 position = glm::vec3(0.0, 0.0, 0.0), direction;
 
@@ -444,9 +471,7 @@ int main(int argc, char *argv[])
 					case SDL_KEYDOWN:
 						{
 							if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_Z && sdlEvent.key.state == SDL_PRESSED)
-								wireframe = !wireframe;
-							
-							glPolygonMode(GL_FRONT_AND_BACK, (wireframe) ? GL_LINE : GL_FILL);
+								WireframeMode = !WireframeMode;
 						} break;
 					case SDL_QUIT:
 						goto QuitLabel;
