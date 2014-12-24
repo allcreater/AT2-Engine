@@ -60,13 +60,14 @@ void GlTexture::BuildMipmaps()
 //
 GlTexture1D::GlTexture1D(GLint _internalFormat, GLuint _size, GLuint _levels) : GlTexture(GlTexture::TextureType::Texture1D, _internalFormat)
 {
+	const GLenum target = static_cast<GLenum>(m_targetType);
 	m_size = glm::uvec3(_size, 1, 1);
-	glTextureStorage1DEXT(m_id, static_cast<GLenum>(m_targetType), _levels, _internalFormat, _size);
+	glTextureStorage1DEXT(m_id, target, _levels, _internalFormat, _size);
 
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MIN_FILTER, (_levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_BASE_LEVEL, 0);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MAX_LEVEL, _levels);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (_levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, _levels);
 }
 
 void GlTexture1D::SetData(GLuint _level, BufferData _data)
@@ -79,13 +80,15 @@ void GlTexture1D::SetData(GLuint _level, BufferData _data)
 GlTexture2D::GlTexture2D(GLint _internalFormat, glm::uvec2 _size, GLuint _levels) :
 	GlTexture(GlTexture::TextureType::Texture2D, _internalFormat)
 {
-	m_size = glm::uvec3(_size, 1);
-	glTextureStorage2DEXT(m_id, static_cast<GLenum>(m_targetType), _levels, _internalFormat, _size.x, _size.y);
+	const GLenum target = static_cast<GLenum>(m_targetType);
 
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MIN_FILTER, (_levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_BASE_LEVEL, 0);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MAX_LEVEL, _levels);
+	m_size = glm::uvec3(_size, 1);
+	glTextureStorage2DEXT(m_id, target, _levels, _internalFormat, _size.x, _size.y);
+
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (_levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, _levels);
 }
 
 void GlTexture2D::SetData(GLuint _level, BufferData _data)
@@ -98,11 +101,15 @@ void GlTexture2D::SetData(GLuint _level, BufferData _data)
 GlTexture2DArray::GlTexture2DArray(GLint _internalFormat, glm::uvec3 _size, GLuint _levels) :
 	GlTexture(GlTexture::TextureType::Texture2DArray, _internalFormat)
 {
-	m_size = _size;
-	glTextureStorage3DEXT(m_id, static_cast<GLenum>(m_targetType), _levels, _internalFormat, _size.x, _size.y, _size.z);
+	const GLenum target = static_cast<GLenum>(m_targetType);
 
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	m_size = _size;
+	glTextureStorage3DEXT(m_id, target, _levels, _internalFormat, _size.x, _size.y, _size.z);
+
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, _levels);
 }
 
 void GlTexture2DArray::SetLayer(GLuint _level, GLuint _layer, BufferData _data)
@@ -113,10 +120,10 @@ void GlTexture2DArray::SetLayer(GLuint _level, GLuint _layer, BufferData _data)
 
 GlTexture3D::GlTexture3D(GLint _internalFormat, glm::uvec3 _size, GLuint _levels) : GlTexture(GlTexture::TextureType::Texture3D, _internalFormat)
 {
-	m_size = _size;
-	glTextureStorage3DEXT(m_id, static_cast<GLenum>(m_targetType), _levels, _internalFormat, _size.x, _size.y, _size.z);
-
 	const GLenum target = static_cast<GLenum>(m_targetType);
+	m_size = _size;
+	glTextureStorage3DEXT(m_id, target, _levels, _internalFormat, _size.x, _size.y, _size.z);
+
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, GL_REPEAT);
@@ -143,10 +150,10 @@ void GlTexture3D::SetData(GLuint _level, BufferData _data)
 
 GlTextureCube::GlTextureCube(GLint _internalFormat, glm::uvec2 _size, GLuint _levels) : GlTexture(GlTexture::TextureType::CubeMap, _internalFormat)
 {
-	m_size = glm::uvec3(_size, 1);
-	glTextureStorage2DEXT(m_id, static_cast<GLenum>(m_targetType), _levels, _internalFormat, _size.x, _size.y);
-
 	const GLenum target = static_cast<GLenum>(m_targetType);
+	m_size = glm::uvec3(_size, 1);
+	glTextureStorage2DEXT(m_id, target, _levels, _internalFormat, _size.x, _size.y);
+
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
