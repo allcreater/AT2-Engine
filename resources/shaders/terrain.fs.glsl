@@ -2,7 +2,7 @@
 
 uniform CameraBlock
 {
-	mat4 u_matMW, u_matInverseMW, u_matProj, u_matInverseProj;
+	mat4 u_matModelView, u_matInverseModelView, u_matProjection, u_matInverseProjection, u_matModelViewProjection;
 	mat3 u_matNormal;
 };
 

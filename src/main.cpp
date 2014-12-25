@@ -34,7 +34,7 @@ bool WireframeMode = false;
 
 GLfloat Phase = 0.0;
 
-glm::mat4 matMW, matProj;
+glm::mat4 matMV, matProj;
 
 namespace AT2
 {
@@ -233,11 +233,12 @@ float Render(AT2::GlRenderer* renderer)
 	GlTimerQuery glTimer;
 	glTimer.Begin();
 
-	CameraUB->SetUniform("u_matMW", matMW);
-	CameraUB->SetUniform("u_matInverseMW", glm::inverse(matMW));
-	CameraUB->SetUniform("u_matProj", matProj);
-	CameraUB->SetUniform("u_matInverseProj", glm::inverse(matProj));
-	CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(matMW))));
+	CameraUB->SetUniform("u_matModelView", matMV);
+	CameraUB->SetUniform("u_matInverseModelView", glm::inverse(matMV));
+	CameraUB->SetUniform("u_matProjection", matProj);
+	CameraUB->SetUniform("u_matInverseProjection", glm::inverse(matProj));
+	CameraUB->SetUniform("u_matModelViewProjection", matProj * matMV);
+	CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(matMV))));
 	CameraUB->SetBindingPoint(1);
 	CameraUB->Bind();
 	
@@ -497,7 +498,7 @@ int main(int argc, char *argv[])
 			if (keyboardState[SDL_SCANCODE_D])
 				position -= right;
 
-			matMW = glm::lookAt(position, position + direction, up);
+			matMV = glm::lookAt(position, position + direction, up);
 
 
 			Uint32 time = SDL_GetTicks();

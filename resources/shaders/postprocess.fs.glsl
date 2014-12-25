@@ -6,7 +6,7 @@ in vec2 v_texCoord;
 
 uniform CameraBlock
 {
-	mat4 u_matMW, u_matInverseMW, u_matProj, u_matInverseProj;
+	mat4 u_matModelView, u_matInverseModelView, u_matProjection, u_matInverseProjection, u_matModelViewProjection;
 	mat3 u_matNormal;
 };
 
@@ -21,15 +21,15 @@ layout (location = 0) out vec4 FragColor;
 vec3 getEyeDir()
 {
     vec4 device_normal = vec4(v_texCoord*2.0-1.0, 0.0, 1.0);
-    vec3 eye_normal = normalize((u_matInverseProj * device_normal).xyz);
-    vec3 world_normal = normalize(mat3(u_matInverseMW) * eye_normal);
+    vec3 eye_normal = normalize((u_matInverseProjection * device_normal).xyz);
+    vec3 world_normal = normalize(mat3(u_matInverseModelView) * eye_normal);
     
     return world_normal;
 }
 
 vec3 getFragPos(float z)
 {
-    vec4 pos = u_matInverseProj * vec4(v_texCoord*2.0-1.0, z*2.0-1.0, 1.0);
+    vec4 pos = u_matInverseProjection * vec4(v_texCoord*2.0-1.0, z*2.0-1.0, 1.0);
     return pos.xyz/pos.w;
 }
 
