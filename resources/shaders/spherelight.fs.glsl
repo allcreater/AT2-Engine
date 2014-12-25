@@ -26,18 +26,9 @@ uniform sampler2D u_depthMap;
 layout (location = 0) out vec4 FragColor;
 
 
-vec3 getEyeDir()
+vec3 getFragPos(in vec3 screenCoord) 
 {
-    vec4 device_normal = vec4(v_texCoord*2.0-1.0, 0.0, 1.0);
-    vec3 eye_normal = normalize((u_matInverseProjection * device_normal).xyz);
-    vec3 world_normal = normalize(mat3(u_matInverseModelView) * eye_normal);
-    
-    return world_normal;
-}
-
-vec3 getFragPos(float z, vec2 screenCoord) 
-{
-    vec4 pos = u_matInverseProjection * vec4(screenCoord*2.0-1.0, z*2.0-1.0, 1.0);
+    vec4 pos = u_matInverseProjection * vec4(screenCoord*2.0-1.0, 1.0);
     return pos.xyz/pos.w;
 }
 
@@ -46,10 +37,10 @@ void main()
 	vec2 texCoord = gl_FragCoord.xy/1024.0;
 
 	float z = texture (u_depthMap, texCoord);
-	vec3 fragPos = getFragPos(z, texCoord);
+	vec3 fragPos = getFragPos(vec3(texCoord, z));
 
 
-	vec3 lightDir = fragPos - vec3(u_matModelView * u_lightPos);
+	vec3 lightDir = fragPos - (u_matModelView * u_lightPos).xyz;
 	float lightDirLength = length(lightDir);
 	lightDir = lightDir / lightDirLength; //normalize dir vector
 

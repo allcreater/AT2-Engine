@@ -27,7 +27,7 @@ vec3 getEyeDir()
     return world_normal;
 }
 
-vec3 getFragPos(float z)
+vec3 getFragPos(in float z)
 {
     vec4 pos = u_matInverseProjection * vec4(v_texCoord*2.0-1.0, z*2.0-1.0, 1.0);
     return pos.xyz/pos.w;

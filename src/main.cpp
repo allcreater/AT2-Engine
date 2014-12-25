@@ -443,7 +443,7 @@ int main(int argc, char *argv[])
 		glEnable(GL_CULL_FACE);
 
 		glViewport(0, 0, 1024, 1024);
-		matProj = glm::frustum(1.0, -1.0, -1.0, 1.0, 0.5, 5000.0);
+		matProj = glm::frustum(1.0, -1.0, -1.0, 1.0, 0.5, 5000.0);//glm::perspective(50.0, 1.0, 0.5, 5000.0);//
 
 		float heading = 0.0f, pitch = 0.0f;
 		glm::vec3 position = glm::vec3(0.0, 0.0, 0.0), direction;
@@ -467,7 +467,7 @@ int main(int argc, char *argv[])
 							pitch += sdlEvent.motion.yrel * 0.01f;
 							pitch = glm::clamp(pitch, -glm::pi<float>()/2, glm::pi<float>()/2);
 
-							direction = glm::vec3(cos(pitch) * sin(heading), sin(pitch), cos(pitch) * cos(heading));
+							direction = glm::normalize(glm::vec3(cos(pitch) * sin(heading), sin(pitch), cos(pitch) * cos(heading)));
 						} break;
 					case SDL_KEYDOWN:
 						{

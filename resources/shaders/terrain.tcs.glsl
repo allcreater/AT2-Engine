@@ -18,37 +18,20 @@ out	tcsResult {
 	vec2 texCoord;
 } output[];
 
-
-vec4 clippingPlane[6] = vec4[6] (
-	//right and left
-	normalize(u_matModelViewProjection[3] - u_matModelViewProjection[0]),
-	normalize(u_matModelViewProjection[3] + u_matModelViewProjection[0]),
-	//down and up
-	normalize(u_matModelViewProjection[3] - u_matModelViewProjection[1]),
-	normalize(u_matModelViewProjection[3] + u_matModelViewProjection[1]),
-	//far and near
-	normalize(u_matModelViewProjection[3] - u_matModelViewProjection[2]),
-	normalize(u_matModelViewProjection[3] + u_matModelViewProjection[2])
-	);
-
-bool PointInFrustum(vec3 point)
+bool PointInFrustum(in vec4 point)
 {
-	vec3 dir = point - u_matInverseModelView[3].xyz;
-	return dot(dir, -u_matInverseModelView[2].xyz) > 0;
-	/*
-	return (dot(clippingPlane[0].xyz, point) > -clippingPlane[0].w)
-		&& (dot(clippingPlane[1].xyz, point) > -clippingPlane[1].w)
-		&& (dot(clippingPlane[2].xyz, point) > -clippingPlane[2].w)
-		&& (dot(clippingPlane[3].xyz, point) > -clippingPlane[3].w)
-		&& (dot(clippingPlane[4].xyz, point) > -clippingPlane[4].w)
-		&& (dot(clippingPlane[5].xyz, point) > -clippingPlane[5].w);*/
+	vec4 pointProj = u_matModelViewProjection * point;
+	float limit = pointProj.w + 50.0;
+
+	return !((pointProj.x < -limit) || (pointProj.x > limit));// || (pointProj.y < -limit) || (pointProj.y > limit));
 }
+
 
 void main()
 {
 	if (gl_InvocationID == 0)
 	{
-		float level = (PointInFrustum(gl_in[0].gl_Position.xyz) || PointInFrustum(gl_in[1].gl_Position.xyz) || PointInFrustum(gl_in[2].gl_Position.xyz) || PointInFrustum(gl_in[3].gl_Position.xyz)) ? unMaxTessLevel : 2.0;
+		float level = (PointInFrustum(gl_in[0].gl_Position) || PointInFrustum(gl_in[1].gl_Position) || PointInFrustum(gl_in[2].gl_Position) || PointInFrustum(gl_in[3].gl_Position)) ? unMaxTessLevel : 2.0;
 		gl_TessLevelInner[0] = level;
 		gl_TessLevelInner[1] = level;
 

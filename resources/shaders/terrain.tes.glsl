@@ -18,6 +18,7 @@ in	tcsResult {
 
 out tesResult {
 	vec2 texCoord;
+	float elevation;
 	vec3 position; //in view-space
 } output;
 
@@ -29,9 +30,9 @@ out tesResult {
 		gl_TessCoord.y ) )
 
 
-float getHeight (vec2 texCoord)
+float getHeight (in vec2 texCoord)
 {
-	return (textureLod(u_texHeight, texCoord, 0.0).r + textureLod(u_texHeight, texCoord, 5.0).r*0.00390625) * u_scaleV;// + texture(u_texNoise, texCoord*10.0).r * 3.0;
+	return (textureLod(u_texHeight, texCoord, 0.0).r + textureLod(u_texHeight, texCoord, 4.0).r*0.00390625*2.0) * u_scaleV;// + texture(u_texNoise, texCoord*10.0).r * 3.0;
 }
 
 void main()
@@ -39,11 +40,12 @@ void main()
 	vec4	worldPos 	= Interpolate( gl_in, .gl_Position );
 	vec2	texCoord 	= Interpolate( input, .texCoord );
 
-	worldPos.y += getHeight(texCoord);
-	//worldPos.y = 0.0;
+	float height = getHeight(texCoord);
+	worldPos.y += height;
 
 
 	output.texCoord = texCoord;
+	output.elevation = height/u_scaleV;
 	output.position = vec3(u_matModelView * worldPos);
 	gl_Position = u_matProjection * u_matModelView * worldPos;
 }
