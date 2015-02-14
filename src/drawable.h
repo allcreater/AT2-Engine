@@ -9,6 +9,7 @@ class IDrawable
 {
 public:
 	virtual void Draw (IRenderer& renderer) = 0;
+	virtual ~IDrawable() {}
 
 private:
 

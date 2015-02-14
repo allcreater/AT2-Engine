@@ -4,7 +4,7 @@ layout(vertices = 4) out;
 
 uniform CameraBlock
 {
-	mat4 u_matModelView, u_matInverseModelView, u_matProjection, u_matInverseProjection, u_matModelViewProjection;
+	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;
 };
 
@@ -20,7 +20,7 @@ out	tcsResult {
 
 bool PointInFrustum(in vec4 point)
 {
-	vec4 pointProj = u_matModelViewProjection * point;
+	vec4 pointProj = u_matViewProjection * point;
 	float limit = pointProj.w + 50.0;
 
 	return !((pointProj.x < -limit) || (pointProj.x > limit));// || (pointProj.y < -limit) || (pointProj.y > limit));

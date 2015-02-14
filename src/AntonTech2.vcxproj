@@ -41,8 +41,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\..\libs\glew-1.10.0\include;$(SolutionDir)\..\libs\glm-0.9.5.4\;$(SolutionDir)\..\libs\SDL2-2.0.3\include;$(SolutionDir)\..\libs\gli-0.5.1.1\;$(SolutionDir)\..\libs\boost_1_57_0\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\..\libs\SDL2-2.0.3\lib\x86;$(SolutionDir)\..\libs\glew-1.10.0\lib\Release\Win32;C:\Users\allcreater\Documents\GitHub\AT2-Engine\libs\boost_1_57_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\..\libs\glew-1.10.0\include;$(SolutionDir)\..\libs\glm-0.9.5.4\;$(SolutionDir)\..\libs\SDL2-2.0.3\include;$(SolutionDir)\..\libs\gli-0.5.1.1\;$(SolutionDir)\..\libs\boost_1_57_0\;$(SolutionDir)\..\libs\assimp-3.1.1\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\..\libs\SDL2-2.0.3\lib\x86;$(SolutionDir)\..\libs\glew-1.10.0\lib\Release\Win32;$(SolutionDir)\..\libs\boost_1_57_0\stage\lib;$(SolutionDir)\..\libs\assimp-3.1.1\build\code\MinSizeRel\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\..\build\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -59,7 +59,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glew32.lib;SDL2.lib;SDL2main.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;SDL2.lib;SDL2main.lib;opengl32.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -110,6 +110,22 @@
     <ClInclude Include="OpenGL\GlVertexBuffer.h" />
     <ClInclude Include="StateManager.h" />
     <ClInclude Include="utils.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\shaders\mesh.fs.glsl" />
+    <None Include="..\resources\shaders\mesh.vs.glsl" />
+    <None Include="..\resources\shaders\postprocess.fs.glsl" />
+    <None Include="..\resources\shaders\postprocess.vs.glsl" />
+    <None Include="..\resources\shaders\raytrace_sky.fs.glsl" />
+    <None Include="..\resources\shaders\raytrace_sky.vs.glsl" />
+    <None Include="..\resources\shaders\skylight.fs.glsl" />
+    <None Include="..\resources\shaders\skylight.vs.glsl" />
+    <None Include="..\resources\shaders\spherelight.fs.glsl" />
+    <None Include="..\resources\shaders\spherelight.vs.glsl" />
+    <None Include="..\resources\shaders\terrain.fs.glsl" />
+    <None Include="..\resources\shaders\terrain.tcs.glsl" />
+    <None Include="..\resources\shaders\terrain.tes.glsl" />
+    <None Include="..\resources\shaders\terrain.vs.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

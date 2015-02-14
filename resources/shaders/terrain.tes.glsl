@@ -4,7 +4,7 @@ layout(quads, equal_spacing, ccw) in;
 
 uniform CameraBlock
 {
-	mat4 u_matModelView, u_matInverseModelView, u_matProjection, u_matInverseProjection, u_matModelViewProjection;
+	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;
 };
 
@@ -46,6 +46,6 @@ void main()
 
 	output.texCoord = texCoord;
 	output.elevation = height/u_scaleV;
-	output.position = vec3(u_matModelView * worldPos);
-	gl_Position = u_matProjection * u_matModelView * worldPos;
+	output.position = vec3(u_matView * worldPos);
+	gl_Position = u_matProjection * u_matView * worldPos;
 }

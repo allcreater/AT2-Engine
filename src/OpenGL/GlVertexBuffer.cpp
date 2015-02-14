@@ -87,7 +87,8 @@ T* GlVertexBuffer<T>::Lock()
 		m_mappedData = reinterpret_cast<T*>(glMapNamedBufferEXT(m_id, GL_READ_WRITE));
 	else
 		Log::Warning() << "VertexBuffer: redundant Lock() call" << std::endl;
-
+	//glMapNamedBufferRangeEXT(m_id, 0, _size, );
+	
 	return m_mappedData;
 }
 

@@ -6,7 +6,7 @@ in vec2 v_texCoord;
 
 uniform CameraBlock
 {
-	mat4 u_matModelView, u_matInverseModelView, u_matProjection, u_matInverseProjection, u_matModelViewProjection;
+	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;
 };
 
@@ -22,7 +22,7 @@ vec3 getEyeDir()
 {
     vec4 device_normal = vec4(v_texCoord*2.0-1.0, 0.0, 1.0);
     vec3 eye_normal = normalize((u_matInverseProjection * device_normal).xyz);
-    vec3 world_normal = normalize(mat3(u_matInverseModelView) * eye_normal);
+    vec3 world_normal = normalize(mat3(u_matInverseView) * eye_normal);
     
     return world_normal;
 }

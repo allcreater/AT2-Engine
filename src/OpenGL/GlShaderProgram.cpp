@@ -137,81 +137,14 @@ bool GlShaderProgram::IsActive() const
 
 	return m_programId == activeProgramId;
 }
-/*
-//WARNING: copypaste!
-void GlShaderProgram::SetUniform(const str& _name, GLfloat _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniform1f(m_programId, location, _value);
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::vec2& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniform2fv(m_programId, location, 1, glm::value_ptr(_value));
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::vec3& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniform3fv(m_programId, location, 1, glm::value_ptr(_value));
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::vec4& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniform4fv(m_programId, location, 1, glm::value_ptr(_value));
-}
-void GlShaderProgram::SetUniform(const str& _name, GLint _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniform1i(m_programId, location, _value);
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::ivec2& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniform2iv(m_programId, location, 1, glm::value_ptr(_value));
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::ivec3& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniform3iv(m_programId, location, 1, glm::value_ptr(_value));
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::ivec4& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniform4iv(m_programId, location, 1, glm::value_ptr(_value));
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::mat2& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniformMatrix2fv(m_programId, location, 1, GL_FALSE, glm::value_ptr(_value));
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::mat3& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniformMatrix3fv(m_programId, location, 1, GL_FALSE, glm::value_ptr(_value));
-}
-void GlShaderProgram::SetUniform(const str& _name, const glm::mat4& _value)
-{
-	GLint location = glGetUniformLocation(m_programId, _name.c_str());
-	if (location >= 0)
-		glProgramUniformMatrix4fv(m_programId, location, 1, GL_FALSE, glm::value_ptr(_value));
-}
-*/
 
 void GlShaderProgram::SetUBO(const str& blockName, unsigned int index)
 {
 	GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
 	if (blockIndex != GL_INVALID_INDEX)
 		glUniformBlockBinding(m_programId, blockIndex, index);
+	else
+		Log::Warning() << "Uniform block " << blockName << "not found" << std::endl;
 }
 
 std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformBlockInfo(const str& blockName) const

@@ -1,17 +1,17 @@
-#version 420 core
+#version 400 core
 
 precision mediump float;
 
 in vec3 v_pos;
 in vec2 v_texCoord;
 
-layout(binding = 1) uniform CameraBlock
+uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;
 };
 
-layout(binding = 2) uniform LightingBlock
+uniform LightingBlock
 {
 	vec4 u_lightPos; //in view space
 	float u_lightRadius;
@@ -53,5 +53,5 @@ void main()
 	
 	vec4 color = texture(u_colorMap, texCoord)*Kd;
 
-	FragColor = vec4(color.rgb*attenuation*attenuation, 1.0);
+	FragColor = vec4(color.rgb*attenuation, 1.0);
 }

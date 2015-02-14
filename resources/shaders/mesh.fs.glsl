@@ -10,16 +10,15 @@ uniform sampler3D u_texNoise;
 uniform sampler2D u_texHeight, u_texNormalMap;
 uniform sampler2D u_texGrass, u_texRock;
 
-in tesResult {
+in fsInput {
 	vec2 texCoord;
-	float elevation;
+	vec3 normal;
 	vec3 position; //in view-space
 } input;
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 FragNormal;
 
-//not using there
 mat3 cotangent_frame(in vec3 normal, in vec3 pos, in vec2 uv)
 {
     // get edge vectors of the pixel triangle
@@ -41,16 +40,13 @@ mat3 cotangent_frame(in vec3 normal, in vec3 pos, in vec2 uv)
 
 void main()
 {
-	vec3 normalFromMap = (texture(u_texNormalMap, input.texCoord).rbg * 2.0 - 1.0)*vec3(1.0, 1.0, -1.0);
+	//vec3 normalFromMap = (texture(u_texNormalMap, input.texCoord).rbg * 2.0 - 1.0)*vec3(1.0, 1.0, -1.0);
 
-	vec2 texCoord = input.texCoord*200.0;
-	FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, smoothstep(0.1, 0.5, length(normalFromMap.xz)));
+	vec2 texCoord = input.texCoord;
+	//FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, smoothstep(0.1, 0.5, length(normalFromMap.xz)));
+	//FragColor.a = 1.0;
+	FragColor.rgba = vec4(1.0, 0.0, 0.0, 1.0);
 
-	if (input.elevation <= 0.01)
-		FragColor.rgb = vec3(0.2, 0.3, 1.0);
-
-	FragColor.a = 1.0;
-
-	vec3 normal = u_matNormal * normalFromMap;
+	vec3 normal = u_matNormal * input.normal;
 	FragNormal = vec4(normal, 1.0);
 }

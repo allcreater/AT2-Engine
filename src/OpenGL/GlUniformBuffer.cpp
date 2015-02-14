@@ -43,6 +43,31 @@ void GlUniformBuffer::SetUniformInternal(const str& name, const T& value, size_t
 	glUnmapNamedBufferEXT(m_id);
 }
 
+
+//mat2
+template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const mat2& value, size_t size)
+{
+	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
+	if (!ui)
+		return;
+
+	auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
+	memcpy(data + ui->Offset, &(value[0].x), sizeof(mat2::col_type));
+	memcpy(data + ui->Offset + ui->MatrixStride, &(value[1].x), sizeof(mat2::col_type));
+	glUnmapNamedBufferEXT(m_id);
+}
+template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const dmat2& value, size_t size)
+{
+	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
+	if (!ui)
+		return;
+
+	auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
+	memcpy(data + ui->Offset, &(value[0].x), sizeof(dmat2::col_type));
+	memcpy(data + ui->Offset + ui->MatrixStride, &(value[1].x), sizeof(dmat2::col_type));
+	glUnmapNamedBufferEXT(m_id);
+}
+//mat3
 template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const mat3& value, size_t size)
 {
 	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
@@ -53,6 +78,18 @@ template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const ma
 	memcpy(data + ui->Offset, &(value[0].x), sizeof(mat3::col_type));
 	memcpy(data + ui->Offset + ui->MatrixStride, &(value[1].x), sizeof(mat3::col_type));
 	memcpy(data + ui->Offset + ui->MatrixStride * 2, &(value[2].x), sizeof(mat3::col_type));
+	glUnmapNamedBufferEXT(m_id);
+}
+template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const dmat3& value, size_t size)
+{
+	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
+	if (!ui)
+		return;
+
+	auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
+	memcpy(data + ui->Offset, &(value[0].x), sizeof(dmat3::col_type));
+	memcpy(data + ui->Offset + ui->MatrixStride, &(value[1].x), sizeof(dmat3::col_type));
+	memcpy(data + ui->Offset + ui->MatrixStride * 2, &(value[2].x), sizeof(dmat3::col_type));
 	glUnmapNamedBufferEXT(m_id);
 }
 
