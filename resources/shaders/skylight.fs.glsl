@@ -1,17 +1,17 @@
-#version 400 core
+#version 420 core
 
 precision mediump float;
 
 in vec3 v_pos;
 in vec2 v_texCoord;
 
-uniform CameraBlock
+layout(binding = 1) uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;
 };
 
-uniform LightingBlock
+layout(binding = 2) uniform LightingBlock
 {
 	vec4 u_lightPos; //in view space
 	float u_lightRadius;
@@ -36,7 +36,7 @@ void main()
 {
 	vec2 texCoord = gl_FragCoord.xy/1024.0;
 
-	float z = texture (u_depthMap, texCoord);
+	float z = texture (u_depthMap, texCoord).r;
 	vec3 fragPos = getFragPos(vec3(texCoord, z));
 
 

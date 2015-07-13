@@ -1,14 +1,14 @@
-#version 400 core
+#version 420 core
 
 layout(location = 1) in vec3 a_Normal;
 
-uniform CameraBlock
+layout(binding = 1) uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;
 };
 
-uniform LightingBlock
+layout(binding = 2)	uniform LightingBlock
 {
 	vec4 u_lightPos; //in view space
 	float u_lightRadius;

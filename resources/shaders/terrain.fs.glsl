@@ -1,6 +1,6 @@
-#version 410 core
+#version 420 core
 
-uniform CameraBlock
+layout(binding = 1) uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;
@@ -48,6 +48,8 @@ void main()
 
 	if (input.elevation <= 0.01)
 		FragColor.rgb = vec3(0.2, 0.3, 1.0);
+
+	FragColor.rgb = mix(FragColor.rgb, vec3(1.0), smoothstep(0.31, 0.35, input.elevation * (-length(normalFromMap.xz)+0.95)));
 
 	FragColor.a = 1.0;
 

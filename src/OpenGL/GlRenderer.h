@@ -18,8 +18,17 @@ public:
 class GlResourceFactory : public IResourceFactory
 {
 public:
+	GlResourceFactory();
+	~GlResourceFactory();
+
+public:
 	std::shared_ptr<ITexture> LoadTexture(const str& filename) const override;
 	std::shared_ptr<ITexture> CreateTexture() const override;
+
+protected:
+	GLint GetInternalFormat(GLuint externalFormat, GLuint externalType) const;
+	std::shared_ptr<ITexture> LoadTexture_GLI(const str& filename) const;
+	std::shared_ptr<ITexture> LoadTexture_DevIL(const str& filename) const;
 };
 
 class GlRenderer : public IRenderer
@@ -41,6 +50,9 @@ public:
 
 private:
 	void CheckSDLError();
+
+private:
+	static void  __stdcall GlErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar * message, GLvoid * userParam);
 
 private:
     SDL_Window* m_window;

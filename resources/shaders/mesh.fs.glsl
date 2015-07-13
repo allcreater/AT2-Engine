@@ -1,17 +1,16 @@
-#version 410 core
+#version 420 core
 
-uniform CameraBlock
+layout(binding = 1) uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;
 };
 
-uniform sampler3D u_texNoise;
-uniform sampler2D u_texHeight, u_texNormalMap;
-uniform sampler2D u_texGrass, u_texRock;
+uniform sampler2D u_texNormalMap;
+uniform sampler2D u_texDiffuse;
 
 in fsInput {
-	vec2 texCoord;
+	vec3 texCoord;
 	vec3 normal;
 	vec3 position; //in view-space
 } input;
@@ -42,10 +41,9 @@ void main()
 {
 	//vec3 normalFromMap = (texture(u_texNormalMap, input.texCoord).rbg * 2.0 - 1.0)*vec3(1.0, 1.0, -1.0);
 
-	vec2 texCoord = input.texCoord;
-	//FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, smoothstep(0.1, 0.5, length(normalFromMap.xz)));
-	//FragColor.a = 1.0;
-	FragColor.rgba = vec4(1.0, 0.0, 0.0, 1.0);
+	vec2 texCoord = input.texCoord.st;
+
+	FragColor.rgba = texture (u_texDiffuse, texCoord.st*vec2(1,-1));
 
 	vec3 normal = u_matNormal * input.normal;
 	FragNormal = vec4(normal, 1.0);

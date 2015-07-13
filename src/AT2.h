@@ -1,6 +1,8 @@
 #ifndef AT2_MAIN_HEADER_H
 #define AT2_MAIN_HEADER_H
 
+#define GLM_SWIZZLE
+
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
@@ -95,12 +97,12 @@ public:
 	IShaderProgram() = default;
 	IShaderProgram(const IShaderProgram& other) = delete;
 	IShaderProgram& operator= (const IShaderProgram& other) = delete;
+	virtual ~IShaderProgram() {};
 
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 	virtual bool IsActive() const = 0;
-	virtual ~IShaderProgram() {};
 };
 
 class IDrawPrimitive
@@ -184,6 +186,9 @@ public:
 
 class IResourceFactory
 {
+public:
+	virtual ~IResourceFactory() {}
+
 public:
 	virtual std::shared_ptr<ITexture> LoadTexture(const str& filename) const = 0; //TODO: maybe I need to detach load functionality 
 	virtual std::shared_ptr<ITexture> CreateTexture() const = 0;

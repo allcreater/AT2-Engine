@@ -157,8 +157,8 @@ private:
 class IFileSystemListener
 {
 public:
-	typedef std::wstring namestring;
-	typedef std::function<void(const std::wstring& filename)> callbackFunc;
+	typedef std::string namestring;
+	typedef std::function<void(const namestring& filename)> callbackFunc;
 
 	virtual void SetFolderCallback(const namestring& folderName, callbackFunc callback) = 0;
 	virtual void ResetFolderCallback(const namestring& folderName) = 0;

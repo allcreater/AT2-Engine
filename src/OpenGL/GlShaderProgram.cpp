@@ -90,7 +90,7 @@ GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
 	GLint infoLogLength;
 	glGetShaderInfoLog(shader, 2048, &infoLogLength, infoLogBuffer);
 	if (infoLogLength > 0)
-		Log::Debug() << "Shader log: " << std::endl << infoLogBuffer;
+		Log::Debug() << "Shader \"" << GetName() << "\" log: " << std::endl << infoLogBuffer;
 
 	GLint status = 0;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -104,7 +104,7 @@ GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
 			std::string("unknown");
 
 		std::stringstream ss;
-		ss << "GlShaderProgram:" << shaderType << " shader compilation failed!" << std::endl << infoLogBuffer;
+		ss << "GlShaderProgram:" << shaderType << " shader \"" << GetName() <<"\" compilation failed!" << std::endl << infoLogBuffer;
 
 		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, ss.str());
 	}

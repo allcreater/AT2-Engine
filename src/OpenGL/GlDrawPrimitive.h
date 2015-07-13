@@ -26,7 +26,7 @@ class GlDrawPrimitive : public IDrawPrimitive
 {
 public:
 	GlDrawPrimitive(GlDrawPrimitiveType mode) : m_primitiveMode(mode) {}
-	virtual ~GlDrawPrimitive() {}
+	~GlDrawPrimitive() {}
 
 	GlDrawPrimitiveType GetPrimitiveMode() const {return m_primitiveMode;}
 
@@ -39,10 +39,10 @@ class GlDrawArraysPrimitive : public GlDrawPrimitive
 {
 public:
 	GlDrawArraysPrimitive(GlDrawPrimitiveType mode, GLint first, GLsizei count) : GlDrawPrimitive(mode), m_firstIndex(first), m_count(count) {}
-	virtual ~GlDrawArraysPrimitive() {}
+	~GlDrawArraysPrimitive() {}
 
 public:
-	virtual void Draw() const
+	void Draw() const override
 	{
 		glDrawArrays(static_cast<GLenum>(GetPrimitiveMode()), m_firstIndex, m_count);
 	}
@@ -65,10 +65,10 @@ public:
 
 public:
 	GlDrawElementsPrimitive(GlDrawPrimitiveType mode, GLsizei count, IndicesType indicesType, GLint first) : GlDrawPrimitive(mode), m_firstIndex(first), m_count(count), m_indicesType(indicesType) {}
-	virtual ~GlDrawElementsPrimitive() {}
+	~GlDrawElementsPrimitive() {}
 
 public:
-	virtual void Draw() const
+	void Draw() const override
 	{
 		glDrawElements(static_cast<GLenum>(GetPrimitiveMode()), m_count, static_cast<GLenum>(m_indicesType), reinterpret_cast<GLvoid*>(m_firstIndex));
 	}

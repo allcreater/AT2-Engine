@@ -82,7 +82,7 @@ public:
 	void SetUniform(const str& name, const glm::mat4& value)	override;
 
 	//integers
-	void SetUniform(const str& name, const int& value)		override;
+	void SetUniform(const str& name, const int& value)			override;
 	void SetUniform(const str& name, const glm::ivec2& value)	override;
 	void SetUniform(const str& name, const glm::ivec3& value)	override;
 	void SetUniform(const str& name, const glm::ivec4& value)	override;
@@ -90,7 +90,10 @@ public:
 	//textures
 	void SetUniform(const str& name, std::weak_ptr<const ITexture> value) override;
 
-	virtual void Bind() override;
+	void Bind() override;
+	
+	void SetProgram(std::weak_ptr<GlShaderProgram> program) { m_program = program; }
+	std::weak_ptr<GlShaderProgram> GetProgram() { return m_program; }
 
 private:
 	template <typename T>

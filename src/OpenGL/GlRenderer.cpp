@@ -52,7 +52,8 @@ GlRenderer::GlRenderer()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);//WGL_CONTEXT_DEBUG_BIT_ARB
+
     m_window = SDL_CreateWindow("Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (!m_window)
         throw AT2Exception(AT2Exception::ErrorCase::Renderer, "SDL: cannot create window");
@@ -70,6 +71,11 @@ GlRenderer::GlRenderer()
 	GLenum err=glewInit();
 	if(err != GLEW_OK)
 		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GLEW: cannot init");
+	
+	
+	glDebugMessageCallback(GlErrorCallback, this);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
 	m_rendererCapabilities = new GlRendererCapabilities();
 	m_resourceFactory = new GlResourceFactory();
@@ -124,4 +130,25 @@ void GlRenderer::Shutdown()
 
 	m_context = nullptr;
 	m_window = nullptr;
+}
+
+void GlRenderer::GlErrorCallback(GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length, const GLchar * _message, GLvoid * _userParam)
+{
+	auto rendererInstance = reinterpret_cast<GlRenderer*>(_userParam);
+
+	assert(dynamic_cast<GlRenderer*>(rendererInstance));
+
+	switch (_severity)
+	{
+	case GL_DEBUG_SEVERITY_NOTIFICATION:
+		Log::Info() << "OpenGL[N]: " << _message << std::endl; break;
+	case GL_DEBUG_SEVERITY_LOW:
+		Log::Debug() << "OpenGL[L]: " << _message << std::endl; break;
+	case GL_DEBUG_SEVERITY_MEDIUM:
+		Log::Warning() << "OpenGL[M]: " << _message << std::endl; break;
+	case GL_DEBUG_SEVERITY_HIGH:
+		Log::Error() << "OpenGL[H]: " << _message << std::endl; break;
+	default:
+		assert(false); //WTF?!
+	}
 }

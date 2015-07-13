@@ -1,8 +1,8 @@
-#version 410 core
+#version 420 core
 
 layout(quads, equal_spacing, ccw) in;
 
-uniform CameraBlock
+layout(binding = 1) uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	mat3 u_matNormal;

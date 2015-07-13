@@ -36,7 +36,7 @@ void main()
 {
 	vec2 texCoord = gl_FragCoord.xy/1024.0;
 
-	float z = texture (u_depthMap, texCoord);
+	float z = texture (u_depthMap, texCoord).r;
 	vec3 fragPos = getFragPos(vec3(texCoord, z));
 
 

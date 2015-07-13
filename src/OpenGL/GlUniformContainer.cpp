@@ -308,9 +308,9 @@ private:
 	std::weak_ptr<const ITexture> m_value;
 };
 
-GlUniformContainer::GlUniformContainer(std::weak_ptr<GlShaderProgram> program) : m_program(program)
+GlUniformContainer::GlUniformContainer(std::weak_ptr<GlShaderProgram> _program)
 {
-
+	SetProgram(_program);
 }
 
 GlUniformContainer::~GlUniformContainer()
@@ -319,9 +319,9 @@ GlUniformContainer::~GlUniformContainer()
 }
 
 template <typename T>
-IGlUniform* GlUniformContainer::GetOrCreateUniform(const str& name)
+IGlUniform* GlUniformContainer::GetOrCreateUniform(const str& _name)
 {
-	auto& value = m_uniformsMap[name];
+	auto& value = m_uniformsMap[_name];
 	if (value == nullptr)
 		value = new GlUniform<T>();
 

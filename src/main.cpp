@@ -20,11 +20,14 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include <chrono>
+#include <filesystem>
 
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
+
+std::shared_ptr<AT2::GlShaderProgram> MeshShader;
 
 std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex;
@@ -33,7 +36,7 @@ std::shared_ptr<AT2::GlFrameBuffer> Stage1FBO, Stage2FBO;
 std::shared_ptr<AT2::IFrameBuffer> NullFBO;
 
 std::shared_ptr<AT2::MeshDrawable> QuadDrawable, TerrainDrawable, SphereLightDrawable;
-std::vector<std::shared_ptr<AT2::MeshDrawable>> SceneDrawables;
+std::vector<std::shared_ptr<AT2::IDrawable>> SceneDrawables;
 
 bool WireframeMode = false;
 
@@ -55,6 +58,7 @@ public:
 		m_filenames[3] = gsFilename;
 		m_filenames[4] = fsFilename;
 
+		SetName(vsFilename);
 		Reload();
 	}
 
@@ -194,26 +198,136 @@ std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::GlRenderer* r
 	return drawable;
 }
 
-std::vector<std::shared_ptr<AT2::MeshDrawable>> LoadModel(const AT2::str& _filename, AT2::GlRenderer* _renderer)
+std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRenderer* _renderer)
 {
+	class GlMeshDrawable : public AT2::IDrawable
+	{
+	friend class GlMeshBuilder;
+
+	public:
+		GlMeshDrawable()
+		{
+			auto storage = std::make_shared<AT2::GlUniformContainer>(MeshShader);
+		}
+
+		void Draw(AT2::IRenderer& _renderer) override
+		{
+			auto stateManager = _renderer.GetStateManager();
+
+			stateManager->BindShader(Shader);
+			stateManager->BindVertexArray(VertexArray);
+			UniformBuffer->Bind();
+
+			for (auto& primitive : Primitives)
+			{
+				stateManager->BindTextures(primitive.Textures);
+
+				UniformBuffer->SetUniform("u_matModel", primitive.ModelMatrix);
+
+				primitive.Primitive->Draw();
+			}
+		}
+
+	protected:
+		std::shared_ptr<AT2::IShaderProgram> Shader;
+		std::shared_ptr<AT2::IVertexArray> VertexArray;
+		std::shared_ptr<AT2::IUniformContainer> UniformBuffer;
+
+		struct ParametrizedPrimitive
+		{
+			glm::mat4 ModelMatrix;
+			AT2::TextureSet Textures;
+			std::shared_ptr<AT2::IDrawPrimitive> Primitive;
+		};
+		std::vector<ParametrizedPrimitive> Primitives;
+	};
+
 	class GlMeshBuilder
 	{
 	public:
+		GlMeshBuilder(const AT2::IRenderer* _renderer, const AT2::str& _filename) : m_renderer(_renderer), m_scenePath(_filename)
+		{
+			m_scene = m_importer.ReadFile(_filename, aiProcess_Triangulate | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+		}
+
+	public:
+		std::shared_ptr <GlMeshDrawable> m_buildedMesh;
+
+		void Build()
+		{
+			BuildVAO();
+			TraverseNode(m_scene->mRootNode, aiMatrix4x4());
+		}
+
+	protected:
+		std::tr2::sys::path m_scenePath;
+		Assimp::Importer m_importer;
 		const aiScene* m_scene;
 		const AT2::IRenderer* m_renderer;
-		std::shared_ptr<AT2::GlShaderProgram> m_shader;
 
-		std::vector<std::shared_ptr<AT2::MeshDrawable>> m_meshList;
+		std::vector<glm::vec3> m_verticesVec;
+		std::vector<glm::vec3> m_texCoordVec;
+		std::vector<glm::vec3> m_normalsVec;
+		std::vector<GLuint> m_indicesVec;
 
-		GlMeshBuilder()
+		std::vector<GLint> m_meshIndexOffsets;
+
+	protected:
+		void AddMesh(const aiMesh* _mesh)
 		{
-			m_shader = AT2::GlShaderProgramFromFile::CreateShader(
-				"resources\\shaders\\mesh.vs.glsl",
-				"",
-				"",
-				"",
-				"resources\\shaders\\mesh.fs.glsl");
-			m_shader->SetUBO("CameraBlock", 1);
+			auto vertexOffset = m_verticesVec.size();
+
+			m_meshIndexOffsets.push_back(m_indicesVec.size());
+
+			m_verticesVec.insert(m_verticesVec.end(), reinterpret_cast<glm::vec3*>(_mesh->mVertices), reinterpret_cast<glm::vec3*>(_mesh->mVertices) + _mesh->mNumVertices);
+			m_texCoordVec.insert(m_texCoordVec.end(), reinterpret_cast<glm::vec3*>(_mesh->mTextureCoords[0]), reinterpret_cast<glm::vec3*>(_mesh->mTextureCoords[0]) + _mesh->mNumVertices);
+			m_normalsVec.insert(m_normalsVec.end(), reinterpret_cast<glm::vec3*>(_mesh->mNormals), reinterpret_cast<glm::vec3*>(_mesh->mNormals) + _mesh->mNumVertices);
+
+			for (int j = 0; j < _mesh->mNumFaces; ++j)
+			{
+				const aiFace& face = _mesh->mFaces[j];
+
+				m_indicesVec.push_back(face.mIndices[0] + vertexOffset);
+				m_indicesVec.push_back(face.mIndices[2] + vertexOffset);
+				m_indicesVec.push_back(face.mIndices[1] + vertexOffset);
+			}
+		}
+
+		void BuildVAO()
+		{
+			for (int i = 0; i < m_scene->mNumMeshes; ++i)
+			{
+				AddMesh(m_scene->mMeshes[i]);
+			}
+
+			auto vao = std::make_shared<AT2::GlVertexArray>(m_renderer->GetRendererCapabilities());
+			vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, m_verticesVec.size(), m_verticesVec.data()));
+			vao->SetVertexBuffer(2, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, m_texCoordVec.size(), m_texCoordVec.data()));
+			vao->SetVertexBuffer(3, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, m_normalsVec.size(), m_normalsVec.data()));
+			vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, m_indicesVec.size(), m_indicesVec.data()));
+
+			m_buildedMesh = std::make_shared<GlMeshDrawable>();
+			m_buildedMesh->Shader = MeshShader;
+			m_buildedMesh->VertexArray = vao;
+		}
+
+		void ExtractMaterials()
+		{
+			for (int i = 0; i < m_scene->mNumMaterials; ++i)
+			{
+				const aiMaterial* material = m_scene->mMaterials[i];
+
+				aiString path;
+				if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS)
+				{
+					std::tr2::sys::path modelPath = m_scenePath.parent_path();
+					modelPath /= path.data;
+
+					auto texDiffuse = m_renderer->GetResourceFactory()->LoadTexture(modelPath.string());
+					//pp.Textures.insert(texDiffuse);
+					//storage->SetUniform("u_texDiffuse", texDiffuse);
+				}
+			}
 		}
 
 		void TraverseNode(const aiNode* _node, aiMatrix4x4 _transform)
@@ -222,31 +336,16 @@ std::vector<std::shared_ptr<AT2::MeshDrawable>> LoadModel(const AT2::str& _filen
 			{
 				for (int i = 0; i < _node->mNumMeshes; i++)
 				{
-					const aiMesh* mesh = m_scene->mMeshes[_node->mMeshes[i]];
+					const int meshIndex = _node->mMeshes[i];
+					const aiMesh* mesh = m_scene->mMeshes[meshIndex];
 
-					auto vao = std::make_shared<AT2::GlVertexArray>(m_renderer->GetRendererCapabilities());
-					vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, mesh->mNumVertices, reinterpret_cast<glm::vec3*>(mesh->mVertices)));
-					vao->SetVertexBuffer(2, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, mesh->mNumVertices, reinterpret_cast<glm::vec3*>(mesh->mTextureCoords[0])));
-					vao->SetVertexBuffer(3, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, mesh->mNumVertices, reinterpret_cast<glm::vec3*>(mesh->mNormals)));
-
- 					std::vector<GLuint> indices(mesh->mNumFaces * 3);
-					for (int j = 0; j < mesh->mNumFaces; ++j)
-					{
-						const aiFace& face = mesh->mFaces[j];
-						indices[j * 3] = face.mIndices[0];
-						indices[j * 3 + 1] = face.mIndices[2];
-						indices[j * 3 + 2] = face.mIndices[1];
-					}
-					vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, indices.size(), indices.data()));
-
-					auto drawable = std::make_shared<AT2::MeshDrawable>();
-					drawable->VertexArray = vao;
-					drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, indices.size(), AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
+					GlMeshDrawable::ParametrizedPrimitive pp;
+					pp.Primitive = std::make_shared<AT2::GlDrawElementsPrimitive>(AT2::GlDrawPrimitiveType::Triangles, mesh->mNumFaces * 3, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, m_meshIndexOffsets[meshIndex]*sizeof(GLuint));
+					pp.ModelMatrix = ConvertMatrix(_transform);
 					
-					SetMaterial(drawable.get());
-					drawable->UniformBuffer->SetUniform("u_matModel", ConvertMatrix(_transform));
-
-					m_meshList.push_back(drawable);
+					m_buildedMesh->Primitives.push_back(pp);
+					if (!m_buildedMesh->UniformBuffer)
+						m_buildedMesh->UniformBuffer = std::make_shared<AT2::GlUniformContainer>(MeshShader);
 				}
 			}
 			else
@@ -258,36 +357,16 @@ std::vector<std::shared_ptr<AT2::MeshDrawable>> LoadModel(const AT2::str& _filen
 				TraverseNode(_node->mChildren[i], _transform);
 		}
 
-	protected:
-		void SetMaterial(AT2::MeshDrawable* _drawable)
-		{
-			auto storage = std::make_shared<AT2::GlUniformContainer>(m_shader);
-			_drawable->UniformBuffer = storage;
-			_drawable->Shader = m_shader;
-		}
-
-		
 		glm::mat4 ConvertMatrix(const aiMatrix4x4& _t) const
 		{
-			/*
-			return glm::mat4(	_t.a1, _t.a2, _t.a3, _t.a4,
-								_t.b1, _t.b2, _t.b3, _t.b4,
-								_t.c1, _t.c2, _t.c3, _t.c4,
-								_t.d1, _t.d2, _t.d3, _t.d4
-				);*/
 			return glm::transpose(*(reinterpret_cast<const glm::mat4*>(&_t)));
 		}
 		
 	};
 
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(_filename, aiProcess_Triangulate | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
-
-	GlMeshBuilder meshBuilder;
-	meshBuilder.m_scene = scene;
-	meshBuilder.m_renderer = _renderer;
-	meshBuilder.TraverseNode(scene->mRootNode, aiMatrix4x4());
-	return meshBuilder.m_meshList;
+	GlMeshBuilder meshBuilder(_renderer, _filename);
+	meshBuilder.Build();
+	return meshBuilder.m_buildedMesh;
 }
 
 class GlTimerQuery
@@ -340,7 +419,6 @@ float Render(AT2::GlRenderer* renderer)
 	CameraUB->SetUniform("u_matInverseProjection", glm::inverse(matProj));
 	CameraUB->SetUniform("u_matViewProjection", matProj * matMV);
 	CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(matMV))));
-	CameraUB->SetBindingPoint(1);
 	CameraUB->Bind();
 	
 
@@ -358,12 +436,10 @@ float Render(AT2::GlRenderer* renderer)
 	glDepthMask(GL_TRUE);
 	glCullFace(GL_BACK);
 	glPatchParameteri( GL_PATCH_VERTICES, 4 );
-	(dynamic_cast<AT2::GlShaderProgram*>(TerrainDrawable->Shader.get()))->SetUBO("CameraBlock", 1);
 	TerrainDrawable->Draw(*renderer);
 
 	for (const auto& drawable : SceneDrawables)
 	{
-		(dynamic_cast<AT2::GlShaderProgram*>(drawable->Shader.get()))->SetUBO("CameraBlock", 1);
 		drawable->Draw(*renderer);
 	}
 
@@ -380,8 +456,6 @@ float Render(AT2::GlRenderer* renderer)
 	glDepthFunc(GL_GREATER);
 	glCullFace(GL_FRONT);
 
-	//(dynamic_cast<AT2::GlShaderProgram*>(SphereLightDrawable->Shader.get()))->SetUBO("CameraBlock", 1);
-	(dynamic_cast<AT2::GlShaderProgram*>(SphereLightDrawable->Shader.get()))->SetUBO("LightingBlock", 2);
 	for (const auto& light : LightsArray)
 	{
 		light->SetBindingPoint(2);
@@ -449,6 +523,13 @@ int main(int argc, char *argv[])
 			"",
 			"resources\\shaders\\skylight.fs.glsl");
 
+		MeshShader = AT2::GlShaderProgramFromFile::CreateShader(
+			"resources\\shaders\\mesh.vs.glsl",
+			"",
+			"",
+			"",
+			"resources\\shaders\\mesh.fs.glsl");
+
 		auto texture = new AT2::GlTexture3D(GL_RGBA8, glm::uvec3(256, 256, 256), 1);
 		AT2::GlTexture::BufferData data;
 		data.Height = 256;
@@ -470,6 +551,7 @@ int main(int argc, char *argv[])
 
 
 		CameraUB = std::make_shared<AT2::GlUniformBuffer>(terrainShader->GetUniformBlockInfo("CameraBlock"));
+		CameraUB->SetBindingPoint(1);
 		LightUB = std::make_shared<AT2::GlUniformBuffer>(sphereLightShader->GetUniformBlockInfo("LightingBlock"));
 
 		auto texDiffuseRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024));
@@ -490,7 +572,6 @@ int main(int argc, char *argv[])
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
 
 		//terrain
-		terrainShader->SetUBO("CameraBlock", 1);
 		TerrainDrawable = MakeTerrainDrawable(renderer, 64, 64);
 		TerrainDrawable->Shader = terrainShader;
 		TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
@@ -506,8 +587,6 @@ int main(int argc, char *argv[])
 			TerrainDrawable->UniformBuffer = uniformStorage;
 		}
 
-		sphereLightShader->SetUBO("CameraBlock", 1);
-		sphereLightShader->SetUBO("LightingBlock", 2);
 		SphereLightDrawable = MakeSphereDrawable(renderer);
 		SphereLightDrawable->Shader = sphereLightShader;
 		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex };
@@ -522,7 +601,6 @@ int main(int argc, char *argv[])
 		}
 
 		//Postprocess quad
-		postprocessShader->SetUBO("CameraBlock", 1);
 		QuadDrawable = MakeFullscreenQuadDrawable(renderer);
 		QuadDrawable->Shader = postprocessShader;
 		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
@@ -547,13 +625,9 @@ int main(int argc, char *argv[])
 			LightsArray.push_back(light);
 		}
 
-		SceneDrawables = LoadModel("resources/jeep1.3ds", renderer);
+		SceneDrawables.push_back(LoadModel("resources/jeep1.3ds", renderer));
 
 		//Init
-		glEnable(GL_TEXTURE_1D);
-		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_TEXTURE_3D);
-
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -597,7 +671,7 @@ int main(int argc, char *argv[])
 					{
 						if (sdlEvent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
 						{
-							AT2::GlShaderProgramFromFile::ReloadAll();
+							//AT2::GlShaderProgramFromFile::ReloadAll();
 						}
 					} break;
 				}

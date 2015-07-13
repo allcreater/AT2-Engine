@@ -48,7 +48,7 @@ namespace AT2
 	public:
 		GlShaderProgram();
 		GlShaderProgram(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs);
-		virtual ~GlShaderProgram();
+		~GlShaderProgram();
 
 	public:
 		void			Bind() override;
@@ -57,17 +57,22 @@ namespace AT2
 
 		virtual void	Reload(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs); //TODO maybe we need to make it more flexible
 
+		//Warning: Shader reloading/relinking will invalidate that state
 		virtual void	SetUBO(const str& blockName, unsigned int index);
+
+		virtual const str& GetName() { return m_name; }
+		virtual void SetName(const str& name) { m_name = name; }
 
 		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName) const;
 
 	protected:
 		GLuint LoadShader(GLenum _shaderType, const str& _text);
 		void CleanUp();
-
+		
 	private:
 		GLuint m_programId;
 		GLuint m_shaderId[5];
+		str m_name;
 	};
 }
 
