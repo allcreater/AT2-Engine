@@ -13,19 +13,22 @@ public:
 	~GlVertexArray();
 
 public:
-	virtual void Bind();
-	virtual unsigned int GetId() const { return m_id; }
+	void Bind() override;
+	unsigned int GetId() const override { return m_id; }
 
-	virtual void SetIndexBuffer(const std::shared_ptr<GlVertexBufferBase>& buffer);
-	virtual std::shared_ptr<GlVertexBufferBase> GetIndexBuffer() const;
+	void SetIndexBuffer(const std::shared_ptr<IVertexBuffer>& buffer) override;
+	std::shared_ptr<IVertexBuffer> GetIndexBuffer() const override;
+	//virtual std::shared_ptr<GlVertexBufferBase> GetOrSetIndexBuffer() const;
 
-	virtual void SetVertexBuffer(unsigned int index, const std::shared_ptr<GlVertexBufferBase>& buffer);
-	virtual std::shared_ptr<GlVertexBufferBase> GetVertexBuffer(unsigned int index) const;
+	void SetVertexBuffer(unsigned int index, const std::shared_ptr<IVertexBuffer>& buffer) override;
+	std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const override;
 	
 private:
 	GLuint m_id;
-	Utils::dynarray<std::shared_ptr<GlVertexBufferBase>> m_buffers;
-	std::shared_ptr<GlVertexBufferBase> m_indexBuffer;
+
+	//we are sure that all buffer will be at least GlVertexBufferBase or derived types
+	Utils::dynarray<std::shared_ptr<IVertexBuffer>> m_buffers;
+	std::shared_ptr<IVertexBuffer> m_indexBuffer;
 };
 
 }

@@ -91,11 +91,13 @@
     <ClCompile Include="OpenGL\GlUniformBuffer.cpp" />
     <ClCompile Include="OpenGL\GlVertexArray.cpp" />
     <ClCompile Include="OpenGL\GlVertexBuffer.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="StateManager.cpp" />
     <ClCompile Include="utils_fileSystemListener.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AT2.h" />
+    <ClInclude Include="AT2_types.hpp" />
     <ClInclude Include="log.h" />
     <ClInclude Include="drawable.h" />
     <ClInclude Include="OpenGL/AT2lowlevel.h" />
@@ -108,6 +110,7 @@
     <ClInclude Include="OpenGL\GlUniformContainer.h" />
     <ClInclude Include="OpenGL\GlVertexArray.h" />
     <ClInclude Include="OpenGL\GlVertexBuffer.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="StateManager.h" />
     <ClInclude Include="utils.hpp" />
   </ItemGroup>

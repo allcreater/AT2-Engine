@@ -5,14 +5,13 @@ using namespace AT2;
 using namespace glm;
 
 GlUniformBuffer::GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi) : 
+	GlVertexBufferBase (VertexBufferType::UniformBuffer),
 	m_bindingPoint(0),
 	m_ubi(ubi)
 {
-	UsageHint = GlBufferUsageHint::StreamDraw;
 	m_length = m_ubi->GetBlockSize();
 
-	glGenBuffers(1, &m_id);
-	glNamedBufferDataEXT(m_id, m_length, 0, static_cast<GLenum>(UsageHint));
+	glNamedBufferDataEXT(m_id, m_length, 0, static_cast<GLenum>(m_usageHint));
 }
 
 GlUniformBuffer::~GlUniformBuffer()

@@ -11,7 +11,7 @@ StateManager::StateManager(const IRendererCapabilities* rendererCapabilities)
 
 void StateManager::BindTextures(const TextureSet& _textures)
 {
-	const int numModules = m_bindedTextures.size();
+	const auto numModules = m_bindedTextures.size();
 	if (_textures.size() > numModules)
 		throw AT2Exception(AT2Exception::ErrorCase::Unknown, "StateManager: trying to bind more textures than free texture units");
 
@@ -25,7 +25,7 @@ void StateManager::BindTextures(const TextureSet& _textures)
 	}
 	
 
-	int currentModule = 0;
+	size_t currentModule = 0;
 	auto textureToBoundIterator = _textures.begin();
 	for (; currentModule < numModules && textureToBoundIterator != _textures.end(); ++currentModule)
 	{

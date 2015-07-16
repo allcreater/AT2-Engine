@@ -14,8 +14,6 @@ public:
 	~GlUniformBuffer();
 
 public:
-	virtual GlBufferType GetType() const { return GlBufferType::UniformBuffer; }
-	
 	//doubles
 	void SetUniform(const str& name, const double& value)		override;
 	void SetUniform(const str& name, const glm::dvec2& value)	override;

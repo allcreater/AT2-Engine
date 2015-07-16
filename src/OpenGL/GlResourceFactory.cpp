@@ -1,11 +1,13 @@
 #include "GlRenderer.h"
 #include "GlTexture.h"
+#include "GlVertexArray.h"
 
 #include <gli/gli.hpp>
 #include <IL/il.h>
 #include <IL/ilu.h>
 
 #include <filesystem>
+#include <unordered_map>
 
 using namespace AT2;
 
@@ -32,7 +34,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 	{
 		gli::texture2DArray tex2d_array(Storage);
 
-		int storageLevels = (tex2d_array.levels() > 1 || !enableAutomipmaps) ? tex2d_array.levels() : (log(std::max(tex2d_array.dimensions().x, tex2d_array.dimensions().y)) / log(2));
+		int storageLevels = (tex2d_array.levels() > 1 || !enableAutomipmaps) ? tex2d_array.levels() : static_cast<int>(log(std::max(tex2d_array.dimensions().x, tex2d_array.dimensions().y)) / log(2));
 		auto glTexture = std::make_shared<AT2::GlTexture2DArray>(
 			gli::internal_format(tex2d_array.format()),
 			glm::uvec3(tex2d_array.dimensions(), tex2d_array.layers()),
@@ -48,8 +50,8 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 		}
 		else
 		{
-			for (auto layer = 0; layer < tex2d_array.layers(); ++layer)
-				for (auto level = 0; level < tex2d_array.levels(); ++level)
+			for (size_t layer = 0; layer < tex2d_array.layers(); ++layer)
+				for (size_t level = 0; level < tex2d_array.levels(); ++level)
 				{
 					bd.Height = tex2d_array[layer][level].dimensions().x;
 					bd.Width = tex2d_array[layer][level].dimensions().y;
@@ -69,7 +71,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 	{
 		gli::texture2D tex2d(Storage);
 
-		int storageLevels = (tex2d.levels() > 1 || !enableAutomipmaps) ? tex2d.levels() : (log(std::max(tex2d.dimensions().x, tex2d.dimensions().y)) / log(2));
+		int storageLevels = (tex2d.levels() > 1 || !enableAutomipmaps) ? tex2d.levels() : static_cast<int>(log(std::max(tex2d.dimensions().x, tex2d.dimensions().y)) / log(2));
 		auto glTexture = std::make_shared<AT2::GlTexture2D>(gli::internal_format(tex2d.format()), tex2d.dimensions(), storageLevels);
 
 		AT2::GlTexture::BufferData bd;
@@ -82,7 +84,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 		}
 		else
 		{
-			for (auto level = 0; level < tex2d.levels(); ++level)
+			for (size_t level = 0; level < tex2d.levels(); ++level)
 			{
 				bd.Height = tex2d[level].dimensions().x;
 				bd.Width = tex2d[level].dimensions().y;
@@ -143,14 +145,14 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_DevIL(const str& filena
 		auto size = glm::uvec3(imageInfo.Width, imageInfo.Height, imageInfo.Depth);
 
 		ILuint mipmapLevels = std::max(imageInfo.NumMips, 1u);
-		ILuint storageLevels = (imageInfo.NumMips || !enableAutomipmaps) ? imageInfo.NumMips : (log(std::max({ size.x, size.y, size.z })) / log(2));
+		ILuint storageLevels = (imageInfo.NumMips || !enableAutomipmaps) ? imageInfo.NumMips : static_cast<ILuint>(log(std::max({ size.x, size.y, size.z })) / log(2));
 
 
 		if (imageInfo.Depth > 1)
 		{
 			auto glTexture = std::make_shared<AT2::GlTexture3D>(GetInternalFormat(imageInfo.Format, imageInfo.Type), size, storageLevels);
 			
-			for (auto level = 0; level < mipmapLevels; ++level)
+			for (unsigned int level = 0; level < mipmapLevels; ++level)
 			{
 				ilActiveMipmap(level);
 			
@@ -175,7 +177,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_DevIL(const str& filena
 		{
 			auto glTexture = std::make_shared<AT2::GlTexture2D>(GetInternalFormat(imageInfo.Format, imageInfo.Type), size.xy, storageLevels);
 
-			for (auto level = 0; level < mipmapLevels; ++level)
+			for (unsigned int level = 0; level < mipmapLevels; ++level)
 			{
 				ilActiveMipmap(level);
 
@@ -204,7 +206,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_DevIL(const str& filena
 	ilDeleteImage(imageID);
 }
 
-GlResourceFactory::GlResourceFactory()
+GlResourceFactory::GlResourceFactory(GlRenderer* renderer) : m_renderer(renderer)
 {
 	ilInit();
 	iluInit();
@@ -220,5 +222,15 @@ GlResourceFactory::~GlResourceFactory()
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTexture() const
 {
-	throw AT2::AT2Exception("GlResourceFactory: not implemented"); //TODO!
+	throw AT2Exception("GlResourceFactory: not implemented"); //TODO!
+}
+
+std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const
+{
+	return std::make_shared<GlVertexArray>(m_renderer->GetRendererCapabilities());
+}
+
+std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type) const
+{
+	return nullptr;//std::make_shared<GlVertexBuffer<>>();
 }

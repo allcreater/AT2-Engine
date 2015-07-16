@@ -107,7 +107,79 @@ private:
 
 };
 
-//I'm afraid, it need to be removed
+template <typename T> class wraparray
+{
+public:
+	wraparray(size_t _size, T* _data) :
+		m_size(_size),
+		m_data(_data)
+	{
+		assert(_size > 0);
+		assert(m_data);
+	}
+
+	~wraparray() //maybe I can make destructor virtual so vertex buffers will get an ability to automatically unlock
+	{
+	}
+
+	wraparray(const dynarray<T>& other) :
+		m_size(other.m_size),
+		m_data(other.m_data)
+	{
+	}
+
+	T& operator= (wraparray<T>& other)
+	{
+		if (&other != this)
+		{
+			m_size = other.m_size;
+			m_data = other.m_data;
+		}
+
+		return (*this);
+	}
+public:
+	T& at(size_t _index)
+	{
+		if (_index >= m_size)
+			std::out_of_range("_index is out of range");
+
+		return m_data[_index];
+	}
+	const T& at(size_t _index) const
+	{
+		if (_index >= m_size)
+			std::out_of_range("_index is out of range");
+
+		return m_data[_index];
+	}
+
+	T& operator [] (size_t _index)
+	{
+		return m_data[_index];
+	}
+	const T& operator [] (size_t _index) const
+	{
+		return m_data[_index];
+	}
+
+	const T* data() const
+	{
+		return m_data;
+	}
+
+	size_t size() const
+	{
+		return m_size;
+	}
+
+private:
+	T* m_data;
+	size_t m_size;
+
+};
+
+//I'm afraid, its need to be removed
 template <typename C, typename T>
 class ControlledList
 {

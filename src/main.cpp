@@ -145,8 +145,8 @@ std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(AT2::GlRenderer* renderer,
 	}
 
 	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, normals.size(), normals.data()));
-	vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, indices.size(), indices.data()));
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, normals.size(), normals.data()));
+	vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::VertexBufferType::IndexBuffer, indices.size(), indices.data()));
 
 	auto drawable = std::make_shared<AT2::MeshDrawable>();
 	drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, indices.size(), AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
@@ -172,7 +172,7 @@ std::shared_ptr<AT2::MeshDrawable> MakeTerrainDrawable(AT2::GlRenderer* renderer
 	}
 
 	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, texCoords.size(), texCoords.data()));
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::VertexBufferType::ArrayBuffer, texCoords.size(), texCoords.data()));
 
 
 	auto drawable = std::make_shared<AT2::MeshDrawable>();
@@ -188,8 +188,8 @@ std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::GlRenderer* r
 	GLuint indices[] = { 0, 1, 2, 0, 2, 3 };
 
 	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, 4, positions));
-	vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, 6, indices));
+	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, 4, positions));
+	vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::VertexBufferType::IndexBuffer, 6, indices));
 
 	auto drawable = std::make_shared<AT2::MeshDrawable>();
 	drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, 6, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
@@ -301,10 +301,10 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 			}
 
 			auto vao = std::make_shared<AT2::GlVertexArray>(m_renderer->GetRendererCapabilities());
-			vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, m_verticesVec.size(), m_verticesVec.data()));
-			vao->SetVertexBuffer(2, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, m_texCoordVec.size(), m_texCoordVec.data()));
-			vao->SetVertexBuffer(3, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::GlVertexBufferBase::GlBufferType::ArrayBuffer, m_normalsVec.size(), m_normalsVec.data()));
-			vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::GlVertexBufferBase::GlBufferType::ElementArrayBuffer, m_indicesVec.size(), m_indicesVec.data()));
+			vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, m_verticesVec.size(), m_verticesVec.data()));
+			vao->SetVertexBuffer(2, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, m_texCoordVec.size(), m_texCoordVec.data()));
+			vao->SetVertexBuffer(3, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, m_normalsVec.size(), m_normalsVec.data()));
+			vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::VertexBufferType::IndexBuffer, m_indicesVec.size(), m_indicesVec.data()));
 
 			m_buildedMesh = std::make_shared<GlMeshDrawable>();
 			m_buildedMesh->Shader = MeshShader;
@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
 					{
 						if (sdlEvent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
 						{
-							//AT2::GlShaderProgramFromFile::ReloadAll();
+							AT2::GlShaderProgramFromFile::ReloadAll();
 						}
 					} break;
 				}

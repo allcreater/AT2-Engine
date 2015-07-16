@@ -17,6 +17,8 @@
 #include "log.h"
 #include "utils.hpp"
 
+#include "AT2_types.hpp"
+
 namespace AT2
 {
 
@@ -26,11 +28,13 @@ template <typename T>
 class IBuffer
 {
 public:
+	virtual ~IBuffer() {};
+
+public:
 	virtual void SetData(unsigned int length, const T* data) = 0;
-	virtual T* Lock() = 0;
+	virtual Utils::wraparray<T> Lock() = 0;
 	virtual void Unlock() = 0;
 
-	virtual ~IBuffer() {};
 };
 
 class IFrameBuffer
@@ -40,10 +44,12 @@ public:
 	IFrameBuffer(const IFrameBuffer& other) = delete;
 	IFrameBuffer& operator= (const IFrameBuffer& other) = delete;
 
+	virtual ~IFrameBuffer() {};
+
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
-	virtual ~IFrameBuffer() {};
+	
 };
 
 class IVertexBuffer
@@ -53,11 +59,16 @@ public:
 	IVertexBuffer(const IVertexBuffer& other) = delete;
 	IVertexBuffer& operator= (const IVertexBuffer& other) = delete;
 
+	virtual ~IVertexBuffer() {};
+
 public:
 	virtual void Bind() = 0;
+
 	virtual unsigned int GetId() const = 0;
-	virtual unsigned int GetLength() = 0;
-	virtual ~IVertexBuffer() {};
+	virtual unsigned int GetLength() const = 0;
+	virtual VertexBufferType GetType() const = 0;
+	virtual const BufferTypeInfo& GetDataType() const = 0;
+	virtual void SetDataType(const BufferTypeInfo& typeInfo) = 0;
 };
 
 class IVertexArray
@@ -67,10 +78,17 @@ public:
 	IVertexArray(const IVertexArray& other) = delete;
 	IVertexArray& operator= (const IVertexArray& other) = delete;
 
+	virtual ~IVertexArray() {};
+
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
-	virtual ~IVertexArray() {};
+
+	virtual void SetIndexBuffer(const std::shared_ptr<IVertexBuffer>& buffer) = 0;
+	virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
+	//virtual std::shared_ptr<IVertexBuffer> GetOrSetIndexBuffer() const;
+	virtual void SetVertexBuffer(unsigned int index, const std::shared_ptr<IVertexBuffer>& buffer) = 0;
+	virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
 };
 
 class ITexture
@@ -108,12 +126,18 @@ public:
 class IDrawPrimitive
 {
 public:
-	virtual void Draw() const = 0;
 	virtual ~IDrawPrimitive() {};
+
+public:
+	virtual void Draw() const = 0;
+
 };
 
 class IUniformContainer
 {
+public:
+	virtual ~IUniformContainer() {}
+
 public:
 	//doubles
 	virtual void SetUniform(const str& name, const double& value) = 0;
@@ -178,6 +202,9 @@ typedef std::vector<IDrawPrimitive*> PrimitiveList;
 class IStateManager
 {
 public:
+	virtual ~IStateManager() {};
+
+public:
 	virtual void BindTextures(const TextureSet& textures) = 0;
 	virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
 	virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
@@ -192,10 +219,15 @@ public:
 public:
 	virtual std::shared_ptr<ITexture> LoadTexture(const str& filename) const = 0; //TODO: maybe I need to detach load functionality 
 	virtual std::shared_ptr<ITexture> CreateTexture() const = 0;
+	virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
+	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
 };
 
 class IRenderer
 {
+public:
+	virtual ~IRenderer() {}
+
 public:
 	virtual IResourceFactory* GetResourceFactory() const = 0;
 	virtual IStateManager* GetStateManager() const = 0;
@@ -207,6 +239,9 @@ public:
 //Interface for all resources which can be dynamically reloaded from file
 class IReloadable
 {
+public:
+	virtual ~IReloadable() {}
+
 public:
 	virtual void Reload() = 0;
 };

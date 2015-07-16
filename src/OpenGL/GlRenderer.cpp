@@ -77,9 +77,9 @@ GlRenderer::GlRenderer()
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
-	m_rendererCapabilities = new GlRendererCapabilities();
-	m_resourceFactory = new GlResourceFactory();
-	m_stateManager = new StateManager(m_rendererCapabilities);
+	m_rendererCapabilities = new GlRendererCapabilities ();
+	m_resourceFactory = new GlResourceFactory (this);
+	m_stateManager = new StateManager (m_rendererCapabilities);
 }
 
 GlRenderer::~GlRenderer()

@@ -60,6 +60,9 @@
     <ClCompile Include="OpenGL\GlResourceFactory.cpp">
       <Filter>Файлы исходного кода\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AT2.h">
@@ -106,6 +109,12 @@
     </ClInclude>
     <ClInclude Include="OpenGL\GlUniformContainer.h">
       <Filter>Заголовочные файлы\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="AT2_types.hpp">
+      <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

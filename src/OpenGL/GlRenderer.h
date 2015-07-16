@@ -5,6 +5,8 @@
 
 namespace AT2
 {
+	
+class GlRenderer;
 
 class GlRendererCapabilities : public IRendererCapabilities
 {
@@ -18,17 +20,22 @@ public:
 class GlResourceFactory : public IResourceFactory
 {
 public:
-	GlResourceFactory();
+	GlResourceFactory(GlRenderer* renderer);
 	~GlResourceFactory();
 
 public:
 	std::shared_ptr<ITexture> LoadTexture(const str& filename) const override;
 	std::shared_ptr<ITexture> CreateTexture() const override;
+	std::shared_ptr<IVertexArray> CreateVertexArray() const override;
+	std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const override;
 
 protected:
 	GLint GetInternalFormat(GLuint externalFormat, GLuint externalType) const;
 	std::shared_ptr<ITexture> LoadTexture_GLI(const str& filename) const;
 	std::shared_ptr<ITexture> LoadTexture_DevIL(const str& filename) const;
+
+private:
+	GlRenderer* m_renderer;
 };
 
 class GlRenderer : public IRenderer

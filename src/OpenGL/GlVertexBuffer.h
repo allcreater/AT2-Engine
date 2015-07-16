@@ -9,6 +9,12 @@ namespace AT2
 class GlVertexBufferBase : public IVertexBuffer
 {
 public:
+	unsigned int GetId() const override					{ return m_id; }
+	VertexBufferType GetType() const override			{ return m_publicType; }
+	const BufferTypeInfo& GetDataType() const override	{ return m_typeInfo; }
+	size_t GetLength() const override					{ return m_length; }
+
+protected:
 	enum class GlBufferType : GLenum//TODO: Not full list of types!
 	{
 		ArrayBuffer = GL_ARRAY_BUFFER,
@@ -19,19 +25,19 @@ public:
 	enum class GlBufferUsageHint : GLenum
 	{
 		StreamDraw = GL_STREAM_DRAW,
-		StreamRead = GL_STREAM_READ, 
-		StreamCopy = GL_STREAM_COPY, 
-		StaticDraw = GL_STATIC_DRAW, 
-		StaticRead = GL_STATIC_READ, 
-		StaticCopy = GL_STATIC_COPY, 
+		StreamRead = GL_STREAM_READ,
+		StreamCopy = GL_STREAM_COPY,
+		StaticDraw = GL_STATIC_DRAW,
+		StaticRead = GL_STATIC_READ,
+		StaticCopy = GL_STATIC_COPY,
 		DynamicDraw = GL_DYNAMIC_DRAW,
 		DynamicRead = GL_DYNAMIC_READ,
 		DynamicCopy = GL_DYNAMIC_COPY
-	} UsageHint;
+	};
 
 	enum class GlBufferDataType : GLenum
 	{
-		 //both for glVertexAttribIPointer and glVertexAttribPointer
+		//both for glVertexAttribIPointer and glVertexAttribPointer
 		Byte = GL_BYTE,
 		UByte = GL_UNSIGNED_BYTE,
 		Short = GL_SHORT,
@@ -46,36 +52,33 @@ public:
 		//???
 		Int2_10_10_10 = GL_INT_2_10_10_10_REV,
 		UInt2_10_10_10 = GL_UNSIGNED_INT_2_10_10_10_REV,
-		UInt10F_11F_11F = GL_UNSIGNED_INT_10F_11F_11F_REV 
+		UInt10F_11F_11F = GL_UNSIGNED_INT_10F_11F_11F_REV
 	};
-
-	enum class GlBufferDataVectorLength
-	{
-		One = 1,
-		Two = 2,
-		Three = 3,
-		Four = 4
-	};
-
-	struct GlBufferTypeInfo
-	{
-		GlBufferDataType DataType;
-		GlBufferDataVectorLength VectorLength; 
-		GLsizei Stride;
-		bool IsNormalized;
-	};
-
-	GlVertexBufferBase() {}
 
 public:
-	virtual unsigned int GetId() const { return m_id; }
-	virtual GlBufferType GetType() const = 0;
-	unsigned int GetLength() { return m_length; }
-	GlBufferTypeInfo ElementTypeInfo;
+	struct GlBufferTypeInfo : public BufferTypeInfo
+	{
+		//BufferTypeInfo();
+
+		GlBufferDataType GlDataType;
+	};
+
+protected:
+	GlVertexBufferBase(VertexBufferType bufferType);
+
+protected:
+	GlBufferType		DetermineGlBufferType (VertexBufferType bufferType) const;
+	GlBufferDataType	DetermineGlDataType (const BufferDataType& dataType) const;
+	void				SetDataType(const BufferTypeInfo& typeInfo) override;
 
 protected:
 	GLuint m_id;
-	GLuint m_length;
+	size_t m_length;
+
+	VertexBufferType m_publicType;
+	GlBufferType m_privateType;
+	GlBufferUsageHint m_usageHint = GlBufferUsageHint::StaticDraw;
+	GlBufferTypeInfo m_typeInfo;
 };
 
 
@@ -83,21 +86,18 @@ template <typename T>
 class GlVertexBuffer : public GlVertexBufferBase, public IBuffer<T>
 { 
 public:
-	GlVertexBuffer(GlBufferType type, GLsizeiptr size, const T* data);
+	GlVertexBuffer(VertexBufferType bufferType, GLsizeiptr size, const T* data);
+	//GlVertexBuffer(GlBufferType type, GLsizeiptr size);
 	~GlVertexBuffer();
 
 public:
-	virtual GlBufferType GetType() const { return m_type; }
+	void Bind() override;
 
-	virtual void Bind();
-
-	virtual void SetData(unsigned int length, const T* data);
-	virtual T* Lock();
-	virtual void Unlock();
+	void SetData(unsigned int length, const T* data) override;
+	Utils::wraparray<T> Lock() override;
+	void Unlock() override;
 
 private:
-	GlBufferType m_type;
-
 	T* m_mappedData;
 };
 
