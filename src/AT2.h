@@ -65,7 +65,7 @@ public:
 	virtual void Bind() = 0;
 
 	virtual unsigned int GetId() const = 0;
-	virtual unsigned int GetLength() const = 0;
+	virtual size_t GetLength() const = 0;
 	virtual VertexBufferType GetType() const = 0;
 	virtual const BufferTypeInfo& GetDataType() const = 0;
 	virtual void SetDataType(const BufferTypeInfo& typeInfo) = 0;

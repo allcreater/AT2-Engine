@@ -34,7 +34,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 	{
 		gli::texture2DArray tex2d_array(Storage);
 
-		int storageLevels = (tex2d_array.levels() > 1 || !enableAutomipmaps) ? tex2d_array.levels() : static_cast<int>(log(std::max(tex2d_array.dimensions().x, tex2d_array.dimensions().y)) / log(2));
+		unsigned int storageLevels = (tex2d_array.levels() > 1 || !enableAutomipmaps) ? tex2d_array.levels() : static_cast<unsigned int>(log(std::max(tex2d_array.dimensions().x, tex2d_array.dimensions().y)) / log(2));
 		auto glTexture = std::make_shared<AT2::GlTexture2DArray>(
 			gli::internal_format(tex2d_array.format()),
 			glm::uvec3(tex2d_array.dimensions(), tex2d_array.layers()),
@@ -50,8 +50,8 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 		}
 		else
 		{
-			for (size_t layer = 0; layer < tex2d_array.layers(); ++layer)
-				for (size_t level = 0; level < tex2d_array.levels(); ++level)
+			for (unsigned int layer = 0; layer < tex2d_array.layers(); ++layer)
+				for (unsigned int level = 0; level < tex2d_array.levels(); ++level)
 				{
 					bd.Height = tex2d_array[layer][level].dimensions().x;
 					bd.Width = tex2d_array[layer][level].dimensions().y;
@@ -71,7 +71,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 	{
 		gli::texture2D tex2d(Storage);
 
-		int storageLevels = (tex2d.levels() > 1 || !enableAutomipmaps) ? tex2d.levels() : static_cast<int>(log(std::max(tex2d.dimensions().x, tex2d.dimensions().y)) / log(2));
+		unsigned int storageLevels = (tex2d.levels() > 1 || !enableAutomipmaps) ? tex2d.levels() : static_cast<unsigned int>(log(std::max(tex2d.dimensions().x, tex2d.dimensions().y)) / log(2));
 		auto glTexture = std::make_shared<AT2::GlTexture2D>(gli::internal_format(tex2d.format()), tex2d.dimensions(), storageLevels);
 
 		AT2::GlTexture::BufferData bd;
@@ -84,7 +84,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 		}
 		else
 		{
-			for (size_t level = 0; level < tex2d.levels(); ++level)
+			for (unsigned int level = 0; level < tex2d.levels(); ++level)
 			{
 				bd.Height = tex2d[level].dimensions().x;
 				bd.Width = tex2d[level].dimensions().y;
