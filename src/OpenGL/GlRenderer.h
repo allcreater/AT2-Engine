@@ -53,13 +53,13 @@ public:
 
 	virtual void ClearBuffer(const glm::vec4& color);
 	virtual void ClearDepth(float depth);
-	virtual void SwapBuffers();
+	virtual void FinishFrame();
 
 private:
 	void CheckSDLError();
 
 private:
-	static void  __stdcall GlErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar * message, GLvoid * userParam);
+	static void  __stdcall GlErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar * message, const GLvoid * userParam);
 
 private:
     SDL_Window* m_window;

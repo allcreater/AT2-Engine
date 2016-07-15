@@ -27,6 +27,19 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
+
+//#define AT2_USE_OCULUS_RIFT
+
+#ifdef AT2_USE_OCULUS_RIFT
+#include <Kernel/OVR_System.h>
+#include <OVR_CAPI_GL.h>
+#include <Extras/OVR_Math.h>
+ovrHmd HMD;
+
+#pragma comment (lib, "LibOVRKernel.lib")
+#pragma comment (lib, "LibOVR.lib")
+#endif
+
 std::shared_ptr<AT2::GlShaderProgram> MeshShader;
 
 std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
@@ -41,8 +54,6 @@ std::vector<std::shared_ptr<AT2::IDrawable>> SceneDrawables;
 bool WireframeMode = false;
 
 GLfloat Phase = 0.0;
-
-glm::mat4 matMV, matProj;
 
 namespace AT2
 {
@@ -104,7 +115,15 @@ public: //static
 	{
 		for (auto element : s_allShaderPrograms)
 		{
-			element.second.lock()->Reload();
+            try
+            {
+                element.second.lock()->Reload();
+            }
+            catch (AT2::AT2Exception exception)
+            {
+                if (exception.Case != AT2::AT2Exception::ErrorCase::Shader)
+                    throw exception;
+            }
 		}
 	}
 };
@@ -406,9 +425,9 @@ private:
 std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 
 //returns frame time
-float Render(AT2::GlRenderer* renderer)
+float Render(AT2::GlRenderer* renderer, AT2::IFrameBuffer* framebuffer, glm::mat4 matProj, glm::mat4 matMV)
 {
-	auto timeBefore = std::chrono::high_resolution_clock::now();
+    glViewport(0, 0, 1024, 1024);
 
 	GlTimerQuery glTimer;
 	glTimer.Begin();
@@ -465,9 +484,12 @@ float Render(AT2::GlRenderer* renderer)
 
 	
 	//Postprocess stage
-	NullFBO->Bind();
+    framebuffer->Bind();
+    //glEnable(GL_FRAMEBUFFER_SRGB);
+
 	glDepthMask(GL_TRUE);
 	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
+    renderer->ClearDepth(0);
 
 	glCullFace(GL_BACK);
 	glDisable(GL_DEPTH_TEST);
@@ -475,16 +497,11 @@ float Render(AT2::GlRenderer* renderer)
 	QuadDrawable->Draw(*renderer);
 
 
-
-
 	glTimer.End();
 	float frameTime = glTimer.WaitForResult() * 0.000001; //in ms
 
 	glFinish();
-	renderer->SwapBuffers();
 
-
-	//float frameTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - timeBefore).count() * 0.001;
 	return frameTime;
 }
 
@@ -627,14 +644,65 @@ int main(int argc, char *argv[])
 
 		SceneDrawables.push_back(LoadModel("resources/jeep1.3ds", renderer));
 
+
+#ifdef AT2_USE_OCULUS_RIFT
+        OVR::System::Init();
+        // Initializes LibOVR, and the Rift
+        if (!OVR_SUCCESS(ovr_Initialize(nullptr)))
+            throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to initialize libOVR.");
+
+        ovrGraphicsLuid luid;
+        if (!OVR_SUCCESS(ovr_Create(&HMD, &luid)))
+            throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to get HMD device.");
+
+        ovrHmdDesc hmdDesc = ovr_GetHmdDesc(HMD);
+
+        if (!OVR_SUCCESS(ovr_ConfigureTracking(HMD, ovrTrackingCap_Orientation | ovrTrackingCap_MagYawCorrection | ovrTrackingCap_Position, 0)))
+            throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to configure tracking.");
+
+
+        ovrEyeRenderDesc EyeRenderDesc[2];
+        std::shared_ptr<AT2::GlFrameBuffer> eyeFrameBuffer[2];
+        ovrSwapTextureSet* eyeTextureSet[2];
+
+        std::shared_ptr<AT2::GlTexture2D> eyeRenderTextureDepth[2];
+        std::vector<std::shared_ptr<AT2::GlTexture2D>> eyeRenderTextureList[2];
+        for (int eye = 0; eye < 2; ++eye)
+        {
+            ovrSizei idealTextureSize = ovr_GetFovTextureSize(HMD, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye], 1);
+
+            const GLuint format = GL_RGBA8; //GL_SRGB8_ALPHA8
+            if (!OVR_SUCCESS(ovr_CreateSwapTextureSetGL(HMD, format, idealTextureSize.w, idealTextureSize.h, &eyeTextureSet[eye])))
+                throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to create swap texture");
+
+            eyeRenderTextureDepth[eye] = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(idealTextureSize.w, idealTextureSize.h));
+
+            eyeFrameBuffer[eye] = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+            eyeFrameBuffer[eye]->SetDepthAttachement(eyeRenderTextureDepth[eye]);
+            //eyeFrameBuffer[eye]->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_SRGB8_ALPHA8, glm::uvec2(idealTextureSize.w, idealTextureSize.h)));
+
+            for (int i = 0; i < eyeTextureSet[eye]->TextureCount; ++i)
+            {
+                auto currentTexture = (ovrGLTexture*)&eyeTextureSet[eye]->Textures[i];
+                eyeRenderTextureList[eye].push_back(std::make_shared<AT2::GlTexture2D>(currentTexture->OGL.TexId, format, glm::uvec2(currentTexture->Texture.Header.TextureSize.w, currentTexture->Texture.Header.TextureSize.h)));
+            }
+            eyeFrameBuffer[eye]->SetColorAttachement(0, eyeRenderTextureList[eye][0]);
+
+            EyeRenderDesc[eye] = ovr_GetRenderDesc(HMD, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye]);
+        }
+        
+        SDL_GL_SetSwapInterval(0);
+#endif
+
+
 		//Init
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glEnable(GL_CULL_FACE);
 
-		glViewport(0, 0, 1024, 1024);
-		matProj = glm::perspective(90.0, -1.0, 1.0, 10000.0);//
+        glm::mat4 matMV, matProj;
+		matProj = glm::perspective(glm::radians(90.0), -1.0, 1.0, 10000.0);//
 
 		float heading = 0.0f, pitch = 0.0f;
 		glm::vec3 position = glm::vec3(0.0, 0.0, 0.0), direction;
@@ -705,8 +773,59 @@ int main(int argc, char *argv[])
 				framesSummaryTime = 0.0;
 			}
 			fpsCount++;
+            
+#ifndef AT2_USE_OCULUS_RIFT
+			framesSummaryTime += Render(renderer, NullFBO.get(), matProj, matMV);
+#else
+            // Get eye poses, feeding in correct IPD offset
+            ovrVector3f      ViewOffset[2] = { EyeRenderDesc[0].HmdToEyeViewOffset, EyeRenderDesc[1].HmdToEyeViewOffset };
+            ovrPosef         EyeRenderPose[2];
 
-			framesSummaryTime += Render(renderer);
+            ovrFrameTiming   ftiming = ovr_GetFrameTiming(HMD, 0);
+            ovrTrackingState hmdState = ovr_GetTrackingState(HMD, ftiming.DisplayMidpointSeconds);
+            ovr_CalcEyePoses(hmdState.HeadPose.ThePose, ViewOffset, EyeRenderPose);
+
+            //render
+            for (int eye = 0; eye < 2; ++eye)
+            {
+                eyeTextureSet[eye]->CurrentIndex = (eyeTextureSet[eye]->CurrentIndex + 1) % eyeTextureSet[eye]->TextureCount;
+
+                eyeFrameBuffer[eye]->SetDepthAttachement(eyeRenderTextureDepth[eye]);
+                eyeFrameBuffer[eye]->SetColorAttachement(0, eyeRenderTextureList[eye][eyeTextureSet[eye]->CurrentIndex]);
+
+                framesSummaryTime += Render(renderer, eyeFrameBuffer[eye].get(), matProj, matMV);
+                //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                eyeFrameBuffer[eye]->SetColorAttachement(0, nullptr);
+                eyeFrameBuffer[eye]->SetDepthAttachement(nullptr);
+                
+            }
+
+            // Set up positional data.
+            ovrViewScaleDesc viewScaleDesc;
+            viewScaleDesc.HmdSpaceToWorldScaleInMeters = 1.0f;
+            viewScaleDesc.HmdToEyeViewOffset[0] = ViewOffset[0];
+            viewScaleDesc.HmdToEyeViewOffset[1] = ViewOffset[1];
+
+            ovrLayerEyeFov ld;
+            ld.Header.Type = ovrLayerType_EyeFov;
+            ld.Header.Flags = ovrLayerFlag_TextureOriginAtBottomLeft;   // Because OpenGL.
+
+            for (int eye = 0; eye < 2; ++eye)
+            {
+                ld.ColorTexture[eye] = eyeTextureSet[eye];
+                ld.Viewport[eye] = OVR::Recti(eyeTextureSet[eye]->Textures[eyeTextureSet[eye]->CurrentIndex].Header.TextureSize);
+                ld.Fov[eye] = hmdDesc.DefaultEyeFov[eye];
+                ld.RenderPose[eye] = EyeRenderPose[eye];
+            }
+
+            ovrLayerHeader* layers = &ld.Header;
+            ovrResult result = ovr_SubmitFrame(HMD, 0, &viewScaleDesc, &layers, 1);
+
+            framesSummaryTime += Render(renderer, NullFBO.get(), matProj, matMV);
+#endif
+
+            renderer->FinishFrame();
 		}
 
 QuitLabel:
@@ -717,5 +836,10 @@ QuitLabel:
 		SDL_ShowSimpleMessageBox(SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR, "Exception", exeption.what(), 0);
 	}
 	
+#ifdef AT2_USE_OCULUS_RIFT
+    ovr_Destroy(HMD);
+    OVR::System::Destroy();
+#endif 
+
 	return 0;
 }

@@ -2,6 +2,8 @@
 #include "../StateManager.h"
 using namespace AT2;
 
+
+
 unsigned int GlRendererCapabilities::GetMaxNumberOfTextureUnits() const
 {
 	GLint numTexUnits = 0;
@@ -72,7 +74,6 @@ GlRenderer::GlRenderer()
 	if(err != GLEW_OK)
 		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GLEW: cannot init");
 	
-	
 	glDebugMessageCallback(GlErrorCallback, this);
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -104,7 +105,7 @@ void GlRenderer::CheckSDLError()
 	}
 }
 
-void GlRenderer::SwapBuffers()
+void GlRenderer::FinishFrame()
 {
 	SDL_GL_SwapWindow(m_window);
 }
@@ -132,11 +133,11 @@ void GlRenderer::Shutdown()
 	m_window = nullptr;
 }
 
-void GlRenderer::GlErrorCallback(GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length, const GLchar * _message, GLvoid * _userParam)
+void GlRenderer::GlErrorCallback(GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length, const GLchar * _message, const GLvoid * _userParam)
 {
-	auto rendererInstance = reinterpret_cast<GlRenderer*>(_userParam);
+	auto rendererInstance = reinterpret_cast<const GlRenderer*>(_userParam);
 
-	assert(dynamic_cast<GlRenderer*>(rendererInstance));
+	assert(dynamic_cast<const GlRenderer*>(rendererInstance));
 
 	switch (_severity)
 	{

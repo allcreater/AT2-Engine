@@ -25,6 +25,10 @@ uniform sampler2D u_depthMap;
 
 layout (location = 0) out vec4 FragColor;
 
+vec3 computeLighting (in vec3 lightDir, in vec3 normal, in vec3 viewDir)
+{
+	return vec3(max(dot (normal, -lightDir), 0.0));
+}
 
 vec3 getFragPos(in vec3 screenCoord) 
 {
@@ -41,17 +45,17 @@ void main()
 
 
 	vec3 lightDir = fragPos - (u_matView * u_lightPos).xyz;
-	float lightDirLength = length(lightDir);
-	lightDir = lightDir / lightDirLength; //normalize dir vector
+	float lightDistance = length(lightDir);
+	lightDir = lightDir / lightDistance; //normalize dir vector
 
 	vec3 normal = texture(u_normalMap, texCoord).rgb;
 
-	float Kd = max(dot (normal, -lightDir), 0.0);
+	vec3 lighting = computeLighting(lightDir, normal, -fragPos);
 
 
-	float attenuation = 1.0 - clamp(lightDirLength/u_lightRadius, 0.0, 1.0);
+	float attenuation = 1.0 - clamp(lightDistance/u_lightRadius, 0.0, 1.0);
 	
-	vec4 color = texture(u_colorMap, texCoord)*Kd;
+	vec4 color = texture(u_colorMap, texCoord) * vec4(lighting * attenuation, 1);
 
-	FragColor = vec4(color.rgb*attenuation*attenuation, 1.0);
+	FragColor = vec4(color.rgb, 1.0);
 }

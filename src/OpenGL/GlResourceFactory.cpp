@@ -2,7 +2,10 @@
 #include "GlTexture.h"
 #include "GlVertexArray.h"
 
+#ifdef USE_GLI
 #include <gli/gli.hpp>
+#endif
+
 #include <IL/il.h>
 #include <IL/ilu.h>
 
@@ -25,6 +28,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture(const str& _filename) c
 
 std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filename) const
 {
+#ifdef USE_GLI
 	gli::storage Storage(gli::load_dds(_filename.c_str()));
 	assert(!Storage.empty());
 
@@ -99,6 +103,9 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 		}
 		return glTexture;
 	}
+#else
+    return nullptr;
+#endif
 }
 
 GLint GlResourceFactory::GetInternalFormat(GLuint externalFormat, GLuint externalType) const

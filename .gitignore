@@ -218,3 +218,4 @@ pip-log.txt
 #Third-party Libraries
 libs/
 *.sdf
+solution/

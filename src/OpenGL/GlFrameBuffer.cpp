@@ -31,15 +31,15 @@ void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const st
 			glNamedFramebufferTexture3DEXT(m_id, attachement, static_cast<GLenum>(texture->GetTargetType()), texture->GetId(), 0, 0); //TODO: zoffset controlling
 		else
 			return;
-
-		m_colorAttachements[attachementNumber] = texture;
 	}
 	else
 	{
 		glNamedFramebufferTextureEXT(m_id, attachement, 0, 0);
 	}
 
-	Validate();
+    m_colorAttachements[attachementNumber] = texture;
+
+	//Validate();
 }
 
 std::shared_ptr<ITexture> GlFrameBuffer::GetColorAttachement(unsigned int attachementNumber) const
@@ -58,7 +58,7 @@ void GlFrameBuffer::SetDepthAttachement(const std::shared_ptr<GlTexture> texture
 	else
 		glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
-	Validate();
+	//Validate();
 }
 
 std::shared_ptr<ITexture> GlFrameBuffer::GetDepthAttachement() const
@@ -92,11 +92,15 @@ void GlFrameBuffer::Resize (const glm::ivec2& _size)
 void GlFrameBuffer::Bind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+    //Validate();
 
 	const size_t numAttachements = m_colorAttachements.size();
 	Utils::dynarray<GLenum> buffers(numAttachements);
 	for (size_t i = 0; i < numAttachements; ++i)
 		buffers[i] = (m_colorAttachements[i]) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
+
+    auto size = m_colorAttachements[0]->GetSize();
+    glViewport(0, 0, size.x, size.y); //TODO
 
 	glDrawBuffers(buffers.size(), buffers.data());
 }

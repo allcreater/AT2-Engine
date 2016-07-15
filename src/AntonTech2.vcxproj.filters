@@ -160,5 +160,6 @@
     <None Include="..\resources\shaders\mesh.vs.glsl">
       <Filter>Файлы ресурсов</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

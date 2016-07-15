@@ -12,6 +12,16 @@ GlTexture::GlTexture(TextureType _type, GLint _internalFormat) :
 	DetermineExternalFormatAndDataType();
 }
 
+AT2::GlTexture::GlTexture(GLuint _id, TextureType _type, GLint _internalFormat) :
+    m_id(_id),
+    m_targetType(_type),
+    m_internalFormat(_internalFormat),
+    m_currentTextureModule(-1)
+{
+    glGenTextures(1, &m_id);
+
+    DetermineExternalFormatAndDataType();
+}
 GlTexture::GlTexture(TextureType type, GLint internalFormat, GLenum format, GLenum dataType) :
 	m_targetType(type),
 	m_internalFormat(internalFormat),
@@ -89,6 +99,19 @@ GlTexture2D::GlTexture2D(GLint _internalFormat, glm::uvec2 _size, GLuint _levels
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
 	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, _levels);
+}
+
+AT2::GlTexture2D::GlTexture2D(GLuint _id, GLint _internalFormat, glm::uvec2 _size, GLuint _levels) :
+    GlTexture(_id, GlTexture::TextureType::Texture2D, _internalFormat)
+{
+    const GLenum target = static_cast<GLenum>(m_targetType);
+
+    m_size = glm::uvec3(_size, 1);
+
+    glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 void GlTexture2D::SetData(GLuint _level, BufferData _data)
