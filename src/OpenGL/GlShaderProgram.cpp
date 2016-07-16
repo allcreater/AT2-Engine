@@ -2,16 +2,36 @@
 
 using namespace AT2;
 
+static const GLuint s_shaderGlType[] = { GL_VERTEX_SHADER, GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER, GL_GEOMETRY_SHADER, GL_FRAGMENT_SHADER };
+
+static GLuint GetGlShaderType(GlShaderType _type)
+{
+    int typeIndex = (int)_type;
+    assert(typeIndex >= 0 && typeIndex <= 4);
+    return s_shaderGlType[typeIndex];
+}
+
+static int GetShaderTypeIndex(GlShaderType _type)
+{
+    int typeIndex = (int)_type;
+    assert(typeIndex >= 0 && typeIndex <= 4);
+
+    return typeIndex;
+}
+
 GlShaderProgram::GlShaderProgram()
 {
 	m_programId = glCreateProgram();
-
-	m_shaderId[0] = m_shaderId[1] = m_shaderId[2] = m_shaderId[3] = m_shaderId[4] = 0;
 }
 
 GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _tes, const str& _gs, const str& _fs) : GlShaderProgram()
 {
-	Reload(_vs, _tcs, _tes, _gs, _fs);
+    AttachShader(_vs, GlShaderType::Vertex);
+    AttachShader(_tcs, GlShaderType::TesselationControl);
+    AttachShader(_tes, GlShaderType::TesselationEvaluation);
+    AttachShader(_gs, GlShaderType::Geometry);
+    AttachShader(_fs, GlShaderType::Fragment);
+    Compile();
 }
 
 GlShaderProgram::~GlShaderProgram()
@@ -21,58 +41,38 @@ GlShaderProgram::~GlShaderProgram()
 	CleanUp();
 }
 
-void GlShaderProgram::Reload(const str& _vs, const str& _tcs, const str& _tes, const str& _gs, const str& _fs)
+void GlShaderProgram::AttachShader(const str& _code, GlShaderType _type)
 {
-	CleanUp();
+    std::vector<GLuint>& shadersList = m_shaderId[GetShaderTypeIndex(_type)];
+    
+    if (_code.empty())
+        throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: trying to attach empty shader");
+    
+    GLuint shaderId = LoadShader(GetGlShaderType(_type), _code);
+    glAttachShader(m_programId, shaderId);
+    
+    shadersList.push_back(shaderId);
+}
 
-	if (!_vs.empty())
-	{
-		m_shaderId[0] = LoadShader(GL_VERTEX_SHADER, _vs);
-		glAttachShader(m_programId, m_shaderId[0]);
-	}
-	else
-		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: empty vertex shader");
+bool GlShaderProgram::Compile()
+{
+    glLinkProgram(m_programId);
+    GLint isLinked = 0;
+    glGetProgramiv(m_programId, GL_LINK_STATUS, &isLinked);
 
-	if (!_tcs.empty())
-	{
-		m_shaderId[1] = LoadShader(GL_TESS_CONTROL_SHADER, _tcs);
-		glAttachShader(m_programId, m_shaderId[1]);
-	}
+    //log
+    GLchar infoLogBuffer[2048];
+    GLint infoLogLength;
+    glGetProgramInfoLog(m_programId, 2048, &infoLogLength, infoLogBuffer);
+    if (infoLogLength > 0)
+        Log::Debug() << "Shader program log: " << std::endl << infoLogBuffer;
 
-	if (!_tes.empty())
-	{
-		m_shaderId[2] = LoadShader(GL_TESS_EVALUATION_SHADER, _tes);
-		glAttachShader(m_programId, m_shaderId[2]);
-	}
-
-	if (!_gs.empty())
-	{
-		m_shaderId[3] = LoadShader(GL_GEOMETRY_SHADER, _gs);
-		glAttachShader(m_programId, m_shaderId[3]);
-	}
-
-	if (!_fs.empty())
-	{
-		m_shaderId[4] = LoadShader(GL_FRAGMENT_SHADER, _fs);
-		glAttachShader(m_programId, m_shaderId[4]);
-	}
-	else
-		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: empty fragment shader");
-
-	glLinkProgram(m_programId);
-	GLint linked = 0;
-	glGetProgramiv(m_programId, GL_LINK_STATUS, &linked);
-
-	//log
-	GLchar infoLogBuffer[2048];
-	GLint infoLogLength;
-	glGetProgramInfoLog(m_programId, 2048, &infoLogLength, infoLogBuffer);
-	if (infoLogLength > 0)
-		Log::Debug() << "Shader program log: " << std::endl << infoLogBuffer;
-
-
-	if (!linked)
-		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: program not linked");
+    
+    return isLinked;
+    /*
+    if (!isLinked)
+        throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: program not linked");
+        */
 }
 
 GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
@@ -114,14 +114,14 @@ GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
 
 void GlShaderProgram::CleanUp()
 {
-	for (int i = 0; i < 5; ++i)
+	for (auto& shaderList : m_shaderId)
 	{
-		if (m_shaderId[i] != 0)
+		for (GLuint shaderId : shaderList)
 		{
-			glDetachShader(m_programId, m_shaderId[i]);
-			glDeleteShader(m_shaderId[i]);
+			glDetachShader(m_programId, shaderId);
+			glDeleteShader(shaderId);
 		}
-		m_shaderId[i] = 0;
+        shaderList.clear();
 	}
 }
 

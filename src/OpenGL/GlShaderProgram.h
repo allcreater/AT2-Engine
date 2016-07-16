@@ -7,6 +7,16 @@
 
 namespace AT2
 {
+    enum class GlShaderType
+    {
+        //Computational = GL_COMPUTE_SHADER,
+        Vertex = 0,
+        TesselationControl = 1,
+        TesselationEvaluation = 2,
+        Geometry = 3,
+        Fragment = 4
+    };
+
 	class GlShaderProgram : public IShaderProgram
 	{
 	public:
@@ -54,8 +64,9 @@ namespace AT2
 		void			Bind() override;
 		unsigned int	GetId() const override { return m_programId; }
 		bool			IsActive() const override;
+        bool            Compile()  override;
 
-		virtual void	Reload(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs); //TODO maybe we need to make it more flexible
+        virtual void    AttachShader(const str& code, GlShaderType type);
 
 		//Warning: Shader reloading/relinking will invalidate that state
 		virtual void	SetUBO(const str& blockName, unsigned int index);
@@ -71,7 +82,7 @@ namespace AT2
 		
 	private:
 		GLuint m_programId;
-		GLuint m_shaderId[5];
+		std::vector<GLuint> m_shaderId[5];
 		str m_name;
 	};
 }

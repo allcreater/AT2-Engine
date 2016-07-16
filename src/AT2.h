@@ -121,6 +121,7 @@ public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 	virtual bool IsActive() const = 0;
+    virtual bool Compile() = 0;
 };
 
 class IDrawPrimitive

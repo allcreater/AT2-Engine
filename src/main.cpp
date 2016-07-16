@@ -61,26 +61,40 @@ namespace AT2
 class GlShaderProgramFromFile : public GlShaderProgram, public virtual IReloadable
 {
 public:
-	GlShaderProgramFromFile(const str& vsFilename, const str& tcsFilename, const str& tesFilename, const str& gsFilename, const str& fsFilename) : GlShaderProgram()
+	GlShaderProgramFromFile(std::initializer_list<str> _shaders) : GlShaderProgram()
 	{
-		m_filenames[0] = vsFilename;
-		m_filenames[1] = tcsFilename;
-		m_filenames[2] = tesFilename;
-		m_filenames[3] = gsFilename;
-		m_filenames[4] = fsFilename;
+        for (auto filename : _shaders)
+        {
+            if (GetName().empty())
+                SetName(filename);
 
-		SetName(vsFilename);
+            if (filename.substr(filename.length() - 8) == ".vs.glsl")
+                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Vertex));
+            else if (filename.substr(filename.length() - 9) == ".tcs.glsl")
+                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationControl));
+            else if (filename.substr(filename.length() - 9) == ".tes.glsl")
+                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationEvaluation));
+            else if (filename.substr(filename.length() - 8) == ".gs.glsl")
+                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Geometry));
+            else if (filename.substr(filename.length() - 8) == ".fs.glsl")
+                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Fragment));
+            else
+                throw AT2Exception("unrecognized shader type");
+        }
+
 		Reload();
 	}
 
 	void Reload()
 	{
-		GlShaderProgram::Reload(
-			LoadShader(m_filenames[0]),
-			LoadShader(m_filenames[1]),
-			LoadShader(m_filenames[2]),
-			LoadShader(m_filenames[3]),
-			LoadShader(m_filenames[4]));
+        GlShaderProgram::CleanUp();
+
+        for (auto shader : m_filenames)
+        {
+            GlShaderProgram::AttachShader(LoadShader(shader.first), shader.second);
+        }
+
+        GlShaderProgram::Compile();
 	}
 
 	~GlShaderProgramFromFile()
@@ -98,15 +112,15 @@ private:
 	}
 
 private:
-	str m_filenames[5];
+	std::vector<std::pair<str, AT2::GlShaderType>> m_filenames;
 
 private: //static
 	static std::map<unsigned int, std::weak_ptr<GlShaderProgramFromFile>> s_allShaderPrograms;
 	
 public: //static
-	static std::shared_ptr<GlShaderProgramFromFile> CreateShader(const str& vsFilename, const str& tcsFilename, const str& tesFilename, const str& gsFilename, const str& fsFilename)
+	static std::shared_ptr<GlShaderProgramFromFile> CreateShader(std::initializer_list<str> _shaders)
 	{
-		auto shader = std::make_shared<AT2::GlShaderProgramFromFile>(vsFilename, tcsFilename, tesFilename, gsFilename, fsFilename);
+		auto shader = std::make_shared<AT2::GlShaderProgramFromFile>(_shaders);
 		s_allShaderPrograms[shader->GetId()] = shader;
 
 		return shader;
@@ -512,40 +526,28 @@ int main(int argc, char *argv[])
 		auto renderer = new AT2::GlRenderer();
 
 
-		auto postprocessShader = AT2::GlShaderProgramFromFile::CreateShader(
-			"resources\\shaders\\postprocess.vs.glsl",
-			"",
-			"",
-			"",
-			"resources\\shaders\\postprocess.fs.glsl");
+        auto postprocessShader = AT2::GlShaderProgramFromFile::CreateShader({
+            "resources\\shaders\\postprocess.vs.glsl",
+            "resources\\shaders\\postprocess.fs.glsl" });
 
-		auto terrainShader = AT2::GlShaderProgramFromFile::CreateShader(
-			"resources\\shaders\\terrain.vs.glsl",
-			"resources\\shaders\\terrain.tcs.glsl",
-			"resources\\shaders\\terrain.tes.glsl",
-			"",
-			"resources\\shaders\\terrain.fs.glsl");
+        auto terrainShader = AT2::GlShaderProgramFromFile::CreateShader({
+            "resources\\shaders\\terrain.vs.glsl",
+            "resources\\shaders\\terrain.tcs.glsl",
+            "resources\\shaders\\terrain.tes.glsl",
+            "resources\\shaders\\terrain.fs.glsl" });
 
-		auto sphereLightShader = AT2::GlShaderProgramFromFile::CreateShader(
-			"resources\\shaders\\spherelight.vs.glsl",
-			"",
-			"",
-			"",
-			"resources\\shaders\\spherelight.fs.glsl");
+        auto sphereLightShader = AT2::GlShaderProgramFromFile::CreateShader({
+            "resources\\shaders\\spherelight.vs.glsl",
+            "resources\\shaders\\pbr.fs.glsl",
+            "resources\\shaders\\spherelight.fs.glsl" });
 
-		auto dayLightShader = AT2::GlShaderProgramFromFile::CreateShader(
-			"resources\\shaders\\skylight.vs.glsl",
-			"",
-			"",
-			"",
-			"resources\\shaders\\skylight.fs.glsl");
+        auto dayLightShader = AT2::GlShaderProgramFromFile::CreateShader({
+            "resources\\shaders\\skylight.vs.glsl",
+            "resources\\shaders\\skylight.fs.glsl" });
 
-		MeshShader = AT2::GlShaderProgramFromFile::CreateShader(
-			"resources\\shaders\\mesh.vs.glsl",
-			"",
-			"",
-			"",
-			"resources\\shaders\\mesh.fs.glsl");
+        MeshShader = AT2::GlShaderProgramFromFile::CreateShader({
+            "resources\\shaders\\mesh.vs.glsl",
+            "resources\\shaders\\mesh.fs.glsl" });
 
 		auto texture = new AT2::GlTexture3D(GL_RGBA8, glm::uvec3(256, 256, 256), 1);
 		AT2::GlTexture::BufferData data;
