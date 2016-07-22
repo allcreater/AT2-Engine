@@ -193,6 +193,7 @@
   <ItemGroup>
     <None Include="..\resources\shaders\mesh.fs.glsl" />
     <None Include="..\resources\shaders\mesh.vs.glsl" />
+    <None Include="..\resources\shaders\pbr.fs.glsl" />
     <None Include="..\resources\shaders\postprocess.fs.glsl" />
     <None Include="..\resources\shaders\postprocess.vs.glsl" />
     <None Include="..\resources\shaders\raytrace_sky.fs.glsl" />

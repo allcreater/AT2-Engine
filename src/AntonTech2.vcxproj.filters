@@ -19,6 +19,9 @@
     <Filter Include="Файлы исходного кода\OpenGL">
       <UniqueIdentifier>{554c1c62-57c3-427b-b438-85ddb9c6dbf7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{0c8ff768-b405-451b-821e-1d685e525663}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -118,48 +121,51 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\resources\shaders\postprocess.fs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\postprocess.vs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\raytrace_sky.fs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\raytrace_sky.vs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\skylight.fs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\skylight.vs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\spherelight.fs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\spherelight.vs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\terrain.fs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\terrain.tcs.glsl">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
-    <None Include="..\resources\shaders\terrain.tes.glsl">
-      <Filter>Файлы ресурсов</Filter>
+    <None Include="packages.config" />
+    <None Include="..\resources\shaders\pbr.fs.glsl">
+      <Filter>Shaders</Filter>
     </None>
     <None Include="..\resources\shaders\terrain.vs.glsl">
-      <Filter>Файлы ресурсов</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="..\resources\shaders\mesh.fs.glsl">
-      <Filter>Файлы ресурсов</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="..\resources\shaders\mesh.vs.glsl">
-      <Filter>Файлы ресурсов</Filter>
+      <Filter>Shaders</Filter>
     </None>
-    <None Include="packages.config" />
+    <None Include="..\resources\shaders\postprocess.fs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\postprocess.vs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\raytrace_sky.fs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\raytrace_sky.vs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\skylight.fs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\skylight.vs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\spherelight.fs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\spherelight.vs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\terrain.fs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\terrain.tcs.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\resources\shaders\terrain.tes.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

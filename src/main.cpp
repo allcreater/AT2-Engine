@@ -43,15 +43,16 @@ ovrHmd HMD;
 std::shared_ptr<AT2::GlShaderProgram> MeshShader;
 
 std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
-std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex;
+std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
 
 std::shared_ptr<AT2::GlFrameBuffer> Stage1FBO, Stage2FBO;
 std::shared_ptr<AT2::IFrameBuffer> NullFBO;
 
-std::shared_ptr<AT2::MeshDrawable> QuadDrawable, TerrainDrawable, SphereLightDrawable;
+std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, TerrainDrawable, SphereLightDrawable;
 std::vector<std::shared_ptr<AT2::IDrawable>> SceneDrawables;
 
-bool WireframeMode = false;
+bool WireframeMode = false, MovingLightMode = true;
+size_t NumActiveLights = 50;
 
 GLfloat Phase = 0.0;
 
@@ -459,7 +460,7 @@ float Render(AT2::GlRenderer* renderer, AT2::IFrameBuffer* framebuffer, glm::mat
 	Stage1FBO->Bind();
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 1.0));
+	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
 	renderer->ClearDepth(1.0);
 
 	glPolygonMode(GL_FRONT_AND_BACK, (WireframeMode) ? GL_LINE : GL_FILL);
@@ -495,7 +496,10 @@ float Render(AT2::GlRenderer* renderer, AT2::IFrameBuffer* framebuffer, glm::mat
 		light->Bind();
 		SphereLightDrawable->Draw(*renderer);
 	}
-
+    
+    glCullFace(GL_BACK);
+    glDisable(GL_DEPTH_TEST);
+    SkylightDrawable->Draw(*renderer);
 	
 	//Postprocess stage
     framebuffer->Bind();
@@ -543,6 +547,7 @@ int main(int argc, char *argv[])
 
         auto dayLightShader = AT2::GlShaderProgramFromFile::CreateShader({
             "resources\\shaders\\skylight.vs.glsl",
+            "resources\\shaders\\pbr.fs.glsl",
             "resources\\shaders\\skylight.fs.glsl" });
 
         MeshShader = AT2::GlShaderProgramFromFile::CreateShader({
@@ -567,8 +572,8 @@ int main(int argc, char *argv[])
 		RockTex = renderer->GetResourceFactory()->LoadTexture("resources\\rock04.dds");
 		NormalMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\terrain_normalmap.dds");
 		HeightMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\heightmap.dds");
-
-
+        EnvironmentMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\04-23_Day_D.hdr");
+        
 		CameraUB = std::make_shared<AT2::GlUniformBuffer>(terrainShader->GetUniformBlockInfo("CameraBlock"));
 		CameraUB->SetBindingPoint(1);
 		LightUB = std::make_shared<AT2::GlUniformBuffer>(sphereLightShader->GetUniformBlockInfo("LightingBlock"));
@@ -619,6 +624,22 @@ int main(int argc, char *argv[])
 			SphereLightDrawable->UniformBuffer = uniformStorage;
 		}
 
+
+        
+        SkylightDrawable = MakeFullscreenQuadDrawable(renderer);
+        SkylightDrawable->Shader = dayLightShader;
+        SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
+        {
+            auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(dayLightShader);
+            uniformStorage->SetUniform("u_phase", Phase);
+            uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+            uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
+            uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
+            uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
+            uniformStorage->SetUniform("u_environmentMap", EnvironmentMapTex);
+            SkylightDrawable->UniformBuffer = uniformStorage;
+        }
+
 		//Postprocess quad
 		QuadDrawable = MakeFullscreenQuadDrawable(renderer);
 		QuadDrawable->Shader = postprocessShader;
@@ -633,7 +654,7 @@ int main(int argc, char *argv[])
 		}
 
 
-		for (int i = 0; i < 100; ++i)
+		for (int i = 0; i < NumActiveLights; ++i)
 		{
 			auto light = std::make_shared<AT2::GlUniformBuffer>(sphereLightShader->GetUniformBlockInfo("LightingBlock"));
 			
@@ -643,6 +664,8 @@ int main(int argc, char *argv[])
 			light->SetBindingPoint(2);
 			LightsArray.push_back(light);
 		}
+
+        LightsArray[0]->SetUniform("u_lightColor", glm::vec3(1.0f, 0.0f, 0.5f));
 
 		SceneDrawables.push_back(LoadModel("resources/jeep1.3ds", renderer));
 
@@ -734,6 +757,8 @@ int main(int argc, char *argv[])
 						{
 							if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_Z && sdlEvent.key.state == SDL_PRESSED)
 								WireframeMode = !WireframeMode;
+                            if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_M && sdlEvent.key.state == SDL_PRESSED)
+                                MovingLightMode = !MovingLightMode;
 						} break;
 					case SDL_QUIT:
 						goto QuitLabel;
@@ -761,7 +786,8 @@ int main(int argc, char *argv[])
 
 			matMV = glm::lookAt(position, position + direction, up);
 
-			LightsArray[0]->SetUniform("u_lightPos", glm::vec4(position, 1.0));
+            if (MovingLightMode)
+			    LightsArray[0]->SetUniform("u_lightPos", glm::vec4(position, 1.0));
 
 			Uint32 time = SDL_GetTicks();
 			if (time - startTime > 1000)

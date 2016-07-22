@@ -27,8 +27,10 @@ layout (location = 0) out vec4 FragColor;
 
 
 vec3 computeLighting (
-	in vec3 lightVec, in float lightRadius, in vec3 lightColor,
- 	in vec3 normal, in vec3 viewDir
+		in vec3 lightVec, in float lightRadius, in vec3 lightColor,
+ 		in vec3 normal, in vec3 viewDir,
+		in float roughtness, in vec3 F0,
+		in vec3 diffuseColor
  	);
 
 vec3 getFragPos(in vec3 screenCoord) 
@@ -45,12 +47,15 @@ void main()
 	vec3 fragPos = getFragPos(vec3(texCoord, z));
 
 
-	vec3 lightVector = fragPos - (u_matView * u_lightPos).xyz;
-
+	vec3 lightVector = (u_matView * u_lightPos).xyz - fragPos;
 	vec3 normal = texture(u_normalMap, texCoord).rgb;
+	
+	vec3 F0 = vec3(0.05);
+	float roughness = 0.1;
+	vec4 color = texture(u_colorMap, texCoord);
 
-	vec3 lighting = computeLighting(lightVector, u_lightRadius, u_lightColor, normal, -fragPos);
-	vec4 color = texture(u_colorMap, texCoord) * vec4(lighting, 1);
+	vec3 lighting = computeLighting(lightVector, u_lightRadius, u_lightColor, normal, normalize(-fragPos), roughness, F0, color.rgb)*1000.0;
+	
 
-	FragColor = vec4(color.rgb, 1.0);
+	FragColor = vec4(lighting, 1.0);
 }
