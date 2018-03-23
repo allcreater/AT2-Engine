@@ -45,9 +45,9 @@ public:
 	virtual ~GlRenderer();
 
 public:
-	IResourceFactory* GetResourceFactory() const override			{ return m_resourceFactory; }
-	IStateManager* GetStateManager() const override					{ return m_stateManager; }
-	IRendererCapabilities* GetRendererCapabilities() const override { return m_rendererCapabilities; }
+	IResourceFactory& GetResourceFactory() const override				{ return *m_resourceFactory.get(); }
+	IStateManager& GetStateManager() const override						{ return *m_stateManager.get(); }
+	IRendererCapabilities& GetRendererCapabilities() const override		{ return *m_rendererCapabilities.get(); }
 
 	void Shutdown() override;
 
@@ -55,19 +55,14 @@ public:
 	virtual void ClearDepth(float depth);
 	virtual void FinishFrame();
 
-private:
-	void CheckSDLError();
 
 private:
 	static void  __stdcall GlErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar * message, const GLvoid * userParam);
 
 private:
-    SDL_Window* m_window;
-    SDL_GLContext m_context;
-
-	IStateManager* m_stateManager;
-	GlResourceFactory* m_resourceFactory;
-	GlRendererCapabilities* m_rendererCapabilities;
+	std::unique_ptr<IStateManager> m_stateManager;
+	std::unique_ptr<IResourceFactory> m_resourceFactory;
+	std::unique_ptr<GlRendererCapabilities> m_rendererCapabilities;
 };
 
 }

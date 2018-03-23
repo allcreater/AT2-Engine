@@ -66,6 +66,9 @@
     <ClCompile Include="Scene.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
+    <ClCompile Include="OpenGL\GlTimerQuery.cpp">
+      <Filter>Файлы исходного кода\OpenGL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AT2.h">
@@ -111,6 +114,9 @@
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="OpenGL\GlUniformContainer.h">
+      <Filter>Заголовочные файлы\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL\GlTimerQuery.h">
       <Filter>Заголовочные файлы\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">

@@ -9,7 +9,7 @@ namespace AT2
 class StateManager : public IStateManager
 {
 public:
-	StateManager(const IRendererCapabilities* rendererCapabilities);
+	StateManager(const IRendererCapabilities& rendererCapabilities);
 
 public:
 	virtual void BindTextures(const TextureSet& _textures);

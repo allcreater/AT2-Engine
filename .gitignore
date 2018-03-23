@@ -217,5 +217,8 @@ pip-log.txt
 
 #Third-party Libraries
 libs/
+
+#Another
 *.sdf
-solution/
+.vs
+*.dll

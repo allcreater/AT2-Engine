@@ -1,7 +1,7 @@
 #ifndef AT2_MAIN_HEADER_H
 #define AT2_MAIN_HEADER_H
 
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
@@ -16,6 +16,9 @@
 
 #include "log.h"
 #include "utils.hpp"
+
+
+const double pi = std::acos(-1);
 
 #include "AT2_types.hpp"
 
@@ -34,7 +37,6 @@ public:
 	virtual void SetData(unsigned int length, const T* data) = 0;
 	virtual Utils::wraparray<T> Lock() = 0;
 	virtual void Unlock() = 0;
-
 };
 
 class IFrameBuffer
@@ -43,7 +45,6 @@ public:
 	IFrameBuffer() = default;
 	IFrameBuffer(const IFrameBuffer& other) = delete;
 	IFrameBuffer& operator= (const IFrameBuffer& other) = delete;
-
 	virtual ~IFrameBuffer() {};
 
 public:
@@ -58,7 +59,6 @@ public:
 	IVertexBuffer() = default;
 	IVertexBuffer(const IVertexBuffer& other) = delete;
 	IVertexBuffer& operator= (const IVertexBuffer& other) = delete;
-
 	virtual ~IVertexBuffer() {};
 
 public:
@@ -77,7 +77,6 @@ public:
 	IVertexArray() = default;
 	IVertexArray(const IVertexArray& other) = delete;
 	IVertexArray& operator= (const IVertexArray& other) = delete;
-
 	virtual ~IVertexArray() {};
 
 public:
@@ -127,8 +126,7 @@ public:
 class IDrawPrimitive
 {
 public:
-	virtual ~IDrawPrimitive() {};
-
+	virtual ~IDrawPrimitive() {}
 public:
 	virtual void Draw() const = 0;
 
@@ -191,6 +189,12 @@ public:
 class IRendererCapabilities
 {
 public:
+	IRendererCapabilities() = default;
+	IRendererCapabilities(const IRendererCapabilities& other) = delete;
+	IRendererCapabilities& operator= (const IRendererCapabilities& other) = delete;
+	virtual ~IRendererCapabilities() {}
+
+public:
 	virtual unsigned int GetMaxNumberOfTextureUnits() const = 0;
 	virtual unsigned int GetMaxTextureSize() const = 0;
 	virtual unsigned int GetMaxNumberOfVertexAttributes() const = 0;
@@ -203,7 +207,10 @@ typedef std::vector<IDrawPrimitive*> PrimitiveList;
 class IStateManager
 {
 public:
-	virtual ~IStateManager() {};
+	IStateManager() = default;
+	IStateManager(const IStateManager& other) = delete;
+	IStateManager& operator= (const IStateManager& other) = delete;
+	virtual ~IStateManager() {}
 
 public:
 	virtual void BindTextures(const TextureSet& textures) = 0;
@@ -215,6 +222,10 @@ public:
 class IResourceFactory
 {
 public:
+	IResourceFactory() = default;
+	IResourceFactory(const IResourceFactory& other) = delete;
+	IResourceFactory& operator= (const IResourceFactory& other) = delete;
+
 	virtual ~IResourceFactory() {}
 
 public:
@@ -227,12 +238,12 @@ public:
 class IRenderer
 {
 public:
-	virtual ~IRenderer() {}
+	virtual ~IRenderer() {};
 
 public:
-	virtual IResourceFactory* GetResourceFactory() const = 0;
-	virtual IStateManager* GetStateManager() const = 0;
-	virtual IRendererCapabilities* GetRendererCapabilities() const = 0;
+	virtual IResourceFactory& GetResourceFactory() const = 0;
+	virtual IStateManager& GetStateManager() const = 0;
+	virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
 	virtual void Shutdown() = 0;
 };

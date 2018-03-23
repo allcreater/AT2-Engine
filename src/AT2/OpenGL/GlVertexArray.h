@@ -9,7 +9,7 @@ namespace AT2
 class GlVertexArray : public IVertexArray
 {
 public:
-	GlVertexArray(IRendererCapabilities* rendererCapabilities);
+	GlVertexArray(const IRendererCapabilities& rendererCapabilities);
 	~GlVertexArray();
 
 public:

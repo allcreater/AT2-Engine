@@ -4,8 +4,8 @@
 
 using namespace AT2;
 
-StateManager::StateManager(const IRendererCapabilities* rendererCapabilities)
-	: m_bindedTextures(rendererCapabilities->GetMaxNumberOfTextureUnits())
+StateManager::StateManager(const IRendererCapabilities& rendererCapabilities)
+	: m_bindedTextures(rendererCapabilities.GetMaxNumberOfTextureUnits())
 {
 }
 
