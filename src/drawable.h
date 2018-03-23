@@ -1,7 +1,7 @@
 #ifndef AT2_DRAWABLE_CLASS
 #define AT2_DRAWABLE_CLASS
 
-#include "AT2.h"
+#include "AT2/AT2.h"
 
 namespace AT2
 {

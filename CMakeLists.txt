@@ -34,8 +34,9 @@ link_directories ("libs/DevIL SDK/lib/x86/Release/")
 #end temporary spike
 
 file(GLOB ${PROJECT_NAME}_SOURCES
-"src/OpenGL/GLFW/*.cpp"
-"src/OpenGL/*.cpp"
+"src/AT2/OpenGL/GLFW/*.cpp"
+"src/AT2/OpenGL/*.cpp"
+"src/AT2/*.cpp"
 "src/*.cpp"
 )
 
