@@ -12,31 +12,16 @@ add_definitions(
 #	-DUSE_ASSIMP
 )
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/libs/")
-message("${CMAKE_SOURCE_DIR}/libs/")
+project (AT2_sandbox)
 
-project (AT2_Engine)
 
-hunter_add_package (glfw)
-hunter_add_package (glm)
-hunter_add_package (glew)
 #hunter_add_package (Assimp)
-
-find_package (glfw3 REQUIRED)
-find_package (glm REQUIRED)
-find_package (glew CONFIG REQUIRED)
-#find_package (DevIL REQUIRED)
 #find_package (Assimp CONFIG REQUIRED)
 
-#the temporary spike :(
-include_directories("libs/DevIL SDK/include/")
-link_directories ("libs/DevIL SDK/lib/x86/Release/")
-#end temporary spike
 
-file(GLOB ${PROJECT_NAME}_SOURCES
-"src/AT2/OpenGL/GLFW/*.cpp"
-"src/AT2/OpenGL/*.cpp"
-"src/AT2/*.cpp"
+#include_directories ("src/AT2/")
+
+file (GLOB ${PROJECT_NAME}_SOURCES
 "src/*.cpp"
 )
 
@@ -44,5 +29,6 @@ add_executable(${PROJECT_NAME}
     ${${PROJECT_NAME}_SOURCES}
 )
 
-target_link_libraries(${PROJECT_NAME}  PRIVATE glfw glm DevIL ILU
-                                       PUBLIC glew::glew) #Assimp::assimp)
+add_subdirectory ("src/AT2/")
+
+target_link_libraries(${PROJECT_NAME} AT2_Engine) #Assimp::assimp)

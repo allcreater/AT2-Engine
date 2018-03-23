@@ -18,7 +18,7 @@ using namespace AT2;
 //TODO add caching
 std::shared_ptr<ITexture> GlResourceFactory::LoadTexture(const str& _filename) const
 {
-	using namespace std::tr2::sys;
+	using namespace std::experimental::filesystem;
 
 	auto ext = path(_filename).extension();
 	/*if (ext == "dds")
@@ -105,40 +105,40 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 		return glTexture;
 	}
 #else
-    return nullptr;
+	return nullptr;
 #endif
 }
 
 GLint GlResourceFactory::GetInternalFormat(GLuint externalFormat, GLuint externalType) const
 {
-    if (externalType == GL_UNSIGNED_BYTE)
-    {
-      if (externalFormat == GL_RED)
-            return GL_R8;
-        else if (externalFormat == GL_RG)
-            return GL_RG8;
-        else if (externalFormat == GL_RGB)
-            return GL_RGB8;
-        else if (externalFormat == GL_RGBA)
-            return GL_RGBA8;
-        else
-            throw AT2::AT2Exception("GlResourceFactory: not supported texture format?!");
-    }
-    else if (externalType == GL_FLOAT)
-    {
-        if (externalFormat == GL_RED)
-            return GL_R32F;
-        else if (externalFormat == GL_RG)
-            return GL_RG32F;
-        else if (externalFormat == GL_RGB)
-            return GL_RGB32F;
-        else if (externalFormat == GL_RGBA)
-            return GL_RGBA32F;
-        else
-            throw AT2::AT2Exception("GlResourceFactory: not supported texture format?!");
-    }
-    else
-        throw AT2::AT2Exception("GlResourceFactory: not supported texture data type");
+	if (externalType == GL_UNSIGNED_BYTE)
+	{
+	  if (externalFormat == GL_RED)
+			return GL_R8;
+		else if (externalFormat == GL_RG)
+			return GL_RG8;
+		else if (externalFormat == GL_RGB)
+			return GL_RGB8;
+		else if (externalFormat == GL_RGBA)
+			return GL_RGBA8;
+		else
+			throw AT2::AT2Exception("GlResourceFactory: not supported texture format?!");
+	}
+	else if (externalType == GL_FLOAT)
+	{
+		if (externalFormat == GL_RED)
+			return GL_R32F;
+		else if (externalFormat == GL_RG)
+			return GL_RG32F;
+		else if (externalFormat == GL_RGB)
+			return GL_RGB32F;
+		else if (externalFormat == GL_RGBA)
+			return GL_RGBA32F;
+		else
+			throw AT2::AT2Exception("GlResourceFactory: not supported texture format?!");
+	}
+	else
+		throw AT2::AT2Exception("GlResourceFactory: not supported texture data type");
 }
 
 std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_DevIL(const str& filename) const
@@ -217,7 +217,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_DevIL(const str& filena
 	else
 		throw AT2::AT2Exception("GlResourceFactory: could not load image");
 
-    //TODO: properly call it in all return cases
+	//TODO: properly call it in all return cases
 	ilDeleteImage(imageID);
 }
 

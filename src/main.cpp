@@ -716,7 +716,6 @@ private:
 
 		glEnable(GL_CULL_FACE);
 
-		glViewport(0, 0, 1024, 1024);
 		matProj = glm::perspective(glm::radians(90.0), -1.0, 1.0, 10000.0);//
 	}
 
@@ -786,9 +785,23 @@ private:
 		m_renderer->FinishFrame();
 	}
 
+	void OnKeyPress(int key)
+	{
+		if (key == GLFW_KEY_W)
+			position += direction;
+		else if (key == GLFW_KEY_S)
+			position -= direction;
+		else if (key == GLFW_KEY_A)
+			position += right;
+		else if (key == GLFW_KEY_D)
+			position -= right;
+	}
+
 	void SetupWindowCallbacks()
 	{
-		m_window.KeyDownCallback = [](int key)
+
+
+		m_window.KeyDownCallback = [&](int key)
 		{
 			std::cout << "Key " << key << " down" << std::endl;
 
@@ -798,18 +811,13 @@ private:
 				MovingLightMode = !MovingLightMode;
 			else if (key == GLFW_KEY_R)
 				AT2::GlShaderProgramFromFile::ReloadAll();
+
+			OnKeyPress(key);
 		};
 
 		m_window.KeyRepeatCallback = [&](int key)
 		{
-			if (key == GLFW_KEY_W)
-				position += direction;
-			else if (key == GLFW_KEY_S)
-				position -= direction;
-			else if (key == GLFW_KEY_A)
-				position += right;
-			else if (key == GLFW_KEY_D)
-				position -= right;
+			OnKeyPress(key);
 		};
 
 		m_window.ResizeCallback = [&](int w, int h)
