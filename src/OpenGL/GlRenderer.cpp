@@ -1,5 +1,6 @@
 #include "GlRenderer.h"
 #include "../StateManager.h"
+
 using namespace AT2;
 
 unsigned int GlRendererCapabilities::GetMaxNumberOfTextureUnits() const
@@ -45,68 +46,24 @@ unsigned int GlRendererCapabilities::GetMaxNumberOfVertexAttributes() const
 
 GlRenderer::GlRenderer()
 {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) /* Initialize SDL's Video subsystem */
-        throw AT2Exception(AT2Exception::ErrorCase::Renderer, "SDL init failed");
- 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);//WGL_CONTEXT_DEBUG_BIT_ARB
+	//TODO: return it
+	//glDebugMessageCallback(GlErrorCallback, this);
+	//glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+	//glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
-    m_window = SDL_CreateWindow("Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-    if (!m_window)
-        throw AT2Exception(AT2Exception::ErrorCase::Renderer, "SDL: cannot create window");
-
-	CheckSDLError();
-
-	m_context = SDL_GL_CreateContext(m_window);
-	SDL_GL_SetSwapInterval(0);
-
-	CheckSDLError();
-
-	SDL_GL_SetSwapInterval(1);
-
-	glewExperimental = GL_TRUE;
-	GLenum err=glewInit();
-	if(err != GLEW_OK)
-		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GLEW: cannot init");
-	
-	
-	glDebugMessageCallback(GlErrorCallback, this);
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-	m_rendererCapabilities = new GlRendererCapabilities();
-	m_resourceFactory = new GlResourceFactory();
-	m_stateManager = new StateManager(m_rendererCapabilities);
+	m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
+	m_resourceFactory = std::make_unique<GlResourceFactory>();
+	m_stateManager = std::make_unique<StateManager>(*m_rendererCapabilities.get());
 }
 
 GlRenderer::~GlRenderer()
 {
-	delete m_rendererCapabilities;
-	delete m_resourceFactory;
-	delete m_stateManager;
 }
 
-void GlRenderer::CheckSDLError()
-{
-	const char *error = SDL_GetError();
-	if (*error != '\0')
-	{
-		std::stringstream ss;
-		ss << "SDL error: " << error << std::endl;
-		SDL_ClearError();
-
-
-		Log::Error() << ss.str();
-		throw AT2Exception(AT2Exception::ErrorCase::Renderer, ss.str());
-	}
-}
 
 void GlRenderer::SwapBuffers()
 {
-	SDL_GL_SwapWindow(m_window);
+	//SDL_GL_SwapWindow(m_window);
 }
 
 void GlRenderer::ClearBuffer(const glm::vec4& color)
@@ -124,12 +81,6 @@ void GlRenderer::ClearDepth(float depth)
 
 void GlRenderer::Shutdown()
 {
-    SDL_GL_DeleteContext(m_context);
-    SDL_DestroyWindow(m_window);
-    SDL_Quit();
-
-	m_context = nullptr;
-	m_window = nullptr;
 }
 
 void GlRenderer::GlErrorCallback(GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length, const GLchar * _message, GLvoid * _userParam)

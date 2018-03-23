@@ -7,13 +7,13 @@
 #include "OpenGl/GlVertexArray.h"
 #include "OpenGl/GlFrameBuffer.h"
 #include "OpenGl/GlUniformContainer.h"
+#include "OpenGl/GlTimerQuery.h"
 
 #include "drawable.h"
 #include "OpenGl/GlDrawPrimitive.h"
 
 #include <iostream>
 #include <fstream>
-#include <SDL.h>
 
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -22,10 +22,14 @@
 #include <chrono>
 #include <filesystem>
 
+#include "OpenGL/GLFW/glfw_window.h"
+
+#ifdef USE_ASSIMP
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
+#endif
 
 std::shared_ptr<AT2::GlShaderProgram> MeshShader;
 
@@ -119,10 +123,10 @@ std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(AT2::GlRenderer* renderer,
 
 	for (int j = 0; j < segY; ++j)
 	{
-		double angV = j*M_PI / (segY-1);
+		double angV = j*pi / (segY-1);
 		for (int i = 0; i < segX; ++i)
 		{
-			double angH = i*M_PI * 2 / segX;
+			double angH = i*pi * 2 / segX;
 
 			normals.push_back(glm::vec3(sin(angV)*cos(angH), sin(angV)*sin(angH), cos(angV)));
 		}
@@ -197,6 +201,8 @@ std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::GlRenderer* r
 
 	return drawable;
 }
+
+#ifdef USE_ASSIMP
 
 std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRenderer* _renderer)
 {
@@ -323,7 +329,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 					std::tr2::sys::path modelPath = m_scenePath.parent_path();
 					modelPath /= path.data;
 
-					auto texDiffuse = m_renderer->GetResourceFactory()->LoadTexture(modelPath.string());
+					auto texDiffuse = m_renderer->GetResourceFactory().LoadTexture(modelPath.string());
 					//pp.Textures.insert(texDiffuse);
 					//storage->SetUniform("u_texDiffuse", texDiffuse);
 				}
@@ -368,40 +374,8 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 	meshBuilder.Build();
 	return meshBuilder.m_buildedMesh;
 }
+#endif
 
-class GlTimerQuery
-{
-public:
-	GlTimerQuery()
-	{
-		glGenQueries(1, &m_id);
-	}
-	~GlTimerQuery()
-	{
-		glDeleteQueries(1, &m_id);
-	}
-
-	void Begin()
-	{
-		m_resultValue = 0;
-		glBeginQuery(GL_TIME_ELAPSED, m_id);
-	}
-
-	void End()
-	{
-		glEndQuery(GL_TIME_ELAPSED);
-	}
-
-	GLuint64 WaitForResult()
-	{
-		glGetQueryObjectui64v(m_id, GL_QUERY_RESULT, &m_resultValue);
-		return m_resultValue;
-	}
-
-private:
-	GLuint m_id;
-	GLuint64 m_resultValue;
-};
 
 std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 
@@ -410,7 +384,7 @@ float Render(AT2::GlRenderer* renderer)
 {
 	auto timeBefore = std::chrono::high_resolution_clock::now();
 
-	GlTimerQuery glTimer;
+	AT2::GlTimerQuery glTimer;
 	glTimer.Begin();
 
 	CameraUB->SetUniform("u_matView", matMV);
@@ -488,11 +462,26 @@ float Render(AT2::GlRenderer* renderer)
 	return frameTime;
 }
 
-int main(int argc, char *argv[])
+class App
 {
-	try
+public:
+	App()
 	{
-		auto renderer = new AT2::GlRenderer();
+		m_window.setWindowLabel("Some engine test");
+		m_window.setWindowSize(m_framebufferPhysicalSize.x, m_framebufferPhysicalSize.y);
+
+		SetupWindowCallbacks();
+	}
+
+	void Run()
+	{
+		m_window.Run();
+	}
+
+private:
+	void OnInitialize()
+	{
+		m_renderer = std::make_unique<AT2::GlRenderer>();
 
 
 		auto postprocessShader = AT2::GlShaderProgramFromFile::CreateShader(
@@ -537,17 +526,17 @@ int main(int argc, char *argv[])
 		data.Depth = 256;
 		GLubyte* arr = new GLubyte [data.Height * data.Width * data.Depth * 4];
 		for (int i = 0; i < data.Height * data.Width * data.Depth * 4; ++i)
-		   arr[i] = (rand() & 0xFF);
+			arr[i] = (rand() & 0xFF);
 		data.Data = arr;
 		texture->SetData(0, data);
 		delete [] arr;
 
 		Noise3Tex = std::shared_ptr<AT2::ITexture>(texture);
 
-		GrassTex = renderer->GetResourceFactory()->LoadTexture("resources\\grass03.dds");
-		RockTex = renderer->GetResourceFactory()->LoadTexture("resources\\rock04.dds");
-		NormalMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\terrain_normalmap.dds");
-		HeightMapTex = renderer->GetResourceFactory()->LoadTexture("resources\\heightmap.dds");
+		GrassTex = m_renderer->GetResourceFactory().LoadTexture("resources\\grass03.dds");
+		RockTex = m_renderer->GetResourceFactory().LoadTexture("resources\\rock04.dds");
+		NormalMapTex = m_renderer->GetResourceFactory().LoadTexture("resources\\terrain_normalmap.dds");
+		HeightMapTex = m_renderer->GetResourceFactory().LoadTexture("resources\\heightmap.dds");
 
 
 		CameraUB = std::make_shared<AT2::GlUniformBuffer>(terrainShader->GetUniformBlockInfo("CameraBlock"));
@@ -558,21 +547,21 @@ int main(int argc, char *argv[])
 		auto texNormalRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
 		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(1024, 1024));
 
-		Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+		Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
 		Stage1FBO->SetColorAttachement(0, texDiffuseRT);
 		Stage1FBO->SetColorAttachement(1, texNormalRT);
 		Stage1FBO->SetDepthAttachement(texDepthRT);
 
 		auto texColorRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
 
-		Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+		Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
 		Stage2FBO->SetColorAttachement(0, texColorRT);
 		Stage2FBO->SetDepthAttachement(texDepthRT); //depth is common with previous stage
 
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
 
 		//terrain
-		TerrainDrawable = MakeTerrainDrawable(renderer, 64, 64);
+		TerrainDrawable = MakeTerrainDrawable(m_renderer.get(), 64, 64);
 		TerrainDrawable->Shader = terrainShader;
 		TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 		{
@@ -587,7 +576,7 @@ int main(int argc, char *argv[])
 			TerrainDrawable->UniformBuffer = uniformStorage;
 		}
 
-		SphereLightDrawable = MakeSphereDrawable(renderer);
+		SphereLightDrawable = MakeSphereDrawable(m_renderer.get());
 		SphereLightDrawable->Shader = sphereLightShader;
 		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex };
 		{
@@ -596,12 +585,12 @@ int main(int argc, char *argv[])
 			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
 			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
 			uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
-			
+
 			SphereLightDrawable->UniformBuffer = uniformStorage;
 		}
 
 		//Postprocess quad
-		QuadDrawable = MakeFullscreenQuadDrawable(renderer);
+		QuadDrawable = MakeFullscreenQuadDrawable(m_renderer.get());
 		QuadDrawable->Shader = postprocessShader;
 		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
 		{
@@ -617,7 +606,7 @@ int main(int argc, char *argv[])
 		for (int i = 0; i < 100; ++i)
 		{
 			auto light = std::make_shared<AT2::GlUniformBuffer>(sphereLightShader->GetUniformBlockInfo("LightingBlock"));
-			
+
 			light->SetUniform("u_lightPos", glm::vec4(glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0), 1.0));
 			light->SetUniform("u_lightRadius", glm::linearRand(300.0f, 700.0f)*2.0f);
 			light->SetUniform("u_lightColor", glm::linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)));
@@ -625,7 +614,9 @@ int main(int argc, char *argv[])
 			LightsArray.push_back(light);
 		}
 
+#ifdef USE_ASSIMP
 		SceneDrawables.push_back(LoadModel("resources/jeep1.3ds", renderer));
+#endif
 
 		//Init
 		glEnable(GL_BLEND);
@@ -635,86 +626,109 @@ int main(int argc, char *argv[])
 
 		glViewport(0, 0, 1024, 1024);
 		matProj = glm::perspective(90.0, -1.0, 1.0, 10000.0);//
-
-		float heading = 0.0f, pitch = 0.0f;
-		glm::vec3 position = glm::vec3(0.0, 0.0, 0.0), direction;
-
-		Uint32 startTime = SDL_GetTicks(); 
-		Uint32 fpsCount = 0;
-
-		double framesSummaryTime = 0.0;
-		while (true)
-		{
-			SDL_Event sdlEvent;
-			//SDL_WaitEvent(&sdlEvent);
-
-			while (SDL_PollEvent(&sdlEvent))
-			{
-				switch (sdlEvent.type)
-				{
-					case SDL_MOUSEMOTION:
-						{
-							heading += sdlEvent.motion.xrel * 0.01f;
-							pitch += sdlEvent.motion.yrel * 0.01f;
-							pitch = glm::clamp(pitch, -glm::pi<float>()/2, glm::pi<float>()/2);
-
-							direction = glm::normalize(glm::vec3(cos(pitch) * sin(heading), sin(pitch), cos(pitch) * cos(heading)));
-						} break;
-					case SDL_KEYDOWN:
-						{
-							if (sdlEvent.key.keysym.scancode == SDL_SCANCODE_Z && sdlEvent.key.state == SDL_PRESSED)
-								WireframeMode = !WireframeMode;
-						} break;
-					case SDL_QUIT:
-						goto QuitLabel;
-					case SDL_WINDOWEVENT:
-					{
-						if (sdlEvent.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
-						{
-							//AT2::GlShaderProgramFromFile::ReloadAll();
-						}
-					} break;
-				}
-			}
-			glm::vec3 right(sin(heading - 3.14f / 2.0f), 0, cos(heading - 3.14f / 2.0f));
-			glm::vec3 up = glm::cross(right, direction);
-
-			const Uint8* keyboardState = SDL_GetKeyboardState(NULL);
-			if (keyboardState[SDL_SCANCODE_W])
-				position += direction;
-			if (keyboardState[SDL_SCANCODE_S])
-				position -= direction;
-			if (keyboardState[SDL_SCANCODE_A])
-				position += right;
-			if (keyboardState[SDL_SCANCODE_D])
-				position -= right;
-
-			matMV = glm::lookAt(position, position + direction, up);
-
-			LightsArray[0]->SetUniform("u_lightPos", glm::vec4(position, 1.0));
-
-			Uint32 time = SDL_GetTicks();
-			if (time - startTime > 1000)
-			{
-				//std::cout << fpsCount << " ";
-				std::cout << framesSummaryTime/fpsCount << "ms ";
-
-
-				startTime = time;
-				fpsCount = 0;
-				framesSummaryTime = 0.0;
-			}
-			fpsCount++;
-
-			framesSummaryTime += Render(renderer);
-		}
-
-QuitLabel:
-		renderer->Shutdown();
 	}
-	catch (AT2::AT2Exception exeption)
+
+	void OnRender(double time, double dt)
 	{
-		SDL_ShowSimpleMessageBox(SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR, "Exception", exeption.what(), 0);
+		right = glm::vec3(sin(heading - 3.14f / 2.0f), 0, cos(heading - 3.14f / 2.0f));
+		up = glm::cross(right, direction);
+		matMV = glm::lookAt(position, position + direction, up);
+
+
+		glViewport(0, 0, m_framebufferPhysicalSize.x, m_framebufferPhysicalSize.y);
+
+		LightsArray[0]->SetUniform("u_lightPos", glm::vec4(position, 1.0));
+
+		Render(m_renderer.get());
+	}
+
+	void SetupWindowCallbacks()
+	{
+		m_window.KeyDownCallback = [](int key)
+		{
+			std::cout << "Key " << key << " down" << std::endl;
+
+			if (key == GLFW_KEY_Z)
+				WireframeMode = !WireframeMode;
+		};
+
+		m_window.KeyRepeatCallback = [&](int key)
+		{
+			if (key == GLFW_KEY_W)
+				position += direction;
+			if (key == GLFW_KEY_S)
+				position -= direction;
+			if (key == GLFW_KEY_A)
+				position += right;
+			if (key == GLFW_KEY_D)
+				position -= right;
+		};
+
+		m_window.ResizeCallback = [&](int w, int h)
+		{
+			m_framebufferPhysicalSize = glm::ivec2(w, h);
+		};
+
+		m_window.MouseUpCallback = [](int key)
+		{
+			std::cout << "Mouse " << key << std::endl;
+		};
+
+		m_window.MouseMoveCallback = [&](double x, double y)
+		{
+			float dx = m_mousePos.x - x, dy = m_mousePos.y - y;
+
+			heading += dx * 0.01f;
+			pitch += dy * 0.01f;
+			pitch = glm::clamp(pitch, -glm::pi<float>() / 2, glm::pi<float>() / 2);
+
+			direction = glm::normalize(glm::vec3(cos(pitch) * sin(heading), sin(pitch), cos(pitch) * cos(heading)));
+
+			m_mousePos = glm::vec2(x, y);
+		};
+
+		m_window.InitializeCallback = [&]()
+		{
+			glfwSwapInterval(1); //VSync
+		};
+
+		m_window.ClosingCallback = [&]()
+		{
+			m_renderer->Shutdown();
+		};
+
+		m_window.RenderCallback = std::bind(&App::OnRender, this, std::placeholders::_1, std::placeholders::_2);
+		m_window.InitializeCallback = std::bind(&App::OnInitialize, this);
+	}
+
+private:
+	GlfwWindow m_window;
+	std::unique_ptr<AT2::GlRenderer> m_renderer;
+
+	glm::ivec2 m_framebufferPhysicalSize = glm::ivec2(1024, 1024);
+	glm::vec2 m_mousePos;
+
+	
+	//TODO: remake
+	float heading = 0.0f, pitch = 0.0f;
+	glm::vec3 position = glm::vec3(0.0, 0.0, 0.0), direction;
+	glm::vec3 right, up;
+};
+
+int main(int argc, char *argv[])
+{
+	try
+	{
+		InitGLFW();
+
+		App app;
+		app.Run();
+
+		ReleaseGLFW();
+	}
+	catch (AT2::AT2Exception exception)
+	{
+		std::cout << "Runtime exception:" << exception.what() << std::endl;
 	}
 	
 	return 0;

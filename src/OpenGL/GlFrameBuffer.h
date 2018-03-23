@@ -11,7 +11,7 @@ namespace AT2
 class GlFrameBuffer : public IFrameBuffer
 {
 public:
-	GlFrameBuffer(IRendererCapabilities* rendererCapabilities);
+	GlFrameBuffer(const IRendererCapabilities& rendererCapabilities);
 	~GlFrameBuffer();
 
 public:

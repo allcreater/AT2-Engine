@@ -3,8 +3,8 @@
 
 using namespace AT2;
 
-GlVertexArray::GlVertexArray(IRendererCapabilities* _rendererCapabilities) :
-	m_buffers(_rendererCapabilities->GetMaxNumberOfVertexAttributes())
+GlVertexArray::GlVertexArray(const IRendererCapabilities& _rendererCapabilities) :
+	m_buffers(_rendererCapabilities.GetMaxNumberOfVertexAttributes())
 {
 	glGenVertexArrays(1, &m_id);
 }

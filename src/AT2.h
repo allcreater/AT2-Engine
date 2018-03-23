@@ -1,7 +1,7 @@
 #ifndef AT2_MAIN_HEADER_H
 #define AT2_MAIN_HEADER_H
 
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
@@ -17,6 +17,9 @@
 #include "log.h"
 #include "utils.hpp"
 
+
+const double pi = std::acos(-1);
+
 namespace AT2
 {
 
@@ -26,11 +29,12 @@ template <typename T>
 class IBuffer
 {
 public:
+	virtual ~IBuffer() {};
+
+public:
 	virtual void SetData(unsigned int length, const T* data) = 0;
 	virtual T* Lock() = 0;
 	virtual void Unlock() = 0;
-
-	virtual ~IBuffer() {};
 };
 
 class IFrameBuffer
@@ -39,11 +43,12 @@ public:
 	IFrameBuffer() = default;
 	IFrameBuffer(const IFrameBuffer& other) = delete;
 	IFrameBuffer& operator= (const IFrameBuffer& other) = delete;
+	virtual ~IFrameBuffer() {};
 
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
-	virtual ~IFrameBuffer() {};
+	
 };
 
 class IVertexBuffer
@@ -52,12 +57,13 @@ public:
 	IVertexBuffer() = default;
 	IVertexBuffer(const IVertexBuffer& other) = delete;
 	IVertexBuffer& operator= (const IVertexBuffer& other) = delete;
+	virtual ~IVertexBuffer() {};
 
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 	virtual unsigned int GetLength() = 0;
-	virtual ~IVertexBuffer() {};
+	
 };
 
 class IVertexArray
@@ -66,11 +72,12 @@ public:
 	IVertexArray() = default;
 	IVertexArray(const IVertexArray& other) = delete;
 	IVertexArray& operator= (const IVertexArray& other) = delete;
+	virtual ~IVertexArray() {};
 
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
-	virtual ~IVertexArray() {};
+	
 };
 
 class ITexture
@@ -108,12 +115,16 @@ public:
 class IDrawPrimitive
 {
 public:
+	virtual ~IDrawPrimitive() {}
+public:
 	virtual void Draw() const = 0;
-	virtual ~IDrawPrimitive() {};
 };
 
 class IUniformContainer
 {
+public:
+	virtual ~IUniformContainer() {}
+
 public:
 	//doubles
 	virtual void SetUniform(const str& name, const double& value) = 0;
@@ -166,6 +177,12 @@ public:
 class IRendererCapabilities
 {
 public:
+	IRendererCapabilities() = default;
+	IRendererCapabilities(const IRendererCapabilities& other) = delete;
+	IRendererCapabilities& operator= (const IRendererCapabilities& other) = delete;
+	virtual ~IRendererCapabilities() {}
+
+public:
 	virtual unsigned int GetMaxNumberOfTextureUnits() const = 0;
 	virtual unsigned int GetMaxTextureSize() const = 0;
 	virtual unsigned int GetMaxNumberOfVertexAttributes() const = 0;
@@ -178,6 +195,12 @@ typedef std::vector<IDrawPrimitive*> PrimitiveList;
 class IStateManager
 {
 public:
+	IStateManager() = default;
+	IStateManager(const IStateManager& other) = delete;
+	IStateManager& operator= (const IStateManager& other) = delete;
+	virtual ~IStateManager() {}
+
+public:
 	virtual void BindTextures(const TextureSet& textures) = 0;
 	virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
 	virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
@@ -187,19 +210,27 @@ public:
 class IResourceFactory
 {
 public:
+	IResourceFactory() = default;
+	IResourceFactory(const IResourceFactory& other) = delete;
+	IResourceFactory& operator= (const IResourceFactory& other) = delete;
+
 	virtual ~IResourceFactory() {}
 
 public:
 	virtual std::shared_ptr<ITexture> LoadTexture(const str& filename) const = 0; //TODO: maybe I need to detach load functionality 
 	virtual std::shared_ptr<ITexture> CreateTexture() const = 0;
+
 };
 
 class IRenderer
 {
 public:
-	virtual IResourceFactory* GetResourceFactory() const = 0;
-	virtual IStateManager* GetStateManager() const = 0;
-	virtual IRendererCapabilities* GetRendererCapabilities() const = 0;
+	virtual ~IRenderer() {};
+
+public:
+	virtual IResourceFactory& GetResourceFactory() const = 0;
+	virtual IStateManager& GetStateManager() const = 0;
+	virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
 	virtual void Shutdown() = 0;
 };

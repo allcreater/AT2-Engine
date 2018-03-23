@@ -2,9 +2,9 @@
 
 using namespace AT2;
 
-GlFrameBuffer::GlFrameBuffer(IRendererCapabilities* rendererCapabilities) :
+GlFrameBuffer::GlFrameBuffer(const IRendererCapabilities& rendererCapabilities) :
 	m_size(0, 0),
-	m_colorAttachements(rendererCapabilities->GetMaxNumberOfColorAttachements())
+	m_colorAttachements(rendererCapabilities.GetMaxNumberOfColorAttachements())
 	//m_attachementsView(m_colorAttachements, [&](size_t i, std::shared_ptr<GlTexture> texture){BindAttachement(i, texture); }, [](size_t i, std::shared_ptr<GlTexture>){}, [&](size_t i, std::shared_ptr<GlTexture>){UnbindAttachement(i); })
 {
 	glGenFramebuffers(1, &m_id);

@@ -1,9 +1,13 @@
 #include "GlRenderer.h"
 #include "GlTexture.h"
 
+#ifdef LIBRARY_GLI_AVAILABLE
 #include <gli/gli.hpp>
+#endif
+
 #include <IL/il.h>
 #include <IL/ilu.h>
+
 
 #include <filesystem>
 
@@ -21,6 +25,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture(const str& _filename) c
 		return LoadTexture_DevIL(_filename);
 }
 
+#ifdef LIBRARY_GLI_AVAILABLE
 std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filename) const
 {
 	gli::storage Storage(gli::load_dds(_filename.c_str()));
@@ -98,6 +103,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 		return glTexture;
 	}
 }
+#endif
 
 GLint GlResourceFactory::GetInternalFormat(GLuint externalFormat, GLuint externalType) const
 {

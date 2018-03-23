@@ -20,11 +20,11 @@ class MeshDrawable : public IDrawable //mesh или не mesh, но определенно что-то 
 public:
 	void Draw(IRenderer& renderer) override
 	{
-		auto stateManager = renderer.GetStateManager();
+		auto& stateManager = renderer.GetStateManager();
 
-		stateManager->BindShader(Shader);
-		stateManager->BindVertexArray(VertexArray);
-		stateManager->BindTextures(Textures);
+		stateManager.BindShader(Shader);
+		stateManager.BindVertexArray(VertexArray);
+		stateManager.BindTextures(Textures);
 		
 		UniformBuffer->Bind();
 
