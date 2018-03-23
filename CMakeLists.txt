@@ -8,27 +8,7 @@ HunterGate(
 )
 # end Hunter
 
-add_definitions(
-#	-DUSE_ASSIMP
-)
-
-project (AT2_sandbox)
-
-
-#hunter_add_package (Assimp)
-#find_package (Assimp CONFIG REQUIRED)
-
-
-#include_directories ("src/AT2/")
-
-file (GLOB ${PROJECT_NAME}_SOURCES
-"src/*.cpp"
-)
-
-add_executable(${PROJECT_NAME}
-    ${${PROJECT_NAME}_SOURCES}
-)
+project(AT2_all)
 
 add_subdirectory ("src/AT2/")
-
-target_link_libraries(${PROJECT_NAME} AT2_Engine) #Assimp::assimp)
+add_subdirectory ("applications/sandbox/")

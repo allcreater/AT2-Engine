@@ -1,17 +1,17 @@
 //This file is something like sandbox. It is just functionality test, not example.
 
-#include "AT2/OpenGl/GlRenderer.h"
-#include "AT2/OpenGl/GlShaderProgram.h"
-#include "AT2/OpenGl/GlUniformBuffer.h"
-#include "AT2/OpenGl/GlTexture.h"
-#include "AT2/OpenGl/GlVertexArray.h"
-#include "AT2/OpenGl/GlFrameBuffer.h"
-#include "AT2/OpenGl/GlUniformContainer.h"
-#include "AT2/OpenGl/GlTimerQuery.h"
-#include "AT2/OpenGL/GLFW/glfw_window.h"
+#include <AT2/OpenGl/GlRenderer.h>
+#include <AT2/OpenGl/GlShaderProgram.h>
+#include <AT2/OpenGl/GlUniformBuffer.h>
+#include <AT2/OpenGl/GlTexture.h>
+#include <AT2/OpenGl/GlVertexArray.h>
+#include <AT2/OpenGl/GlFrameBuffer.h>
+#include <AT2/OpenGl/GlUniformContainer.h>
+#include <AT2/OpenGl/GlTimerQuery.h>
+#include <AT2/OpenGL/GLFW/glfw_window.h>
 
 #include "drawable.h"
-#include "AT2/OpenGl/GlDrawPrimitive.h"
+#include <AT2/OpenGl/GlDrawPrimitive.h>
 
 #include <iostream>
 #include <fstream>
@@ -68,38 +68,38 @@ class GlShaderProgramFromFile : public GlShaderProgram, public virtual IReloadab
 public:
 	GlShaderProgramFromFile(std::initializer_list<str> _shaders) : GlShaderProgram()
 	{
-        for (auto filename : _shaders)
-        {
-            if (GetName().empty())
-                SetName(filename);
+		for (auto filename : _shaders)
+		{
+			if (GetName().empty())
+				SetName(filename);
 
-            if (filename.substr(filename.length() - 8) == ".vs.glsl")
-                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Vertex));
-            else if (filename.substr(filename.length() - 9) == ".tcs.glsl")
-                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationControl));
-            else if (filename.substr(filename.length() - 9) == ".tes.glsl")
-                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationEvaluation));
-            else if (filename.substr(filename.length() - 8) == ".gs.glsl")
-                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Geometry));
-            else if (filename.substr(filename.length() - 8) == ".fs.glsl")
-                m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Fragment));
-            else
-                throw AT2Exception("unrecognized shader type");
-        }
+			if (filename.substr(filename.length() - 8) == ".vs.glsl")
+				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Vertex));
+			else if (filename.substr(filename.length() - 9) == ".tcs.glsl")
+				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationControl));
+			else if (filename.substr(filename.length() - 9) == ".tes.glsl")
+				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationEvaluation));
+			else if (filename.substr(filename.length() - 8) == ".gs.glsl")
+				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Geometry));
+			else if (filename.substr(filename.length() - 8) == ".fs.glsl")
+				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Fragment));
+			else
+				throw AT2Exception("unrecognized shader type");
+		}
 
 		Reload();
 	}
 
 	void Reload()
 	{
-        GlShaderProgram::CleanUp();
+		GlShaderProgram::CleanUp();
 
-        for (auto shader : m_filenames)
-        {
-            GlShaderProgram::AttachShader(LoadShader(shader.first), shader.second);
-        }
+		for (auto shader : m_filenames)
+		{
+			GlShaderProgram::AttachShader(LoadShader(shader.first), shader.second);
+		}
 
-        GlShaderProgram::Compile();
+		GlShaderProgram::Compile();
 	}
 
 	~GlShaderProgramFromFile()
@@ -134,15 +134,15 @@ public: //static
 	{
 		for (auto element : s_allShaderPrograms)
 		{
-            try
-            {
-                element.second.lock()->Reload();
-            }
-            catch (AT2::AT2Exception exception)
-            {
-                if (exception.Case != AT2::AT2Exception::ErrorCase::Shader)
-                    throw exception;
-            }
+			try
+			{
+				element.second.lock()->Reload();
+			}
+			catch (AT2::AT2Exception exception)
+			{
+				if (exception.Case != AT2::AT2Exception::ErrorCase::Shader)
+					throw exception;
+			}
 		}
 	}
 };
@@ -470,18 +470,18 @@ float Render(AT2::GlRenderer* renderer, AT2::IFrameBuffer* framebuffer, glm::mat
 		light->Bind();
 		SphereLightDrawable->Draw(*renderer);
 	}
-    
-    glCullFace(GL_BACK);
-    glDisable(GL_DEPTH_TEST);
-    SkylightDrawable->Draw(*renderer);
+	
+	glCullFace(GL_BACK);
+	glDisable(GL_DEPTH_TEST);
+	SkylightDrawable->Draw(*renderer);
 	
 	//Postprocess stage
-    framebuffer->Bind();
-    //glEnable(GL_FRAMEBUFFER_SRGB);
+	framebuffer->Bind();
+	//glEnable(GL_FRAMEBUFFER_SRGB);
 
 	glDepthMask(GL_TRUE);
 	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
-    renderer->ClearDepth(0);
+	renderer->ClearDepth(0);
 
 	glCullFace(GL_BACK);
 	glDisable(GL_DEPTH_TEST);
@@ -523,25 +523,25 @@ private:
 			"resources\\shaders\\postprocess.vs.glsl",
 			"resources\\shaders\\postprocess.fs.glsl" });
 
-        auto terrainShader = AT2::GlShaderProgramFromFile::CreateShader({
-            "resources\\shaders\\terrain.vs.glsl",
-            "resources\\shaders\\terrain.tcs.glsl",
-            "resources\\shaders\\terrain.tes.glsl",
-            "resources\\shaders\\terrain.fs.glsl" });
+		auto terrainShader = AT2::GlShaderProgramFromFile::CreateShader({
+			"resources\\shaders\\terrain.vs.glsl",
+			"resources\\shaders\\terrain.tcs.glsl",
+			"resources\\shaders\\terrain.tes.glsl",
+			"resources\\shaders\\terrain.fs.glsl" });
 
-        auto sphereLightShader = AT2::GlShaderProgramFromFile::CreateShader({
-            "resources\\shaders\\spherelight.vs.glsl",
-            "resources\\shaders\\pbr.fs.glsl",
-            "resources\\shaders\\spherelight.fs.glsl" });
+		auto sphereLightShader = AT2::GlShaderProgramFromFile::CreateShader({
+			"resources\\shaders\\spherelight.vs.glsl",
+			"resources\\shaders\\pbr.fs.glsl",
+			"resources\\shaders\\spherelight.fs.glsl" });
 
-        auto dayLightShader = AT2::GlShaderProgramFromFile::CreateShader({
-            "resources\\shaders\\skylight.vs.glsl",
-            "resources\\shaders\\pbr.fs.glsl",
-            "resources\\shaders\\skylight.fs.glsl" });
+		auto dayLightShader = AT2::GlShaderProgramFromFile::CreateShader({
+			"resources\\shaders\\skylight.vs.glsl",
+			"resources\\shaders\\pbr.fs.glsl",
+			"resources\\shaders\\skylight.fs.glsl" });
 
-        MeshShader = AT2::GlShaderProgramFromFile::CreateShader({
-            "resources\\shaders\\mesh.vs.glsl",
-            "resources\\shaders\\mesh.fs.glsl" });
+		MeshShader = AT2::GlShaderProgramFromFile::CreateShader({
+			"resources\\shaders\\mesh.vs.glsl",
+			"resources\\shaders\\mesh.fs.glsl" });
 
 		auto texture = new AT2::GlTexture3D(GL_RGBA8, glm::uvec3(256, 256, 256), 1);
 		AT2::GlTexture::BufferData data;
@@ -614,19 +614,19 @@ private:
 		}
 
 
-        SkylightDrawable = MakeFullscreenQuadDrawable(m_renderer.get());
-        SkylightDrawable->Shader = dayLightShader;
-        SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
-        {
-            auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(dayLightShader);
-            uniformStorage->SetUniform("u_phase", Phase);
-            uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-            uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
-            uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
-            uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
-            uniformStorage->SetUniform("u_environmentMap", EnvironmentMapTex);
-            SkylightDrawable->UniformBuffer = uniformStorage;
-        }
+		SkylightDrawable = MakeFullscreenQuadDrawable(m_renderer.get());
+		SkylightDrawable->Shader = dayLightShader;
+		SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
+		{
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(dayLightShader);
+			uniformStorage->SetUniform("u_phase", Phase);
+			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
+			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
+			uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
+			uniformStorage->SetUniform("u_environmentMap", EnvironmentMapTex);
+			SkylightDrawable->UniformBuffer = uniformStorage;
+		}
 
 		//Postprocess quad
 		QuadDrawable = MakeFullscreenQuadDrawable(m_renderer.get());
@@ -661,52 +661,52 @@ private:
 
 
 #ifdef AT2_USE_OCULUS_RIFT
-        OVR::System::Init();
-        // Initializes LibOVR, and the Rift
-        if (!OVR_SUCCESS(ovr_Initialize(nullptr)))
-            throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to initialize libOVR.");
+		OVR::System::Init();
+		// Initializes LibOVR, and the Rift
+		if (!OVR_SUCCESS(ovr_Initialize(nullptr)))
+			throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to initialize libOVR.");
 
-        ovrGraphicsLuid luid;
-        if (!OVR_SUCCESS(ovr_Create(&HMD, &luid)))
-            throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to get HMD device.");
+		ovrGraphicsLuid luid;
+		if (!OVR_SUCCESS(ovr_Create(&HMD, &luid)))
+			throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to get HMD device.");
 
-        ovrHmdDesc hmdDesc = ovr_GetHmdDesc(HMD);
+		ovrHmdDesc hmdDesc = ovr_GetHmdDesc(HMD);
 
-        if (!OVR_SUCCESS(ovr_ConfigureTracking(HMD, ovrTrackingCap_Orientation | ovrTrackingCap_MagYawCorrection | ovrTrackingCap_Position, 0)))
-            throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to configure tracking.");
+		if (!OVR_SUCCESS(ovr_ConfigureTracking(HMD, ovrTrackingCap_Orientation | ovrTrackingCap_MagYawCorrection | ovrTrackingCap_Position, 0)))
+			throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to configure tracking.");
 
 
-        ovrEyeRenderDesc EyeRenderDesc[2];
-        std::shared_ptr<AT2::GlFrameBuffer> eyeFrameBuffer[2];
-        ovrSwapTextureSet* eyeTextureSet[2];
+		ovrEyeRenderDesc EyeRenderDesc[2];
+		std::shared_ptr<AT2::GlFrameBuffer> eyeFrameBuffer[2];
+		ovrSwapTextureSet* eyeTextureSet[2];
 
-        std::shared_ptr<AT2::GlTexture2D> eyeRenderTextureDepth[2];
-        std::vector<std::shared_ptr<AT2::GlTexture2D>> eyeRenderTextureList[2];
-        for (int eye = 0; eye < 2; ++eye)
-        {
-            ovrSizei idealTextureSize = ovr_GetFovTextureSize(HMD, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye], 1);
+		std::shared_ptr<AT2::GlTexture2D> eyeRenderTextureDepth[2];
+		std::vector<std::shared_ptr<AT2::GlTexture2D>> eyeRenderTextureList[2];
+		for (int eye = 0; eye < 2; ++eye)
+		{
+			ovrSizei idealTextureSize = ovr_GetFovTextureSize(HMD, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye], 1);
 
-            const GLuint format = GL_RGBA8; //GL_SRGB8_ALPHA8
-            if (!OVR_SUCCESS(ovr_CreateSwapTextureSetGL(HMD, format, idealTextureSize.w, idealTextureSize.h, &eyeTextureSet[eye])))
-                throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to create swap texture");
+			const GLuint format = GL_RGBA8; //GL_SRGB8_ALPHA8
+			if (!OVR_SUCCESS(ovr_CreateSwapTextureSetGL(HMD, format, idealTextureSize.w, idealTextureSize.h, &eyeTextureSet[eye])))
+				throw AT2::AT2Exception(AT2::AT2Exception::ErrorCase::Renderer, "Failed to create swap texture");
 
-            eyeRenderTextureDepth[eye] = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(idealTextureSize.w, idealTextureSize.h));
+			eyeRenderTextureDepth[eye] = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(idealTextureSize.w, idealTextureSize.h));
 
-            eyeFrameBuffer[eye] = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
-            eyeFrameBuffer[eye]->SetDepthAttachement(eyeRenderTextureDepth[eye]);
-            //eyeFrameBuffer[eye]->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_SRGB8_ALPHA8, glm::uvec2(idealTextureSize.w, idealTextureSize.h)));
+			eyeFrameBuffer[eye] = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+			eyeFrameBuffer[eye]->SetDepthAttachement(eyeRenderTextureDepth[eye]);
+			//eyeFrameBuffer[eye]->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_SRGB8_ALPHA8, glm::uvec2(idealTextureSize.w, idealTextureSize.h)));
 
-            for (int i = 0; i < eyeTextureSet[eye]->TextureCount; ++i)
-            {
-                auto currentTexture = (ovrGLTexture*)&eyeTextureSet[eye]->Textures[i];
-                eyeRenderTextureList[eye].push_back(std::make_shared<AT2::GlTexture2D>(currentTexture->OGL.TexId, format, glm::uvec2(currentTexture->Texture.Header.TextureSize.w, currentTexture->Texture.Header.TextureSize.h)));
-            }
-            eyeFrameBuffer[eye]->SetColorAttachement(0, eyeRenderTextureList[eye][0]);
+			for (int i = 0; i < eyeTextureSet[eye]->TextureCount; ++i)
+			{
+				auto currentTexture = (ovrGLTexture*)&eyeTextureSet[eye]->Textures[i];
+				eyeRenderTextureList[eye].push_back(std::make_shared<AT2::GlTexture2D>(currentTexture->OGL.TexId, format, glm::uvec2(currentTexture->Texture.Header.TextureSize.w, currentTexture->Texture.Header.TextureSize.h)));
+			}
+			eyeFrameBuffer[eye]->SetColorAttachement(0, eyeRenderTextureList[eye][0]);
 
-            EyeRenderDesc[eye] = ovr_GetRenderDesc(HMD, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye]);
-        }
-        
-        SDL_GL_SetSwapInterval(0);
+			EyeRenderDesc[eye] = ovr_GetRenderDesc(HMD, ovrEyeType(eye), hmdDesc.DefaultEyeFov[eye]);
+		}
+		
+		SDL_GL_SetSwapInterval(0);
 #endif
 
 
@@ -889,8 +889,8 @@ int main(int argc, char *argv[])
 	}
 	
 #ifdef AT2_USE_OCULUS_RIFT
-    ovr_Destroy(HMD);
-    OVR::System::Destroy();
+	ovr_Destroy(HMD);
+	OVR::System::Destroy();
 #endif 
 
 	return 0;
