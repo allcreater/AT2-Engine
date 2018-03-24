@@ -12,3 +12,4 @@ project(AT2_all)
 
 add_subdirectory ("src/AT2/")
 add_subdirectory ("applications/sandbox/")
+add_subdirectory ("applications/test_task/")
