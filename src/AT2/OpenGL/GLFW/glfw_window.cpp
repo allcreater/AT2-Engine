@@ -29,9 +29,9 @@ void GlfwWindow::TryUpdateGlBindings()
     //Unfortunately Huter package don't contains MX version so it seems we must reset it after each context switching
     //TODO: switch to Glew MX
 
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK)
-		throw new GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK)
+        throw new GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
 }
 
 void GlfwWindow::Run()
@@ -47,7 +47,7 @@ void GlfwWindow::Run()
         glfwWindowHint(GLFW_SAMPLES, 8);
 
         /* Create a windowed mode window and its OpenGL context */
-        m_window = glfwCreateWindow(m_wndWidth, m_wndHeight, m_windowLabel.c_str(), nullptr, nullptr);
+        m_window = glfwCreateWindow(m_windowSize.x, m_windowSize.y, m_windowLabel.c_str(), nullptr, nullptr);
         if (!m_window)
             throw new GlfwException("Windows creation failed");
 
@@ -89,13 +89,18 @@ const std::string & GlfwWindow::getWindowLabel() const
     return m_windowLabel;
 }
 
+//TODO: find a way to invoke it indirectly? Also need to remake anyway.
+void GlfwWindow::setVSyncInterval(int interval)
+{
+    glfwSwapInterval(interval);
+}
+
 void GlfwWindow::setWindowSize(int width, int height)
 {
-    if (m_window != nullptr)
-        glfwSetWindowSize(m_window, m_wndWidth, m_wndHeight);
+    m_windowSize = glm::ivec2(width, height);
 
-    m_wndWidth = width;
-    m_wndHeight = height;
+    if (m_window != nullptr)
+        glfwSetWindowSize(m_window, m_windowSize.x, m_windowSize.y);
 }
 
 void GlfwWindow::SetupCallbacks()
@@ -127,11 +132,11 @@ void GlfwWindow::SetupCallbacks()
     });
 
     glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double x, double y) {
-        GlfwWindow::FromNativeWindow(window)->OnMouseMove(x, y);
+        GlfwWindow::FromNativeWindow(window)->OnMouseMove(glm::vec2(x, y));
     });
     
     glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow *window, int w, int h) {
-        GlfwWindow::FromNativeWindow(window)->OnResize(w, h);
+        GlfwWindow::FromNativeWindow(window)->OnResize(glm::ivec2(w, h));
     });
     
 }

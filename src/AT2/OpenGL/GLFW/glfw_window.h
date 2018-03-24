@@ -7,6 +7,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "callback_types.h"
+
 #ifdef GLFW_WRAPPER_VIRTUAL_CALLBACKS
 #define GLFW_WRAPPER_VIRTUAL virtual
 #else
@@ -32,6 +34,9 @@ public:
     const std::string& getWindowLabel() const;
 
     void setWindowSize(int width, int height);
+    glm::ivec2 getWindowSize() const { return m_windowSize; }
+
+    void setVSyncInterval(int interval);
 
     //event callbacks
     std::function<void(void)> InitializeCallback;
@@ -40,10 +45,10 @@ public:
     std::function<void(int)> KeyDownCallback;
     std::function<void(int)> KeyUpCallback;
     std::function<void(int)> KeyRepeatCallback;
-    std::function<void(int, int)> ResizeCallback;
+    std::function<void(const glm::ivec2&)> ResizeCallback;
     std::function<void(void)> ClosingCallback;
 
-    std::function<void(double, double)> MouseMoveCallback;
+    std::function<void(const MousePos&)> MouseMoveCallback;
     std::function<void(int)> MouseDownCallback;
     std::function<void(int)> MouseUpCallback;
 
@@ -55,10 +60,16 @@ protected:
     GLFW_WRAPPER_VIRTUAL void OnKeyUp(int key) const { if (KeyUpCallback != nullptr) KeyUpCallback(key); }
     GLFW_WRAPPER_VIRTUAL void OnKeyRepeat(int key) const { if (KeyRepeatCallback != nullptr) KeyRepeatCallback(key); }
     
-    GLFW_WRAPPER_VIRTUAL void OnResize(int newWidth, int newHeight) const { if (ResizeCallback != nullptr) ResizeCallback(newWidth, newHeight); }
+    GLFW_WRAPPER_VIRTUAL void OnResize(const glm::ivec2& newSize) const { if (ResizeCallback != nullptr) ResizeCallback(newSize); }
     GLFW_WRAPPER_VIRTUAL void OnClosing() const { if (ClosingCallback != nullptr) ClosingCallback(); }
     
-    GLFW_WRAPPER_VIRTUAL void OnMouseMove(double x, double y) const { if (MouseMoveCallback != nullptr) MouseMoveCallback(x, y); }
+    GLFW_WRAPPER_VIRTUAL void OnMouseMove(const glm::vec2& mousePosition) const 
+    {
+        if (MouseMoveCallback != nullptr) 
+            MouseMoveCallback(MousePos(mousePosition, m_lastMousePos)); 
+
+        m_lastMousePos = mousePosition;
+    }
     GLFW_WRAPPER_VIRTUAL void OnMouseDown(int button) const { if (MouseDownCallback != nullptr) MouseDownCallback(button); }
     GLFW_WRAPPER_VIRTUAL void OnMouseUp(int button) const { if (MouseUpCallback != nullptr) MouseUpCallback(button); }
 
@@ -78,7 +89,9 @@ private:
     GLFWwindow * m_window = nullptr;
 
     std::string m_windowLabel = "New window";
-    int m_wndWidth = 800, m_wndHeight = 600;
+    glm::ivec2 m_windowSize = glm::ivec2(800, 600);
+
+    mutable glm::vec2 m_lastMousePos; //just to track mouse position :)
 
     double m_previousRenderTime = 0.0;
 };
