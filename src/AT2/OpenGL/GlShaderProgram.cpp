@@ -6,17 +6,17 @@ static const GLuint s_shaderGlType[] = { GL_VERTEX_SHADER, GL_TESS_CONTROL_SHADE
 
 static GLuint GetGlShaderType(GlShaderType _type)
 {
-    int typeIndex = (int)_type;
-    assert(typeIndex >= 0 && typeIndex <= 4);
-    return s_shaderGlType[typeIndex];
+	int typeIndex = (int)_type;
+	assert(typeIndex >= 0 && typeIndex <= 4);
+	return s_shaderGlType[typeIndex];
 }
 
 static int GetShaderTypeIndex(GlShaderType _type)
 {
-    int typeIndex = (int)_type;
-    assert(typeIndex >= 0 && typeIndex <= 4);
+	int typeIndex = (int)_type;
+	assert(typeIndex >= 0 && typeIndex <= 4);
 
-    return typeIndex;
+	return typeIndex;
 }
 
 GlShaderProgram::GlShaderProgram()
@@ -26,12 +26,12 @@ GlShaderProgram::GlShaderProgram()
 
 GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _tes, const str& _gs, const str& _fs) : GlShaderProgram()
 {
-    AttachShader(_vs, GlShaderType::Vertex);
-    AttachShader(_tcs, GlShaderType::TesselationControl);
-    AttachShader(_tes, GlShaderType::TesselationEvaluation);
-    AttachShader(_gs, GlShaderType::Geometry);
-    AttachShader(_fs, GlShaderType::Fragment);
-    Compile();
+	AttachShader(_vs, GlShaderType::Vertex);
+	AttachShader(_tcs, GlShaderType::TesselationControl);
+	AttachShader(_tes, GlShaderType::TesselationEvaluation);
+	AttachShader(_gs, GlShaderType::Geometry);
+	AttachShader(_fs, GlShaderType::Fragment);
+	Compile();
 }
 
 GlShaderProgram::~GlShaderProgram()
@@ -43,36 +43,36 @@ GlShaderProgram::~GlShaderProgram()
 
 void GlShaderProgram::AttachShader(const str& _code, GlShaderType _type)
 {
-    std::vector<GLuint>& shadersList = m_shaderId[GetShaderTypeIndex(_type)];
-    
-    if (_code.empty())
-        throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: trying to attach empty shader");
-    
-    GLuint shaderId = LoadShader(GetGlShaderType(_type), _code);
-    glAttachShader(m_programId, shaderId);
-    
-    shadersList.push_back(shaderId);
+	std::vector<GLuint>& shadersList = m_shaderId[GetShaderTypeIndex(_type)];
+	
+	if (_code.empty())
+		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: trying to attach empty shader");
+	
+	GLuint shaderId = LoadShader(GetGlShaderType(_type), _code);
+	glAttachShader(m_programId, shaderId);
+	
+	shadersList.push_back(shaderId);
 }
 
 bool GlShaderProgram::Compile()
 {
-    glLinkProgram(m_programId);
-    GLint isLinked = 0;
-    glGetProgramiv(m_programId, GL_LINK_STATUS, &isLinked);
+	glLinkProgram(m_programId);
+	GLint isLinked = 0;
+	glGetProgramiv(m_programId, GL_LINK_STATUS, &isLinked);
 
-    //log
-    GLchar infoLogBuffer[2048];
-    GLint infoLogLength;
-    glGetProgramInfoLog(m_programId, 2048, &infoLogLength, infoLogBuffer);
-    if (infoLogLength > 0)
-        Log::Debug() << "Shader program log: " << std::endl << infoLogBuffer;
+	//log
+	GLchar infoLogBuffer[2048];
+	GLint infoLogLength;
+	glGetProgramInfoLog(m_programId, 2048, &infoLogLength, infoLogBuffer);
+	if (infoLogLength > 0)
+		Log::Debug() << "Shader program log: " << std::endl << infoLogBuffer;
 
-    
-    return isLinked;
-    /*
-    if (!isLinked)
-        throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: program not linked");
-        */
+	
+	return isLinked;
+	/*
+	if (!isLinked)
+		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: program not linked");
+		*/
 }
 
 GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
@@ -121,7 +121,7 @@ void GlShaderProgram::CleanUp()
 			glDetachShader(m_programId, shaderId);
 			glDeleteShader(shaderId);
 		}
-        shaderList.clear();
+		shaderList.clear();
 	}
 }
 
