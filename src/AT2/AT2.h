@@ -27,6 +27,25 @@ namespace AT2
 
 typedef std::string str;
 
+enum class ReloadableGroup
+{
+	Shaders = 1,
+	Textures = 2
+};
+
+//Interface for all resources which can be dynamically reloaded from file
+class IReloadable
+{
+public:
+	//because we want to reload resources by their types, not all together
+	virtual ReloadableGroup getReloadableClass() const = 0;
+
+	virtual ~IReloadable() {}
+
+public:
+	virtual void Reload() = 0;
+};
+
 template <typename T>
 class IBuffer
 {
@@ -120,7 +139,7 @@ public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 	virtual bool IsActive() const = 0;
-    virtual bool Compile() = 0;
+	virtual bool Compile() = 0;
 };
 
 class IDrawPrimitive
@@ -233,6 +252,9 @@ public:
 	virtual std::shared_ptr<ITexture> CreateTexture() const = 0;
 	virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
+	virtual std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
+
+	virtual void ReloadResources(ReloadableGroup group) = 0;
 };
 
 class IRenderer
@@ -246,16 +268,6 @@ public:
 	virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
 	virtual void Shutdown() = 0;
-};
-
-//Interface for all resources which can be dynamically reloaded from file
-class IReloadable
-{
-public:
-	virtual ~IReloadable() {}
-
-public:
-	virtual void Reload() = 0;
 };
 
 }

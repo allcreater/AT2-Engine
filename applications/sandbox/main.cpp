@@ -60,96 +60,6 @@ size_t NumActiveLights = 50;
 
 GLfloat Phase = 0.0;
 
-namespace AT2
-{
-
-class GlShaderProgramFromFile : public GlShaderProgram, public virtual IReloadable
-{
-public:
-	GlShaderProgramFromFile(std::initializer_list<str> _shaders) : GlShaderProgram()
-	{
-		for (auto filename : _shaders)
-		{
-			if (GetName().empty())
-				SetName(filename);
-
-			if (filename.substr(filename.length() - 8) == ".vs.glsl")
-				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Vertex));
-			else if (filename.substr(filename.length() - 9) == ".tcs.glsl")
-				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationControl));
-			else if (filename.substr(filename.length() - 9) == ".tes.glsl")
-				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationEvaluation));
-			else if (filename.substr(filename.length() - 8) == ".gs.glsl")
-				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Geometry));
-			else if (filename.substr(filename.length() - 8) == ".fs.glsl")
-				m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Fragment));
-			else
-				throw AT2Exception("unrecognized shader type");
-		}
-
-		Reload();
-	}
-
-	void Reload()
-	{
-		GlShaderProgram::CleanUp();
-
-		for (auto shader : m_filenames)
-		{
-			GlShaderProgram::AttachShader(LoadShader(shader.first), shader.second);
-		}
-
-		GlShaderProgram::Compile();
-	}
-
-	~GlShaderProgramFromFile()
-	{
-	}
-
-private:
-	std::string LoadShader(const str& _filename)
-	{
-		if (_filename.empty())
-			return "";
-
-		std::ifstream t(_filename);
-		return std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-	}
-
-private:
-	std::vector<std::pair<str, AT2::GlShaderType>> m_filenames;
-
-private: //static
-	static std::map<unsigned int, std::weak_ptr<GlShaderProgramFromFile>> s_allShaderPrograms;
-	
-public: //static
-	static std::shared_ptr<GlShaderProgramFromFile> CreateShader(std::initializer_list<str> _shaders)
-	{
-		auto shader = std::make_shared<AT2::GlShaderProgramFromFile>(_shaders);
-		s_allShaderPrograms[shader->GetId()] = shader;
-
-		return shader;
-	}
-	static void ReloadAll()
-	{
-		for (auto element : s_allShaderPrograms)
-		{
-			try
-			{
-				element.second.lock()->Reload();
-			}
-			catch (AT2::AT2Exception exception)
-			{
-				if (exception.Case != AT2::AT2Exception::ErrorCase::Shader)
-					throw exception;
-			}
-		}
-	}
-};
-std::map<unsigned int, std::weak_ptr<GlShaderProgramFromFile>> GlShaderProgramFromFile::s_allShaderPrograms;
-
-}
-
 std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(AT2::GlRenderer* renderer, int segX = 32, int segY = 16)
 {
 	std::vector<glm::vec3> normals; normals.reserve(segX * segY);
@@ -519,30 +429,31 @@ private:
 		m_renderer = std::make_unique<AT2::GlRenderer>();
 
 
-		auto postprocessShader = AT2::GlShaderProgramFromFile::CreateShader({
+		auto postprocessShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources\\shaders\\postprocess.vs.glsl",
 			"resources\\shaders\\postprocess.fs.glsl" });
 
-		auto terrainShader = AT2::GlShaderProgramFromFile::CreateShader({
+		auto terrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources\\shaders\\terrain.vs.glsl",
 			"resources\\shaders\\terrain.tcs.glsl",
 			"resources\\shaders\\terrain.tes.glsl",
 			"resources\\shaders\\terrain.fs.glsl" });
 
-		auto sphereLightShader = AT2::GlShaderProgramFromFile::CreateShader({
+		auto sphereLightShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources\\shaders\\spherelight.vs.glsl",
 			"resources\\shaders\\pbr.fs.glsl",
 			"resources\\shaders\\spherelight.fs.glsl" });
 
-		auto dayLightShader = AT2::GlShaderProgramFromFile::CreateShader({
+		auto dayLightShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources\\shaders\\skylight.vs.glsl",
 			"resources\\shaders\\pbr.fs.glsl",
 			"resources\\shaders\\skylight.fs.glsl" });
 
-		MeshShader = AT2::GlShaderProgramFromFile::CreateShader({
+#ifdef USE_ASSIMP
+		MeshShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources\\shaders\\mesh.vs.glsl",
 			"resources\\shaders\\mesh.fs.glsl" });
-
+#endif
 		auto texture = new AT2::GlTexture3D(GL_RGBA8, glm::uvec3(256, 256, 256), 1);
 		AT2::GlTexture::BufferData data;
 		data.Height = 256;
@@ -563,9 +474,9 @@ private:
 		HeightMapTex = m_renderer->GetResourceFactory().LoadTexture("resources\\heightmap.dds");
 		EnvironmentMapTex = m_renderer->GetResourceFactory().LoadTexture("resources\\04-23_Day_D.hdr");
 
-		CameraUB = std::make_shared<AT2::GlUniformBuffer>(terrainShader->GetUniformBlockInfo("CameraBlock"));
+		CameraUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(terrainShader)->GetUniformBlockInfo("CameraBlock"));
 		CameraUB->SetBindingPoint(1);
-		LightUB = std::make_shared<AT2::GlUniformBuffer>(sphereLightShader->GetUniformBlockInfo("LightingBlock"));
+		LightUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(sphereLightShader)->GetUniformBlockInfo("LightingBlock"));
 
 		auto texDiffuseRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024));
 		auto texNormalRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
@@ -589,7 +500,7 @@ private:
 		TerrainDrawable->Shader = terrainShader;
 		TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(terrainShader);
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(terrainShader));
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_scaleH", 10000.0f);
 			uniformStorage->SetUniform("u_scaleV", 800.0f);
@@ -604,7 +515,7 @@ private:
 		SphereLightDrawable->Shader = sphereLightShader;
 		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex };
 		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(sphereLightShader);
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(sphereLightShader));
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
 			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
@@ -618,7 +529,7 @@ private:
 		SkylightDrawable->Shader = dayLightShader;
 		SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
 		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(dayLightShader);
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(dayLightShader));
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
@@ -633,7 +544,7 @@ private:
 		QuadDrawable->Shader = postprocessShader;
 		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
 		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(postprocessShader);
+			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(postprocessShader));
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 			uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
@@ -644,7 +555,7 @@ private:
 
 		for (int i = 0; i < NumActiveLights; ++i)
 		{
-			auto light = std::make_shared<AT2::GlUniformBuffer>(sphereLightShader->GetUniformBlockInfo("LightingBlock"));
+			auto light = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(sphereLightShader)->GetUniformBlockInfo("LightingBlock"));
 
 			light->SetUniform("u_lightPos", glm::vec4(glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0), 1.0));
 			light->SetUniform("u_lightRadius", glm::linearRand(300.0f, 700.0f)*2.0f);
@@ -810,7 +721,7 @@ private:
 			else if (key == GLFW_KEY_M)
 				MovingLightMode = !MovingLightMode;
 			else if (key == GLFW_KEY_R)
-				AT2::GlShaderProgramFromFile::ReloadAll();
+				m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
 
 			OnKeyPress(key);
 		};

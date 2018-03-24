@@ -28,6 +28,8 @@ public:
 	std::shared_ptr<ITexture> CreateTexture() const override;
 	std::shared_ptr<IVertexArray> CreateVertexArray() const override;
 	std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const override;
+	std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const override;
+	void ReloadResources(ReloadableGroup group) override;
 
 protected:
 	GLint GetInternalFormat(GLuint externalFormat, GLuint externalType) const;
@@ -36,6 +38,7 @@ protected:
 
 private:
 	GlRenderer* m_renderer;
+	mutable std::vector<std::weak_ptr<IReloadable>> m_reloadableResourcesList;
 };
 
 class GlRenderer : public IRenderer
