@@ -820,9 +820,9 @@ private:
 			OnKeyPress(key);
 		};
 
-		m_window.ResizeCallback = [&](int w, int h)
+		m_window.ResizeCallback = [&](const glm::ivec2& newSize)
 		{
-			m_framebufferPhysicalSize = glm::ivec2(w, h);
+			m_framebufferPhysicalSize = newSize;
 		};
 
 		m_window.MouseUpCallback = [](int key)
@@ -830,22 +830,18 @@ private:
 			std::cout << "Mouse " << key << std::endl;
 		};
 
-		m_window.MouseMoveCallback = [&](double x, double y)
+		m_window.MouseMoveCallback = [&](const MousePos& pos)
 		{
-			float dx = m_mousePos.x - x, dy = m_mousePos.y - y;
-
-			heading += dx * 0.01f;
-			pitch += dy * 0.01f;
+			heading += pos.getDeltaPos().x * 0.01f;
+			pitch += pos.getDeltaPos().y * 0.01f;
 			pitch = glm::clamp(pitch, -glm::pi<float>() / 2, glm::pi<float>() / 2);
 
 			direction = glm::normalize(glm::vec3(cos(pitch) * sin(heading), sin(pitch), cos(pitch) * cos(heading)));
-
-			m_mousePos = glm::vec2(x, y);
 		};
 
 		m_window.InitializeCallback = [&]()
 		{
-			glfwSwapInterval(1); //VSync
+			m_window.setVSyncInterval(1);
 		};
 
 		m_window.ClosingCallback = [&]()
@@ -862,7 +858,6 @@ private:
 	std::unique_ptr<AT2::GlRenderer> m_renderer;
 
 	glm::ivec2 m_framebufferPhysicalSize = glm::ivec2(1024, 1024);
-	glm::vec2 m_mousePos;
 
 	
 	//TODO: remake
