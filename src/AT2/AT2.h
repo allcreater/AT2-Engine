@@ -46,16 +46,16 @@ public:
 	virtual void Reload() = 0;
 };
 
-template <typename T>
+//TODO: make it usable for vertex buffers, textures etc
 class IBuffer
 {
 public:
 	virtual ~IBuffer() {};
 
 public:
-	virtual void SetData(unsigned int length, const T* data) = 0;
-	virtual Utils::wraparray<T> Lock() = 0;
-	virtual void Unlock() = 0;
+	virtual void SetData(unsigned int length, const void* data) = 0;
+	//virtual Utils::wraparray<T> Lock() = 0;
+	//virtual void Unlock() = 0;
 };
 
 class IFrameBuffer
@@ -72,7 +72,7 @@ public:
 	
 };
 
-class IVertexBuffer
+class IVertexBuffer// : public IBuffer
 {
 public:
 	IVertexBuffer() = default;
@@ -86,8 +86,11 @@ public:
 	virtual unsigned int GetId() const = 0;
 	virtual size_t GetLength() const = 0;
 	virtual VertexBufferType GetType() const = 0;
+
 	virtual const BufferTypeInfo& GetDataType() const = 0;
 	virtual void SetDataType(const BufferTypeInfo& typeInfo) = 0;
+
+	virtual void SetData(unsigned int length, const void* data) = 0;
 };
 
 class IVertexArray
@@ -251,7 +254,8 @@ public:
 	virtual std::shared_ptr<ITexture> LoadTexture(const str& filename) const = 0; //TODO: maybe I need to detach load functionality 
 	virtual std::shared_ptr<ITexture> CreateTexture() const = 0;
 	virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
-	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
+	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const = 0;
+	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const = 0;
 	virtual std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
 
 	virtual void ReloadResources(ReloadableGroup group) = 0;

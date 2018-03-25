@@ -3,6 +3,8 @@
 
 #include <AT2/AT2.h>
 
+typedef AT2::VertexBufferType AT2vbt;
+
 namespace AT2
 {
 class IDrawable
@@ -40,6 +42,12 @@ public:
 	TextureSet Textures;
 	PrimitiveList Primitives;
 
+
+public:
+
+	static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(AT2::IRenderer* renderer, int segX = 32, int segY = 16);
+	static std::shared_ptr<AT2::MeshDrawable> MakeTerrainDrawable(AT2::IRenderer* renderer, int segX, int segY);
+	static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::IRenderer* renderer);
 private:
 	
 };

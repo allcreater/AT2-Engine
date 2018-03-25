@@ -6,14 +6,23 @@
 namespace AT2
 {
 	
-class GlVertexBufferBase : public IVertexBuffer
+class GlVertexBuffer : public IVertexBuffer
 {
+public:
+	GlVertexBuffer(VertexBufferType bufferType);
+	~GlVertexBuffer() override;
+
 public:
 	unsigned int GetId() const override					{ return m_id; }
 	VertexBufferType GetType() const override			{ return m_publicType; }
+
 	const BufferTypeInfo& GetDataType() const override	{ return m_typeInfo; }
+	void				SetDataType(const BufferTypeInfo& typeInfo) override;
+
 	size_t GetLength() const override					{ return m_length; }
 
+	void Bind() override;
+	void SetData(unsigned int length, const void* data) override;
 protected:
 	enum class GlBufferType : GLenum//TODO: Not full list of types!
 	{
@@ -64,12 +73,8 @@ public:
 	};
 
 protected:
-	GlVertexBufferBase(VertexBufferType bufferType);
-
-protected:
 	GlBufferType		DetermineGlBufferType (VertexBufferType bufferType) const;
 	GlBufferDataType	DetermineGlDataType (const BufferDataType& dataType) const;
-	void				SetDataType(const BufferTypeInfo& typeInfo) override;
 
 protected:
 	GLuint m_id;
@@ -80,27 +85,6 @@ protected:
 	GlBufferUsageHint m_usageHint = GlBufferUsageHint::StaticDraw;
 	GlBufferTypeInfo m_typeInfo;
 };
-
-
-template <typename T>
-class GlVertexBuffer : public GlVertexBufferBase, public IBuffer<T>
-{ 
-public:
-	GlVertexBuffer(VertexBufferType bufferType, GLsizeiptr size, const T* data);
-	//GlVertexBuffer(GlBufferType type, GLsizeiptr size);
-	~GlVertexBuffer();
-
-public:
-	void Bind() override;
-
-	void SetData(unsigned int length, const T* data) override;
-	Utils::wraparray<T> Lock() override;
-	void Unlock() override;
-
-private:
-	T* m_mappedData;
-};
-
 
 }
 

@@ -35,7 +35,7 @@ namespace AT2
 		};
 
 		GlTexture(TextureType type, GLint internalFormat);
-        GlTexture(GLuint id, TextureType type, GLint internalFormat);
+		GlTexture(GLuint id, TextureType type, GLint internalFormat);
 		GlTexture(TextureType type, GLint internalFormat, GLenum format, GLenum dataType);
 
 		virtual ~GlTexture();
@@ -79,7 +79,7 @@ namespace AT2
 	{
 	public:
 		GlTexture2D(GLint internalFormat, glm::uvec2 size, GLuint levels=1);
-        GlTexture2D(GLuint id, GLint internalFormat, glm::uvec2 size, GLuint levels = 1); //TODO временный костыль для LibOVR
+		GlTexture2D(GLuint id, GLint internalFormat, glm::uvec2 size, GLuint levels = 1); //TODO временный костыль для LibOVR
 
 	public:
 		void SetData(GLuint level, BufferData data);

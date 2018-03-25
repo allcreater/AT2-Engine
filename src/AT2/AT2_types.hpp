@@ -34,8 +34,50 @@ struct BufferTypeInfo
 	unsigned char Count;
 	unsigned int Stride;
 	bool IsNormalized;
+
+	BufferTypeInfo() = default;
+	BufferTypeInfo(BufferDataType type, unsigned char count, unsigned int stride, bool isNormalized = false) : Type(type), Count(count), Stride(stride), IsNormalized(isNormalized) {}
 };
 
-};
+
+namespace BufferDataTypes
+{
+	template<typename T> BufferTypeInfo MakeBufferTypeInfo(BufferDataType type, unsigned char count, bool isNormalized = false)
+	{
+		return BufferTypeInfo(type, count, sizeof(T), isNormalized);
+	}
+
+	//scalars
+	const BufferTypeInfo Byte = BufferTypeInfo(BufferDataType::Byte, 1, 1);
+	const BufferTypeInfo UByte = BufferTypeInfo(BufferDataType::UByte, 1, 1);
+
+	const BufferTypeInfo Short = BufferTypeInfo(BufferDataType::Short, 1, 2);
+	const BufferTypeInfo UShort = BufferTypeInfo(BufferDataType::UShort, 1, 2);
+
+	const BufferTypeInfo Int = BufferTypeInfo(BufferDataType::Int, 1, 4);
+	const BufferTypeInfo UInt = BufferTypeInfo(BufferDataType::UInt, 1, 4);
+
+	const BufferTypeInfo Float = BufferTypeInfo(BufferDataType::Float, 1, 4);
+	const BufferTypeInfo Double = BufferTypeInfo(BufferDataType::Double, 1, 8);
+
+	//vectors
+	const BufferTypeInfo BVec2 = MakeBufferTypeInfo<glm::bvec2>(BufferDataType::Byte, 2);
+	const BufferTypeInfo BVec3 = MakeBufferTypeInfo<glm::bvec3>(BufferDataType::Byte, 3);
+	const BufferTypeInfo BVec4 = MakeBufferTypeInfo<glm::bvec4>(BufferDataType::Byte, 4);
+
+	const BufferTypeInfo IVec2 = MakeBufferTypeInfo<glm::ivec2>(BufferDataType::Int, 2);
+	const BufferTypeInfo IVec3 = MakeBufferTypeInfo<glm::ivec3>(BufferDataType::Int, 3);
+	const BufferTypeInfo IVec4 = MakeBufferTypeInfo<glm::ivec4>(BufferDataType::Int, 4);
+
+	const BufferTypeInfo Vec2 = MakeBufferTypeInfo<glm::vec2>(BufferDataType::Float, 2);
+	const BufferTypeInfo Vec3 = MakeBufferTypeInfo<glm::vec3>(BufferDataType::Float, 3);
+	const BufferTypeInfo Vec4 = MakeBufferTypeInfo<glm::vec4>(BufferDataType::Float, 4);
+
+	const BufferTypeInfo DVec2 = MakeBufferTypeInfo<glm::dvec2>(BufferDataType::Double, 2);
+	const BufferTypeInfo DVec3 = MakeBufferTypeInfo<glm::dvec3>(BufferDataType::Double, 3);
+	const BufferTypeInfo DVec4 = MakeBufferTypeInfo<glm::dvec4>(BufferDataType::Double, 4);
+}
+
+}
 
 #endif
