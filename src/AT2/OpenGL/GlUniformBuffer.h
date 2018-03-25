@@ -7,7 +7,7 @@
 namespace AT2
 {
 
-class GlUniformBuffer : public GlVertexBufferBase, public IUniformContainer
+class GlUniformBuffer : public GlVertexBuffer, public IUniformContainer
 {
 public:
 	GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi);

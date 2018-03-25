@@ -5,7 +5,7 @@ using namespace AT2;
 using namespace glm;
 
 GlUniformBuffer::GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi) : 
-	GlVertexBufferBase (VertexBufferType::UniformBuffer),
+	GlVertexBuffer (VertexBufferType::UniformBuffer),
 	m_bindingPoint(0),
 	m_ubi(ubi)
 {

@@ -247,12 +247,21 @@ std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const
 	return std::make_shared<GlVertexArray>(m_renderer->GetRendererCapabilities());
 }
 
-std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type) const
+std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const
 {
-	return nullptr;//std::make_shared<GlVertexBuffer<>>();
+	auto buffer = std::make_shared<GlVertexBuffer>(type);
+	buffer->SetDataType(dataType);
+	return buffer;
 }
 
+std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const
+{
+	auto buffer = CreateVertexBuffer(type, dataType);
+	buffer->SetData(dataLength, data);
+	return buffer;
+}
 
+//TODO: detach file as a shader source from specific implementation, remove inheritance
 std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(std::initializer_list<str> files) const
 {
 

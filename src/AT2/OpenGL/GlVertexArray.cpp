@@ -25,7 +25,7 @@ void GlVertexArray::SetIndexBuffer(const std::shared_ptr<IVertexBuffer>& _buffer
 {
 	if (_buffer) //if present we must ensure that it right
 	{
-		assert(dynamic_cast<GlVertexBufferBase*>(_buffer.get()));
+		assert(dynamic_cast<GlVertexBuffer*>(_buffer.get()));
 
 		if (_buffer->GetType() != VertexBufferType::IndexBuffer)
 			throw AT2Exception("GlVertexBuffer: must be index buffer!");
@@ -45,12 +45,12 @@ void GlVertexArray::SetVertexBuffer(unsigned int _index, const std::shared_ptr<I
 
 	if (_buffer)
 	{
-		assert(dynamic_cast<GlVertexBufferBase*>(_buffer.get()));
+		assert(dynamic_cast<GlVertexBuffer*>(_buffer.get()));
 
 		if (_buffer->GetType() != VertexBufferType::ArrayBuffer)
 			throw AT2Exception("GlVertexBuffer: trying to attach incorrect type buffer");
 
-		auto dataType = reinterpret_cast<const GlVertexBufferBase::GlBufferTypeInfo&>(_buffer->GetDataType());
+		auto dataType = reinterpret_cast<const GlVertexBuffer::GlBufferTypeInfo&>(_buffer->GetDataType());
 
 		glVertexArrayVertexAttribOffsetEXT(m_id, _buffer->GetId(), _index, static_cast<GLint>(dataType.Count), static_cast<GLenum>(dataType.GlDataType), dataType.IsNormalized ? GL_TRUE : GL_FALSE, dataType.Stride, 0);
 		glEnableVertexArrayAttribEXT(m_id, _index);

@@ -10,7 +10,7 @@
 #include <AT2/OpenGl/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
 
-#include "drawable.h"
+#include "../drawable.h"
 #include <AT2/OpenGl/GlDrawPrimitive.h>
 
 #include <iostream>
@@ -59,92 +59,6 @@ bool WireframeMode = false, MovingLightMode = true;
 size_t NumActiveLights = 50;
 
 GLfloat Phase = 0.0;
-
-std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(AT2::GlRenderer* renderer, int segX = 32, int segY = 16)
-{
-	std::vector<glm::vec3> normals; normals.reserve(segX * segY);
-	std::vector<GLuint> indices; indices.reserve(segX * segY * 6);
-
-	for (int j = 0; j < segY; ++j)
-	{
-		double angV = j*pi / (segY-1);
-		for (int i = 0; i < segX; ++i)
-		{
-			double angH = i*pi * 2 / segX;
-
-			normals.push_back(glm::vec3(sin(angV)*cos(angH), sin(angV)*sin(angH), cos(angV)));
-		}
-	}
-
-	for (int j = 0; j < segY-1; ++j)
-	{
-		const int nj = j + 1;
-		for (int i = 0; i < segX; ++i)
-		{
-			const int ni = (i + 1) % segX;
-
-			indices.push_back(j * segX + i);
-			indices.push_back(j * segX + ni);
-			indices.push_back(nj * segX + ni);
-			indices.push_back(j * segX + i);
-			indices.push_back(nj * segX + ni);
-			indices.push_back(nj * segX + i);
-		}
-	}
-
-	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, normals.size(), normals.data()));
-	vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::VertexBufferType::IndexBuffer, indices.size(), indices.data()));
-
-	auto drawable = std::make_shared<AT2::MeshDrawable>();
-	drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, indices.size(), AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
-	drawable->VertexArray = vao;
-
-	return drawable;
-}
-
-std::shared_ptr<AT2::MeshDrawable> MakeTerrainDrawable(AT2::GlRenderer* renderer, int segX, int segY)
-{
-	std::vector<glm::vec2> texCoords(segX * segY * 4);//TODO! GlVertexBuffer - take iterators!
-
-	for (int j = 0; j < segY; ++j)
-	{
-		for (int i = 0; i < segX; ++i)
-		{
-			const int num = (i + j * segX) * 4;
-			texCoords[num] = glm::vec2(float(i) / segX, float(j) / segY);
-			texCoords[num + 1] = glm::vec2(float(i + 1) / segX, float(j) / segY);
-			texCoords[num + 2] = glm::vec2(float(i + 1) / segX, float(j + 1) / segY);
-			texCoords[num + 3] = glm::vec2(float(i) / segX, float(j + 1) / segY);
-		}
-	}
-
-	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec2>>(AT2::VertexBufferType::ArrayBuffer, texCoords.size(), texCoords.data()));
-
-
-	auto drawable = std::make_shared<AT2::MeshDrawable>();
-	drawable->Primitives.push_back(new AT2::GlDrawArraysPrimitive(AT2::GlDrawPrimitiveType::Patches, 0, texCoords.size()));
-	drawable->VertexArray = vao;
-
-	return drawable;
-}
-
-std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::GlRenderer* renderer)
-{
-	glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
-	GLuint indices[] = { 0, 1, 2, 0, 2, 3 };
-
-	auto vao = std::make_shared<AT2::GlVertexArray>(renderer->GetRendererCapabilities());
-	vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, 4, positions));
-	vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::VertexBufferType::IndexBuffer, 6, indices));
-
-	auto drawable = std::make_shared<AT2::MeshDrawable>();
-	drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, 6, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
-	drawable->VertexArray = vao;
-
-	return drawable;
-}
 
 #ifdef USE_ASSIMP
 
@@ -496,7 +410,7 @@ private:
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
 
 		//terrain
-		TerrainDrawable = MakeTerrainDrawable(m_renderer.get(), 64, 64);
+		TerrainDrawable = AT2::MeshDrawable::MakeTerrainDrawable(m_renderer.get(), 64, 64);
 		TerrainDrawable->Shader = terrainShader;
 		TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 		{
@@ -511,7 +425,7 @@ private:
 			TerrainDrawable->UniformBuffer = uniformStorage;
 		}
 
-		SphereLightDrawable = MakeSphereDrawable(m_renderer.get());
+		SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer.get());
 		SphereLightDrawable->Shader = sphereLightShader;
 		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex };
 		{
@@ -525,7 +439,7 @@ private:
 		}
 
 
-		SkylightDrawable = MakeFullscreenQuadDrawable(m_renderer.get());
+		SkylightDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer.get());
 		SkylightDrawable->Shader = dayLightShader;
 		SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
 		{
@@ -540,7 +454,7 @@ private:
 		}
 
 		//Postprocess quad
-		QuadDrawable = MakeFullscreenQuadDrawable(m_renderer.get());
+		QuadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer.get());
 		QuadDrawable->Shader = postprocessShader;
 		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
 		{

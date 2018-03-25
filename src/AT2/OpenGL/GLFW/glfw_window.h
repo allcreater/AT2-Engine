@@ -34,7 +34,7 @@ public:
     const std::string& getWindowLabel() const;
 
     void setWindowSize(int width, int height);
-    glm::ivec2 getWindowSize() const { return m_windowSize; }
+    const glm::ivec2& getWindowSize() const { return m_windowSize; }
 
     void setVSyncInterval(int interval);
 
@@ -60,7 +60,12 @@ protected:
     GLFW_WRAPPER_VIRTUAL void OnKeyUp(int key) const { if (KeyUpCallback != nullptr) KeyUpCallback(key); }
     GLFW_WRAPPER_VIRTUAL void OnKeyRepeat(int key) const { if (KeyRepeatCallback != nullptr) KeyRepeatCallback(key); }
     
-    GLFW_WRAPPER_VIRTUAL void OnResize(const glm::ivec2& newSize) const { if (ResizeCallback != nullptr) ResizeCallback(newSize); }
+    GLFW_WRAPPER_VIRTUAL void OnResize(const glm::ivec2& newSize) const 
+    { 
+        if (ResizeCallback != nullptr) ResizeCallback(newSize); 
+
+        m_windowSize = newSize;
+    }
     GLFW_WRAPPER_VIRTUAL void OnClosing() const { if (ClosingCallback != nullptr) ClosingCallback(); }
     
     GLFW_WRAPPER_VIRTUAL void OnMouseMove(const glm::vec2& mousePosition) const 
@@ -89,9 +94,10 @@ private:
     GLFWwindow * m_window = nullptr;
 
     std::string m_windowLabel = "New window";
-    glm::ivec2 m_windowSize = glm::ivec2(800, 600);
 
-    mutable glm::vec2 m_lastMousePos; //just to track mouse position :)
+    //mutables is just for track some parameters in callbacks
+    mutable glm::ivec2 m_windowSize = glm::ivec2(800, 600);
+    mutable glm::vec2 m_lastMousePos;
 
     double m_previousRenderTime = 0.0;
 };

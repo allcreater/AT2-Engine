@@ -13,6 +13,7 @@ include_directories ("${CMAKE_SOURCE_DIR}/src/")
 
 file (GLOB ${PROJECT_NAME}_SOURCES
 "*.cpp"
+"../*.cpp" #for some utilities that are still not implemented at library
 )
 
 add_executable(${PROJECT_NAME}

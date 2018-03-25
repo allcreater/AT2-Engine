@@ -65,6 +65,7 @@ GlRenderer::~GlRenderer()
 
 void GlRenderer::FinishFrame()
 {
+	glFinish();
 	//SDL_GL_SwapWindow(m_window);
 }
 
