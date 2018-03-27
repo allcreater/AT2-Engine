@@ -37,6 +37,12 @@ bool Group::RemoveChild(const std::shared_ptr<Node>& child)
 	return numDeleted > 0;
 }
 
+void UI::Group::ForEachChild(std::function<void(std::shared_ptr<Node>&)> func)
+{
+	for (auto child : m_Children)
+		func(child);
+}
+
 
 void StackPanel::Measure(const glm::ivec2& position, const glm::uvec2& possibleSize)
 {

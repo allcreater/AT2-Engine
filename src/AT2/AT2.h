@@ -272,6 +272,10 @@ public:
 	virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
 	virtual void Shutdown() = 0;
+
+	virtual void ClearBuffer(const glm::vec4& color) = 0;
+	virtual void ClearDepth(float depth) = 0;
+	virtual void FinishFrame() = 0;
 };
 
 }

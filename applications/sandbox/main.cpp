@@ -238,7 +238,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 
 //returns frame time
-float Render(AT2::GlRenderer* renderer, AT2::IFrameBuffer* framebuffer, glm::mat4 matProj, glm::mat4 matMV)
+float Render(const std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer* framebuffer, glm::mat4 matProj, glm::mat4 matMV)
 {
 	auto timeBefore = std::chrono::high_resolution_clock::now();
 
@@ -268,11 +268,11 @@ float Render(AT2::GlRenderer* renderer, AT2::IFrameBuffer* framebuffer, glm::mat
 	glDepthMask(GL_TRUE);
 	glCullFace(GL_BACK);
 	glPatchParameteri( GL_PATCH_VERTICES, 4 );
-	TerrainDrawable->Draw(*renderer);
+	TerrainDrawable->Draw(renderer);
 
 	for (const auto& drawable : SceneDrawables)
 	{
-		drawable->Draw(*renderer);
+		drawable->Draw(renderer);
 	}
 
 	
@@ -292,12 +292,12 @@ float Render(AT2::GlRenderer* renderer, AT2::IFrameBuffer* framebuffer, glm::mat
 	{
 		light->SetBindingPoint(2);
 		light->Bind();
-		SphereLightDrawable->Draw(*renderer);
+		SphereLightDrawable->Draw(renderer);
 	}
 	
 	glCullFace(GL_BACK);
 	glDisable(GL_DEPTH_TEST);
-	SkylightDrawable->Draw(*renderer);
+	SkylightDrawable->Draw(renderer);
 	
 	//Postprocess stage
 	framebuffer->Bind();
@@ -310,7 +310,7 @@ float Render(AT2::GlRenderer* renderer, AT2::IFrameBuffer* framebuffer, glm::mat
 	glCullFace(GL_BACK);
 	glDisable(GL_DEPTH_TEST);
 	(dynamic_cast<AT2::GlShaderProgram*>(QuadDrawable->Shader.get()))->SetUBO("CameraBlock", 1);
-	QuadDrawable->Draw(*renderer);
+	QuadDrawable->Draw(renderer);
 
 
 	glTimer.End();
@@ -410,7 +410,7 @@ private:
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
 
 		//terrain
-		TerrainDrawable = AT2::MeshDrawable::MakeTerrainDrawable(m_renderer.get(), 64, 64);
+		TerrainDrawable = AT2::MeshDrawable::MakeTerrainDrawable(m_renderer, 64, 64);
 		TerrainDrawable->Shader = terrainShader;
 		TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 		{
@@ -425,7 +425,7 @@ private:
 			TerrainDrawable->UniformBuffer = uniformStorage;
 		}
 
-		SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer.get());
+		SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer);
 		SphereLightDrawable->Shader = sphereLightShader;
 		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex };
 		{
@@ -439,7 +439,7 @@ private:
 		}
 
 
-		SkylightDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer.get());
+		SkylightDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
 		SkylightDrawable->Shader = dayLightShader;
 		SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
 		{
@@ -454,7 +454,7 @@ private:
 		}
 
 		//Postprocess quad
-		QuadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer.get());
+		QuadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
 		QuadDrawable->Shader = postprocessShader;
 		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
 		{
@@ -557,7 +557,7 @@ private:
 			LightsArray[0]->SetUniform("u_lightPos", glm::vec4(position, 1.0));
 
 #ifndef AT2_USE_OCULUS_RIFT
-		Render(m_renderer.get(), NullFBO.get(), matProj, matMV);
+		Render(m_renderer, NullFBO.get(), matProj, matMV);
 #else
 		// Get eye poses, feeding in correct IPD offset
 		ovrVector3f      ViewOffset[2] = { EyeRenderDesc[0].HmdToEyeViewOffset, EyeRenderDesc[1].HmdToEyeViewOffset };
@@ -575,7 +575,7 @@ private:
 			eyeFrameBuffer[eye]->SetDepthAttachement(eyeRenderTextureDepth[eye]);
 			eyeFrameBuffer[eye]->SetColorAttachement(0, eyeRenderTextureList[eye][eyeTextureSet[eye]->CurrentIndex]);
 
-			Render(m_renderer.get(), eyeFrameBuffer[eye].get(), matProj, matMV);
+			Render(m_renderer, eyeFrameBuffer[eye].get(), matProj, matMV);
 			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 			eyeFrameBuffer[eye]->SetColorAttachement(0, nullptr);
@@ -604,7 +604,7 @@ private:
 		ovrLayerHeader* layers = &ld.Header;
 		ovrResult result = ovr_SubmitFrame(HMD, 0, &viewScaleDesc, &layers, 1);
 
-		Render(m_renderer.get(), NullFBO.get(), matProj, matMV);
+		Render(m_renderer, NullFBO.get(), matProj, matMV);
 #endif
 
 		m_renderer->FinishFrame();
@@ -680,7 +680,7 @@ private:
 
 private:
 	GlfwWindow m_window;
-	std::unique_ptr<AT2::GlRenderer> m_renderer;
+	std::shared_ptr<AT2::GlRenderer> m_renderer;
 
 	glm::ivec2 m_framebufferPhysicalSize = glm::ivec2(1024, 1024);
 

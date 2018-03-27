@@ -12,6 +12,68 @@
 
 #include "UI.h"
 
+
+namespace UI
+{
+	class UiRenderingVisitor : public Visitor
+	{
+	public:
+		UiRenderingVisitor(std::shared_ptr<AT2::IRenderer>& renderer) : m_renderer(renderer)
+		{
+			auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+				{
+					"resources//shaders//simple.vs.glsl",
+					"resources//shaders//simple.fs.glsl"
+				});
+
+
+			m_quadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(renderer);
+			m_quadDrawable->Shader = postprocessShader;
+			//m_quadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
+			{
+				auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(postprocessShader));
+				//uniformStorage->SetUniform("u_phase", Phase);
+				//uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+				//uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
+				//uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
+				m_quadDrawable->UniformBuffer = uniformStorage;
+			}
+		}
+
+		virtual void Visit(Node& ref) override
+		{
+			glViewport(ref.GetCanvasData().Position.x, ref.GetCanvasData().Position.y, ref.GetCanvasData().MeasuredSize.x, ref.GetCanvasData().MeasuredSize.y);
+			Render(ref);
+		}
+		virtual void Visit(Group& ref)
+		{
+			//Render();
+		}
+		virtual void Visit(StackPanel& ref)
+		{
+//			Render();
+			TraverseChildren(ref);
+		}
+
+		void TraverseChildren(Group& group)
+		{
+			group.ForEachChild([this](std::shared_ptr<Node>& nodePtr) {nodePtr->Accept(*this); });
+		}
+
+		void Render(Node& ref)
+		{
+			std::hash<std::string> hash_fn;
+			auto h = hash_fn(std::string(ref.GetName()));
+			m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0));
+			m_quadDrawable->Draw(m_renderer.lock());
+		}
+
+	private:
+		std::shared_ptr<AT2::MeshDrawable> m_quadDrawable;
+		std::weak_ptr<AT2::IRenderer> m_renderer;
+	};
+}
+
 class App
 {
 public:
@@ -44,6 +106,8 @@ private:
 						Button::Make("ButtonDatasetTwo", glm::ivec2(100, 100))
 					})
 			});
+
+		m_uiRenderer = std::make_unique<UiRenderingVisitor>(m_renderer);
 	}
 
 	void OnInitialize()
@@ -53,26 +117,24 @@ private:
 		CreateUI();
 		
 
-		auto postprocessShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-			{
-			"resources//shaders//simple.vs.glsl",
-			"resources//shaders//simple.fs.glsl" 
-			});
-
 
 		//Init
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
 
 	}
 
 	void OnRender(double time, double dt)
 	{
 		glViewport(0, 0, m_window.getWindowSize().x, m_window.getWindowSize().y);
-		
-	
+		m_renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
+		m_renderer->ClearDepth(0);
+
+		m_uiRoot->Accept(*m_uiRenderer.get());
+
 		m_renderer->FinishFrame();
 	}
 
@@ -142,8 +204,10 @@ private:
 
 private:
 	GlfwWindow m_window;
-	std::unique_ptr<AT2::GlRenderer> m_renderer;
+	std::shared_ptr<AT2::IRenderer> m_renderer;
 	std::shared_ptr<UI::Node> m_uiRoot;
+
+	std::unique_ptr<UI::UiRenderingVisitor> m_uiRenderer;
 };
 
 int main(int argc, char *argv[])

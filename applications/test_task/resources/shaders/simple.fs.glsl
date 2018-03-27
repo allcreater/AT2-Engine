@@ -6,8 +6,10 @@ in vec2 v_texCoord;
 
 layout (location = 0) out vec4 FragColor;
 
+uniform vec4 u_Color;
+
 void main()
 {
 	//vec4 color = texture(u_colorMap, v_texCoord);
-	FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+	FragColor = u_Color;
 }

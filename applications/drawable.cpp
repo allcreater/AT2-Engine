@@ -2,7 +2,7 @@
 
 #include <AT2/OpenGl/GlDrawPrimitive.h> //Unfortunately right now it don't be created abstractrly
 
-std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(AT2::IRenderer* renderer, int segX, int segY)
+std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const std::shared_ptr<IRenderer>& renderer, int segX, int segY)
 {
 	std::vector<glm::vec3> normals; normals.reserve(segX * segY);
 	std::vector<glm::uint> indices; indices.reserve(segX * segY * 6);
@@ -47,7 +47,7 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(AT2::IR
 	return drawable;
 }
 
-std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeTerrainDrawable(AT2::IRenderer* renderer, int segX, int segY)
+std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeTerrainDrawable(const std::shared_ptr<IRenderer>& renderer, int segX, int segY)
 {
 	std::vector<glm::vec2> texCoords(segX * segY * 4);//TODO! GlVertexBuffer - take iterators!
 
@@ -76,7 +76,7 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeTerrainDrawable(AT2::I
 	return drawable;
 }
 
-std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeFullscreenQuadDrawable(AT2::IRenderer* renderer)
+std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer)
 {
 	glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
 	glm::uint indices[] = { 0, 1, 2, 0, 2, 3 };

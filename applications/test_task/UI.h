@@ -23,14 +23,25 @@ namespace UI
 		glm::uvec2 MeasuredSize;
 	};
 
+	class Node;
 	class Group;
+	class StackPanel;
+
+	//simplified visitor for rendering purposes
+	struct Visitor
+	{
+		virtual void Visit(Node& ref) = 0;
+		virtual void Visit(Group& ref) = 0;
+		virtual void Visit(StackPanel& ref) = 0;
+	};
+
 
 	class Node
 	{
 		friend class Group;
 
 	public:
-		virtual ~Node() {}
+		virtual ~Node() = default;
 
 	public:
 		std::weak_ptr<Group> GetParent() const						{ return m_Parent; }
@@ -44,11 +55,14 @@ namespace UI
 		virtual glm::uvec2 ComputeMinimalSize()						{ return m_CanvasData.MinimalSize = m_Size; }
 		const glm::uvec2 GetMinimalSize() const						{ return m_CanvasData.MinimalSize; }
 
+		CanvasData& GetCanvasData() { return m_CanvasData; }
+		const CanvasData& GetCanvasData() const { return m_CanvasData; }
+
+		virtual void Accept(Visitor& visitor)						{ visitor.Visit(*this); }
+
 	protected:
 		Node(std::string_view name, const glm::ivec2& size) : m_Name(name), m_Size(size) {};
 
-		CanvasData& GetCanvasData() { return m_CanvasData; }
-		const CanvasData& GetCanvasData() const { return m_CanvasData; }
 
 	protected:
 		std::weak_ptr<Group> m_Parent;
@@ -60,11 +74,15 @@ namespace UI
 		CanvasData m_CanvasData;
 	};
 
+
 	class Group : public Node, public std::enable_shared_from_this<Group>
 	{
 	public:
 		void AddChild(std::shared_ptr<Node> newChild);
 		bool RemoveChild(const std::shared_ptr<Node>& child);
+		void ForEachChild(std::function<void(std::shared_ptr<Node>&)>);
+
+		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
 	protected:
 		Group(std::string_view name, const glm::ivec2& size) : Node(name, size) {}
@@ -74,23 +92,24 @@ namespace UI
 		std::set<std::shared_ptr<Node>> m_Children;
 	};
 
+
 	class StackPanel : public Group
 	{
-	protected:
-		StackPanel(std::string_view name, Alignment alignment, const glm::ivec2& size) : Group(name, size), m_Alignment(alignment) {}
-
-	public:
-		
-
 	public:
 		static std::shared_ptr<StackPanel> Make(std::string_view name, Alignment alignment, std::initializer_list<std::shared_ptr<Node>> children, const glm::ivec2& size = glm::ivec2());
 
 		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
 		glm::uvec2 ComputeMinimalSize() override;
 
+		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
+
+	protected:
+		StackPanel(std::string_view name, Alignment alignment, const glm::ivec2& size) : Group(name, size), m_Alignment(alignment) {}
+
 	protected:
 		Alignment m_Alignment;
 	};
+
 
 	class Button : public Node
 	{
@@ -107,6 +126,7 @@ namespace UI
 
 		
 	};
+
 
 	class Plot : public Node
 	{

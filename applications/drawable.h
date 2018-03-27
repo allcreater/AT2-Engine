@@ -10,7 +10,7 @@ namespace AT2
 class IDrawable
 {
 public:
-	virtual void Draw (IRenderer& renderer) = 0;
+	virtual void Draw (const std::shared_ptr<IRenderer>& renderer) = 0;
 	virtual ~IDrawable() {}
 
 private:
@@ -20,9 +20,9 @@ private:
 class MeshDrawable : public IDrawable //mesh или не mesh, но определенно что-то похожее
 {
 public:
-	void Draw(IRenderer& renderer) override
+	void Draw(const std::shared_ptr<IRenderer>& renderer) override
 	{
-		auto& stateManager = renderer.GetStateManager();
+		auto& stateManager = renderer->GetStateManager();
 
 		stateManager.BindShader(Shader);
 		stateManager.BindVertexArray(VertexArray);
@@ -45,9 +45,9 @@ public:
 
 public:
 
-	static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(AT2::IRenderer* renderer, int segX = 32, int segY = 16);
-	static std::shared_ptr<AT2::MeshDrawable> MakeTerrainDrawable(AT2::IRenderer* renderer, int segX, int segY);
-	static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(AT2::IRenderer* renderer);
+	static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(const std::shared_ptr<IRenderer>& renderer, int segX = 32, int segY = 16);
+	static std::shared_ptr<AT2::MeshDrawable> MakeTerrainDrawable(const std::shared_ptr<IRenderer>& renderer, int segX, int segY);
+	static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer);
 private:
 	
 };
