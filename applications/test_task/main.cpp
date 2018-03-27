@@ -17,7 +17,7 @@ class App
 public:
 	App()
 	{
-		m_window.setWindowLabel("Some engine test");
+		m_window.setWindowLabel("IQ Option Test Task");
 		m_window.setWindowSize(1280, 800);
 
 		SetupWindowCallbacks();
@@ -40,12 +40,10 @@ private:
 				Plot::Make("Plot"),
 				StackPanel::Make("SidePanel", Alignment::Vertical,
 					{
-						Button::Make("ButtonDatasetOne"),
-						Button::Make("ButtonDatasetTwo")
+						Button::Make("ButtonDatasetOne", glm::ivec2(100, 100)),
+						Button::Make("ButtonDatasetTwo", glm::ivec2(100, 100))
 					})
 			});
-
-		m_uiRoot.reset();
 	}
 
 	void OnInitialize()
@@ -115,6 +113,8 @@ private:
 
 		m_window.ResizeCallback = [&](const glm::ivec2& newSize)
 		{
+			auto ms = m_uiRoot->ComputeMinimalSize();
+			m_uiRoot->Measure(glm::ivec2(0,0), newSize);
 		};
 
 		m_window.MouseUpCallback = [](int key)
