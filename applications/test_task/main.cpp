@@ -34,17 +34,18 @@ private:
 		using namespace std;
 		using namespace UI;
 
-		m_uiRoot = shared_ptr<Node>(
-			new StackPanel(Alignment::Horizontal,
-				{
-					new Plot(),
-					new StackPanel(Alignment::Vertical,
-						{
-							new Button(),
-							new Button()
-						})
-				})
-			);
+
+		m_uiRoot = StackPanel::Make("MainPanel", Alignment::Horizontal,
+			{
+				Plot::Make("Plot"),
+				StackPanel::Make("SidePanel", Alignment::Vertical,
+					{
+						Button::Make("ButtonDatasetOne"),
+						Button::Make("ButtonDatasetTwo")
+					})
+			});
+
+		m_uiRoot.reset();
 	}
 
 	void OnInitialize()

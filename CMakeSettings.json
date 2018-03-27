@@ -3,14 +3,20 @@
   "configurations": [
     {
       "name": "x86-Debug",
-      "generator": "Ninja",
+      "generator": "Visual Studio 15 2017",
       "configurationType": "Debug",
       "inheritEnvironments": [ "msvc_x86" ],
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
       "cmakeCommandArgs": "",
-      "buildCommandArgs": "-v",
-      "ctestCommandArgs": ""
+      "buildCommandArgs": "/v:n",
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "C:\\Users\\allcr\\CMakeBuilds\\fea068fe-22a1-a23d-973f-f52ace188003\\install\\x86-Release"
+        }
+      ]
     },
     {
       "name": "x86-Release",
@@ -32,7 +38,13 @@
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
-      "ctestCommandArgs": ""
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "C:\\Users\\allcr\\CMakeBuilds\\fea068fe-22a1-a23d-973f-f52ace188003\\install\\x64-Release"
+        }
+      ]
     },
     {
       "name": "x64-Release",

@@ -1,10 +1,14 @@
 #include "UI.h"
 
+using namespace UI;
+
 //TODO: write unit tests
 
-UI::Group::Group(std::initializer_list<Node*> children)
-	: m_Children(children.begin(), children.end())
+void Group::Initialize(std::initializer_list<std::shared_ptr<Node>> children)
 {
+	assert(m_Children.empty());
+	m_Children = std::set<std::shared_ptr<Node>>(children.begin(), children.end());
+
 	for (auto child : children)
 	{
 		assert(child->m_Parent.expired() == true);
@@ -12,7 +16,7 @@ UI::Group::Group(std::initializer_list<Node*> children)
 	}
 }
 
-void UI::Group::AddChild(std::shared_ptr<Node> newChild)
+void Group::AddChild(std::shared_ptr<Node> newChild)
 {
 	if (auto oldParent = newChild->m_Parent.lock())
 		oldParent->RemoveChild(newChild);
@@ -21,7 +25,7 @@ void UI::Group::AddChild(std::shared_ptr<Node> newChild)
 	m_Children.insert(newChild);
 }
 
-bool UI::Group::RemoveChild(const std::shared_ptr<Node>& child)
+bool Group::RemoveChild(const std::shared_ptr<Node>& child)
 {
 	size_t numDeleted = m_Children.erase(child);
 	if (numDeleted == 1)

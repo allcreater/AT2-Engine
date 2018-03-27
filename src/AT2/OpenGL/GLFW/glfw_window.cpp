@@ -73,8 +73,6 @@ void GlfwWindow::Run()
         glfwSwapBuffers(m_window);
         glfwPollEvents();
     }
-
-    OnClosing();
 }
 
 void GlfwWindow::setWindowLabel(const std::string & label)
@@ -93,6 +91,15 @@ const std::string & GlfwWindow::getWindowLabel() const
 void GlfwWindow::setVSyncInterval(int interval)
 {
     glfwSwapInterval(interval);
+}
+
+void GlfwWindow::setWindowCloseFlag(bool flag)
+{
+    glfwSetWindowShouldClose(m_window, flag ? GLFW_TRUE : GLFW_FALSE);
+
+    //When flag is setted manually there is no callback, so we should call it manually
+    if (flag)
+        OnClosing();
 }
 
 void GlfwWindow::setWindowSize(int width, int height)
@@ -137,6 +144,10 @@ void GlfwWindow::SetupCallbacks()
     
     glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow *window, int w, int h) {
         GlfwWindow::FromNativeWindow(window)->OnResize(glm::ivec2(w, h));
+    });
+
+    glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {
+        GlfwWindow::FromNativeWindow(window)->OnClosing();
     });
     
 }

@@ -30,6 +30,7 @@ class GlfwWindow
 public:
     void Run();
 
+    //TODO: probably all this functions should be made thread-safe or made available only from callbacks(for example moved to some helper class)
     void setWindowLabel(const std::string& label);
     const std::string& getWindowLabel() const;
 
@@ -37,6 +38,7 @@ public:
     const glm::ivec2& getWindowSize() const { return m_windowSize; }
 
     void setVSyncInterval(int interval);
+    void setWindowCloseFlag(bool flag);
 
     //event callbacks
     std::function<void(void)> InitializeCallback;

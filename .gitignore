@@ -218,7 +218,11 @@ pip-log.txt
 #Third-party Libraries
 libs/
 
+#user CMake settings at VS environment
+CMakeSettings.json
+
 #Another
 *.sdf
 .vs
 *.dll
+/solution
