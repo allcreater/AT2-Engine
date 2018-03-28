@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-using namespace UI;
+using namespace AT2::UI;
 
 //TODO: write unit tests
 
@@ -20,24 +20,26 @@ void Group::Initialize(std::initializer_list<std::shared_ptr<Node>> children)
 
 void Group::AddChild(std::shared_ptr<Node> newChild)
 {
+	assert(std::find(m_Children.begin(), m_Children.end(), newChild) == m_Children.end());
+
 	if (auto oldParent = newChild->m_Parent.lock())
 		oldParent->RemoveChild(newChild);
 
 	newChild->m_Parent = weak_from_this();
-	m_Children.insert(newChild);
+	m_Children.push_back(newChild);
 }
 
 bool Group::RemoveChild(const std::shared_ptr<Node>& child)
 {
-	size_t numDeleted = m_Children.erase(child);
-	if (numDeleted == 1)
-		child->m_Parent.reset();
+	auto iterator = std::remove(m_Children.begin(), m_Children.end(), child);
+	auto numDeleted = std::distance(iterator, m_Children.end());
+	m_Children.erase(iterator, m_Children.end());
 
-	assert(numDeleted < 2);
+	assert(numDeleted < 2); //means that there was duplicates but it don't supported
 	return numDeleted > 0;
 }
 
-void UI::Group::ForEachChild(std::function<void(std::shared_ptr<Node>&)> func)
+void Group::ForEachChild(std::function<void(std::shared_ptr<Node>&)> func)
 {
 	for (auto child : m_Children)
 		func(child);
@@ -114,9 +116,7 @@ std::shared_ptr<Button> Button::Make(std::string_view name, const glm::ivec2& si
 	return std::shared_ptr<Button>(new Button(name, size));
 }
 
-//recursively calculates the actual sizes of all children
-
-inline void UI::Node::Measure(const glm::ivec2 & position, const glm::uvec2 & possibleSize)
+void Node::Measure(const glm::ivec2 & position, const glm::uvec2 & possibleSize)
 {
 	m_CanvasData.MeasuredSize = possibleSize;
 	m_CanvasData.Position = position;

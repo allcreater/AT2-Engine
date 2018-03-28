@@ -27,6 +27,7 @@ endif()
 file(GLOB ${PROJECT_NAME}_SOURCES
 "OpenGL/GLFW/*.cpp"
 "OpenGL/*.cpp"
+"UI/*.cpp"
 "*.cpp"
 )
 
@@ -36,3 +37,5 @@ add_library(${PROJECT_NAME} STATIC
 
 target_link_libraries(${PROJECT_NAME}  PRIVATE glfw glm ${IL_LIBRARIES} ${ILU_LIBRARIES} #DevIL ILU
                                        PUBLIC glew::glew) #Assimp::assimp)
+
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

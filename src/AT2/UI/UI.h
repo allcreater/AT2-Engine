@@ -1,15 +1,16 @@
 #ifndef UI_HEADER
 #define UI_HEADER
 
-#include <AT2/AT2.h>
+#include "../AT2.h"
 #include <memory>
 #include <set>
 #include <variant>
 
 #include <glm/glm.hpp>
 
-namespace UI
+namespace AT2::UI
 {
+
 	struct CanvasData
 	{
 		glm::ivec2 Position; //top left point of the UI AABB
@@ -87,7 +88,9 @@ namespace UI
 		void Initialize(std::initializer_list<std::shared_ptr<Node>> children);
 
 	protected:
-		std::set<std::shared_ptr<Node>> m_Children;
+		//probably std::set is best candidate with built-in duplicate protection etc, but it's not so convenient for element ordering
+		//std::set<std::shared_ptr<Node>> m_Children;
+		std::vector<std::shared_ptr<Node>> m_Children; 
 	};
 
 
@@ -183,6 +186,6 @@ namespace UI
 			group.ForEachChild([this](std::shared_ptr<Node>& nodePtr) {nodePtr->Accept(*this); });
 		}
 	};
-}
 
+}
 #endif

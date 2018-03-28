@@ -10,10 +10,10 @@
 
 #include "../drawable.h"
 
-#include "UI.h"
+#include <AT2/UI/UI.h>
 
 
-namespace UI
+namespace AT2::UI
 {
 	class UiRenderingVisitor : public UiVisitor
 	{
@@ -87,6 +87,11 @@ namespace UI
 	};
 }
 
+void Foo()
+{
+
+}
+
 class App
 {
 public:
@@ -107,7 +112,7 @@ private:
 	void CreateUI()
 	{
 		using namespace std;
-		using namespace UI;
+		using namespace AT2::UI;
 
 
 		m_uiRoot = StackPanel::Make("MainPanel", StackPanel::Alignment::Horizontal,
@@ -218,9 +223,9 @@ private:
 private:
 	GlfwWindow m_window;
 	std::shared_ptr<AT2::IRenderer> m_renderer;
-	std::shared_ptr<UI::Node> m_uiRoot;
+	std::shared_ptr<AT2::UI::Node> m_uiRoot;
 
-	std::unique_ptr<UI::UiRenderingVisitor> m_uiRenderer;
+	std::unique_ptr<AT2::UI::UiRenderingVisitor> m_uiRenderer;
 };
 
 int main(int argc, char *argv[])
