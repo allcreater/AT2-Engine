@@ -10,12 +10,6 @@
 
 namespace UI
 {
-	enum class Alignment
-	{
-		Horizontal,
-		Vertical
-	};
-
 	struct CanvasData
 	{
 		glm::ivec2 Position; //top left point of the UI AABB
@@ -26,13 +20,17 @@ namespace UI
 	class Node;
 	class Group;
 	class StackPanel;
+	class Button;
+	class Plot;
 
-	//simplified visitor for rendering purposes
+	//classic visitor with classic coupling problems, probably should be replaced for approach with dynamic_cast instead of double dispatcherisation
 	struct Visitor
 	{
 		virtual void Visit(Node& ref) = 0;
 		virtual void Visit(Group& ref) = 0;
 		virtual void Visit(StackPanel& ref) = 0;
+		virtual void Visit(Button& ref) = 0;
+		virtual void Visit(Plot& ref) = 0;
 	};
 
 
@@ -96,8 +94,16 @@ namespace UI
 	class StackPanel : public Group
 	{
 	public:
+		enum class Alignment
+		{
+			Horizontal,
+			Vertical
+		};
+
+	public:
 		static std::shared_ptr<StackPanel> Make(std::string_view name, Alignment alignment, std::initializer_list<std::shared_ptr<Node>> children, const glm::ivec2& size = glm::ivec2());
 
+	public:
 		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
 		glm::uvec2 ComputeMinimalSize() override;
 
@@ -113,14 +119,19 @@ namespace UI
 
 	class Button : public Node
 	{
-	protected:
-		Button(std::string_view name, const glm::ivec2& size) : Node(name, size) {}
 
 	public:
 		static std::shared_ptr<Button> Make(std::string_view name, const glm::ivec2& size = glm::ivec2());
 
 		~Button() { std::cout << "Button" << std::endl; }
-		
+
+	public:
+		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
+
+	protected:
+		Button(std::string_view name, const glm::ivec2& size) : Node(name, size) {}
+
+
 	protected:
 
 
@@ -135,9 +146,42 @@ namespace UI
 
 		~Plot() { std::cout << "Plot" << std::endl; }
 
+	public:
+		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
+
 	protected:
 		Plot(std::string_view name, const glm::ivec2& size) : Node(name, size) {}
 
+	};
+
+
+
+	class UiVisitor : public Visitor
+	{
+	public:
+		void Visit(Node& node) override
+		{
+		}
+		void Visit(Group& node) override
+		{
+			TraverseChildren(node);
+		}
+		void Visit(StackPanel& node) override
+		{
+			TraverseChildren(node);
+		}
+		void Visit(Button& node) override
+		{
+		}
+		void Visit(Plot& node) override
+		{
+		}
+
+	protected:
+		void TraverseChildren(Group& group)
+		{
+			group.ForEachChild([this](std::shared_ptr<Node>& nodePtr) {nodePtr->Accept(*this); });
+		}
 	};
 }
 

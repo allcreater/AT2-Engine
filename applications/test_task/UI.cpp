@@ -9,7 +9,7 @@ using namespace UI;
 void Group::Initialize(std::initializer_list<std::shared_ptr<Node>> children)
 {
 	assert(m_Children.empty());
-	m_Children = std::set<std::shared_ptr<Node>>(children.begin(), children.end());
+	m_Children = decltype(m_Children)(children.begin(), children.end());
 
 	for (auto child : children)
 	{

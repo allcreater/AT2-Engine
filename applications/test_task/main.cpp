@@ -15,7 +15,7 @@
 
 namespace UI
 {
-	class UiRenderingVisitor : public Visitor
+	class UiRenderingVisitor : public UiVisitor
 	{
 	public:
 		UiRenderingVisitor(std::shared_ptr<AT2::IRenderer>& renderer) : m_renderer(renderer)
@@ -40,32 +40,45 @@ namespace UI
 			}
 		}
 
-		virtual void Visit(Node& ref) override
+		void Visit(Node& node) override
 		{
-			glViewport(ref.GetCanvasData().Position.x, ref.GetCanvasData().Position.y, ref.GetCanvasData().MeasuredSize.x, ref.GetCanvasData().MeasuredSize.y);
-			Render(ref);
+			UiVisitor::Visit(node);
 		}
-		virtual void Visit(Group& ref)
+		void Visit(Group& node) override
 		{
-			//Render();
+			UiVisitor::Visit(node);
 		}
-		virtual void Visit(StackPanel& ref)
+		void Visit(StackPanel& node) override
 		{
 //			Render();
-			TraverseChildren(ref);
+			UiVisitor::Visit(node);
 		}
-
-		void TraverseChildren(Group& group)
+		void Visit(Button& node) override
 		{
-			group.ForEachChild([this](std::shared_ptr<Node>& nodePtr) {nodePtr->Accept(*this); });
+			Render(node);
+			UiVisitor::Visit(node);
+		}
+		void Visit(Plot& node) override
+		{
+			Render(node);
+			UiVisitor::Visit(node);
 		}
 
-		void Render(Node& ref)
+
+		void Render(Node& node)
+		{
+			glViewport(node.GetCanvasData().Position.x, node.GetCanvasData().Position.y, node.GetCanvasData().MeasuredSize.x, node.GetCanvasData().MeasuredSize.y);
+
+
+			m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
+			m_quadDrawable->Draw(m_renderer.lock());
+		}
+
+		glm::vec4 DebugColor(Node& node)
 		{
 			std::hash<std::string> hash_fn;
-			auto h = hash_fn(std::string(ref.GetName()));
-			m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0));
-			m_quadDrawable->Draw(m_renderer.lock());
+			auto h = hash_fn(std::string(node.GetName()));
+			return glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0);
 		}
 
 	private:
@@ -97,13 +110,13 @@ private:
 		using namespace UI;
 
 
-		m_uiRoot = StackPanel::Make("MainPanel", Alignment::Horizontal,
+		m_uiRoot = StackPanel::Make("MainPanel", StackPanel::Alignment::Horizontal,
 			{
 				Plot::Make("Plot"),
-				StackPanel::Make("SidePanel", Alignment::Vertical,
+				StackPanel::Make("SidePanel", StackPanel::Alignment::Vertical,
 					{
-						Button::Make("ButtonDatasetOne", glm::ivec2(100, 100)),
-						Button::Make("ButtonDatasetTwo", glm::ivec2(100, 100))
+						Button::Make("ButtonDatasetOne", glm::ivec2(200, 200)),
+						Button::Make("ButtonDatasetTwo", glm::ivec2(200, 200))
 					})
 			});
 
@@ -224,6 +237,7 @@ int main(int argc, char *argv[])
 	catch (AT2::AT2Exception exception)
 	{
 		std::cout << "Runtime exception:" << exception.what() << std::endl;
+		system("PAUSE");
 	}
 
 	return 0;
