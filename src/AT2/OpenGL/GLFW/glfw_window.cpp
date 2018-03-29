@@ -18,7 +18,6 @@ void ReleaseGLFW()
     glfwTerminate();
 }
 
-
 GlfwWindow* GlfwWindow::FromNativeWindow(const GLFWwindow* window)
 {
     return reinterpret_cast<GlfwWindow*>(glfwGetWindowUserPointer(const_cast<GLFWwindow*>(window)));
@@ -62,17 +61,22 @@ void GlfwWindow::Run()
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(m_window))
     {
-        MakeContextCurrent();
-
-        {
-            double currentTime = glfwGetTime();
-            OnRender(currentTime, currentTime - m_previousRenderTime);
-            m_previousRenderTime = currentTime;
-        }
-
-        glfwSwapBuffers(m_window);
+        Render();
         glfwPollEvents();
     }
+}
+
+void GlfwWindow::Render()
+{
+    MakeContextCurrent();
+
+    {
+        double currentTime = glfwGetTime();
+        OnRender(currentTime, currentTime - m_previousRenderTime);
+        m_previousRenderTime = currentTime;
+    }
+
+    glfwSwapBuffers(m_window);
 }
 
 void GlfwWindow::setWindowLabel(const std::string & label)
@@ -148,6 +152,12 @@ void GlfwWindow::SetupCallbacks()
 
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {
         GlfwWindow::FromNativeWindow(window)->OnClosing();
+    });
+
+    glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
+        auto wnd = GlfwWindow::FromNativeWindow(window);
+        wnd->OnWindowRefreshing();
+        wnd->Render();
     });
     
 }

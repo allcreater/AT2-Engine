@@ -20,10 +20,6 @@ std::shared_ptr<StackPanel> CreateTestTree()
 		});
 }
 
-TEST(Foo, Boo) {
-	ASSERT_EQ(3, 3);
-}
-
 TEST(UI, CreatingAndUnreferencing)
 {
 	auto root = CreateTestTree();

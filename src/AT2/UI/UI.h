@@ -5,12 +5,14 @@
 #include <memory>
 #include <set>
 #include <variant>
+#include <map>
 
 #include <glm/glm.hpp>
 
+//TODO: use lazy size calculation instead of direct ComputeMinimalSize() call
+
 namespace AT2::UI
 {
-
 	struct CanvasData
 	{
 		glm::ivec2 Position; //top left point of the UI AABB
@@ -38,7 +40,7 @@ namespace AT2::UI
 	class Node
 	{
 		friend class Group;
-
+		
 	public:
 		virtual ~Node() = default;
 
@@ -145,16 +147,50 @@ namespace AT2::UI
 	class Plot : public Node
 	{
 	public:
+		class CurveData
+		{
+			friend class Plot;
+		public:
+			CurveData() = default;
+			CurveData(const CurveData&) = delete;
+			CurveData(CurveData&&) = default;
+			CurveData& operator=(const CurveData&) const = delete;
+
+		public:
+			std::vector<float> Data;
+			
+			void SetXRange(float startX, float endX) { m_aabb.MinBound.x = startX; m_aabb.MaxBound.x = endX; }
+			const AABB2d& GetCurveBounds();
+			void Dirty() noexcept;
+
+		private:
+			bool m_dirtyFlag = true;
+			bool m_rangeNeedsUpdate = true;
+			AABB2d m_aabb;
+		};
+
+	public:
 		static std::shared_ptr<Plot> Make(std::string_view name, const glm::ivec2& size = glm::ivec2());
 
 		~Plot() { std::cout << "Plot" << std::endl; }
 
 	public:
+		CurveData& GetOrCreateCurve (const std::string& curveName);
+		const AABB2d& GetAABB() const { return m_allBounds; }
+
+		void SetObservingZone(const AABB2d& zone) { m_observingZone = zone; }
+		const AABB2d& GetObservingZone() const { return m_observingZone; }
+
 		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
 	protected:
 		Plot(std::string_view name, const glm::ivec2& size) : Node(name, size) {}
 
+		void ComputeAABB();
+
+	protected:
+		std::map<std::string, CurveData> m_curvesData;
+		AABB2d m_allBounds, m_observingZone;
 	};
 
 

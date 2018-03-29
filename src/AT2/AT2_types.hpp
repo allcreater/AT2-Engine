@@ -2,6 +2,7 @@
 #define AT2_TYPES_H
 
 #include <glm/glm.hpp>
+#include "AABB.h"
 
 namespace AT2
 {

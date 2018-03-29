@@ -22,8 +22,8 @@ namespace AT2::UI
 		{
 			auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
 				{
-					"resources//shaders//simple.vs.glsl",
-					"resources//shaders//simple.fs.glsl"
+					"resources//shaders//window.vs.glsl",
+					"resources//shaders//window.fs.glsl"
 				});
 
 
@@ -68,7 +68,6 @@ namespace AT2::UI
 		void Render(Node& node)
 		{
 			glViewport(node.GetCanvasData().Position.x, node.GetCanvasData().Position.y, node.GetCanvasData().MeasuredSize.x, node.GetCanvasData().MeasuredSize.y);
-
 
 			m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
 			m_quadDrawable->Draw(m_renderer.lock());
@@ -124,6 +123,8 @@ private:
 						Button::Make("ButtonDatasetTwo", glm::ivec2(200, 200))
 					})
 			});
+		m_uiRoot->ComputeMinimalSize();
+		m_uiRoot->Measure(glm::ivec2(), m_window.getWindowSize());
 
 		m_uiRenderer = std::make_unique<UiRenderingVisitor>(m_renderer);
 	}
@@ -193,6 +194,7 @@ private:
 
 		m_window.ResizeCallback = [&](const glm::ivec2& newSize)
 		{
+			std::cout << "Size " << newSize.x  << "x" << newSize.y << std::endl;
 			auto ms = m_uiRoot->ComputeMinimalSize();
 			m_uiRoot->Measure(glm::ivec2(0,0), newSize);
 		};

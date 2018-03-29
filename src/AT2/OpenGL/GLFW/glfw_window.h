@@ -43,6 +43,7 @@ public:
     //event callbacks
     std::function<void(void)> InitializeCallback;
     std::function<void(double, double)> RenderCallback;
+    std::function<void(void)> RefreshingCallback;
 
     std::function<void(int)> KeyDownCallback;
     std::function<void(int)> KeyUpCallback;
@@ -57,7 +58,8 @@ public:
 protected:
     GLFW_WRAPPER_VIRTUAL void OnInitialize() { if (InitializeCallback != nullptr) InitializeCallback(); }
     GLFW_WRAPPER_VIRTUAL void OnRender(double time, double deltaTime) { if (RenderCallback != nullptr) RenderCallback(time, deltaTime); }
-    
+    GLFW_WRAPPER_VIRTUAL void OnWindowRefreshing() const { if (RefreshingCallback != nullptr) RefreshingCallback(); }
+
     GLFW_WRAPPER_VIRTUAL void OnKeyDown(int key) const { if (KeyDownCallback != nullptr) KeyDownCallback(key); }
     GLFW_WRAPPER_VIRTUAL void OnKeyUp(int key) const { if (KeyUpCallback != nullptr) KeyUpCallback(key); }
     GLFW_WRAPPER_VIRTUAL void OnKeyRepeat(int key) const { if (KeyRepeatCallback != nullptr) KeyRepeatCallback(key); }
@@ -79,6 +81,8 @@ protected:
     }
     GLFW_WRAPPER_VIRTUAL void OnMouseDown(int button) const { if (MouseDownCallback != nullptr) MouseDownCallback(button); }
     GLFW_WRAPPER_VIRTUAL void OnMouseUp(int button) const { if (MouseUpCallback != nullptr) MouseUpCallback(button); }
+
+    void Render();
 
     static GlfwWindow* FromNativeWindow(const GLFWwindow* window);
 

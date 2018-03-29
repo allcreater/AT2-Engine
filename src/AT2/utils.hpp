@@ -1,8 +1,6 @@
 #include <functional>
 
-namespace AT2
-{
-namespace Utils
+namespace AT2::Utils
 {
 
 // constant-sized array in heap
@@ -107,6 +105,7 @@ private:
 
 };
 
+//something like std::span from C++ 20 =/
 template <typename T> class wraparray
 {
 public:
@@ -179,51 +178,30 @@ private:
 
 };
 
-//I'm afraid, its need to be removed
-template <typename C, typename T>
-class ControlledList
+template <typename T>
+class RaiiWrapper
 {
 public:
-	typedef std::function<void(size_t, const T&)> ControlCallback;
+	typedef std::function<void(T&)> DeinitFunc;
 
 public:
-	ControlledList() = default;
-	ControlledList(const ControlledList& other) = delete;
-	const ControlledList& operator= (const ControlledList& other) = delete;
-
-	ControlledList(C& collection, ControlCallback setCallback, ControlCallback getCallback, ControlCallback removeCallback)
-		: m_collection(collection),
-		m_setCallback(setCallback),
-		m_getCallback(getCallback),
-		m_removeCallback(removeCallback)
+	RaiiWrapper(std::reference_wrapper<T> object, DeinitFunc deinitializeFunc) : m_objectRef(object), m_deinitializationFunc(deinitializeFunc) {}
+	RaiiWrapper(RaiiWrapper& other) = delete;
+	RaiiWrapper(const RaiiWrapper& other) = delete;
+	
+	~RaiiWrapper()
 	{
+		m_deinitializationFunc(m_objectRef);
 	}
-
-	T& operator [] (size_t index)
+	
+	operator T& ()
 	{
-		T& element = m_collection[index];
-
-		m_setCallback(index, element);
-		return element;
-	}
-	const T& operator [] (size_t index) const
-	{
-		T& element = m_collection[index];
-
-		m_getCallback(index, element);
-		return element;
-	}
-
-	void Remove(size_t index)
-	{
-		m_removeCallback(index, m_collection[index]);
-
-		m_collection[index] = default(T);
+		return m_objectRef.get();
 	}
 
 private:
-	C& m_collection;
-	ControlCallback m_setCallback, m_getCallback, m_removeCallback;
+	std::reference_wrapper<T> m_objectRef;
+	DeinitFunc m_deinitializationFunc;
 };
 
 class IFileSystemListener
@@ -242,5 +220,4 @@ private:
 	static IFileSystemListener* s_instance;
 };
 
-}
 }
