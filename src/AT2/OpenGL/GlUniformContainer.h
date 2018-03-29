@@ -42,6 +42,12 @@ public:
 	virtual void set(const glm::ivec3& value)	{ throw std::logic_error("wrong uniform type"); }
 	virtual void set(const glm::ivec4& value)	{ throw std::logic_error("wrong uniform type"); }
 
+	//unsigned integers
+	virtual void set(const GLuint& value)		{ throw std::logic_error("wrong uniform type"); }
+	virtual void set(const glm::uvec2& value)	{ throw std::logic_error("wrong uniform type"); }
+	virtual void set(const glm::uvec3& value)	{ throw std::logic_error("wrong uniform type"); }
+	virtual void set(const glm::uvec4& value)	{ throw std::logic_error("wrong uniform type"); }
+
 	//texture
 	virtual void set(std::weak_ptr<const ITexture> value) { throw std::logic_error("wrong uniform type"); }
 
@@ -86,6 +92,12 @@ public:
 	void SetUniform(const str& name, const glm::ivec2& value)	override;
 	void SetUniform(const str& name, const glm::ivec3& value)	override;
 	void SetUniform(const str& name, const glm::ivec4& value)	override;
+
+	//unsigned integers
+	void SetUniform(const str& name, const glm::uint& value)	override;
+	void SetUniform(const str& name, const glm::uvec2& value)	override;
+	void SetUniform(const str& name, const glm::uvec3& value)	override;
+	void SetUniform(const str& name, const glm::uvec4& value)	override;
 
 	//textures
 	void SetUniform(const str& name, std::weak_ptr<const ITexture> value) override;

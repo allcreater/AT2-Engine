@@ -40,6 +40,12 @@ public:
 	void SetUniform(const str& name, const glm::ivec3& value)	override;
 	void SetUniform(const str& name, const glm::ivec4& value)	override;
 
+	//unsigned integers
+	void SetUniform(const str& name, const glm::uint& value)	override;
+	void SetUniform(const str& name, const glm::uvec2& value)	override;
+	void SetUniform(const str& name, const glm::uvec3& value)	override;
+	void SetUniform(const str& name, const glm::uvec4& value)	override;
+
 	//textures
 	void SetUniform(const str& name, std::weak_ptr<const ITexture> value) override;
 
@@ -47,7 +53,7 @@ public:
 	void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
 
 private:
-	template <typename T> void SetUniformInternal(const str& name, const T& value, size_t size);
+	template <typename T> void SetUniformInternal(const str& name, const T& value, size_t size = sizeof(T));
 
 private:
 	std::shared_ptr<GlShaderProgram::UniformBufferInfo> m_ubi;

@@ -186,6 +186,12 @@ public:
 	virtual void SetUniform(const str& name, const glm::ivec3& value) = 0;
 	virtual void SetUniform(const str& name, const glm::ivec4& value) = 0;
 
+	//unsigned integers
+	virtual void SetUniform(const str& name, const glm::uint& value) = 0;
+	virtual void SetUniform(const str& name, const glm::uvec2& value) = 0;
+	virtual void SetUniform(const str& name, const glm::uvec3& value) = 0;
+	virtual void SetUniform(const str& name, const glm::uvec4& value) = 0;
+
 	//texture
 	virtual void SetUniform(const str& name, std::weak_ptr<const ITexture> value) = 0;
 

@@ -285,6 +285,67 @@ private:
 	glm::ivec4 m_value;
 };
 
+//unsigned integers
+template <>
+class GlUniform<GLuint> : public IGlUniform
+{
+public:
+	void set(const GLuint& value) override { m_value = value; }
+
+	void Bind() override { glUniform1ui(GetLocation(), m_value); }
+	void Bind(GLuint programID) override { glProgramUniform1ui(programID, GetLocation(), m_value); }
+
+	GlUniform() : IGlUniform() {}
+	~GlUniform() {}
+private:
+	GLuint m_value;
+};
+
+template <>
+class GlUniform<uvec2> : public IGlUniform
+{
+public:
+	void set(const glm::uvec2& value) override { m_value = value; }
+
+	void Bind() override { glUniform2uiv(GetLocation(), 1, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override { glProgramUniform2uiv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
+
+	GlUniform() : IGlUniform() {}
+	~GlUniform() {}
+private:
+	glm::uvec2 m_value;
+};
+
+template <>
+class GlUniform<uvec3> : public IGlUniform
+{
+public:
+	void set(const glm::uvec3& value) override { m_value = value; }
+
+	void Bind() override { glUniform3uiv(GetLocation(), 1, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override { glProgramUniform3uiv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
+
+	GlUniform() : IGlUniform() {}
+	~GlUniform() {}
+private:
+	glm::uvec3 m_value;
+};
+
+template <>
+class GlUniform<uvec4> : public IGlUniform
+{
+public:
+	void set(const glm::uvec4& value) override { m_value = value; }
+
+	void Bind() override { glUniform4uiv(GetLocation(), 1, glm::value_ptr(m_value)); }
+	void Bind(GLuint programID) override { glProgramUniform4uiv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
+
+	GlUniform() : IGlUniform() {}
+	~GlUniform() {}
+private:
+	glm::uvec4 m_value;
+};
+
 template <>
 class GlUniform<std::weak_ptr<const ITexture>> : public IGlUniform
 {
@@ -352,6 +413,12 @@ void GlUniformContainer::SetUniform(const str& name, const GLint& value)		{ GetO
 void GlUniformContainer::SetUniform(const str& name, const glm::ivec2& value)	{ GetOrCreateUniform<ivec2>(name)->set(value); }
 void GlUniformContainer::SetUniform(const str& name, const glm::ivec3& value)	{ GetOrCreateUniform<ivec3>(name)->set(value); }
 void GlUniformContainer::SetUniform(const str& name, const glm::ivec4& value)	{ GetOrCreateUniform<ivec4>(name)->set(value); }
+
+//unsigned integers	
+void GlUniformContainer::SetUniform(const str& name, const glm::uint&  value) { GetOrCreateUniform<GLuint>(name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec2& value) { GetOrCreateUniform<uvec2> (name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec3& value) { GetOrCreateUniform<uvec3> (name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec4& value) { GetOrCreateUniform<uvec4> (name)->set(value); }
 
 //texture
 void GlUniformContainer::SetUniform(const str& name, std::weak_ptr<const ITexture> value)	{ GetOrCreateUniform<std::weak_ptr<const ITexture>>(name)->set(value); }
