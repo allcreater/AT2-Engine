@@ -1,7 +1,7 @@
 #ifndef UI_HEADER
 #define UI_HEADER
 
-#include "../AT2.h"
+#include "../Drawable.h"
 #include <memory>
 #include <set>
 #include <variant>
@@ -56,8 +56,11 @@ namespace AT2::UI
 		virtual glm::uvec2 ComputeMinimalSize()						{ return m_CanvasData.MinimalSize = m_Size; }
 		const glm::uvec2 GetMinimalSize() const						{ return m_CanvasData.MinimalSize; }
 
-		CanvasData& GetCanvasData() { return m_CanvasData; }
-		const CanvasData& GetCanvasData() const { return m_CanvasData; }
+		CanvasData& GetCanvasData()									{ return m_CanvasData; }
+		const CanvasData& GetCanvasData() const						{ return m_CanvasData; }
+
+		void SetNodeRenderer(std::shared_ptr<IDrawable> drawable)	{ m_Drawable = drawable; }
+		std::weak_ptr<IDrawable> GetNodeRenderer() const			{ return m_Drawable; }
 
 		virtual void Accept(Visitor& visitor)						{ visitor.Visit(*this); }
 
@@ -73,6 +76,8 @@ namespace AT2::UI
 		glm::ivec2 m_Size;
 
 		CanvasData m_CanvasData;
+
+		std::shared_ptr<IDrawable> m_Drawable;
 	};
 
 

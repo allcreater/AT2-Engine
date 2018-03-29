@@ -1,21 +1,13 @@
 #ifndef AT2_DRAWABLE_CLASS
 #define AT2_DRAWABLE_CLASS
 
-#include <AT2/AT2.h>
+#include <AT2/Drawable.h>
 
 typedef AT2::VertexBufferType AT2vbt;
 
 namespace AT2
 {
-class IDrawable
-{
-public:
-	virtual void Draw (const std::shared_ptr<IRenderer>& renderer) = 0;
-	virtual ~IDrawable() {}
 
-private:
-
-};
 
 class MeshDrawable : public IDrawable //mesh или не mesh, но определенно что-то похожее
 {

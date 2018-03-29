@@ -1,4 +1,5 @@
 #include "GlShaderProgram.h"
+#include "GlUniformContainer.h"
 
 using namespace AT2;
 
@@ -73,6 +74,11 @@ bool GlShaderProgram::Compile()
 	if (!isLinked)
 		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: program not linked");
 		*/
+}
+
+std::shared_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStorage()
+{
+	return std::make_shared<AT2::GlUniformContainer>(shared_from_this());
 }
 
 GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)

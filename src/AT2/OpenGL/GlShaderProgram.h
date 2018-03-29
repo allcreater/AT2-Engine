@@ -7,17 +7,17 @@
 
 namespace AT2
 {
-    enum class GlShaderType
-    {
-        //Computational = GL_COMPUTE_SHADER,
-        Vertex = 0,
-        TesselationControl = 1,
-        TesselationEvaluation = 2,
-        Geometry = 3,
-        Fragment = 4
-    };
+	enum class GlShaderType
+	{
+		//Computational = GL_COMPUTE_SHADER,
+		Vertex = 0,
+		TesselationControl = 1,
+		TesselationEvaluation = 2,
+		Geometry = 3,
+		Fragment = 4
+	};
 
-	class GlShaderProgram : public IShaderProgram
+	class GlShaderProgram : public IShaderProgram, public std::enable_shared_from_this<GlShaderProgram>
 	{
 	public:
 		struct UniformInfo
@@ -64,9 +64,10 @@ namespace AT2
 		void			Bind() override;
 		unsigned int	GetId() const override { return m_programId; }
 		bool			IsActive() const override;
-        bool            Compile()  override;
+		bool			Compile()  override;
+		std::shared_ptr<IUniformContainer> CreateAssociatedUniformStorage() override;
 
-        virtual void    AttachShader(const str& code, GlShaderType type);
+		virtual void	AttachShader(const str& code, GlShaderType type);
 
 		//Warning: Shader reloading/relinking will invalidate that state
 		virtual void	SetUBO(const str& blockName, unsigned int index);

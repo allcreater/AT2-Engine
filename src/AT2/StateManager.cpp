@@ -79,3 +79,23 @@ void StateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexA
 	_vertexArray->Bind();
 	m_activeVertexArray = _vertexArray;
 }
+
+//TextureSet& StateManager::GetActiveTextures() const
+//{
+//	throw AT2::AT2Exception("Not implemented yet :(");
+//}
+
+std::weak_ptr<IFrameBuffer> StateManager::GetActiveFrameBuffer() const
+{
+	return m_activeFramebuffer;
+}
+
+std::weak_ptr<IShaderProgram> StateManager::GetActiveShader() const
+{
+	return m_activeShader;
+}
+
+std::weak_ptr<IVertexArray> StateManager::GetActiveVertexArray() const
+{
+	return m_activeVertexArray;
+}

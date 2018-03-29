@@ -369,6 +369,10 @@ private:
 	std::weak_ptr<const ITexture> m_value;
 };
 
+//
+// GlUniformContainer
+//
+
 GlUniformContainer::GlUniformContainer(std::weak_ptr<GlShaderProgram> _program)
 {
 	SetProgram(_program);
@@ -415,14 +419,15 @@ void GlUniformContainer::SetUniform(const str& name, const glm::ivec3& value)	{ 
 void GlUniformContainer::SetUniform(const str& name, const glm::ivec4& value)	{ GetOrCreateUniform<ivec4>(name)->set(value); }
 
 //unsigned integers	
-void GlUniformContainer::SetUniform(const str& name, const glm::uint&  value) { GetOrCreateUniform<GLuint>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::uvec2& value) { GetOrCreateUniform<uvec2> (name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::uvec3& value) { GetOrCreateUniform<uvec3> (name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::uvec4& value) { GetOrCreateUniform<uvec4> (name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uint&  value)	{ GetOrCreateUniform<GLuint>(name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec2& value)	{ GetOrCreateUniform<uvec2> (name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec3& value)	{ GetOrCreateUniform<uvec3> (name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec4& value)	{ GetOrCreateUniform<uvec4> (name)->set(value); }
 
 //texture
 void GlUniformContainer::SetUniform(const str& name, std::weak_ptr<const ITexture> value)	{ GetOrCreateUniform<std::weak_ptr<const ITexture>>(name)->set(value); }
 
+//TODO: maybe it's better to detach uniform container from specific program at all?
 void GlUniformContainer::Bind()
 {
 	auto program = m_program.lock();

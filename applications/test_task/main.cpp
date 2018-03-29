@@ -32,7 +32,7 @@ namespace AT2::UI
 			m_quadDrawable->Shader = postprocessShader;
 			//m_quadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
 			{
-				auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(postprocessShader));
+				auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
 				//uniformStorage->SetUniform("u_phase", Phase);
 				//uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 				//uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));

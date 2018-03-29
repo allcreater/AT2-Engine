@@ -130,6 +130,8 @@ public:
 	virtual glm::uvec3 GetSize() const = 0;
 };
 
+class IUniformContainer;
+
 class IShaderProgram
 {
 public:
@@ -143,6 +145,7 @@ public:
 	virtual unsigned int GetId() const = 0;
 	virtual bool IsActive() const = 0;
 	virtual bool Compile() = 0;
+	virtual std::shared_ptr<IUniformContainer> CreateAssociatedUniformStorage() = 0;
 };
 
 class IDrawPrimitive
@@ -245,6 +248,11 @@ public:
 	virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
 	virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
 	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
+
+	//virtual TextureSet& GetActiveTextures() const = 0;
+	virtual std::weak_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
+	virtual std::weak_ptr<IShaderProgram> GetActiveShader() const = 0;
+	virtual std::weak_ptr<IVertexArray> GetActiveVertexArray() const = 0;
 };
 
 class IResourceFactory

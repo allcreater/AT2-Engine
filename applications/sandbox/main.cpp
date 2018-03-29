@@ -71,7 +71,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 	public:
 		GlMeshDrawable()
 		{
-			auto storage = std::make_shared<AT2::GlUniformContainer>(MeshShader);
+			auto storage = MeshShader->CreateAssociatedUniformStorage();
 		}
 
 		void Draw(AT2::IRenderer& _renderer) override
@@ -209,7 +209,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 					
 					m_buildedMesh->Primitives.push_back(pp);
 					if (!m_buildedMesh->UniformBuffer)
-						m_buildedMesh->UniformBuffer = std::make_shared<AT2::GlUniformContainer>(MeshShader);
+						m_buildedMesh->UniformBuffer = MeshShader->CreateAssociatedUniformStorage();
 				}
 			}
 			else
@@ -414,7 +414,7 @@ private:
 		TerrainDrawable->Shader = terrainShader;
 		TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(terrainShader));
+			auto uniformStorage = terrainShader->CreateAssociatedUniformStorage();
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_scaleH", 10000.0f);
 			uniformStorage->SetUniform("u_scaleV", 800.0f);
@@ -429,7 +429,7 @@ private:
 		SphereLightDrawable->Shader = sphereLightShader;
 		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex };
 		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(sphereLightShader));
+			auto uniformStorage = sphereLightShader->CreateAssociatedUniformStorage();
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
 			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
@@ -443,7 +443,7 @@ private:
 		SkylightDrawable->Shader = dayLightShader;
 		SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
 		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(dayLightShader));
+			auto uniformStorage = dayLightShader->CreateAssociatedUniformStorage();
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
@@ -458,7 +458,7 @@ private:
 		QuadDrawable->Shader = postprocessShader;
 		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
 		{
-			auto uniformStorage = std::make_shared<AT2::GlUniformContainer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(postprocessShader));
+			auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 			uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
