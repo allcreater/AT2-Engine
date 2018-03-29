@@ -12,6 +12,7 @@
 
 #include <AT2/UI/UI.h>
 
+#include <random>
 
 namespace AT2::UI
 {
@@ -108,21 +109,56 @@ public:
 	}
 
 private:
+	std::vector<float> GenerateCurve(size_t numPoints, float amplitude)
+	{
+		std::mt19937 randGenerator;
+		std::uniform_real_distribution<float> distribution(0.001, 0.1);
+		auto rnd = std::bind(distribution, randGenerator);
+
+		std::vector<float> data(numPoints);
+		float freq = rnd();
+		for (size_t i = 0; i < numPoints; ++i)
+		{
+			data[i] = sin(i * freq) * amplitude;
+		}
+
+
+		return data;
+	}
+
 	void CreateUI()
 	{
 		using namespace std;
 		using namespace AT2::UI;
 
+		std::shared_ptr<Plot> plot;
 
 		m_uiRoot = StackPanel::Make("MainPanel", StackPanel::Alignment::Horizontal,
 			{
-				Plot::Make("Plot"),
+				plot = Plot::Make("Plot"),
 				StackPanel::Make("SidePanel", StackPanel::Alignment::Vertical,
 					{
 						Button::Make("ButtonDatasetOne", glm::ivec2(200, 200)),
 						Button::Make("ButtonDatasetTwo", glm::ivec2(200, 200))
 					})
 			});
+
+		{
+			auto &curve = plot->GetOrCreateCurve("DataSet #1");
+			curve.Data = GenerateCurve(100000, 5.0);
+			curve.SetXRange(-100, 100.0);
+			curve.Dirty();
+		}
+		{
+			auto& curve = plot->GetOrCreateCurve("DataSet #2");
+			curve.Data = GenerateCurve(200000, 0.0);
+			curve.SetXRange(-100, 100);
+			curve.Dirty();
+		}
+
+		auto bounds = plot->GetAABB();
+		plot->SetObservingZone(bounds);
+
 		m_uiRoot->ComputeMinimalSize();
 		m_uiRoot->Measure(glm::ivec2(), m_window.getWindowSize());
 

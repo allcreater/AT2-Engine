@@ -6,7 +6,7 @@
 using namespace AT2::UI;
 
 //TODO: unit tests on AABB and probably this
-inline const AABB2d & AT2::UI::Plot::CurveData::GetCurveBounds()
+const AABB2d & AT2::UI::Plot::CurveData::GetCurveBounds()
 {
 	if (m_rangeNeedsUpdate)
 	{
@@ -29,18 +29,34 @@ inline const AABB2d & AT2::UI::Plot::CurveData::GetCurveBounds()
 	return m_aabb;
 }
 
-inline void AT2::UI::Plot::CurveData::Dirty() noexcept
+void AT2::UI::Plot::CurveData::Dirty() noexcept
 {
 	m_dirtyFlag = true;
 	m_rangeNeedsUpdate = true;
 	m_aabb.MaxBound.y = m_aabb.MinBound.y = 0.0f;
+
+	if (auto parent = m_parent.lock())
+		parent->DirtyCurves();
+	else
+		assert(false);
 }
 
 
 Plot::CurveData& Plot::GetOrCreateCurve(const std::string& curveName)
 {
-	auto pair = m_curvesData.try_emplace(curveName, CurveData());
+	auto pair = m_curvesData.try_emplace(curveName, CurveData(weak_from_this()));
 	return pair.first->second;
+}
+
+const AABB2d & AT2::UI::Plot::GetAABB()
+{
+	if (m_boundsShouldBeRecalculated)
+	{
+		ComputeAABB();
+		m_boundsShouldBeRecalculated = false;
+	}
+
+	return m_allBounds;
 }
 
 void Plot::ComputeAABB()

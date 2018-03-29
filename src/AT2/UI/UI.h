@@ -143,15 +143,17 @@ namespace AT2::UI
 		
 	};
 
-
-	class Plot : public Node
+	//TODO: is it possible to move enable_from_this to Node?
+	class Plot : public Node, public std::enable_shared_from_this<Plot> 
 	{
 	public:
 		class CurveData
 		{
 			friend class Plot;
+
 		public:
-			CurveData() = default;
+			CurveData(std::weak_ptr<Plot> plot) : m_parent(plot) {}
+
 			CurveData(const CurveData&) = delete;
 			CurveData(CurveData&&) = default;
 			CurveData& operator=(const CurveData&) const = delete;
@@ -167,6 +169,7 @@ namespace AT2::UI
 			bool m_dirtyFlag = true;
 			bool m_rangeNeedsUpdate = true;
 			AABB2d m_aabb;
+			std::weak_ptr<Plot> m_parent;
 		};
 
 	public:
@@ -176,10 +179,12 @@ namespace AT2::UI
 
 	public:
 		CurveData& GetOrCreateCurve (const std::string& curveName);
-		const AABB2d& GetAABB() const { return m_allBounds; }
+		const AABB2d& GetAABB();
 
 		void SetObservingZone(const AABB2d& zone) { m_observingZone = zone; }
 		const AABB2d& GetObservingZone() const { return m_observingZone; }
+
+		void DirtyCurves() { m_boundsShouldBeRecalculated = true; }
 
 		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
@@ -190,6 +195,7 @@ namespace AT2::UI
 
 	protected:
 		std::map<std::string, CurveData> m_curvesData;
+		bool m_boundsShouldBeRecalculated = true;
 		AABB2d m_allBounds, m_observingZone;
 	};
 
