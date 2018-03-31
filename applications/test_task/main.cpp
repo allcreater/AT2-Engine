@@ -10,7 +10,7 @@
 
 #include "../drawable.h"
 
-#include <AT2/UI/UI.h>
+#include "UI.h"
 
 #include <random>
 
@@ -61,7 +61,13 @@ namespace AT2::UI
 		}
 		void Visit(Plot& node) override
 		{
+			//
 			Render(node);
+
+			glViewport(node.GetCanvasData().Position.x, node.GetCanvasData().Position.y, node.GetCanvasData().MeasuredSize.x, node.GetCanvasData().MeasuredSize.y);
+			if (auto nr = node.GetNodeRenderer().lock())
+				nr->Draw(m_renderer.lock());
+
 			UiVisitor::Visit(node);
 		}
 
@@ -112,7 +118,7 @@ private:
 	std::vector<float> GenerateCurve(size_t numPoints, float amplitude)
 	{
 		std::mt19937 randGenerator;
-		std::uniform_real_distribution<float> distribution(0.001, 0.1);
+		std::uniform_real_distribution<float> distribution(0.001, 0.01);
 		auto rnd = std::bind(distribution, randGenerator);
 
 		std::vector<float> data(numPoints);
@@ -145,16 +151,18 @@ private:
 
 		{
 			auto &curve = plot->GetOrCreateCurve("DataSet #1");
-			curve.Data = GenerateCurve(100000, 5.0);
-			curve.SetXRange(-100, 100.0);
+			curve.Data = GenerateCurve(10000, 5.0);
+			curve.SetXRange(-50, 50.0);
 			curve.Dirty();
 		}
 		{
 			auto& curve = plot->GetOrCreateCurve("DataSet #2");
-			curve.Data = GenerateCurve(200000, 0.0);
-			curve.SetXRange(-100, 100);
+			curve.Data = GenerateCurve(20000, 3.0);
+			curve.SetXRange(-100, 200);
 			curve.Dirty();
 		}
+
+		plot->SetNodeRenderer(std::make_shared<PlotRenderer>(plot));
 
 		auto bounds = plot->GetAABB();
 		plot->SetObservingZone(bounds);

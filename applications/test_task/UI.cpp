@@ -8,14 +8,22 @@ using namespace AT2::UI;
 
 
 //it is possible to contain all data in one vertex buffer array and one vertex buffer, but it's more complex task and much unclear code, so let's just draw it separately
-class CurveDrawable : public IDrawable
+class AT2::UI::CurveDrawable : public IDrawable
 {
+public:
+	CurveDrawable()
+	{
+	}
+
 	void Draw(const std::shared_ptr<IRenderer>& renderer) override
 	{
-		auto& stateManager = renderer->GetStateManager();
+		if (m_VAO == nullptr)
+			Init(renderer);
 
+		auto& stateManager = renderer->GetStateManager();
 		stateManager.BindVertexArray(m_VAO);
-		//stateManager.BindTextures(Textures);
+
+		m_uniforms->SetUniform("u_matProjection", m_projectionMatrix);
 
 		m_uniforms->Bind();
 		m_DrawPrimitive->Draw();
@@ -23,49 +31,85 @@ class CurveDrawable : public IDrawable
 
 	void UpdateFromData(const std::shared_ptr<IRenderer>& renderer, const std::vector<float>& data, float x1, float x2)
 	{
-		auto& rf = renderer->GetResourceFactory();
+		if (m_VAO == nullptr)
+			Init(renderer);
 
-		m_VAO = rf.CreateVertexArray();
-		m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, data.size() * sizeof(glm::vec3), data.data()));
+		m_VAO->GetVertexBuffer(0)->SetData(data.size() * sizeof(float), data.data());
 
 		m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(GlDrawPrimitiveType::LineStrip, 0, data.size());
-		
 
 		m_uniforms->SetUniform("u_BoundsX", glm::vec2(x1, x2));
 		m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)data.size());
+		m_uniforms->SetUniform("u_Color", glm::vec4(1.0, 1.0, 0.0, 1.0));
+	}
+
+	void SetProjectionMatrix(const glm::mat4& matProj)
+	{
+		m_projectionMatrix = matProj;
+	}
+private:
+	void Init(const std::shared_ptr<IRenderer>& renderer)
+	{
+		auto& rf = renderer->GetResourceFactory();
+
+		m_VAO = rf.CreateVertexArray();
+		m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Float, 0, 0));
+
+
+		m_uniforms = renderer->GetStateManager().GetActiveShader().lock()->CreateAssociatedUniformStorage();
 	}
 
 private:
 	std::shared_ptr<IVertexArray> m_VAO;
 	std::unique_ptr<IDrawPrimitive> m_DrawPrimitive;
 	std::shared_ptr<IUniformContainer> m_uniforms;
+	glm::mat4 m_projectionMatrix;
 };
 
 
 
 void PlotRenderer::Draw(const std::shared_ptr<IRenderer>& renderer)
 {
-	if (m_uiVAO == nullptr)
+	if (m_uiShader == nullptr)
 		Init(renderer);
 
 	auto& stateManager = renderer->GetStateManager();
 
 	stateManager.BindShader(m_uiShader);
-	//stateManager.BindTextures(Textures);
-	stateManager.BindVertexArray(m_uiVAO);
-		
-
 	m_uniformBuffer->Bind();
+	LinesHelper::Draw(renderer);
 
-	for (auto primitive : m_uiPrimitiveList)
-		primitive->Draw();
 
+	stateManager.BindShader(m_curveShader);
+	PrepareData(renderer);
+
+	for (auto pair : m_curves)
+		pair.second->Draw(renderer);
 
 }
 
 void PlotRenderer::PrepareData(const std::shared_ptr<IRenderer>& renderer)
 {
+	if (auto controlPtr = m_Control.lock())
+	{
+		auto& observingRange = controlPtr->GetObservingZone();
+		m_projectionMatrix = glm::ortho(observingRange.MinBound.x, observingRange.MaxBound.x, observingRange.MaxBound.y, observingRange.MinBound.y);
 
+		controlPtr->EnumerateCurves([&](std::string_view name, std::vector<float> data, bool isInvalidated, std::pair<float,float> range) {
+			auto emplaceResult = m_curves.try_emplace(std::string(name), std::make_shared<CurveDrawable>());
+			if (isInvalidated)
+				emplaceResult.first->second->UpdateFromData(renderer, data, range.first, range.second);
+		});
+
+		for (auto& pair : m_curves)
+			pair.second->SetProjectionMatrix(m_projectionMatrix);
+
+		Clear();
+		AddLine(glm::vec2(observingRange.MinBound.x, 0.0), glm::vec2(observingRange.MaxBound.x, 0.0));
+		AddLine(glm::vec2(0.0, observingRange.MinBound.y), glm::vec2(0.0, observingRange.MaxBound.y));
+	}
+
+	m_uniformBuffer->SetUniform("u_matProjection", m_projectionMatrix);
 }
 
 void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
@@ -83,15 +127,8 @@ void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
 		});
 		
 
-	glm::vec2 positions[] = { glm::vec2(-1.0, -1.0), glm::vec2(1.0, -1.0), glm::vec2(1.0, 1.0), glm::vec2(-1.0, 1.0) };
-	glm::vec4 colors[] = { glm::vec4(1,1,1,1), glm::vec4(1,1,1,1), glm::vec4(1,0,0,1), glm::vec4(1,1,1,1) };
-	glm::uint indices[] = { 0, 2, 1, 3 };
+	std::vector<glm::vec2> positions = {glm::vec2()};
+	std::vector<glm::vec4> colors;
 
-	auto& rf = renderer->GetResourceFactory();
-
-	m_uiVAO = rf.CreateVertexArray();
-	m_uiVAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec2, 4 * sizeof(glm::vec2), positions));
-	m_uiVAO->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec4, 4 * sizeof(glm::vec4), colors));
-	m_uiVAO->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, AT2::BufferDataTypes::UInt, 4 * sizeof(glm::uint), indices));
-	m_uiPrimitiveList.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Lines, 4, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
+	m_uniformBuffer = m_uiShader->CreateAssociatedUniformStorage();
 }

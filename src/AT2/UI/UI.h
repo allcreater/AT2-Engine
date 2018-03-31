@@ -183,7 +183,10 @@ namespace AT2::UI
 		~Plot() { std::cout << "Plot" << std::endl; }
 
 	public:
+		//TODO: encapsulate function parameters at special class
+		size_t EnumerateCurves(std::function<void(const std::string_view, const std::vector<float>&, bool, std::pair<float, float>)>);
 		CurveData& GetOrCreateCurve (const std::string& curveName);
+
 		const AABB2d& GetAABB();
 
 		void SetObservingZone(const AABB2d& zone) { m_observingZone = zone; }

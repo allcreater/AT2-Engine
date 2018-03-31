@@ -1,12 +1,13 @@
 #ifndef RENDERABLE_UI_HEADER
 #define RENDERABLE_UI_HEADER
 #include <AT2/UI/UI.h>
-#include "../drawable.h"
+#include "LinesHelper.h"
 
 namespace AT2::UI
 {
-
-	class PlotRenderer : public IDrawable
+	class CurveDrawable;
+	
+	class PlotRenderer : public IDrawable, protected LinesHelper
 	{
 	public:
 		PlotRenderer(std::weak_ptr<Plot> plot) : m_Control(plot)
@@ -23,10 +24,11 @@ namespace AT2::UI
 	private:
 		std::weak_ptr<Plot> m_Control;
 
-		std::shared_ptr<IVertexArray> m_uiVAO;
 		std::shared_ptr<IShaderProgram> m_uiShader, m_curveShader;
 		std::shared_ptr<IUniformContainer> m_uniformBuffer;
-		PrimitiveList m_uiPrimitiveList;
+
+		std::map<std::string, std::shared_ptr<CurveDrawable>> m_curves;
+		glm::mat4 m_projectionMatrix;
 	};
 
 }

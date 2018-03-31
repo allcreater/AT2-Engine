@@ -42,6 +42,18 @@ void AT2::UI::Plot::CurveData::Dirty() noexcept
 }
 
 
+size_t Plot::EnumerateCurves(std::function<void(const std::string_view, const std::vector<float>&, bool, std::pair<float, float>)> fn)
+{
+	size_t counter = 0;
+	std::for_each(m_curvesData.begin(), m_curvesData.end(), [&](decltype(m_curvesData)::value_type& x) {
+		fn(x.first, x.second.Data, x.second.m_dirtyFlag, std::make_pair(x.second.m_aabb.MinBound.x, x.second.m_aabb.MaxBound.x));
+		x.second.m_dirtyFlag = false;  //TODO: remove govnocode!!!
+		counter++; 
+	});
+
+	return counter;
+}
+
 Plot::CurveData& Plot::GetOrCreateCurve(const std::string& curveName)
 {
 	auto pair = m_curvesData.try_emplace(curveName, CurveData(weak_from_this()));
