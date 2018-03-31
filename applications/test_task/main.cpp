@@ -138,14 +138,15 @@ private:
 		using namespace AT2::UI;
 
 		std::shared_ptr<Plot> plot;
+		std::shared_ptr<Node> button;
 
 		m_uiRoot = StackPanel::Make("MainPanel", StackPanel::Alignment::Horizontal,
 			{
 				plot = Plot::Make("Plot"),
 				StackPanel::Make("SidePanel", StackPanel::Alignment::Vertical,
 					{
-						Button::Make("ButtonDatasetOne", glm::ivec2(200, 200)),
-						Button::Make("ButtonDatasetTwo", glm::ivec2(200, 200))
+						button = Button::Make("ButtonDatasetOne", glm::ivec2(200, 0)),
+						Button::Make("ButtonDatasetTwo", glm::ivec2(200, 0))
 					})
 			});
 
@@ -166,6 +167,11 @@ private:
 
 		auto bounds = plot->GetAABB();
 		plot->SetObservingZone(bounds);
+
+		button->EventClicked = [&](const Node& node) {
+			std::cout << std::string(node.GetName()) << "clicked" << std::endl;
+			return true; 
+		};
 
 		m_uiRoot->ComputeMinimalSize();
 		m_uiRoot->Measure(glm::ivec2(), m_window.getWindowSize());
@@ -243,13 +249,16 @@ private:
 			m_uiRoot->Measure(glm::ivec2(0,0), newSize);
 		};
 
-		m_window.MouseUpCallback = [](int key)
+		m_window.MouseUpCallback = [&](int key)
 		{
 			std::cout << "Mouse " << key << std::endl;
+			AT2::UI::MouseClickVisitor mcv(m_mousePos);
+			m_uiRoot->Accept(mcv);
 		};
 
 		m_window.MouseMoveCallback = [&](const MousePos& pos)
 		{
+			m_mousePos = pos.getPos();
 		};
 
 		m_window.InitializeCallback = [&]()
@@ -272,6 +281,8 @@ private:
 	std::shared_ptr<AT2::UI::Node> m_uiRoot;
 
 	std::unique_ptr<AT2::UI::UiRenderingVisitor> m_uiRenderer;
+
+	glm::vec2 m_mousePos;
 };
 
 int main(int argc, char *argv[])

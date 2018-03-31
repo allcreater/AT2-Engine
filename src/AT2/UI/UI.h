@@ -64,6 +64,10 @@ namespace AT2::UI
 
 		virtual void Accept(Visitor& visitor)						{ visitor.Visit(*this); }
 
+	public: //events
+		std::function<bool(const Node& node)> EventClicked;
+		std::function<bool(const Node& node)> EventMouseDrag;
+
 	protected:
 		Node(std::string_view name, const glm::ivec2& size) : m_Name(name), m_Size(size) {};
 

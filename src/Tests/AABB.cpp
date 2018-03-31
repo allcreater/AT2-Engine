@@ -43,3 +43,15 @@ TEST(AABB_2d, UnionWorksCorrectly)
 
 	ASSERT_EQ(a.GetUnion(b), expectedUnion);
 }
+
+TEST(AABB_2d, IsPointInsideTest)
+{
+	const AABB2d aabb(glm::vec2(-10, -10), glm::vec2(10, 10));
+
+	ASSERT_FALSE(aabb.IsPointInside(glm::vec2(-20, 0)));
+	ASSERT_FALSE(aabb.IsPointInside(glm::vec2( 20, 0)));
+	ASSERT_FALSE(aabb.IsPointInside(glm::vec2( 0,-20)));
+	ASSERT_FALSE(aabb.IsPointInside(glm::vec2( 0, 20)));
+
+	ASSERT_TRUE(aabb.IsPointInside(glm::vec2(0, 0)));
+}

@@ -45,6 +45,11 @@ public:
 		return MaxBound.x == MinBound.x && MaxBound.y == MinBound.y;
 	}
 
+	bool IsPointInside(const glm::vec2& point) const noexcept
+	{
+		return (point.x >= MinBound.x && point.y >= MinBound.y && point.x <= MaxBound.x && point.y <= MaxBound.y);
+	}
+
 	void Extend(const glm::vec2& point) noexcept
 	{
 		MinBound.x = glm::min(MinBound.x, point.x);
