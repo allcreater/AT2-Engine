@@ -209,7 +209,8 @@ public:
 		Unknown = -1,
 		Renderer,
 		Shader,
-		Buffer
+		Buffer,
+		UI
 	} Case;
 
 

@@ -10,8 +10,36 @@ using namespace AT2::UI;
 
 void Node::Measure(const glm::ivec2 & position, const glm::uvec2 & possibleSize)
 {
-	m_CanvasData.MeasuredSize = possibleSize;
-	m_CanvasData.Position = position;
+	m_CanvasData.MeasuredSize.x = (HorizontalAlignment == Alignment::Stretch) ? possibleSize.x : std::min(possibleSize.x, m_Size.x);
+	m_CanvasData.MeasuredSize.y = (VerticalAlignment == Alignment::Stretch) ? possibleSize.t : std::min(possibleSize.y, m_Size.y);
+	
+	switch (HorizontalAlignment)
+	{
+		case Alignment::Stretch:
+			[[fallthrough]];
+		case Alignment::Side1:
+			m_CanvasData.Position.x = position.x; break;
+		case Alignment::Side2:
+			m_CanvasData.Position.x = position.x + (possibleSize.x - m_CanvasData.MeasuredSize.x); break;
+		case Alignment::Center:
+			m_CanvasData.Position.x = position.x + (possibleSize.x - m_CanvasData.MeasuredSize.x) / 2; break;
+		default:
+			throw AT2::AT2Exception(AT2Exception::ErrorCase::UI, "Incorrect HorizontalAlignment");
+	}
+
+	switch (VerticalAlignment)
+	{
+		case Alignment::Stretch:
+			[[fallthrough]];
+		case Alignment::Side1:
+			m_CanvasData.Position.y = position.y; break;
+		case Alignment::Side2:
+			m_CanvasData.Position.y = position.y + (possibleSize.y - m_CanvasData.MeasuredSize.y); break;
+		case Alignment::Center:
+			m_CanvasData.Position.y = position.y + (possibleSize.y - m_CanvasData.MeasuredSize.y) / 2; break;
+		default:
+			throw AT2::AT2Exception(AT2Exception::ErrorCase::UI, "Incorrect VerticalAlignment");
+	}
 }
 
 //
@@ -61,19 +89,22 @@ void Group::ForEachChild(std::function<void(std::shared_ptr<Node>&)> func)
 // Constructor methods
 //
 
-std::shared_ptr<StackPanel> StackPanel::Make(std::string_view name, Alignment alignment, std::initializer_list<std::shared_ptr<Node>> children, const glm::ivec2& size)
+std::shared_ptr<StackPanel> StackPanel::Make(std::string_view name, Orientation orientation, std::initializer_list<std::shared_ptr<Node>> children, const glm::uvec2& size)
 {
-	auto ptr = std::shared_ptr<StackPanel>(new StackPanel(name, alignment, size));
+	auto ptr = std::shared_ptr<StackPanel>(new StackPanel(name, orientation, size));
 	ptr->Initialize(children);
 	return ptr;
 }
 
-std::shared_ptr<Plot> Plot::Make(std::string_view name, const glm::ivec2& size)
+std::shared_ptr<Plot> Plot::Make(std::string_view name, const glm::uvec2& size)
 {
 	return std::shared_ptr<Plot>(new Plot(name, size));
 }
 
-std::shared_ptr<Button> Button::Make(std::string_view name, const glm::ivec2& size)
+std::shared_ptr<Button> Button::Make(std::string_view name, const glm::uvec2& size, Alignment vertical, Alignment horizontal)
 {
-	return std::shared_ptr<Button>(new Button(name, size));
+	auto ptr = std::shared_ptr<Button>(new Button(name, size));
+	ptr->VerticalAlignment = vertical;
+	ptr->HorizontalAlignment = horizontal;
+	return ptr;
 }

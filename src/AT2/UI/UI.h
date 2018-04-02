@@ -9,6 +9,9 @@
 
 #include <glm/glm.hpp>
 
+//This is an attempt to implement simple tree-structured extensible UI with automatic layout
+//Unfortunately elements aligning is not fully supported, it will be fixed later
+
 //TODO: use lazy size calculation instead of direct ComputeMinimalSize() call
 
 namespace AT2::UI
@@ -36,6 +39,19 @@ namespace AT2::UI
 		virtual void Visit(Plot& ref) = 0;
 	};
 
+	enum class Alignment
+	{
+		Side1,
+		Center,
+		Stretch,
+		Side2
+	};
+
+	enum class Orientation
+	{
+		Horizontal,
+		Vertical
+	};
 
 	class Node
 	{
@@ -43,6 +59,10 @@ namespace AT2::UI
 		
 	public:
 		virtual ~Node() = default;
+
+	public:
+		Alignment VerticalAlignment = Alignment::Stretch;
+		Alignment HorizontalAlignment = Alignment::Stretch;
 
 	public:
 		std::weak_ptr<Group> GetParent() const						{ return m_Parent; }
@@ -69,15 +89,13 @@ namespace AT2::UI
 		std::function<bool(const Node& node)> EventMouseDrag;
 
 	protected:
-		Node(std::string_view name, const glm::ivec2& size) : m_Name(name), m_Size(size) {};
-
+		Node(std::string_view name, const glm::uvec2& size) : m_Name(name), m_Size(size) {};
 
 	protected:
 		std::weak_ptr<Group> m_Parent;
 
-	private:
 		std::string m_Name;
-		glm::ivec2 m_Size;
+		glm::uvec2 m_Size;
 
 		CanvasData m_CanvasData;
 
@@ -95,7 +113,7 @@ namespace AT2::UI
 		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
 	protected:
-		Group(std::string_view name, const glm::ivec2& size) : Node(name, size) {}
+		Group(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
 		void Initialize(std::initializer_list<std::shared_ptr<Node>> children);
 
 	protected:
@@ -108,14 +126,7 @@ namespace AT2::UI
 	class StackPanel : public Group
 	{
 	public:
-		enum class Alignment
-		{
-			Horizontal,
-			Vertical
-		};
-
-	public:
-		static std::shared_ptr<StackPanel> Make(std::string_view name, Alignment alignment, std::initializer_list<std::shared_ptr<Node>> children, const glm::ivec2& size = glm::ivec2());
+		static std::shared_ptr<StackPanel> Make(std::string_view name, Orientation alignment, std::initializer_list<std::shared_ptr<Node>> children, const glm::uvec2& size = glm::uvec2());
 
 	public:
 		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
@@ -124,10 +135,10 @@ namespace AT2::UI
 		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
 	protected:
-		StackPanel(std::string_view name, Alignment alignment, const glm::ivec2& size) : Group(name, size), m_Alignment(alignment) {}
+		StackPanel(std::string_view name, Orientation alignment, const glm::ivec2& size) : Group(name, size), m_Orientation(alignment) {}
 
 	protected:
-		Alignment m_Alignment;
+		Orientation m_Orientation;
 	};
 
 
@@ -135,7 +146,7 @@ namespace AT2::UI
 	{
 
 	public:
-		static std::shared_ptr<Button> Make(std::string_view name, const glm::ivec2& size = glm::ivec2());
+		static std::shared_ptr<Button> Make(std::string_view name, const glm::uvec2& size = glm::uvec2(), Alignment vertical = Alignment::Stretch, Alignment horizontal = Alignment::Stretch);
 
 		~Button() { std::cout << "Button" << std::endl; }
 
@@ -143,7 +154,7 @@ namespace AT2::UI
 		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
 	protected:
-		Button(std::string_view name, const glm::ivec2& size) : Node(name, size) {}
+		Button(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
 
 
 	protected:
@@ -182,7 +193,7 @@ namespace AT2::UI
 		};
 
 	public:
-		static std::shared_ptr<Plot> Make(std::string_view name, const glm::ivec2& size = glm::ivec2());
+		static std::shared_ptr<Plot> Make(std::string_view name, const glm::uvec2& size = glm::uvec2());
 
 		~Plot() { std::cout << "Plot" << std::endl; }
 
@@ -201,7 +212,7 @@ namespace AT2::UI
 		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
 	protected:
-		Plot(std::string_view name, const glm::ivec2& size) : Node(name, size) {}
+		Plot(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
 
 		void ComputeAABB();
 

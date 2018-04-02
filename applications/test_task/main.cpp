@@ -64,17 +64,20 @@ namespace AT2::UI
 			//
 			Render(node);
 
-			glViewport(node.GetCanvasData().Position.x, node.GetCanvasData().Position.y, node.GetCanvasData().MeasuredSize.x, node.GetCanvasData().MeasuredSize.y);
+			//glViewport(node.GetCanvasData().Position.x, node.GetCanvasData().Position.y, node.GetCanvasData().MeasuredSize.x, node.GetCanvasData().MeasuredSize.y);
 			if (auto nr = node.GetNodeRenderer().lock())
 				nr->Draw(m_renderer.lock());
 
 			UiVisitor::Visit(node);
 		}
 
+		void SetWindowSize(const glm::uvec2& windowSize) { m_windowSize = windowSize; }
+
+	private:
 
 		void Render(Node& node)
 		{
-			glViewport(node.GetCanvasData().Position.x, node.GetCanvasData().Position.y, node.GetCanvasData().MeasuredSize.x, node.GetCanvasData().MeasuredSize.y);
+			glViewport(node.GetCanvasData().Position.x, m_windowSize.y - node.GetCanvasData().Position.y - node.GetCanvasData().MeasuredSize.y, node.GetCanvasData().MeasuredSize.x, node.GetCanvasData().MeasuredSize.y);
 
 			m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
 			m_quadDrawable->Draw(m_renderer.lock());
@@ -90,6 +93,7 @@ namespace AT2::UI
 	private:
 		std::shared_ptr<AT2::MeshDrawable> m_quadDrawable;
 		std::weak_ptr<AT2::IRenderer> m_renderer;
+		glm::uvec2 m_windowSize;
 	};
 }
 
@@ -140,10 +144,10 @@ private:
 		std::shared_ptr<Plot> plot;
 		std::shared_ptr<Node> button;
 
-		m_uiRoot = StackPanel::Make("MainPanel", StackPanel::Alignment::Horizontal,
+		m_uiRoot = StackPanel::Make("MainPanel", Orientation::Horizontal,
 			{
 				plot = Plot::Make("Plot"),
-				StackPanel::Make("SidePanel", StackPanel::Alignment::Vertical,
+				StackPanel::Make("SidePanel", Orientation::Vertical,
 					{
 						button = Button::Make("ButtonDatasetOne", glm::ivec2(200, 0)),
 						Button::Make("ButtonDatasetTwo", glm::ivec2(200, 0))
@@ -202,6 +206,7 @@ private:
 		m_renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
 		m_renderer->ClearDepth(0);
 
+		m_uiRenderer->SetWindowSize(m_window.getWindowSize());
 		m_uiRoot->Accept(*m_uiRenderer.get());
 
 		m_renderer->FinishFrame();
