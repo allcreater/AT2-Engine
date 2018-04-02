@@ -22,25 +22,25 @@ public:
 
 		auto& stateManager = renderer->GetStateManager();
 		stateManager.BindVertexArray(m_VAO);
-
+		glLineWidth(1.5);
 		m_uniforms->SetUniform("u_matProjection", m_projectionMatrix);
 
 		m_uniforms->Bind();
 		m_DrawPrimitive->Draw();
 	}
 
-	void UpdateFromData(const std::shared_ptr<IRenderer>& renderer, const std::vector<float>& data, float x1, float x2)
+	void UpdateFromData(const std::shared_ptr<IRenderer>& renderer, const Plot::CurveData& data)
 	{
 		if (m_VAO == nullptr)
 			Init(renderer);
 
-		m_VAO->GetVertexBuffer(0)->SetData(data.size() * sizeof(float), data.data());
+		m_VAO->GetVertexBuffer(0)->SetData(data.Data.size() * sizeof(float), data.Data.data()); //data.data.data :)
 
-		m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(GlDrawPrimitiveType::LineStrip, 0, data.size());
+		m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(GlDrawPrimitiveType::LineStrip, 0, data.Data.size());
 
-		m_uniforms->SetUniform("u_BoundsX", glm::vec2(x1, x2));
-		m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)data.size());
-		m_uniforms->SetUniform("u_Color", glm::vec4(1.0, 1.0, 0.0, 1.0));
+		m_uniforms->SetUniform("u_BoundsX", glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
+		m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)data.Data.size());
+		m_uniforms->SetUniform("u_Color", data.GetColor());
 	}
 
 	void SetProjectionMatrix(const glm::mat4& matProj)
@@ -95,21 +95,37 @@ void PlotRenderer::PrepareData(const std::shared_ptr<IRenderer>& renderer)
 		auto& observingRange = controlPtr->GetObservingZone();
 		m_projectionMatrix = glm::ortho(observingRange.MinBound.x, observingRange.MaxBound.x, observingRange.MaxBound.y, observingRange.MinBound.y);
 
-		controlPtr->EnumerateCurves([&](std::string_view name, std::vector<float> data, bool isInvalidated, std::pair<float,float> range) {
+		controlPtr->EnumerateCurves([&](const std::string_view name, const Plot::CurveData& data, bool isInvalidated)
+		{
 			auto emplaceResult = m_curves.try_emplace(std::string(name), std::make_shared<CurveDrawable>());
 			if (isInvalidated)
-				emplaceResult.first->second->UpdateFromData(renderer, data, range.first, range.second);
+				emplaceResult.first->second->UpdateFromData(renderer, data);
+
+			return true;
 		});
 
 		for (auto& pair : m_curves)
 			pair.second->SetProjectionMatrix(m_projectionMatrix);
 
-		Clear();
-		AddLine(glm::vec2(observingRange.MinBound.x, 0.0), glm::vec2(observingRange.MaxBound.x, 0.0));
-		AddLine(glm::vec2(0.0, observingRange.MinBound.y), glm::vec2(0.0, observingRange.MaxBound.y));
+		UpdateCanvasGeometry(observingRange);
 	}
 
 	m_uniformBuffer->SetUniform("u_matProjection", m_projectionMatrix);
+}
+
+void PlotRenderer::UpdateCanvasGeometry(const AABB2d& observingRange)
+{
+	Clear();
+	AddLine(glm::vec2(observingRange.MinBound.x, 0.0), glm::vec2(observingRange.MaxBound.x, 0.0));
+	AddLine(glm::vec2(0.0, observingRange.MinBound.y), glm::vec2(0.0, observingRange.MaxBound.y));
+
+	glm::vec2 range = observingRange.MaxBound - observingRange.MinBound;
+	glm::vec2 exp = glm::floor(glm::log(range)/ glm::log(decltype(range)(10.0f)));
+
+	glm::vec2 minExp = glm::floor(glm::log(observingRange.MaxBound) / glm::log(decltype(range)(10.0f)));
+
+	AddLine(glm::vec2(pow(10, minExp.x), observingRange.MinBound.y), glm::vec2(pow(10, minExp.x), observingRange.MaxBound.y), glm::vec4(1.0,1.0,1.0, 0.3));
+	//AddLine(glm::vec2(minExp.x * 10, 0.0), glm::vec2(minExp.x * 10, 0.0));
 }
 
 void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)

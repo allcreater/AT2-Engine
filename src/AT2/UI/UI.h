@@ -29,16 +29,6 @@ namespace AT2::UI
 	class Button;
 	class Plot;
 
-	//classic visitor with classic coupling problems, probably should be replaced for approach with dynamic_cast instead of double dispatcherisation
-	struct Visitor
-	{
-		virtual void Visit(Node& ref) = 0;
-		virtual void Visit(Group& ref) = 0;
-		virtual void Visit(StackPanel& ref) = 0;
-		virtual void Visit(Button& ref) = 0;
-		virtual void Visit(Plot& ref) = 0;
-	};
-
 	enum class Alignment
 	{
 		Side1,
@@ -82,8 +72,11 @@ namespace AT2::UI
 		void SetNodeRenderer(std::shared_ptr<IDrawable> drawable)	{ m_Drawable = drawable; }
 		std::weak_ptr<IDrawable> GetNodeRenderer() const			{ return m_Drawable; }
 
-		virtual void Accept(Visitor& visitor)						{ visitor.Visit(*this); }
+		//virtual void TraverseDepthFirst(std::function<void(Node&)> func) { func(*this); }
+		//virtual void TraverseBreadthFirst(std::function<void(Node&)> func) { func(*this); }
 
+		virtual void TraverseDepthFirst(std::function<void(std::shared_ptr<Node>&)> func) { }
+		virtual void TraverseBreadthFirst(std::function<void(std::shared_ptr<Node>&)> func) { }
 	public: //events
 		std::function<bool(const Node& node)> EventClicked;
 		std::function<bool(const Node& node)> EventMouseDrag;
@@ -108,9 +101,14 @@ namespace AT2::UI
 	public:
 		void AddChild(std::shared_ptr<Node> newChild);
 		bool RemoveChild(const std::shared_ptr<Node>& child);
-		void ForEachChild(std::function<void(std::shared_ptr<Node>&)>);
 
-		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
+		void ForEachChild(std::function<void(Node&)> func);
+
+		//void TraverseDepthFirst(std::function<void(Node&)> func) override;
+		//void TraverseBreadthFirst(std::function<void(Node&)> func) override;
+
+		void TraverseDepthFirst(std::function<void(std::shared_ptr<Node>&)> func) override;
+		void TraverseBreadthFirst(std::function<void(std::shared_ptr<Node>&)> func) override;
 
 	protected:
 		Group(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
@@ -132,8 +130,6 @@ namespace AT2::UI
 		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
 		glm::uvec2 ComputeMinimalSize() override;
 
-		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
-
 	protected:
 		StackPanel(std::string_view name, Orientation alignment, const glm::ivec2& size) : Group(name, size), m_Orientation(alignment) {}
 
@@ -149,9 +145,6 @@ namespace AT2::UI
 		static std::shared_ptr<Button> Make(std::string_view name, const glm::uvec2& size = glm::uvec2(), Alignment vertical = Alignment::Stretch, Alignment horizontal = Alignment::Stretch);
 
 		~Button() { std::cout << "Button" << std::endl; }
-
-	public:
-		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
 	protected:
 		Button(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
@@ -182,13 +175,21 @@ namespace AT2::UI
 			std::vector<float> Data;
 			
 			void SetXRange(float startX, float endX) { m_aabb.MinBound.x = startX; m_aabb.MaxBound.x = endX; }
-			const AABB2d& GetCurveBounds();
+			const AABB2d& GetCurveBounds() const;
 			void Dirty() noexcept;
 
+			void SetColor(const glm::vec4& color) { m_Color = color; }
+			const glm::vec4& GetColor() const { return m_Color; }
+
 		private:
-			bool m_dirtyFlag = true;
-			bool m_rangeNeedsUpdate = true;
-			AABB2d m_aabb;
+			bool m_dataInvalidatedFlag = true;
+
+			//the size recomputes lazily so could be treated as const
+			mutable bool m_rangeNeedsUpdate = true;
+			mutable AABB2d m_aabb; 
+
+			glm::vec4 m_Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
+
 			std::weak_ptr<Plot> m_parent;
 		};
 
@@ -199,7 +200,7 @@ namespace AT2::UI
 
 	public:
 		//TODO: encapsulate function parameters at special class
-		size_t EnumerateCurves(std::function<void(const std::string_view, const std::vector<float>&, bool, std::pair<float, float>)>);
+		size_t EnumerateCurves(std::function<bool(const std::string_view name, const CurveData& data, bool invalidated)>);
 		CurveData& GetOrCreateCurve (const std::string& curveName);
 
 		const AABB2d& GetAABB();
@@ -208,8 +209,6 @@ namespace AT2::UI
 		const AABB2d& GetObservingZone() const { return m_observingZone; }
 
 		void DirtyCurves() { m_boundsShouldBeRecalculated = true; }
-
-		void Accept(Visitor& visitor) override { visitor.Visit(*this); }
 
 	protected:
 		Plot(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
@@ -220,36 +219,6 @@ namespace AT2::UI
 		std::map<std::string, CurveData> m_curvesData;
 		bool m_boundsShouldBeRecalculated = true;
 		AABB2d m_allBounds, m_observingZone;
-	};
-
-
-
-	class UiVisitor : public Visitor
-	{
-	public:
-		void Visit(Node& node) override
-		{
-		}
-		void Visit(Group& node) override
-		{
-			TraverseChildren(node);
-		}
-		void Visit(StackPanel& node) override
-		{
-			TraverseChildren(node);
-		}
-		void Visit(Button& node) override
-		{
-		}
-		void Visit(Plot& node) override
-		{
-		}
-
-	protected:
-		void TraverseChildren(Group& group)
-		{
-			group.ForEachChild([this](std::shared_ptr<Node>& nodePtr) {nodePtr->Accept(*this); });
-		}
 	};
 
 }

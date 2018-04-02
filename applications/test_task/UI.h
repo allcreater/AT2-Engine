@@ -21,6 +21,7 @@ namespace AT2::UI
 	protected:
 		void PrepareData(const std::shared_ptr<IRenderer>& renderer);
 		void Init(const std::shared_ptr<IRenderer>& renderer);
+		void UpdateCanvasGeometry(const AABB2d& observingRange);
 
 	private:
 		std::weak_ptr<Plot> m_Control;

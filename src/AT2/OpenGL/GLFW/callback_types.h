@@ -6,7 +6,10 @@
 class MousePos
 {
 public:
+	MousePos() = default;
 	MousePos(const glm::vec2& pos, const glm::vec2& previousPos) : m_pos(pos), m_prevPos(previousPos) {}
+	MousePos(const MousePos&) = default;
+	MousePos& operator=(const MousePos&) = default;
 
 	const glm::vec2& getPos() const			{ return m_pos; }
 	glm::vec2 getDeltaPos() const			{ return m_pos - m_prevPos; }

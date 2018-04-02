@@ -6,7 +6,7 @@
 using namespace AT2::UI;
 
 //TODO: unit tests on AABB and probably this
-const AABB2d & AT2::UI::Plot::CurveData::GetCurveBounds()
+const AABB2d & AT2::UI::Plot::CurveData::GetCurveBounds() const
 {
 	if (m_rangeNeedsUpdate)
 	{
@@ -31,7 +31,7 @@ const AABB2d & AT2::UI::Plot::CurveData::GetCurveBounds()
 
 void AT2::UI::Plot::CurveData::Dirty() noexcept
 {
-	m_dirtyFlag = true;
+	m_dataInvalidatedFlag = true;
 	m_rangeNeedsUpdate = true;
 	m_aabb.MaxBound.y = m_aabb.MinBound.y = 0.0f;
 
@@ -42,12 +42,12 @@ void AT2::UI::Plot::CurveData::Dirty() noexcept
 }
 
 
-size_t Plot::EnumerateCurves(std::function<void(const std::string_view, const std::vector<float>&, bool, std::pair<float, float>)> fn)
+size_t Plot::EnumerateCurves(std::function<bool(const std::string_view, const CurveData&, bool)> fn)
 {
 	size_t counter = 0;
-	std::for_each(m_curvesData.begin(), m_curvesData.end(), [&](decltype(m_curvesData)::value_type& x) {
-		fn(x.first, x.second.Data, x.second.m_dirtyFlag, std::make_pair(x.second.m_aabb.MinBound.x, x.second.m_aabb.MaxBound.x));
-		x.second.m_dirtyFlag = false;  //TODO: remove govnocode!!!
+	std::for_each(m_curvesData.begin(), m_curvesData.end(), [&](decltype(m_curvesData)::value_type& x) 
+	{
+		x.second.m_dataInvalidatedFlag &= !fn(x.first, x.second, x.second.m_dataInvalidatedFlag); //invalidation flag could be resetted, but not setted
 		counter++; 
 	});
 

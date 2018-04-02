@@ -54,6 +54,7 @@ public:
     std::function<void(const MousePos&)> MouseMoveCallback;
     std::function<void(int)> MouseDownCallback;
     std::function<void(int)> MouseUpCallback;
+    std::function<void(const glm::vec2)> MouseScrollCallback;
 
 protected:
     GLFW_WRAPPER_VIRTUAL void OnInitialize() { if (InitializeCallback != nullptr) InitializeCallback(); }
@@ -81,6 +82,7 @@ protected:
     }
     GLFW_WRAPPER_VIRTUAL void OnMouseDown(int button) const { if (MouseDownCallback != nullptr) MouseDownCallback(button); }
     GLFW_WRAPPER_VIRTUAL void OnMouseUp(int button) const { if (MouseUpCallback != nullptr) MouseUpCallback(button); }
+    GLFW_WRAPPER_VIRTUAL void OnMouseScroll(const glm::vec2& scrollDirection) const { if (MouseScrollCallback) MouseScrollCallback(scrollDirection); }
 
     void Render();
 

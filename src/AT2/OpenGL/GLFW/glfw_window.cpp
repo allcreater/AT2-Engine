@@ -159,6 +159,10 @@ void GlfwWindow::SetupCallbacks()
         wnd->OnWindowRefreshing();
         wnd->Render();
     });
+
+    glfwSetScrollCallback(m_window, [](GLFWwindow* window, double xoffset, double yoffset) {
+        GlfwWindow::FromNativeWindow(window)->OnMouseScroll(glm::vec2(xoffset, yoffset));
+    });
     
 }
 

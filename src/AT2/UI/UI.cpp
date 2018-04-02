@@ -79,10 +79,48 @@ bool Group::RemoveChild(const std::shared_ptr<Node>& child)
 	return numDeleted > 0;
 }
 
-void Group::ForEachChild(std::function<void(std::shared_ptr<Node>&)> func)
+void Group::ForEachChild(std::function<void(Node&)> func)
 {
 	for (auto child : m_Children)
+		func(*child);
+}
+
+//void Group::TraverseDepthFirst(std::function<void(Node&)> func)
+//{
+//	for (auto child : m_Children)
+//		child->TraverseDepthFirst(func);
+//
+//	func(*this);
+//}
+//void Group::TraverseBreadthFirst(std::function<void(Node&)> func)
+//{
+//	func(*this);
+//
+//	for (auto child : m_Children)
+//		child->TraverseDepthFirst(func);
+//}
+
+void Group::TraverseDepthFirst(std::function<void(std::shared_ptr<Node>&)> func)
+{
+	for (auto child : m_Children)
+	{
+		child->TraverseDepthFirst(func);
 		func(child);
+	}
+	
+	if (AT2::Utils::is_uninitialized(m_Parent))
+		func(std::shared_ptr<Node>(this->shared_from_this()));
+}
+void Group::TraverseBreadthFirst(std::function<void(std::shared_ptr<Node>&)> func)
+{
+	if (AT2::Utils::is_uninitialized(m_Parent))
+		func(std::shared_ptr<Node>(this->shared_from_this())); //yes, such a spike, but it seems there is no another way (except Node - ancestor from enable_shared_from_this() with another issues)
+
+	for (auto child : m_Children)
+	{
+		func(child);
+		child->TraverseDepthFirst(func);
+	}
 }
 
 //
