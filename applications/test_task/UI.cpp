@@ -178,7 +178,7 @@ void UiInputHandler::OnMouseMove(const MousePos& mousePos)
 		{
 			if (auto& vector = m_mouseDownOnControl[0]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
 				if (EventClicked)
-					eventCatched |= EventMouseDrag(node, mousePos.getDeltaPos());
+					eventCatched |= EventMouseDrag(node, m_mousePos);
 		}
 	});
 
@@ -219,7 +219,7 @@ void UiInputHandler::OnMouseScroll(const glm::vec2& scrollDir)
 		if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
 		{
 			if (EventScrolled)
-				eventCatched |= EventScrolled(node, scrollDir);
+				eventCatched |= EventScrolled(node, m_mousePos, scrollDir);
 
 			eventCatched = true;
 		}
@@ -228,6 +228,5 @@ void UiInputHandler::OnMouseScroll(const glm::vec2& scrollDir)
 
 bool UiInputHandler::isPointInsideNode(std::shared_ptr<Node>& node, const glm::vec2& pos)
 {
-	auto aabb = AABB2d(node->GetCanvasData().Position, node->GetCanvasData().Position + glm::ivec2(node->GetCanvasData().MeasuredSize));
-	return aabb.IsPointInside(pos);
+	return node->GetScreenPosition().IsPointInside(pos);
 }

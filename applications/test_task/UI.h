@@ -50,8 +50,8 @@ namespace AT2::UI
 
 	public:
 		std::function<bool(std::shared_ptr<Node>& node)> EventClicked;
-		std::function<bool(std::shared_ptr<Node>& node, const glm::vec2& dragDir)> EventMouseDrag;
-		std::function<bool(std::shared_ptr<Node>& node, const glm::vec2& scrollDir)> EventScrolled;
+		std::function<bool(std::shared_ptr<Node>& node, const MousePos& mousePos)> EventMouseDrag;
+		std::function<bool(std::shared_ptr<Node>& node, const MousePos& mousePos, const glm::vec2& scrollDir)> EventScrolled;
 
 		void OnMouseMove(const MousePos& mousePos);
 		void OnMouseDown(int key);

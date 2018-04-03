@@ -52,7 +52,8 @@ namespace AT2::UI
 
 		void RenderNode(std::shared_ptr<Node>& node)
 		{
-			glViewport(node->GetCanvasData().Position.x, m_windowSize.y - node->GetCanvasData().Position.y - node->GetCanvasData().MeasuredSize.y, node->GetCanvasData().MeasuredSize.x, node->GetCanvasData().MeasuredSize.y);
+			auto aabb = node->GetScreenPosition();
+			glViewport(aabb.MinBound.x, m_windowSize.y - aabb.MinBound.y - aabb.GetHeight(), aabb.GetWidth(), aabb.GetHeight());
 
 			m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
 			m_quadDrawable->Draw(m_renderer.lock());
@@ -224,23 +225,35 @@ private:
 			return false;
 		};
 
-		m_uiInputHandler->EventScrolled = [](std::shared_ptr<Node>& node, const glm::vec2& scrollDir)
+		m_uiInputHandler->EventScrolled = [](std::shared_ptr<Node>& node, const MousePos& mousePos, const glm::vec2& scrollDir)
 		{
 			if (auto plot = std::dynamic_pointer_cast<Plot>(node); node->GetName() == "Plot")
 			{
-				auto oldBounds = plot->GetObservingZone();
+				auto plotBounds = plot->GetObservingZone();
 				float scale = 1.0f + scrollDir.y*0.1f;
-				plot->SetObservingZone(AABB2d(oldBounds.MinBound*scale, oldBounds.MaxBound*scale));
+
+				//TODO: implement general way for UI coordinate system transitions
+				//dirty code :(
+				auto scrAABB = plot->GetScreenPosition();
+				glm::vec2 localMousePos = (mousePos.getPos() - scrAABB.MinBound) * plotBounds.GetSize() / scrAABB.GetSize() + plotBounds.MinBound;
+
+				plot->SetObservingZone(AABB2d((plotBounds.MinBound - localMousePos)*scale + localMousePos, (plotBounds.MaxBound - localMousePos)*scale + localMousePos));
 				return true;
 			}
 			return false;
 		};
 
-		m_uiInputHandler->EventMouseDrag = [](std::shared_ptr<Node>& node, const glm::vec2& delta)
+		m_uiInputHandler->EventMouseDrag = [](std::shared_ptr<Node>& node, const MousePos& mousePos)
 		{
 			if (auto plot = std::dynamic_pointer_cast<Plot>(node); node->GetName() == "Plot")
 			{
-				std::cout << std::string(node->GetName()) << " dragged" << std::endl;
+				auto plotBounds = plot->GetObservingZone();
+				auto scrAABB = plot->GetScreenPosition();
+				glm::vec2 localMouseDelta = mousePos.getDeltaPos() * plotBounds.GetSize() / scrAABB.GetSize();
+
+				plot->SetObservingZone(AABB2d(plotBounds.MinBound - localMouseDelta, plotBounds.MaxBound - localMouseDelta));
+				
+
 				return true;
 			}
 			return false;

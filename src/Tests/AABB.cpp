@@ -55,3 +55,30 @@ TEST(AABB_2d, IsPointInsideTest)
 
 	ASSERT_TRUE(aabb.IsPointInside(glm::vec2(0, 0)));
 }
+
+TEST(AABB_2d, IsWidthAndHeightCorrect)
+{
+	const AABB2d aabb1(glm::vec2(-10, -20), glm::vec2(10, 10));
+	const AABB2d aabb2(glm::vec2(-20, -20), glm::vec2(-10, -10));
+	const AABB2d aabb3(glm::vec2(10, 10),   glm::vec2(30, 50));
+
+	ASSERT_EQ(aabb1.GetWidth(), 20.0f);
+	ASSERT_EQ(aabb1.GetHeight(), 30.0f);
+
+	ASSERT_EQ(aabb2.GetWidth(), 10.0f);
+	ASSERT_EQ(aabb2.GetHeight(), 10.0f);
+
+	ASSERT_EQ(aabb3.GetWidth(), 20.0f);
+	ASSERT_EQ(aabb3.GetHeight(), 40.0f);
+}
+
+TEST(AABB_2d, IsIntersectionWorksCorrectly)
+{
+	const AABB2d aabb1(glm::vec2(-10, -20), glm::vec2(10, 20));
+
+	const AABB2d aabb2(glm::vec2(0, -30), glm::vec2(10, -10));
+
+	ASSERT_EQ(aabb1.GetIntersection(AABB2d(aabb1)), aabb1);
+
+	ASSERT_EQ(aabb1.GetIntersection(aabb2), AABB2d(glm::vec2(0, -20), glm::vec2(10, -10)));
+}

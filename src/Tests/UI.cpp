@@ -10,9 +10,9 @@ const glm::uvec2 minimalTestTreeSize(100, 200);
 std::shared_ptr<StackPanel> CreateTestTree()
 {
 	auto button2 = Button::Make("Button2");
-	return StackPanel::Make("StackPanel1", StackPanel::Alignment::Horizontal, 
+	return StackPanel::Make("StackPanel1", Orientation::Horizontal, 
 		{
-			StackPanel::Make("StackPanel2", StackPanel::Alignment::Vertical,
+			StackPanel::Make("StackPanel2", Orientation::Vertical,
 			{
 				Button::Make("Button1", minimalTestTreeSize), //the element with fixed size should restrict all tree size
 			}),

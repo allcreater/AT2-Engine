@@ -18,6 +18,7 @@ namespace AT2::UI
 {
 	struct CanvasData
 	{
+		//TODO: replace to AABB
 		glm::ivec2 Position; //top left point of the UI AABB
 		glm::uvec2 MinimalSize; //minimal measured size
 		glm::uvec2 MeasuredSize;
@@ -68,6 +69,8 @@ namespace AT2::UI
 
 		CanvasData& GetCanvasData()									{ return m_CanvasData; }
 		const CanvasData& GetCanvasData() const						{ return m_CanvasData; }
+
+		AABB2d GetScreenPosition() const							{ return AABB2d(m_CanvasData.Position, m_CanvasData.Position + glm::ivec2(m_CanvasData.MeasuredSize)); }
 
 		void SetNodeRenderer(std::shared_ptr<IDrawable> drawable)	{ m_Drawable = drawable; }
 		std::weak_ptr<IDrawable> GetNodeRenderer() const			{ return m_Drawable; }
@@ -156,7 +159,7 @@ namespace AT2::UI
 		
 	};
 
-	//TODO: is it possible to move enable_from_this to Node?
+	//TODO: is it possible to move enable_from_this to Node without spikes?
 	class Plot : public Node, public std::enable_shared_from_this<Plot> 
 	{
 	public:
@@ -199,13 +202,12 @@ namespace AT2::UI
 		~Plot() { std::cout << "Plot" << std::endl; }
 
 	public:
-		//TODO: encapsulate function parameters at special class
 		size_t EnumerateCurves(std::function<bool(const std::string_view name, const CurveData& data, bool invalidated)>);
 		CurveData& GetOrCreateCurve (const std::string& curveName);
 
 		const AABB2d& GetAABB();
 
-		void SetObservingZone(const AABB2d& zone) { m_observingZone = zone; }
+		void SetObservingZone(const AABB2d& zone);
 		const AABB2d& GetObservingZone() const { return m_observingZone; }
 
 		void DirtyCurves() { m_boundsShouldBeRecalculated = true; }

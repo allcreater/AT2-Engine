@@ -71,6 +71,12 @@ const AABB2d & AT2::UI::Plot::GetAABB()
 	return m_allBounds;
 }
 
+void Plot::SetObservingZone(const AABB2d & zone)
+{
+	if (!GetAABB().GetIntersection(zone).Empty())
+		m_observingZone = zone;
+}
+
 void Plot::ComputeAABB()
 {
 	m_allBounds.Reset();

@@ -50,6 +50,21 @@ public:
 		return (point.x >= MinBound.x && point.y >= MinBound.y && point.x <= MaxBound.x && point.y <= MaxBound.y);
 	}
 
+	float GetWidth() const noexcept
+	{
+		return MaxBound.x - MinBound.x;
+	}
+
+	float GetHeight() const noexcept
+	{
+		return MaxBound.y - MinBound.y;
+	}
+
+	glm::vec2 GetSize() const noexcept
+	{
+		return MaxBound - MinBound;
+	}
+
 	void Extend(const glm::vec2& point) noexcept
 	{
 		MinBound.x = glm::min(MinBound.x, point.x);
@@ -68,10 +83,28 @@ public:
 		MaxBound.y = glm::max(MaxBound.y, other.MaxBound.y);
 	}
 
+	void IntersectWith(const AABB2d& other)
+	{
+		assert(other.Valid());
+
+		MinBound.x = glm::max(MinBound.x, other.MinBound.x);
+		MinBound.y = glm::max(MinBound.y, other.MinBound.y);
+		MaxBound.x = glm::min(MaxBound.x, other.MaxBound.x);
+		MaxBound.y = glm::min(MaxBound.y, other.MaxBound.y);
+	}
+
+
 	AABB2d GetUnion(const AABB2d& other) const
 	{
 		AABB2d aabb(*this);
 		aabb.UniteWith(other);
+		return aabb;
+	}
+
+	AABB2d GetIntersection(const AABB2d& other) const
+	{
+		AABB2d aabb(*this);
+		aabb.IntersectWith(other);
 		return aabb;
 	}
 
