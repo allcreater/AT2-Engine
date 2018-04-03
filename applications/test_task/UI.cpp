@@ -36,12 +36,13 @@ public:
 		if (m_VAO == nullptr)
 			Init(renderer);
 
-		m_VAO->GetVertexBuffer(0)->SetData(data.Data.size() * sizeof(float), data.Data.data()); //data.data.data :)
+		const auto& vector = data.GetData();
+		m_VAO->GetVertexBuffer(0)->SetData(vector.size() * sizeof(float), vector.data());
 
-		m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(GlDrawPrimitiveType::LineStrip, 0, data.Data.size());
+		m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(GlDrawPrimitiveType::LineStrip, 0, vector.size());
 
 		m_uniforms->SetUniform("u_BoundsX", glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
-		m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)data.Data.size());
+		m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)vector.size());
 		m_uniforms->SetUniform("u_Color", data.GetColor());
 	}
 
@@ -163,70 +164,33 @@ void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
 }
 
 
-//
-// UiInputHandler
-//
-
-void UiInputHandler::OnMouseMove(const MousePos& mousePos)
+WindowRendererSharedInfo::WindowRendererSharedInfo(const std::shared_ptr<IRenderer>& renderer)
 {
-	m_mousePos = mousePos;
+	glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
+	auto& rf = renderer->GetResourceFactory();
 
-	bool eventCatched = false;
+	m_VAO = rf.CreateVertexArray();
+	m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, 4 * sizeof(glm::vec3), positions));
+	m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(AT2::GlDrawPrimitiveType::TriangleFan, 0, 4);
 
-	m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
-		if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
-		{
-			if (auto& vector = m_mouseDownOnControl[0]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
-				if (EventClicked)
-					eventCatched |= EventMouseDrag(node, m_mousePos);
-		}
-	});
-
-}
-
-void UiInputHandler::OnMouseDown(int key)
-{
-	m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
-		if (isPointInsideNode(node, m_mousePos.getPos()))
-			m_mouseDownOnControl[key].push_back(node);
-	});
-
-}
-void UiInputHandler::OnMouseUp(int key)
-{
-	bool eventCatched = false;
-
-	if (key == 0)
+	m_Shader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
 	{
-		m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
-			if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
-			{
-				if (auto& vector = m_mouseDownOnControl[key]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
-					if (EventClicked)
-						eventCatched |= EventClicked(node);
-			}
-		});
-	}
-
-	m_mouseDownOnControl[key].clear();
-}
-
-void UiInputHandler::OnMouseScroll(const glm::vec2& scrollDir)
-{
-	bool eventCatched = false;
-
-	m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
-		if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
-		{
-			if (EventScrolled)
-				eventCatched |= EventScrolled(node, m_mousePos, scrollDir);
-
-			eventCatched = true;
-		}
+		R"(resources/shaders/window.vs.glsl)",
+		R"(resources/shaders/window.fs.glsl)"
 	});
 }
 
-bool UiInputHandler::isPointInsideNode(std::shared_ptr<Node>& node, const glm::vec2& pos)
+void AT2::UI::WindowRenderer::Draw(const std::shared_ptr<IRenderer>& renderer)
 {
-	return node->GetScreenPosition().IsPointInside(pos);
+	if (m_uniforms == nullptr)
+		m_uniforms = m_SharedInfo->m_Shader->CreateAssociatedUniformStorage();
+
+	auto& stateManager = renderer->GetStateManager();
+	stateManager.BindShader(m_SharedInfo->m_Shader);
+	stateManager.BindVertexArray(m_SharedInfo->m_VAO);
+
+	m_uniforms->SetUniform("u_Color", glm::vec4(1.0f));
+	m_uniforms->Bind();
+
+	m_SharedInfo->m_DrawPrimitive->Draw();
 }

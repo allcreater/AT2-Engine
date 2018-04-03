@@ -2,60 +2,40 @@
 #define UI_INPUT_VISITOR_HEADER
 
 #include "UI.h"
+#include "../OpenGL/GLFW/glfw_window.h" //TODO: detach type MousePos from GLFW
 
 namespace AT2::UI
 {
 
-//	class MouseClickVisitor : public UiVisitor
-//	{
-//	public:
-//		MouseClickVisitor(const glm::vec2& mousePos) : m_mousePos(mousePos)
-//		{
-//		}
-//
-//		void Visit(Node& node) override
-//		{
-//			UiVisitor::Visit(node);
-//		}
-//		void Visit(Group& node) override
-//		{
-//			UiVisitor::Visit(node);
-//		}
-//		void Visit(StackPanel& node) override
-//		{
-//			UiVisitor::Visit(node);
-//		}
-//		void Visit(Button& node) override
-//		{
-//			UiVisitor::Visit(node);
-//			Work(node);
-//		}
-//		void Visit(Plot& node) override
-//		{
-//			//
-//			//glViewport(node.GetCanvasData().Position.x, node.GetCanvasData().Position.y, node.GetCanvasData().MeasuredSize.x, node.GetCanvasData().MeasuredSize.y);
-//
-//			UiVisitor::Visit(node);
-//			Work(node);
-//		}
-//
-//		void Work(Node& node)
-//		{
-//			auto aabb = AABB2d(node.GetCanvasData().Position, node.GetCanvasData().Position + glm::ivec2(node.GetCanvasData().MeasuredSize));
-//			if (!m_eventCatched && aabb.IsPointInside(m_mousePos))
-//			{
-//				if (node.EventClicked)
-//					node.EventClicked(node);
-//
-//				m_eventCatched = true;
-//			}
-//		}
-//
-//	private:
-//		bool m_eventCatched = false;
-//		glm::vec2 m_mousePos;
-//	};
-//
+	//determines some UI events and rise callbacks
+	class UiInputHandler
+	{
+	public:
+		UiInputHandler(std::shared_ptr<AT2::UI::Node> rootNode) : m_rootNode(rootNode)
+		{
+
+		}
+
+	public:
+		std::function<bool(std::shared_ptr<Node>& node)> EventClicked;
+		std::function<bool(std::shared_ptr<Node>& node, const MousePos& mousePos)> EventMouseDrag;
+		std::function<bool(std::shared_ptr<Node>& node, const MousePos& mousePos, const glm::vec2& scrollDir)> EventScrolled;
+
+		void OnMouseMove(const MousePos& mousePos);
+		void OnMouseDown(int key);
+		void OnMouseUp(int key);
+
+		void OnMouseScroll(const glm::vec2& scrollDir);
+
+	protected:
+		bool isPointInsideNode(std::shared_ptr<Node>& node, const glm::vec2& pos);
+
+	private:
+		std::shared_ptr<Node> m_rootNode;
+		MousePos m_mousePos;
+		std::map<int, std::vector<std::weak_ptr<Node>>> m_mouseDownOnControl; //yes, it's an overkill, but it's a simplest solution
+	};
+
 }
 
 #endif

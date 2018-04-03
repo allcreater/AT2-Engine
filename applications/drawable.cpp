@@ -91,5 +91,11 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeFullscreenQuadDrawable
 	drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, 6, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
 	drawable->VertexArray = vao;
 
+	auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+		{
+			R"(resources/shaders/window.vs.glsl)",
+			R"(resources/shaders/window.fs.glsl)"
+		});
+
 	return drawable;
 }

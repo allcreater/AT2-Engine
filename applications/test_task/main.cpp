@@ -22,18 +22,19 @@ namespace AT2::UI
 		{
 			auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
 				{
-					"resources//shaders//window.vs.glsl",
-					"resources//shaders//window.fs.glsl"
+					R"(resources/shaders/background.vs.glsl)",
+					R"(resources/shaders/background.fs.glsl)"
 				});
 
+			auto texture = renderer->GetResourceFactory().LoadTexture(R"(resources/helix_nebula.jpg)");
 
 			m_quadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(renderer);
 			m_quadDrawable->Shader = postprocessShader;
-			//m_quadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
+			m_quadDrawable->Textures = { texture };
 			{
 				auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
 				//uniformStorage->SetUniform("u_phase", Phase);
-				//uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+				uniformStorage->SetUniform("u_backgroundTexture", texture);
 				//uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
 				//uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
 				m_quadDrawable->UniformBuffer = uniformStorage;
@@ -42,6 +43,9 @@ namespace AT2::UI
 
 		void Draw()
 		{
+			glViewport(0, 0, m_windowSize.x, m_windowSize.y);
+			m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4(1.0f));
+			m_quadDrawable->Draw(m_renderer.lock());
 
 			m_uiRoot->TraverseBreadthFirst(std::bind(&UiRenderer::RenderNode, this, std::placeholders::_1));
 		}
@@ -55,8 +59,8 @@ namespace AT2::UI
 			auto aabb = node->GetScreenPosition();
 			glViewport(aabb.MinBound.x, m_windowSize.y - aabb.MinBound.y - aabb.GetHeight(), aabb.GetWidth(), aabb.GetHeight());
 
-			m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
-			m_quadDrawable->Draw(m_renderer.lock());
+			//m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
+			//m_quadDrawable->Draw(m_renderer.lock());
 
 			if (auto nr = node->GetNodeRenderer().lock())
 				nr->Draw(m_renderer.lock());
@@ -144,13 +148,13 @@ public:
 private:
 	std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_t numHarmonics = 10)
 	{
-		std::mt19937 randGenerator;
-		std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.1f);
-		std::uniform_real_distribution<float> phaseDistribution(0.0f, pi * 2);
+		static std::mt19937 randGenerator;
+		std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.3f);
+		std::uniform_real_distribution<float> phaseDistribution(0.0f, float(pi * 2));
 		std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
 
 		std::vector<std::tuple<float, float, float>> harmonics(numHarmonics);
-		for (auto i = 0; i < harmonics.size(); ++i)
+		for (size_t i = 0; i < harmonics.size(); ++i)
 			harmonics[i] = std::make_tuple(frequencyDistribution(randGenerator), phaseDistribution(randGenerator), amplitudeDistribution(randGenerator));
 
 		std::vector<float> data(numPoints);
@@ -173,10 +177,12 @@ private:
 		using namespace std;
 		using namespace AT2::UI;
 
+		std::shared_ptr<Node> panel;
+
 		m_uiRoot = StackPanel::Make("MainPanel", Orientation::Horizontal,
 			{
 				m_plotNode = Plot::Make("Plot"),
-				StackPanel::Make("SidePanel", Orientation::Vertical,
+				panel = StackPanel::Make("SidePanel", Orientation::Vertical,
 					{
 						Button::Make("ButtonDatasetOne", glm::ivec2(200, 0)),
 						Button::Make("ButtonDatasetTwo", glm::ivec2(200, 0))
@@ -185,20 +191,19 @@ private:
 
 		{
 			auto &curve = m_plotNode->GetOrCreateCurve(DataSet1);
-			curve.Data = GenerateCurve(10000, 5.0);
-			curve.SetXRange(-5000, 5000);
+			curve.SetData(GenerateCurve(10000, 5.0, 10));
+			//curve.SetXRange(-5000, 5000);
 			curve.SetColor(glm::vec4(1.0, 0.0, 0.0, 1.0));
-			curve.Dirty();
 		}
 		{
 			auto& curve = m_plotNode->GetOrCreateCurve(DataSet2);
-			curve.Data = GenerateCurve(20000, 3.0);
-			curve.SetXRange(-10000, 10000);
+			curve.SetData(GenerateCurve(20000, 3.0, 40));
+			//curve.SetXRange(-10000, 10000);
 			curve.SetColor(glm::vec4(0.0, 0.0, 1.0, 1.0));
-			curve.Dirty();
 		}
 
 		m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
+		panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, std::make_shared<WindowRendererSharedInfo>(m_renderer)));
 
 		auto bounds = m_plotNode->GetAABB();
 		m_plotNode->SetObservingZone(AABB2d(glm::vec2(0.0, bounds.MinBound.y), glm::vec2(1000.0, bounds.MaxBound.y)));
@@ -237,7 +242,10 @@ private:
 				auto scrAABB = plot->GetScreenPosition();
 				glm::vec2 localMousePos = (mousePos.getPos() - scrAABB.MinBound) * plotBounds.GetSize() / scrAABB.GetSize() + plotBounds.MinBound;
 
-				plot->SetObservingZone(AABB2d((plotBounds.MinBound - localMousePos)*scale + localMousePos, (plotBounds.MaxBound - localMousePos)*scale + localMousePos));
+				auto desiredAABB = AABB2d((plotBounds.MinBound - localMousePos)*scale + localMousePos, (plotBounds.MaxBound - localMousePos)*scale + localMousePos);
+				if (desiredAABB.GetWidth() >= 200.0 && desiredAABB.GetWidth() <= 1000.0) //technical requirement :)
+					plot->SetObservingZone(desiredAABB);
+				
 				return true;
 			}
 			return false;
@@ -284,7 +292,8 @@ private:
 		m_renderer->ClearDepth(0);
 
 		for (auto& animation : m_animationsList)
-			animation->Animate(dt);
+			animation->Animate((float)dt);
+
 		m_animationsList.remove_if([](std::unique_ptr<IAnimation>& animation) {return animation->IsFinished(); });
 
 		m_uiRenderer->SetWindowSize(m_window.getWindowSize());

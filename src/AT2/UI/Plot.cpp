@@ -5,23 +5,37 @@
 
 using namespace AT2::UI;
 
+void Plot::CurveData::SetData(std::vector<float>&& data, bool autoRange) 
+{
+	m_data = std::move(data); 
+	Dirty();
+
+	if (autoRange)
+		SetXRange(0.0, m_data.size());
+}
+
+void Plot::CurveData::SetXRange(float startX, float endX) 
+{
+	m_aabb.MinBound.x = startX; m_aabb.MaxBound.x = endX;
+}
+
 //TODO: unit tests on AABB and probably this
-const AABB2d & AT2::UI::Plot::CurveData::GetCurveBounds() const
+const AABB2d & Plot::CurveData::GetCurveBounds() const
 {
 	if (m_rangeNeedsUpdate)
 	{
 		m_aabb.MaxBound.y = m_aabb.MinBound.y = 0.0f;
 		
-		if (Data.size() >= 2)
+		if (m_data.size() >= 2)
 		{
 			//could be optimised with raw array access but it will be computed lazy[right as me :) ] and only after data has changed
-			auto iteratorsPair = std::minmax_element(Data.begin(), Data.end());
+			auto iteratorsPair = std::minmax_element(m_data.begin(), m_data.end());
 			m_aabb.MinBound.y = *iteratorsPair.first;
 			m_aabb.MaxBound.y = *iteratorsPair.second;
 		}
-		else if (Data.size() == 1)
+		else if (m_data.size() == 1)
 		{
-			m_aabb.MaxBound.y = m_aabb.MinBound.y = Data.front();
+			m_aabb.MaxBound.y = m_aabb.MinBound.y = m_data.front();
 		}
 		m_rangeNeedsUpdate = false;
 	}

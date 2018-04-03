@@ -80,9 +80,6 @@ namespace AT2::UI
 
 		virtual void TraverseDepthFirst(std::function<void(std::shared_ptr<Node>&)> func) { }
 		virtual void TraverseBreadthFirst(std::function<void(std::shared_ptr<Node>&)> func) { }
-	public: //events
-		std::function<bool(const Node& node)> EventClicked;
-		std::function<bool(const Node& node)> EventMouseDrag;
 
 	protected:
 		Node(std::string_view name, const glm::uvec2& size) : m_Name(name), m_Size(size) {};
@@ -175,9 +172,10 @@ namespace AT2::UI
 			CurveData& operator=(const CurveData&) const = delete;
 
 		public:
-			std::vector<float> Data;
-			
-			void SetXRange(float startX, float endX) { m_aabb.MinBound.x = startX; m_aabb.MaxBound.x = endX; }
+			void SetData(std::vector<float>&& data, bool autoRange = true);
+			const std::vector<float>& GetData() const noexcept { return m_data; }
+
+			void SetXRange(float startX, float endX);
 			const AABB2d& GetCurveBounds() const;
 			void Dirty() noexcept;
 
@@ -185,6 +183,7 @@ namespace AT2::UI
 			const glm::vec4& GetColor() const { return m_Color; }
 
 		private:
+			std::vector<float> m_data;
 			bool m_dataInvalidatedFlag = true;
 
 			//the size recomputes lazily so could be treated as const

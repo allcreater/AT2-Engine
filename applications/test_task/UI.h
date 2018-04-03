@@ -1,11 +1,7 @@
 #ifndef RENDERABLE_UI_HEADER
 #define RENDERABLE_UI_HEADER
-//#include <AT2/UI/UI.h>
 
-#include <string_view>
-
-#include <AT2/OpenGL/GLFW/glfw_window.h>
-#include <AT2/UI/InputVisitor.h>
+#include <AT2/UI/InputHelper.h>
 #include "LinesHelper.h"
 
 namespace AT2::UI
@@ -39,33 +35,33 @@ namespace AT2::UI
 	};
 
 
-	//determines some UI events and rise callbacks
-	class UiInputHandler
+	struct WindowRendererSharedInfo
 	{
-	public:
-		UiInputHandler(std::shared_ptr<AT2::UI::Node> rootNode) : m_rootNode(rootNode)
-		{
+		WindowRendererSharedInfo(const std::shared_ptr<IRenderer>& renderer);
 
-		}
-
-	public:
-		std::function<bool(std::shared_ptr<Node>& node)> EventClicked;
-		std::function<bool(std::shared_ptr<Node>& node, const MousePos& mousePos)> EventMouseDrag;
-		std::function<bool(std::shared_ptr<Node>& node, const MousePos& mousePos, const glm::vec2& scrollDir)> EventScrolled;
-
-		void OnMouseMove(const MousePos& mousePos);
-		void OnMouseDown(int key);
-		void OnMouseUp(int key);
-
-		void OnMouseScroll(const glm::vec2& scrollDir);
-
-	protected:
-		bool isPointInsideNode(std::shared_ptr<Node>& node, const glm::vec2& pos);
+		friend struct WindowRenderer;
 
 	private:
-		std::shared_ptr<Node> m_rootNode;
-		MousePos m_mousePos;
-		std::map<int, std::vector<std::weak_ptr<Node>>> m_mouseDownOnControl; //yes, it's an overkill, but it's a simplest solution
+		std::shared_ptr<IVertexArray> m_VAO;
+		std::shared_ptr<IShaderProgram> m_Shader;
+		std::unique_ptr<IDrawPrimitive> m_DrawPrimitive;
 	};
+
+	struct WindowRenderer : public IDrawable
+	{
+		WindowRenderer(std::weak_ptr<Node> node, std::shared_ptr<WindowRendererSharedInfo> sharedInfo) : m_Control(node), m_SharedInfo(sharedInfo)
+		{
+		}
+
+		void Draw(const std::shared_ptr<IRenderer>& renderer) override;
+
+	private:
+		std::weak_ptr<Node> m_Control;
+		std::shared_ptr<WindowRendererSharedInfo> m_SharedInfo;
+		std::shared_ptr<IUniformContainer> m_uniforms;
+		
+	};
+
+
 }
 #endif
