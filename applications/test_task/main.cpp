@@ -6,7 +6,6 @@
 #include <AT2/OpenGl/GlFrameBuffer.h>
 #include <AT2/OpenGl/GlUniformContainer.h>
 #include <AT2/OpenGl/GlTimerQuery.h>
-#include <AT2/OpenGL/GLFW/glfw_window.h>
 
 #include "../drawable.h"
 
@@ -76,90 +75,54 @@ namespace AT2::UI
 		glm::uvec2 m_windowSize;
 	};
 
-	class UiInputHandler
-	{
-	public:
-		UiInputHandler(std::shared_ptr<AT2::UI::Node> rootNode) : m_rootNode(rootNode)
-		{
-
-		}
-
-	public:
-		std::function<bool(std::shared_ptr<Node>& node)> EventClicked;
-		std::function<bool(std::shared_ptr<Node>& node, const glm::vec2& dragDir)> EventMouseDrag;
-		std::function<bool(std::shared_ptr<Node>& node, const glm::vec2& scrollDir)> EventScrolled;
-
-		void OnMouseMove(const MousePos& mousePos)
-		{
-			m_mousePos = mousePos;
-
-			bool eventCatched = false;
-
-			m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
-				if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
-				{
-					if (auto& vector = m_mouseDownOnControl[0]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
-						if (EventClicked)
-							eventCatched |= EventMouseDrag(node, mousePos.getDeltaPos());
-				}
-			});
-
-		}
-
-		void OnMouseDown(int key)
-		{
-			m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
-				if (isPointInsideNode(node, m_mousePos.getPos()))
-					m_mouseDownOnControl[key].push_back(node);
-			});
-
-		}
-		void OnMouseUp(int key)
-		{
-			bool eventCatched = false;
-
-			if (key == 0)
-			{
-				m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
-					if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
-					{
-						if (auto& vector = m_mouseDownOnControl[key]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
-							if (EventClicked)
-								eventCatched |= EventClicked(node);
-					}
-				});
-			}
-
-			m_mouseDownOnControl[key].clear();
-		}
-
-		void OnMouseScroll(const glm::vec2& scrollDir)
-		{
-			bool eventCatched = false;
-
-			m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
-				if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
-				{
-					if (EventScrolled)
-						eventCatched |= EventScrolled(node, scrollDir);
-
-					eventCatched = true;
-				}
-			});
-		}
-
-		bool isPointInsideNode(std::shared_ptr<Node>& node, const glm::vec2& pos)
-		{
-			auto aabb = AABB2d(node->GetCanvasData().Position, node->GetCanvasData().Position + glm::ivec2(node->GetCanvasData().MeasuredSize));
-			return aabb.IsPointInside(pos);
-		}
-
-	private:
-		std::shared_ptr<Node> m_rootNode;
-		MousePos m_mousePos;
-		std::map<int, std::vector<std::weak_ptr<Node>>> m_mouseDownOnControl; //yes, it's an overkill, but it's a simplest solution
-	};
 }
+
+struct IAnimation
+{
+	virtual void Animate(float dt) = 0;
+	virtual bool IsFinished() = 0;
+
+	virtual ~IAnimation() = default;
+};
+
+struct PlotCurveSwitchingAnimation : public IAnimation
+{
+	PlotCurveSwitchingAnimation(float duration, std::weak_ptr<AT2::UI::Plot> plotNode, std::string_view hidingCurveName, std::string_view appearingCurveName) : 
+		m_Duration(duration), 
+		m_plotNode(plotNode),
+		m_hidingCurveName(hidingCurveName),
+		m_appearingCurveName(appearingCurveName)
+	{
+	}
+
+	void Animate(float dt) override
+	{
+		float t = m_elapsedTime / m_Duration;
+
+		if (auto plot = m_plotNode.lock())
+		{
+			auto& hidingCurve = plot->GetOrCreateCurve(m_hidingCurveName);
+			auto& appearingCurve = plot->GetOrCreateCurve(m_appearingCurveName);
+
+			hidingCurve.SetColor(glm::vec4(hidingCurve.GetColor().rgb, 1.0f - t));
+			appearingCurve.SetColor(glm::vec4(appearingCurve.GetColor().rgb, t));
+		}
+
+		m_elapsedTime += dt;
+	}
+
+	bool IsFinished() override
+	{
+		return m_elapsedTime >= m_Duration;
+	}
+
+	~PlotCurveSwitchingAnimation() = default;
+
+private:
+	std::weak_ptr<AT2::UI::Plot> m_plotNode;
+	float m_Duration, m_elapsedTime = 0.0f;
+	std::string m_hidingCurveName, m_appearingCurveName;
+};
 
 class App
 {
@@ -178,17 +141,26 @@ public:
 	}
 
 private:
-	std::vector<float> GenerateCurve(size_t numPoints, float amplitude)
+	std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_t numHarmonics = 10)
 	{
 		std::mt19937 randGenerator;
-		std::uniform_real_distribution<float> distribution(0.001f, 0.01f);
-		auto rnd = std::bind(distribution, randGenerator);
+		std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.1f);
+		std::uniform_real_distribution<float> phaseDistribution(0.0f, pi * 2);
+		std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
+
+		std::vector<std::tuple<float, float, float>> harmonics(numHarmonics);
+		for (auto i = 0; i < harmonics.size(); ++i)
+			harmonics[i] = std::make_tuple(frequencyDistribution(randGenerator), phaseDistribution(randGenerator), amplitudeDistribution(randGenerator));
 
 		std::vector<float> data(numPoints);
-		float freq = rnd();
 		for (size_t i = 0; i < numPoints; ++i)
 		{
-			data[i] = sin(i * freq) * amplitude;
+			data[i] = 0.0f;
+			for (size_t j = 0; j < harmonics.size(); ++j)
+			{
+				const auto& [freq, phase, amplitude] = harmonics[j];
+				data[i] += sin(i * freq + phase) * amplitude;
+			}
 		}
 
 
@@ -200,11 +172,9 @@ private:
 		using namespace std;
 		using namespace AT2::UI;
 
-		std::shared_ptr<Plot> plot;
-
 		m_uiRoot = StackPanel::Make("MainPanel", Orientation::Horizontal,
 			{
-				plot = Plot::Make("Plot"),
+				m_plotNode = Plot::Make("Plot"),
 				StackPanel::Make("SidePanel", Orientation::Vertical,
 					{
 						Button::Make("ButtonDatasetOne", glm::ivec2(200, 0)),
@@ -213,24 +183,24 @@ private:
 			});
 
 		{
-			auto &curve = plot->GetOrCreateCurve("DataSet #1");
+			auto &curve = m_plotNode->GetOrCreateCurve(DataSet1);
 			curve.Data = GenerateCurve(10000, 5.0);
 			curve.SetXRange(-5000, 5000);
 			curve.SetColor(glm::vec4(1.0, 0.0, 0.0, 1.0));
 			curve.Dirty();
 		}
 		{
-			auto& curve = plot->GetOrCreateCurve("DataSet #2");
+			auto& curve = m_plotNode->GetOrCreateCurve(DataSet2);
 			curve.Data = GenerateCurve(20000, 3.0);
 			curve.SetXRange(-10000, 10000);
 			curve.SetColor(glm::vec4(0.0, 0.0, 1.0, 1.0));
 			curve.Dirty();
 		}
 
-		plot->SetNodeRenderer(std::make_shared<PlotRenderer>(plot));
+		m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
 
-		auto bounds = plot->GetAABB();
-		plot->SetObservingZone(bounds);
+		auto bounds = m_plotNode->GetAABB();
+		m_plotNode->SetObservingZone(AABB2d(glm::vec2(0.0, bounds.MinBound.y), glm::vec2(1000.0, bounds.MaxBound.y)));
 
 
 		m_uiRoot->ComputeMinimalSize();
@@ -239,10 +209,19 @@ private:
 		m_uiRenderer = std::make_unique<UiRenderer>(m_renderer, m_uiRoot);
 		m_uiInputHandler = std::make_unique<UiInputHandler>(m_uiRoot);
 
-		m_uiInputHandler->EventClicked = [](std::shared_ptr<Node>& node) 
+		m_uiInputHandler->EventClicked = [&](std::shared_ptr<Node>& node) 
 		{
-			std::cout << std::string(node->GetName()) << " clicked" << std::endl;
-			return true;
+			if (node->GetName() == "ButtonDatasetOne" && m_plotNode->GetOrCreateCurve(DataSet2).GetColor().a >= 0.95f)
+			{
+				m_animationsList.emplace_back(new PlotCurveSwitchingAnimation(1.0f, m_plotNode, DataSet2, DataSet1));
+				return true;
+			}
+			else if (node->GetName() == "ButtonDatasetTwo"  && m_plotNode->GetOrCreateCurve(DataSet1).GetColor().a >= 0.95f)
+			{
+				m_animationsList.emplace_back(new PlotCurveSwitchingAnimation(1.0f, m_plotNode, DataSet1, DataSet2));
+				return true;
+			}
+			return false;
 		};
 
 		m_uiInputHandler->EventScrolled = [](std::shared_ptr<Node>& node, const glm::vec2& scrollDir)
@@ -290,6 +269,10 @@ private:
 		glViewport(0, 0, m_window.getWindowSize().x, m_window.getWindowSize().y);
 		m_renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
 		m_renderer->ClearDepth(0);
+
+		for (auto& animation : m_animationsList)
+			animation->Animate(dt);
+		m_animationsList.remove_if([](std::unique_ptr<IAnimation>& animation) {return animation->IsFinished(); });
 
 		m_uiRenderer->SetWindowSize(m_window.getWindowSize());
 		m_uiRenderer->Draw();
@@ -376,14 +359,20 @@ private:
 	}
 
 private:
+	const std::string DataSet1 = "DataSet #1";
+	const std::string DataSet2 = "DataSet #2";
+
+private:
 	GlfwWindow m_window;
 	std::shared_ptr<AT2::IRenderer> m_renderer;
 
 	std::shared_ptr<AT2::UI::Node> m_uiRoot;
-	//std::weak_ptr<AT2::UI::Plot> m_nodePlot;
+	std::shared_ptr<AT2::UI::Plot> m_plotNode;
 
 	std::unique_ptr<AT2::UI::UiRenderer> m_uiRenderer;
 	std::unique_ptr<AT2::UI::UiInputHandler> m_uiInputHandler;
+
+	std::list<std::unique_ptr<IAnimation>> m_animationsList;
 };
 
 int main(int argc, char *argv[])

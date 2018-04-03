@@ -3,6 +3,8 @@
 using namespace AT2;
 using namespace AT2::UI;
 
+#include <algorithm>
+
 //TODO: hide from the interface!
 #include <AT2/OpenGl/GlDrawPrimitive.h>
 
@@ -29,7 +31,7 @@ public:
 		m_DrawPrimitive->Draw();
 	}
 
-	void UpdateFromData(const std::shared_ptr<IRenderer>& renderer, const Plot::CurveData& data)
+	void RebuildFromData(const std::shared_ptr<IRenderer>& renderer, const Plot::CurveData& data)
 	{
 		if (m_VAO == nullptr)
 			Init(renderer);
@@ -40,6 +42,15 @@ public:
 
 		m_uniforms->SetUniform("u_BoundsX", glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
 		m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)data.Data.size());
+		m_uniforms->SetUniform("u_Color", data.GetColor());
+	}
+
+	void RefreshFromData(const std::shared_ptr<IRenderer>& renderer, const Plot::CurveData& data)
+	{
+		if (m_VAO == nullptr)
+			throw AT2::AT2Exception("AT2::UI::CurveDrawable should be created before refreshing!");
+
+		m_uniforms->SetUniform("u_BoundsX", glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
 		m_uniforms->SetUniform("u_Color", data.GetColor());
 	}
 
@@ -98,8 +109,10 @@ void PlotRenderer::PrepareData(const std::shared_ptr<IRenderer>& renderer)
 		controlPtr->EnumerateCurves([&](const std::string_view name, const Plot::CurveData& data, bool isInvalidated)
 		{
 			auto emplaceResult = m_curves.try_emplace(std::string(name), std::make_shared<CurveDrawable>());
-			if (isInvalidated)
-				emplaceResult.first->second->UpdateFromData(renderer, data);
+			if (isInvalidated || emplaceResult.second)
+				emplaceResult.first->second->RebuildFromData(renderer, data);
+			else
+				emplaceResult.first->second->RefreshFromData(renderer, data);
 
 			return true;
 		});
@@ -147,4 +160,74 @@ void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
 	std::vector<glm::vec4> colors;
 
 	m_uniformBuffer = m_uiShader->CreateAssociatedUniformStorage();
+}
+
+
+//
+// UiInputHandler
+//
+
+void UiInputHandler::OnMouseMove(const MousePos& mousePos)
+{
+	m_mousePos = mousePos;
+
+	bool eventCatched = false;
+
+	m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
+		if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
+		{
+			if (auto& vector = m_mouseDownOnControl[0]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
+				if (EventClicked)
+					eventCatched |= EventMouseDrag(node, mousePos.getDeltaPos());
+		}
+	});
+
+}
+
+void UiInputHandler::OnMouseDown(int key)
+{
+	m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
+		if (isPointInsideNode(node, m_mousePos.getPos()))
+			m_mouseDownOnControl[key].push_back(node);
+	});
+
+}
+void UiInputHandler::OnMouseUp(int key)
+{
+	bool eventCatched = false;
+
+	if (key == 0)
+	{
+		m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
+			if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
+			{
+				if (auto& vector = m_mouseDownOnControl[key]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
+					if (EventClicked)
+						eventCatched |= EventClicked(node);
+			}
+		});
+	}
+
+	m_mouseDownOnControl[key].clear();
+}
+
+void UiInputHandler::OnMouseScroll(const glm::vec2& scrollDir)
+{
+	bool eventCatched = false;
+
+	m_rootNode->TraverseDepthFirst([&](std::shared_ptr<Node>& node) {
+		if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
+		{
+			if (EventScrolled)
+				eventCatched |= EventScrolled(node, scrollDir);
+
+			eventCatched = true;
+		}
+	});
+}
+
+bool UiInputHandler::isPointInsideNode(std::shared_ptr<Node>& node, const glm::vec2& pos)
+{
+	auto aabb = AABB2d(node->GetCanvasData().Position, node->GetCanvasData().Position + glm::ivec2(node->GetCanvasData().MeasuredSize));
+	return aabb.IsPointInside(pos);
 }
