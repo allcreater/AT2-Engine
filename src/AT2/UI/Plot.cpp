@@ -73,7 +73,7 @@ const AABB2d & AT2::UI::Plot::GetAABB()
 
 void Plot::SetObservingZone(const AABB2d & zone)
 {
-	if (!GetAABB().GetIntersection(zone).Empty())
+	if (GetAABB().GetIntersection(zone).Valid())
 		m_observingZone = zone;
 }
 
