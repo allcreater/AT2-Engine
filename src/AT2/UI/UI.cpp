@@ -109,7 +109,7 @@ void Group::TraverseDepthFirst(std::function<void(const std::shared_ptr<Node>&)>
 	}
 	
 	if (AT2::Utils::is_uninitialized(m_Parent))
-		func(std::shared_ptr<Node>(this->shared_from_this()));
+		func(this->shared_from_this());
 }
 void Group::TraverseBreadthFirst(std::function<void(const std::shared_ptr<Node>&)> func)
 {

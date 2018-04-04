@@ -18,12 +18,6 @@ find_package (glew CONFIG REQUIRED)
 find_package (DevIL REQUIRED)
 #find_package (Assimp CONFIG REQUIRED)
 
-#unfortunately DEVIL is not a Hunter package :(
-if (DEVIL_FOUND)
-    message("Trololo! ${IL_INCLUDE_DIR}")
-    include_directories("${IL_INCLUDE_DIR}/../")
-endif()
-
 file(GLOB ${PROJECT_NAME}_SOURCES
 "OpenGL/GLFW/*.cpp"
 "OpenGL/*.cpp"
@@ -34,6 +28,11 @@ file(GLOB ${PROJECT_NAME}_SOURCES
 add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
 )
+
+#unfortunately DEVIL is not a Hunter package :(
+if (DEVIL_FOUND)
+    target_include_directories (${PROJECT_NAME} PRIVATE "${IL_INCLUDE_DIR}/../")
+endif()
 
 target_link_libraries(${PROJECT_NAME}  PRIVATE glfw glm ${IL_LIBRARIES} ${ILU_LIBRARIES} #DevIL ILU
                                        PUBLIC glew::glew) #Assimp::assimp)

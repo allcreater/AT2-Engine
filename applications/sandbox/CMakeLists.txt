@@ -9,8 +9,6 @@ project (AT2_sandbox)
 #find_package (Assimp CONFIG REQUIRED)
 
 
-include_directories ("${CMAKE_SOURCE_DIR}/src/")
-
 file (GLOB ${PROJECT_NAME}_SOURCES
 "*.cpp"
 "../*.cpp" #for some utilities that are still not implemented at library
@@ -19,5 +17,7 @@ file (GLOB ${PROJECT_NAME}_SOURCES
 add_executable(${PROJECT_NAME}
     ${${PROJECT_NAME}_SOURCES}
 )
+
+target_include_directories (${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/src/")
 
 target_link_libraries(${PROJECT_NAME} AT2_Engine) #Assimp::assimp)
