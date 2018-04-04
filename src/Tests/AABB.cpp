@@ -17,7 +17,7 @@ TEST(AABB_2d, InvalidAfterInvalidating)
 	ASSERT_FALSE(aabb.Valid());
 }
 
-TEST(AABB_2d, ExtensionWorksСorrectly)
+TEST(AABB_2d, ExtensionWorksCorrectly)
 {
 	const AABB2d aabb(glm::vec2(-10, -10), glm::vec2(10, 10));
 

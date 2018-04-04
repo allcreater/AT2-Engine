@@ -9,7 +9,7 @@ namespace AT2::UI
 	class CurveDrawable;
 	
 	//encapsulates all visualisation logics of Plot control
-	class PlotRenderer : public IDrawable, protected LinesHelper
+	class PlotRenderer : public virtual IDrawable, protected LinesHelper
 	{
 	public:
 		PlotRenderer(std::weak_ptr<Plot> plot) : m_Control(plot)

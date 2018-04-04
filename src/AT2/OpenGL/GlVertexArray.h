@@ -1,7 +1,7 @@
 #ifndef AT2_GL_VERTEXARRAY_H
 #define AT2_GL_VERTEXARRAY_H
 
-#include "glVertexBuffer.h"
+#include "GlVertexBuffer.h"
 
 namespace AT2
 {

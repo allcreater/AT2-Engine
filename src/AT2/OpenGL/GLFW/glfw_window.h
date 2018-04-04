@@ -15,9 +15,9 @@
 #define GLFW_WRAPPER_VIRTUAL 
 #endif
 
-struct GlfwException : public std::exception
+struct GlfwException : public std::runtime_error
 {
-    GlfwException(const char* reason) : std::exception(reason)
+    GlfwException(const char* reason) : std::runtime_error(reason)
     {
     }
 };

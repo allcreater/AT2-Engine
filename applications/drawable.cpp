@@ -1,6 +1,6 @@
 #include "drawable.h"
 
-#include <AT2/OpenGl/GlDrawPrimitive.h> //Unfortunately right now it don't be created abstractrly
+#include <AT2/OpenGL/GlDrawPrimitive.h> //Unfortunately right now it don't be created abstractrly
 
 std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const std::shared_ptr<IRenderer>& renderer, int segX, int segY)
 {

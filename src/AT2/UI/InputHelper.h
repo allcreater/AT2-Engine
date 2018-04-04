@@ -17,9 +17,9 @@ namespace AT2::UI
 		}
 
 	public:
-		std::function<bool(std::shared_ptr<Node>& node)> EventClicked;
-		std::function<bool(std::shared_ptr<Node>& node, const MousePos& mousePos)> EventMouseDrag;
-		std::function<bool(std::shared_ptr<Node>& node, const MousePos& mousePos, const glm::vec2& scrollDir)> EventScrolled;
+		std::function<bool(const std::shared_ptr<Node>& node)> EventClicked;
+		std::function<bool(const std::shared_ptr<Node>& node, const MousePos& mousePos)> EventMouseDrag;
+		std::function<bool(const std::shared_ptr<Node>& node, const MousePos& mousePos, const glm::vec2& scrollDir)> EventScrolled;
 
 		void OnMouseMove(const MousePos& mousePos);
 		void OnMouseDown(int key);
@@ -28,7 +28,7 @@ namespace AT2::UI
 		void OnMouseScroll(const glm::vec2& scrollDir);
 
 	protected:
-		bool isPointInsideNode(std::shared_ptr<Node>& node, const glm::vec2& pos);
+		bool isPointInsideNode(const std::shared_ptr<Node>& node, const glm::vec2& pos);
 
 	private:
 		std::shared_ptr<Node> m_rootNode;

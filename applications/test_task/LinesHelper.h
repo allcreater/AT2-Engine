@@ -2,14 +2,14 @@
 #define LINES_HELPER_HEADER
 #include "../drawable.h"
 
-class LinesHelper : public AT2::IDrawable
+class LinesHelper : public virtual AT2::IDrawable
 {
 public:
 	LinesHelper();
 
 	void Draw(const std::shared_ptr<AT2::IRenderer>& renderer) override;
 
-	void AddLine(const glm::vec2& begin, const glm::vec2& end, glm::vec4& color = glm::vec4(1.0, 1.0, 1.0, 1.0));
+	void AddLine(const glm::vec2& begin, const glm::vec2& end, const glm::vec4& color = glm::vec4(1.0, 1.0, 1.0, 1.0));
 	void Clear();
 
 private:

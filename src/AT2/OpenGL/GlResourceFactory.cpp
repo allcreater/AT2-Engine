@@ -11,7 +11,6 @@
 #include <IL/ilu.h>
 
 
-#include <filesystem>
 #include <unordered_map>
 #include <fstream>
 
@@ -20,13 +19,7 @@ using namespace AT2;
 //TODO add caching
 std::shared_ptr<ITexture> GlResourceFactory::LoadTexture(const str& _filename) const
 {
-	using namespace std::experimental::filesystem;
-
-	auto ext = path(_filename).extension();
-	/*if (ext == "dds")
-		return LoadTexture_GLI(_filename);
-	else*/
-		return LoadTexture_DevIL(_filename);
+	return LoadTexture_DevIL(_filename);
 }
 
 std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filename) const

@@ -1,17 +1,17 @@
 //This file is something like sandbox. It is just functionality test, not example.
 
-#include <AT2/OpenGl/GlRenderer.h>
-#include <AT2/OpenGl/GlShaderProgram.h>
-#include <AT2/OpenGl/GlUniformBuffer.h>
-#include <AT2/OpenGl/GlTexture.h>
-#include <AT2/OpenGl/GlVertexArray.h>
-#include <AT2/OpenGl/GlFrameBuffer.h>
-#include <AT2/OpenGl/GlUniformContainer.h>
-#include <AT2/OpenGl/GlTimerQuery.h>
+#include <AT2/OpenGL/GlRenderer.h>
+#include <AT2/OpenGL/GlShaderProgram.h>
+#include <AT2/OpenGL/GlUniformBuffer.h>
+#include <AT2/OpenGL/GlTexture.h>
+#include <AT2/OpenGL/GlVertexArray.h>
+#include <AT2/OpenGL/GlFrameBuffer.h>
+#include <AT2/OpenGL/GlUniformContainer.h>
+#include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
 
 #include "../drawable.h"
-#include <AT2/OpenGl/GlDrawPrimitive.h>
+#include <AT2/OpenGL/GlDrawPrimitive.h>
 
 #include <iostream>
 #include <fstream>
@@ -21,8 +21,6 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include <chrono>
-#include <filesystem>
-
 
 #ifdef USE_ASSIMP
 #include <assimp/cimport.h>

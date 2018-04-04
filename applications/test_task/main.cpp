@@ -1,16 +1,10 @@
-#include <AT2/OpenGl/GlRenderer.h>
-#include <AT2/OpenGl/GlShaderProgram.h>
-#include <AT2/OpenGl/GlUniformBuffer.h>
-#include <AT2/OpenGl/GlTexture.h>
-#include <AT2/OpenGl/GlVertexArray.h>
-#include <AT2/OpenGl/GlFrameBuffer.h>
-#include <AT2/OpenGl/GlUniformContainer.h>
-#include <AT2/OpenGl/GlTimerQuery.h>
+#include <AT2/OpenGL/GlRenderer.h>
 
 #include "../drawable.h"
 
 #include "UI.h"
 
+#include <list>
 #include <random>
 
 namespace AT2::UI
@@ -54,7 +48,7 @@ namespace AT2::UI
 
 	private:
 
-		void RenderNode(std::shared_ptr<Node>& node)
+		void RenderNode(const std::shared_ptr<Node>& node)
 		{
 			auto aabb = node->GetScreenPosition();
 			glViewport(aabb.MinBound.x, m_windowSize.y - aabb.MinBound.y - aabb.GetHeight(), aabb.GetWidth(), aabb.GetHeight());
@@ -66,7 +60,7 @@ namespace AT2::UI
 				nr->Draw(m_renderer.lock());
 		}
 
-		glm::vec4 DebugColor(std::shared_ptr<Node>& node)
+		glm::vec4 DebugColor(const std::shared_ptr<Node>& node)
 		{
 			std::hash<std::string> hash_fn;
 			auto h = hash_fn(std::string(node->GetName()));
@@ -202,8 +196,8 @@ private:
 			curve.SetColor(glm::vec4(0.0, 0.0, 1.0, 1.0));
 		}
 
-		m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
-		panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, std::make_shared<WindowRendererSharedInfo>(m_renderer)));
+		m_plotNode->SetNodeRenderer(std::static_pointer_cast<AT2::IDrawable>(std::make_shared<PlotRenderer>(m_plotNode)));
+		panel->SetNodeRenderer(std::static_pointer_cast<AT2::IDrawable>(std::make_shared<WindowRenderer>(panel, std::make_shared<WindowRendererSharedInfo>(m_renderer))));
 
 		auto bounds = m_plotNode->GetAABB();
 		m_plotNode->SetObservingZone(AABB2d(glm::vec2(0.0, bounds.MinBound.y), glm::vec2(1000.0, bounds.MaxBound.y)));
@@ -215,7 +209,7 @@ private:
 		m_uiRenderer = std::make_unique<UiRenderer>(m_renderer, m_uiRoot);
 		m_uiInputHandler = std::make_unique<UiInputHandler>(m_uiRoot);
 
-		m_uiInputHandler->EventClicked = [&](std::shared_ptr<Node>& node) 
+		m_uiInputHandler->EventClicked = [&](const std::shared_ptr<Node>& node) 
 		{
 			if (node->GetName() == "ButtonDatasetOne" && m_plotNode->GetOrCreateCurve(DataSet2).GetColor().a >= 0.95f)
 			{
@@ -230,7 +224,7 @@ private:
 			return false;
 		};
 
-		m_uiInputHandler->EventScrolled = [](std::shared_ptr<Node>& node, const MousePos& mousePos, const glm::vec2& scrollDir)
+		m_uiInputHandler->EventScrolled = [](const std::shared_ptr<Node>& node, const MousePos& mousePos, const glm::vec2& scrollDir)
 		{
 			if (auto plot = std::dynamic_pointer_cast<Plot>(node); node->GetName() == "Plot")
 			{
@@ -251,7 +245,7 @@ private:
 			return false;
 		};
 
-		m_uiInputHandler->EventMouseDrag = [](std::shared_ptr<Node>& node, const MousePos& mousePos)
+		m_uiInputHandler->EventMouseDrag = [](const std::shared_ptr<Node>& node, const MousePos& mousePos)
 		{
 			if (auto plot = std::dynamic_pointer_cast<Plot>(node); node->GetName() == "Plot")
 			{

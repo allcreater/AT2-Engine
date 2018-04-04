@@ -78,8 +78,8 @@ namespace AT2::UI
 		//virtual void TraverseDepthFirst(std::function<void(Node&)> func) { func(*this); }
 		//virtual void TraverseBreadthFirst(std::function<void(Node&)> func) { func(*this); }
 
-		virtual void TraverseDepthFirst(std::function<void(std::shared_ptr<Node>&)> func) { }
-		virtual void TraverseBreadthFirst(std::function<void(std::shared_ptr<Node>&)> func) { }
+		virtual void TraverseDepthFirst(std::function<void(const std::shared_ptr<Node>&)> func) { }
+		virtual void TraverseBreadthFirst(std::function<void(const std::shared_ptr<Node>&)> func) { }
 
 	protected:
 		Node(std::string_view name, const glm::uvec2& size) : m_Name(name), m_Size(size) {};
@@ -107,8 +107,8 @@ namespace AT2::UI
 		//void TraverseDepthFirst(std::function<void(Node&)> func) override;
 		//void TraverseBreadthFirst(std::function<void(Node&)> func) override;
 
-		void TraverseDepthFirst(std::function<void(std::shared_ptr<Node>&)> func) override;
-		void TraverseBreadthFirst(std::function<void(std::shared_ptr<Node>&)> func) override;
+		void TraverseDepthFirst(std::function<void(const std::shared_ptr<Node>&)> func) override;
+		void TraverseBreadthFirst(std::function<void(const std::shared_ptr<Node>&)> func) override;
 
 	protected:
 		Group(std::string_view name, const glm::uvec2& size) : Node(name, size) {}

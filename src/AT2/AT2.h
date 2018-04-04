@@ -3,9 +3,9 @@
 
 #define GLM_FORCE_SWIZZLE
 
-#include <glm\glm.hpp>
-#include <glm\gtc\matrix_transform.hpp>
-#include <glm\gtc\type_ptr.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 #include <exception>
@@ -201,7 +201,7 @@ public:
 	virtual void Bind() = 0;
 };
 
-class AT2Exception : public std::exception
+class AT2Exception : public std::runtime_error
 {
 public:
 	enum struct ErrorCase
@@ -214,8 +214,8 @@ public:
 	} Case;
 
 
-	AT2Exception(const std::string& _message) : std::exception(_message.c_str()), Case(ErrorCase::Unknown) {};
-	AT2Exception(ErrorCase _case, const std::string& _message) : std::exception(_message.c_str()), Case(_case) {};
+	AT2Exception(const std::string& _message) : std::runtime_error(_message.c_str()), Case(ErrorCase::Unknown) {};
+	AT2Exception(ErrorCase _case, const std::string& _message) : std::runtime_error(_message.c_str()), Case(_case) {};
 };
 
 class IRendererCapabilities

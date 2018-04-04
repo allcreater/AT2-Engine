@@ -1,6 +1,6 @@
 #include "LinesHelper.h"
 
-#include <AT2/OpenGl/GlDrawPrimitive.h>
+#include <AT2/OpenGL/GlDrawPrimitive.h>
 
 using namespace AT2;
 
@@ -22,7 +22,7 @@ void LinesHelper::Draw(const std::shared_ptr<IRenderer>& renderer)
 	m_DrawPrimitive->Draw();
 }
 
-void LinesHelper::AddLine(const glm::vec2& begin, const glm::vec2& end, glm::vec4& color)
+void LinesHelper::AddLine(const glm::vec2& begin, const glm::vec2& end, const glm::vec4& color)
 {
 	m_vertices.emplace_back(begin);
 	m_colors.emplace_back(color);
