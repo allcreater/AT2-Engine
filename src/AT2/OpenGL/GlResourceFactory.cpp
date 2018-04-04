@@ -13,6 +13,7 @@
 
 #include <unordered_map>
 #include <fstream>
+#include <algorithm>
 
 using namespace AT2;
 
