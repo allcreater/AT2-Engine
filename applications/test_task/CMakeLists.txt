@@ -1,12 +1,4 @@
-add_definitions(
-#	-DUSE_ASSIMP
-)
-
 project (Test_Task)
-
-#hunter_add_package (Assimp)
-#find_package (Assimp CONFIG REQUIRED)
-
 
 file (GLOB ${PROJECT_NAME}_SOURCES
 "*.cpp"
