@@ -185,12 +185,23 @@ void AT2::UI::WindowRenderer::Draw(const std::shared_ptr<IRenderer>& renderer)
 	if (m_uniforms == nullptr)
 		m_uniforms = m_SharedInfo->m_Shader->CreateAssociatedUniformStorage();
 
-	auto& stateManager = renderer->GetStateManager();
-	stateManager.BindShader(m_SharedInfo->m_Shader);
-	stateManager.BindVertexArray(m_SharedInfo->m_VAO);
 
-	m_uniforms->SetUniform("u_Color", glm::vec4(1.0f));
-	m_uniforms->Bind();
+	if (auto control = m_Control.lock())
+	{
+		auto screenAABB = control->GetScreenPosition();
 
-	m_SharedInfo->m_DrawPrimitive->Draw();
+		//it's preety costly and not so important, but looks nice. Until it's not bottleneck, let's continue
+		std::shared_ptr<ITexture> texture = renderer->GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
+
+		auto& stateManager = renderer->GetStateManager();
+		stateManager.BindTextures({ texture });
+		stateManager.BindShader(m_SharedInfo->m_Shader);
+		stateManager.BindVertexArray(m_SharedInfo->m_VAO);
+
+		m_uniforms->SetUniform("u_BackgroundTexture", texture);
+		m_uniforms->SetUniform("u_Color", glm::vec4(1.0f));
+		m_uniforms->Bind();
+
+		m_SharedInfo->m_DrawPrimitive->Draw();
+	}
 }

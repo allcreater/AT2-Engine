@@ -73,15 +73,15 @@ private:
 
 void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 {
-	std::shared_ptr<Node> panel;
+	std::shared_ptr<Node> panel, button1, button2;
 
 	m_uiRoot = StackPanel::Make("MainPanel", Orientation::Horizontal,
 		{
 			m_plotNode = Plot::Make("Plot"),
 			panel = StackPanel::Make("SidePanel", Orientation::Vertical,
 				{
-					Button::Make("ButtonDatasetOne", glm::ivec2(200, 0)),
-					Button::Make("ButtonDatasetTwo", glm::ivec2(200, 0))
+					button1 = Button::Make("ButtonDatasetOne", glm::ivec2(200, 0)),
+					button2 = Button::Make("ButtonDatasetTwo", glm::ivec2(200, 0))
 				})
 		});
 
@@ -96,8 +96,12 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 		curve.SetColor(glm::vec4(0.0, 0.0, 1.0, 1.0));
 	}
 
+
+	auto windowRendererSharedData = std::make_shared<WindowRendererSharedInfo>(renderer);
 	m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
-	panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, std::make_shared<WindowRendererSharedInfo>(renderer)));
+	panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, windowRendererSharedData));
+	button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, windowRendererSharedData));
+	button2->SetNodeRenderer(std::make_shared<WindowRenderer>(button2, windowRendererSharedData));
 
 	auto bounds = m_plotNode->GetAABB();
 	m_plotNode->SetObservingZone(AABB2d(glm::vec2(0.0, bounds.MinBound.y), glm::vec2(1000.0, bounds.MaxBound.y)));

@@ -13,14 +13,14 @@ GlTexture::GlTexture(TextureType _type, GLint _internalFormat) :
 }
 
 AT2::GlTexture::GlTexture(GLuint _id, TextureType _type, GLint _internalFormat) :
-    m_id(_id),
-    m_targetType(_type),
-    m_internalFormat(_internalFormat),
-    m_currentTextureModule(-1)
+	m_id(_id),
+	m_targetType(_type),
+	m_internalFormat(_internalFormat),
+	m_currentTextureModule(-1)
 {
-    glGenTextures(1, &m_id);
+	glGenTextures(1, &m_id);
 
-    DetermineExternalFormatAndDataType();
+	DetermineExternalFormatAndDataType();
 }
 GlTexture::GlTexture(TextureType type, GLint internalFormat, GLenum format, GLenum dataType) :
 	m_targetType(type),
@@ -102,16 +102,16 @@ GlTexture2D::GlTexture2D(GLint _internalFormat, glm::uvec2 _size, GLuint _levels
 }
 
 AT2::GlTexture2D::GlTexture2D(GLuint _id, GLint _internalFormat, glm::uvec2 _size, GLuint _levels) :
-    GlTexture(_id, GlTexture::TextureType::Texture2D, _internalFormat)
+	GlTexture(_id, GlTexture::TextureType::Texture2D, _internalFormat)
 {
-    const GLenum target = static_cast<GLenum>(m_targetType);
+	const GLenum target = static_cast<GLenum>(m_targetType);
 
-    m_size = glm::uvec3(_size, 1);
+	m_size = glm::uvec3(_size, 1);
 
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 void GlTexture2D::SetData(GLuint _level, BufferData _data)
@@ -119,6 +119,11 @@ void GlTexture2D::SetData(GLuint _level, BufferData _data)
 	const GLenum extFormat = _data.ExternalFormat ? _data.ExternalFormat : m_format, extDataType = _data.DataType ? _data.DataType : m_dataType;
 
 	glTextureSubImage2DEXT(m_id, static_cast<GLenum>(m_targetType), _level, 0, 0, _data.Width, _data.Height, extFormat, extDataType, _data.Data);
+}
+
+void GlTexture2D::CopyFromFramebuffer(GLuint _level, glm::ivec2 pos, glm::uvec2 size)
+{
+	glCopyTextureSubImage2D(m_id, _level, 0, 0, pos.x, pos.y, size.x, size.y);
 }
 
 GlTexture2DArray::GlTexture2DArray(GLint _internalFormat, glm::uvec3 _size, GLuint _levels) :

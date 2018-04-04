@@ -79,23 +79,15 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeTerrainDrawable(const 
 std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer)
 {
 	glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
-	glm::uint indices[] = { 0, 1, 2, 0, 2, 3 };
 
 	auto& rf = renderer->GetResourceFactory();
 
 	auto vao = rf.CreateVertexArray();
 	vao->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, 4*sizeof(glm::vec3), positions));
-	vao->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, AT2::BufferDataTypes::UInt, 6*sizeof(glm::uint), indices));
 
 	auto drawable = std::make_shared<AT2::MeshDrawable>();
-	drawable->Primitives.push_back(new AT2::GlDrawElementsPrimitive(AT2::GlDrawPrimitiveType::Triangles, 6, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, 0));
+	drawable->Primitives.push_back(new AT2::GlDrawArraysPrimitive(AT2::GlDrawPrimitiveType::TriangleFan, 0, 4));
 	drawable->VertexArray = vao;
-
-	auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-		{
-			R"(resources/shaders/window.vs.glsl)",
-			R"(resources/shaders/window.fs.glsl)"
-		});
 
 	return drawable;
 }

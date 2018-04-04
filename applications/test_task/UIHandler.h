@@ -3,7 +3,8 @@
 
 #include "UI.h"
 
-namespace AT2::UI
+//TODO: move into library
+namespace AT2::UI 
 {
 	class UiRenderer
 	{
@@ -24,7 +25,7 @@ namespace AT2::UI
 			{
 				auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
 				//uniformStorage->SetUniform("u_phase", Phase);
-				uniformStorage->SetUniform("u_backgroundTexture", texture);
+				uniformStorage->SetUniform("u_BackgroundTexture", texture);
 				//uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
 				//uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
 				m_quadDrawable->UniformBuffer = uniformStorage;

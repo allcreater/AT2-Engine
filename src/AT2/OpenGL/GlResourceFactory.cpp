@@ -237,9 +237,11 @@ GlResourceFactory::~GlResourceFactory()
 	ilShutDown();
 }
 
-std::shared_ptr<ITexture> GlResourceFactory::CreateTexture() const
+std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const
 {
-	throw AT2Exception("GlResourceFactory: not implemented"); //TODO!
+	auto texture = std::make_shared<GlTexture2D>(GL_RGBA8, size);
+	texture->CopyFromFramebuffer(0, pos, size);
+	return texture;
 }
 
 std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const
