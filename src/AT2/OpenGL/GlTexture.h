@@ -83,6 +83,7 @@ namespace AT2
 
 	public:
 		void SetData(GLuint level, BufferData data);
+		void CopyFromFramebuffer(GLuint _level, glm::ivec2 pos, glm::uvec2 size);
 	};
 
 

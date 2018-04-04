@@ -267,7 +267,7 @@ public:
 
 public:
 	virtual std::shared_ptr<ITexture> LoadTexture(const str& filename) const = 0; //TODO: maybe I need to detach load functionality 
-	virtual std::shared_ptr<ITexture> CreateTexture() const = 0;
+	virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const = 0; //TODO: provide possibility to create different textures with different formats
 	virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const = 0;
 	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const = 0;
