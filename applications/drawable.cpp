@@ -78,7 +78,7 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeTerrainDrawable(const 
 
 std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer)
 {
-	glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
+	static glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
 
 	auto& rf = renderer->GetResourceFactory();
 

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <unordered_map>
+#include <cassert>
 
 using namespace AT2;
 
@@ -68,5 +69,6 @@ GlVertexBuffer::~GlVertexBuffer()
 
 void GlVertexBuffer::SetData(unsigned int _size, const void* _data)
 {
+	assert(GLEW_EXT_direct_state_access && __glewNamedBufferDataEXT);
 	glNamedBufferDataEXT(m_id, _size, _data, static_cast<GLenum>(m_usageHint));
 }

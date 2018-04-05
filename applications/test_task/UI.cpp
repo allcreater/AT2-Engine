@@ -166,7 +166,7 @@ void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
 
 WindowRendererSharedInfo::WindowRendererSharedInfo(const std::shared_ptr<IRenderer>& renderer)
 {
-	glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
+	static glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
 	auto& rf = renderer->GetResourceFactory();
 
 	m_VAO = rf.CreateVertexArray();

@@ -123,7 +123,7 @@ void GlTexture2D::SetData(GLuint _level, BufferData _data)
 
 void GlTexture2D::CopyFromFramebuffer(GLuint _level, glm::ivec2 pos, glm::uvec2 size)
 {
-	glCopyTextureSubImage2D(m_id, _level, 0, 0, pos.x, pos.y, size.x, size.y);
+	glCopyTextureSubImage2DEXT(m_id, static_cast<GLenum>(m_targetType), _level, 0, 0, pos.x, pos.y, size.x, size.y);
 }
 
 GlTexture2DArray::GlTexture2DArray(GLint _internalFormat, glm::uvec3 _size, GLuint _levels) :

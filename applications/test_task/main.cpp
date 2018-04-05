@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
 		ReleaseGLFW();
 	}
-	catch (AT2::AT2Exception exception)
+	catch (AT2::AT2Exception& exception)
 	{
 		std::cout << "Runtime exception:" << exception.what() << std::endl;
 		system("PAUSE");
