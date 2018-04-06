@@ -130,16 +130,23 @@ void PlotRenderer::PrepareData(const std::shared_ptr<IRenderer>& renderer)
 void PlotRenderer::UpdateCanvasGeometry(const AABB2d& observingRange)
 {
 	Clear();
+
+	//axises
 	AddLine(glm::vec2(observingRange.MinBound.x, 0.0), glm::vec2(observingRange.MaxBound.x, 0.0));
 	AddLine(glm::vec2(0.0, observingRange.MinBound.y), glm::vec2(0.0, observingRange.MaxBound.y));
-
+	
+	//let's draw a coordinate grid here
 	glm::vec2 range = observingRange.MaxBound - observingRange.MinBound;
-	glm::vec2 exp = glm::floor(glm::log(range)/ glm::log(decltype(range)(10.0f)));
+	glm::vec2 exp = glm::floor(glm::log(range)/ glm::log(glm::vec2(10.0f)));
+	
+	glm::vec2 step = glm::pow(glm::vec2(10.0f), exp - glm::vec2(1));
+	glm::vec2 firstMark = glm::floor(observingRange.MinBound / step)*step;
 
-	glm::vec2 minExp = glm::floor(glm::log(observingRange.MaxBound) / glm::log(decltype(range)(10.0f)));
+	for (auto x = firstMark.x; x <= observingRange.MaxBound.x; x += step.x)
+		AddLine(glm::vec2(x, observingRange.MinBound.y), glm::vec2(x, observingRange.MaxBound.y), glm::vec4(1.0, 1.0, 1.0, 0.3));
 
-	AddLine(glm::vec2(pow(10, minExp.x), observingRange.MinBound.y), glm::vec2(pow(10, minExp.x), observingRange.MaxBound.y), glm::vec4(1.0,1.0,1.0, 0.3));
-	//AddLine(glm::vec2(minExp.x * 10, 0.0), glm::vec2(minExp.x * 10, 0.0));
+	for (auto y = firstMark.y; y <= observingRange.MaxBound.y; y += step.y)
+		AddLine(glm::vec2(observingRange.MinBound.x, y), glm::vec2(observingRange.MaxBound.x, y), glm::vec4(1.0, 1.0, 1.0, 0.3));
 }
 
 void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
@@ -156,9 +163,6 @@ void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
 			"resources//shaders//curve.fs.glsl"
 		});
 		
-
-	std::vector<glm::vec2> positions = {glm::vec2()};
-	std::vector<glm::vec4> colors;
 
 	m_uniformBuffer = m_uiShader->CreateAssociatedUniformStorage();
 }
