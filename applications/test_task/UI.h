@@ -49,7 +49,11 @@ namespace AT2::UI
 
 	struct WindowRenderer : public IDrawable
 	{
-		WindowRenderer(std::weak_ptr<Node> node, std::shared_ptr<WindowRendererSharedInfo> sharedInfo) : m_Control(node), m_SharedInfo(sharedInfo)
+		WindowRenderer(std::weak_ptr<Node> node, std::shared_ptr<WindowRendererSharedInfo> sharedInfo,const glm::vec2& borderThickness = glm::vec2(3.0, 3.0), const glm::vec4& color = glm::vec4(0.5, 0.5, 0.5, 0.3)) :
+			m_Control(node),
+			m_SharedInfo(sharedInfo),
+			m_borderThickness(borderThickness),
+			m_Color(color)
 		{
 		}
 
@@ -59,6 +63,10 @@ namespace AT2::UI
 		std::weak_ptr<Node> m_Control;
 		std::shared_ptr<WindowRendererSharedInfo> m_SharedInfo;
 		std::shared_ptr<IUniformContainer> m_uniforms;
+
+		//visual parameters
+		glm::vec2 m_borderThickness, m_blurDirection = glm::vec2(0.7, 0.7);
+		glm::vec4 m_Color;
 		
 	};
 

@@ -99,9 +99,9 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 
 	auto windowRendererSharedData = std::make_shared<WindowRendererSharedInfo>(renderer);
 	m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
-	panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, windowRendererSharedData));
-	button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, windowRendererSharedData));
-	button2->SetNodeRenderer(std::make_shared<WindowRenderer>(button2, windowRendererSharedData));
+	panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, windowRendererSharedData, glm::vec2(0, 0), glm::vec4(0.5, 0.5, 0.5, 0.3)));
+	button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, windowRendererSharedData, glm::vec2(4, 4), glm::vec4(2.0, 0.5, 0.5, 0.6)));
+	button2->SetNodeRenderer(std::make_shared<WindowRenderer>(button2, windowRendererSharedData, glm::vec2(4, 4), glm::vec4(0.5, 0.5, 2.0, 0.6)));
 
 	auto bounds = m_plotNode->GetAABB();
 	m_plotNode->SetObservingZone(AABB2d(glm::vec2(0.0, bounds.MinBound.y), glm::vec2(1000.0, bounds.MaxBound.y)));

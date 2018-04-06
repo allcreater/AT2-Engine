@@ -203,7 +203,12 @@ void AT2::UI::WindowRenderer::Draw(const std::shared_ptr<IRenderer>& renderer)
 		stateManager.BindVertexArray(m_SharedInfo->m_VAO);
 
 		m_uniforms->SetUniform("u_BackgroundTexture", texture);
-		m_uniforms->SetUniform("u_Color", glm::vec4(1.0f));
+		m_uniforms->SetUniform("u_ScreenAABB", glm::vec4(screenAABB.MinBound, screenAABB.MaxBound));
+
+		m_uniforms->SetUniform("u_Color", m_Color);
+		m_uniforms->SetUniform("u_BorderThickness", m_borderThickness);
+		m_uniforms->SetUniform("u_BlurDirection", m_blurDirection);
+		
 		m_uniforms->Bind();
 
 		m_SharedInfo->m_DrawPrimitive->Draw();
