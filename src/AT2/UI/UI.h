@@ -59,8 +59,8 @@ namespace AT2::UI
 		std::weak_ptr<Group> GetParent() const						{ return m_Parent; }
 		std::string_view GetName() const							{ return m_Name; }
 
-		void SetSize(const glm::ivec2& size)						{ m_Size = size; }
-		const glm::ivec2& GetSize() const							{ return m_Size; }
+		void SetSize(const glm::uvec2& size)						{ m_Size = size; }
+		const glm::uvec2& GetSize() const							{ return m_Size; }
 
 		//recursively calculates the actual sizes of all children
 		virtual void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize);
@@ -95,17 +95,20 @@ namespace AT2::UI
 		std::shared_ptr<IDrawable> m_Drawable;
 	};
 
-
+	//The grouping control that supports manual elements placing, sometimes named as Canvas
 	class Group : public Node, public std::enable_shared_from_this<Group>
 	{
+	public:
+		static std::shared_ptr<Group> Make(std::string_view name, std::initializer_list<std::shared_ptr<Node>> children, const glm::uvec2& size = glm::uvec2());
+
 	public:
 		void AddChild(std::shared_ptr<Node> newChild);
 		bool RemoveChild(const std::shared_ptr<Node>& child);
 
 		void ForEachChild(std::function<void(Node&)> func);
 
-		//void TraverseDepthFirst(std::function<void(Node&)> func) override;
-		//void TraverseBreadthFirst(std::function<void(Node&)> func) override;
+		glm::uvec2 ComputeMinimalSize() override;
+		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
 
 		void TraverseDepthFirst(std::function<void(const std::shared_ptr<Node>&)> func) override;
 		void TraverseBreadthFirst(std::function<void(const std::shared_ptr<Node>&)> func) override;
@@ -124,7 +127,7 @@ namespace AT2::UI
 	class StackPanel : public Group
 	{
 	public:
-		static std::shared_ptr<StackPanel> Make(std::string_view name, Orientation alignment, std::initializer_list<std::shared_ptr<Node>> children, const glm::uvec2& size = glm::uvec2());
+		static std::shared_ptr<StackPanel> Make(std::string_view name, Orientation alignment, std::initializer_list<std::shared_ptr<Node>> children, const glm::uvec2& size = glm::uvec2(), Alignment vertical = Alignment::Stretch, Alignment horizontal = Alignment::Stretch);
 
 	public:
 		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;

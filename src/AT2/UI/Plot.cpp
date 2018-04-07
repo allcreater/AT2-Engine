@@ -11,7 +11,7 @@ void Plot::CurveData::SetData(std::vector<float>&& data, bool autoRange)
 	Dirty();
 
 	if (autoRange)
-		SetXRange(0.0, m_data.size());
+		SetXRange(0.0, float(m_data.size()));
 }
 
 void Plot::CurveData::SetXRange(float startX, float endX) 

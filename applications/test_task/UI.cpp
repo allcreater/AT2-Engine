@@ -105,7 +105,7 @@ void PlotRenderer::PrepareData(const std::shared_ptr<IRenderer>& renderer)
 	if (auto controlPtr = m_Control.lock())
 	{
 		auto& observingRange = controlPtr->GetObservingZone();
-		m_projectionMatrix = glm::ortho(observingRange.MinBound.x, observingRange.MaxBound.x, observingRange.MaxBound.y, observingRange.MinBound.y);
+		m_projectionMatrix = glm::ortho(observingRange.MinBound.x, observingRange.MaxBound.x, observingRange.MinBound.y, observingRange.MaxBound.y);
 
 		controlPtr->EnumerateCurves([&](const std::string_view name, const Plot::CurveData& data, bool isInvalidated)
 		{

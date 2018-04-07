@@ -75,14 +75,13 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 {
 	std::shared_ptr<Node> panel, button1, button2;
 
-	m_uiRoot = StackPanel::Make("MainPanel", Orientation::Horizontal,
-		{
-			m_plotNode = Plot::Make("Plot"),
+	m_uiRoot = Group::Make("MainGroup", {
+		m_plotNode = Plot::Make("Plot"),
 			panel = StackPanel::Make("SidePanel", Orientation::Vertical,
 				{
-					button1 = Button::Make("ButtonDatasetOne", glm::ivec2(200, 0)),
-					button2 = Button::Make("ButtonDatasetTwo", glm::ivec2(200, 0))
-				})
+					button1 = Button::Make("ButtonDatasetOne", glm::ivec2(200, 0), Alignment::Stretch, Alignment::Side2),
+					button2 = Button::Make("ButtonDatasetTwo", glm::ivec2(200, 0), Alignment::Stretch, Alignment::Side2)
+				}, glm::ivec2(210, 0), Alignment::Stretch, Alignment::Side2)
 		});
 
 	{
@@ -99,7 +98,7 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 
 	auto windowRendererSharedData = std::make_shared<WindowRendererSharedInfo>(renderer);
 	m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
-	panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, windowRendererSharedData, glm::vec2(0, 0), glm::vec4(0.5, 0.5, 0.5, 0.3)));
+	panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, windowRendererSharedData, glm::vec2(0, 0), glm::vec4(0.5, 0.5, 0.5, 0.5)));
 	button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, windowRendererSharedData, glm::vec2(4, 4), glm::vec4(2.0, 0.5, 0.5, 0.6)));
 	button2->SetNodeRenderer(std::make_shared<WindowRenderer>(button2, windowRendererSharedData, glm::vec2(4, 4), glm::vec4(0.5, 0.5, 2.0, 0.6)));
 

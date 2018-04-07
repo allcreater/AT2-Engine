@@ -50,7 +50,8 @@ namespace AT2::UI
 		void RenderNode(const std::shared_ptr<Node>& node)
 		{
 			auto aabb = node->GetScreenPosition();
-			glViewport(aabb.MinBound.x, m_windowSize.y - aabb.MinBound.y - aabb.GetHeight(), aabb.GetWidth(), aabb.GetHeight());
+			//glViewport(aabb.MinBound.x, m_windowSize.y - aabb.MinBound.y - aabb.GetHeight(), aabb.GetWidth(), aabb.GetHeight());
+			glViewport(aabb.MinBound.x, aabb.MinBound.y, aabb.GetWidth(), aabb.GetHeight());
 
 			//m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
 			//m_quadDrawable->Draw(m_renderer.lock());

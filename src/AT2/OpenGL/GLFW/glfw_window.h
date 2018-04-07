@@ -73,8 +73,9 @@ protected:
     }
     GLFW_WRAPPER_VIRTUAL void OnClosing() const { if (ClosingCallback != nullptr) ClosingCallback(); }
     
-    GLFW_WRAPPER_VIRTUAL void OnMouseMove(const glm::vec2& mousePosition) const 
+    GLFW_WRAPPER_VIRTUAL void OnMouseMove(glm::vec2&& mousePosition) const 
     {
+        mousePosition.y = m_windowSize.y - mousePosition.y; //WTF?
         if (MouseMoveCallback != nullptr) 
             MouseMoveCallback(MousePos(mousePosition, m_lastMousePos)); 
 

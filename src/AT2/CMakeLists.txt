@@ -18,11 +18,9 @@ find_package (glew CONFIG REQUIRED)
 find_package (DevIL REQUIRED)
 #find_package (Assimp CONFIG REQUIRED)
 
-file(GLOB ${PROJECT_NAME}_SOURCES
-"OpenGL/GLFW/*.cpp"
-"OpenGL/*.cpp"
-"UI/*.cpp"
+file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES
 "*.cpp"
+"*.h"
 )
 
 add_library(${PROJECT_NAME} STATIC
