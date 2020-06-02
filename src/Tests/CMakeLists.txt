@@ -1,8 +1,8 @@
 project (AT2_UnitTests)
 
-hunter_add_package(GTest)
-find_package(GTest CONFIG REQUIRED)
-find_package(GMock CONFIG REQUIRED)
+enable_testing()
+
+find_package(GTest MODULE REQUIRED)
 
 include(GoogleTest)
 
@@ -17,7 +17,7 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} 
-    PUBLIC AT2_Engine GTest::main GMock::gmock
+    PRIVATE AT2_Engine GTest::gtest GTest::gtest_main 
 )
 
 
@@ -25,3 +25,5 @@ gtest_add_tests(TARGET      ${PROJECT_NAME}
                 TEST_SUFFIX .noArgs
                 TEST_LIST   noArgsTests
 )
+
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
