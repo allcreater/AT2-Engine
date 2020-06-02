@@ -15,6 +15,7 @@
 #include <fstream>
 #include <algorithm>
 
+using namespace std::literals;
 using namespace AT2;
 
 //TODO add caching
@@ -266,7 +267,7 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 	public:
 		GlShaderProgramFromFileImpl(std::initializer_list<str> _shaders) : GlShaderProgram()
 		{
-			for (auto filename : _shaders)
+			for (const auto& filename : _shaders)
 			{
 				if (GetName().empty())
 					SetName(filename);
@@ -282,7 +283,7 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 				else if (filename.substr(filename.length() - 8) == ".fs.glsl")
 					m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Fragment));
 				else
-					throw AT2Exception("unrecognized shader type");
+					throw AT2Exception(AT2Exception::ErrorCase::Shader, "unrecognized shader type"s);
 			}
 
 			Reload();
@@ -305,10 +306,6 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 			return ReloadableGroup::Shaders;
 		}
 
-		~GlShaderProgramFromFileImpl()
-		{
-		}
-
 	private:
 		std::string LoadShader(const str& _filename)
 		{
@@ -316,6 +313,10 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 				return "";
 
 			std::ifstream t(_filename);
+			if (!t.is_open())
+				throw AT2Exception(AT2Exception::ErrorCase::File, "file '"s + _filename + "' not found.");
+
+
 			return std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 		}
 

@@ -2,9 +2,11 @@
 
 #include "utils.hpp"
 #include <Windows.h>
+
 #include <vector>
 #include <map>
 #include <thread>
+#include <stdexcept>
 
 using namespace AT2::Utils;
 

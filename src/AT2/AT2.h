@@ -210,7 +210,8 @@ public:
 		Renderer,
 		Shader,
 		Buffer,
-		UI
+		UI,
+		File
 	} Case;
 
 

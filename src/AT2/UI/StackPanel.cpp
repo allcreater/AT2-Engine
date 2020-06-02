@@ -50,7 +50,7 @@ glm::uvec2 StackPanel::ComputeMinimalSize()
 	Func aggregateFunc = (m_Orientation == Orientation::Horizontal) ? horizontalFunc : verticalFunc;
 
 
-	glm::ivec2 minimalContentSize;
+	glm::ivec2 minimalContentSize = {};
 	for (auto child : m_Children)
 		minimalContentSize = aggregateFunc(minimalContentSize, child->ComputeMinimalSize());
 

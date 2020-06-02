@@ -15,12 +15,15 @@
 
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 #include <chrono>
+
+#define USE_ASSIMP
 
 #ifdef USE_ASSIMP
 #include <assimp/cimport.h>
@@ -42,7 +45,7 @@ ovrHmd HMD;
 #pragma comment (lib, "LibOVR.lib")
 #endif
 
-std::shared_ptr<AT2::GlShaderProgram> MeshShader;
+std::shared_ptr<AT2::IShaderProgram> MeshShader;
 
 std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
@@ -60,7 +63,7 @@ GLfloat Phase = 0.0;
 
 #ifdef USE_ASSIMP
 
-std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRenderer* _renderer)
+std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::shared_ptr<AT2::IRenderer>& _renderer)
 {
 	class GlMeshDrawable : public AT2::IDrawable
 	{
@@ -72,17 +75,17 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 			auto storage = MeshShader->CreateAssociatedUniformStorage();
 		}
 
-		void Draw(AT2::IRenderer& _renderer) override
+		void Draw(const std::shared_ptr<AT2::IRenderer>& _renderer) override
 		{
-			auto stateManager = _renderer.GetStateManager();
+			auto& stateManager = _renderer->GetStateManager();
 
-			stateManager->BindShader(Shader);
-			stateManager->BindVertexArray(VertexArray);
+			stateManager.BindShader(Shader);
+			stateManager.BindVertexArray(VertexArray);
 			UniformBuffer->Bind();
 
 			for (auto& primitive : Primitives)
 			{
-				stateManager->BindTextures(primitive.Textures);
+				stateManager.BindTextures(primitive.Textures);
 
 				UniformBuffer->SetUniform("u_matModel", primitive.ModelMatrix);
 
@@ -107,7 +110,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 	class GlMeshBuilder
 	{
 	public:
-		GlMeshBuilder(const AT2::IRenderer* _renderer, const AT2::str& _filename) : m_renderer(_renderer), m_scenePath(_filename)
+		GlMeshBuilder(const std::shared_ptr<AT2::IRenderer>& _renderer, const AT2::str& _filename) : m_renderer(_renderer), m_scenePath(_filename)
 		{
 			m_scene = m_importer.ReadFile(_filename, aiProcess_Triangulate | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
 		}
@@ -122,10 +125,10 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 		}
 
 	protected:
-		std::tr2::sys::path m_scenePath;
+		std::filesystem::path m_scenePath;
 		Assimp::Importer m_importer;
 		const aiScene* m_scene;
-		const AT2::IRenderer* m_renderer;
+		const std::shared_ptr<AT2::IRenderer>& m_renderer;
 
 		std::vector<glm::vec3> m_verticesVec;
 		std::vector<glm::vec3> m_texCoordVec;
@@ -162,11 +165,12 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 				AddMesh(m_scene->mMeshes[i]);
 			}
 
-			auto vao = std::make_shared<AT2::GlVertexArray>(m_renderer->GetRendererCapabilities());
-			vao->SetVertexBuffer(1, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, m_verticesVec.size(), m_verticesVec.data()));
-			vao->SetVertexBuffer(2, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, m_texCoordVec.size(), m_texCoordVec.data()));
-			vao->SetVertexBuffer(3, std::make_shared<AT2::GlVertexBuffer<glm::vec3>>(AT2::VertexBufferType::ArrayBuffer, m_normalsVec.size(), m_normalsVec.data()));
-			vao->SetIndexBuffer(std::make_shared<AT2::GlVertexBuffer<GLuint>>(AT2::VertexBufferType::IndexBuffer, m_indicesVec.size(), m_indicesVec.data()));
+			auto& rf = m_renderer->GetResourceFactory();
+			auto vao = rf.CreateVertexArray();
+			vao->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_verticesVec.size(), m_verticesVec.data()));
+			vao->SetVertexBuffer(2, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_texCoordVec.size(), m_texCoordVec.data()));
+			vao->SetVertexBuffer(3, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_normalsVec.size(), m_normalsVec.data()));
+			vao->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size(), m_indicesVec.data()));
 
 			m_buildedMesh = std::make_shared<GlMeshDrawable>();
 			m_buildedMesh->Shader = MeshShader;
@@ -182,7 +186,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, AT2::GlRend
 				aiString path;
 				if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS)
 				{
-					std::tr2::sys::path modelPath = m_scenePath.parent_path();
+					std::filesystem::path modelPath = m_scenePath.parent_path();
 					modelPath /= path.data;
 
 					auto texDiffuse = m_renderer->GetResourceFactory().LoadTexture(modelPath.string());
@@ -342,29 +346,29 @@ private:
 
 
 		auto postprocessShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-			"resources\\shaders\\postprocess.vs.glsl",
-			"resources\\shaders\\postprocess.fs.glsl" });
+			"resources/shaders/postprocess.vs.glsl",
+			"resources/shaders/postprocess.fs.glsl" });
 
 		auto terrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-			"resources\\shaders\\terrain.vs.glsl",
-			"resources\\shaders\\terrain.tcs.glsl",
-			"resources\\shaders\\terrain.tes.glsl",
-			"resources\\shaders\\terrain.fs.glsl" });
+			"resources/shaders/terrain.vs.glsl",
+			"resources/shaders/terrain.tcs.glsl",
+			"resources/shaders/terrain.tes.glsl",
+			"resources/shaders/terrain.fs.glsl" });
 
 		auto sphereLightShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-			"resources\\shaders\\spherelight.vs.glsl",
-			"resources\\shaders\\pbr.fs.glsl",
-			"resources\\shaders\\spherelight.fs.glsl" });
+			"resources/shaders/spherelight.vs.glsl",
+			"resources/shaders/pbr.fs.glsl",
+			"resources/shaders/spherelight.fs.glsl" });
 
 		auto dayLightShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-			"resources\\shaders\\skylight.vs.glsl",
-			"resources\\shaders\\pbr.fs.glsl",
-			"resources\\shaders\\skylight.fs.glsl" });
+			"resources/shaders/skylight.vs.glsl",
+			"resources/shaders/pbr.fs.glsl",
+			"resources/shaders/skylight.fs.glsl" });
 
 #ifdef USE_ASSIMP
 		MeshShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-			"resources\\shaders\\mesh.vs.glsl",
-			"resources\\shaders\\mesh.fs.glsl" });
+			"resources/shaders/mesh.vs.glsl",
+			"resources/shaders/mesh.fs.glsl" });
 #endif
 		auto texture = new AT2::GlTexture3D(GL_RGBA8, glm::uvec3(256, 256, 256), 1);
 		AT2::GlTexture::BufferData data;
@@ -380,11 +384,11 @@ private:
 
 		Noise3Tex = std::shared_ptr<AT2::ITexture>(texture);
 
-		GrassTex = m_renderer->GetResourceFactory().LoadTexture("resources\\grass03.dds");
-		RockTex = m_renderer->GetResourceFactory().LoadTexture("resources\\rock04.dds");
-		NormalMapTex = m_renderer->GetResourceFactory().LoadTexture("resources\\terrain_normalmap.dds");
-		HeightMapTex = m_renderer->GetResourceFactory().LoadTexture("resources\\heightmap.dds");
-		EnvironmentMapTex = m_renderer->GetResourceFactory().LoadTexture("resources\\04-23_Day_D.hdr");
+		GrassTex = m_renderer->GetResourceFactory().LoadTexture("resources/grass03.dds");
+		RockTex = m_renderer->GetResourceFactory().LoadTexture("resources/rock04.dds");
+		NormalMapTex = m_renderer->GetResourceFactory().LoadTexture("resources/terrain_normalmap.dds");
+		HeightMapTex = m_renderer->GetResourceFactory().LoadTexture("resources/heightmap.dds");
+		EnvironmentMapTex = m_renderer->GetResourceFactory().LoadTexture("resources/04-23_Day_D.hdr");
 
 		CameraUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(terrainShader)->GetUniformBlockInfo("CameraBlock"));
 		CameraUB->SetBindingPoint(1);
@@ -479,7 +483,7 @@ private:
 		LightsArray[0]->SetUniform("u_lightColor", glm::vec3(1.0f, 0.0f, 0.5f));
 
 #ifdef USE_ASSIMP
-		SceneDrawables.push_back(LoadModel("resources/jeep1.3ds", renderer));
+		SceneDrawables.push_back(LoadModel("resources/jeep1.3ds", m_renderer));
 #endif
 
 
@@ -701,7 +705,7 @@ int main(int argc, char *argv[])
 
 		ReleaseGLFW();
 	}
-	catch (AT2::AT2Exception exception)
+	catch (AT2::AT2Exception& exception)
 	{
 		std::cout << "Runtime exception:" << exception.what() << std::endl;
 	}
