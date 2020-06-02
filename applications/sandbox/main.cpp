@@ -23,6 +23,8 @@
 
 #include <chrono>
 
+#include "AT2/OpenGL/GLFW/glfw_application.h"
+
 #define USE_ASSIMP
 
 #ifdef USE_ASSIMP
@@ -328,20 +330,36 @@ class App
 public:
 	App()
 	{
-		m_window.setWindowLabel("Some engine test");
-		m_window.setWindowSize(m_framebufferPhysicalSize.x, m_framebufferPhysicalSize.y);
+		GlfwApplication::get().OnNoActiveWindows = []
+		{
+			GlfwApplication::get().stop();
+			//spdlog::info("Exit");
+		};
+
+
+		m_window = GlfwApplication::get().createWindow();
+
+		m_window->
+			setLabel("Some engine test").
+			setSize(m_framebufferPhysicalSize).
+			setCursorMode(GlfwCursorMode::Disabled);
+
 
 		SetupWindowCallbacks();
 	}
 
 	void Run()
 	{
-		m_window.Run();
+		GlfwApplication::get().run();
 	}
 
 private:
 	void OnInitialize()
 	{
+		glewExperimental = GL_TRUE;
+		if (glewInit() != GLEW_OK)
+			throw new GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
+
 		m_renderer = std::make_unique<AT2::GlRenderer>();
 
 
@@ -546,7 +564,7 @@ private:
 		matProj = glm::perspective(glm::radians(90.0), -1.0, 1.0, 10000.0);//
 	}
 
-	void OnRender(double time, double dt)
+	void OnRender(double dt)
 	{
 		right = glm::vec3(sin(heading - 3.14f / 2.0f), 0, cos(heading - 3.14f / 2.0f));
 		up = glm::cross(right, direction);
@@ -628,7 +646,7 @@ private:
 	{
 
 
-		m_window.KeyDownCallback = [&](int key)
+		m_window->KeyDownCallback = [&](int key)
 		{
 			std::cout << "Key " << key << " down" << std::endl;
 
@@ -642,22 +660,22 @@ private:
 			OnKeyPress(key);
 		};
 
-		m_window.KeyRepeatCallback = [&](int key)
+		m_window->KeyRepeatCallback = [&](int key)
 		{
 			OnKeyPress(key);
 		};
 
-		m_window.ResizeCallback = [&](const glm::ivec2& newSize)
+		m_window->ResizeCallback = [&](const glm::ivec2& newSize)
 		{
 			m_framebufferPhysicalSize = newSize;
 		};
 
-		m_window.MouseUpCallback = [](int key)
+		m_window->MouseUpCallback = [](int key)
 		{
 			std::cout << "Mouse " << key << std::endl;
 		};
 
-		m_window.MouseMoveCallback = [&](const MousePos& pos)
+		m_window->MouseMoveCallback = [&](const MousePos& pos)
 		{
 			heading += pos.getDeltaPos().x * 0.01f;
 			pitch += pos.getDeltaPos().y * 0.01f;
@@ -666,22 +684,22 @@ private:
 			direction = glm::normalize(glm::vec3(cos(pitch) * sin(heading), sin(pitch), cos(pitch) * cos(heading)));
 		};
 
-		m_window.InitializeCallback = [&]()
+		m_window->InitializeCallback = [&]()
 		{
-			m_window.setVSyncInterval(1);
+			m_window->setVSyncInterval(1);
 		};
 
-		m_window.ClosingCallback = [&]()
+		m_window->ClosingCallback = [&]()
 		{
 			m_renderer->Shutdown();
 		};
 
-		m_window.RenderCallback = std::bind(&App::OnRender, this, std::placeholders::_1, std::placeholders::_2);
-		m_window.InitializeCallback = std::bind(&App::OnInitialize, this);
+		m_window->RenderCallback = std::bind(&App::OnRender, this, std::placeholders::_1);
+		m_window->InitializeCallback = std::bind(&App::OnInitialize, this);
 	}
 
 private:
-	GlfwWindow m_window;
+	std::shared_ptr<GlfwWindow> m_window;
 	std::shared_ptr<AT2::GlRenderer> m_renderer;
 
 	glm::ivec2 m_framebufferPhysicalSize = glm::ivec2(1024, 1024);
@@ -698,12 +716,8 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		InitGLFW();
-
 		App app;
 		app.Run();
-
-		ReleaseGLFW();
 	}
 	catch (AT2::AT2Exception& exception)
 	{

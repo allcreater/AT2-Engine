@@ -9,7 +9,7 @@ namespace AT2
 {
 
 
-class MeshDrawable : public IDrawable //mesh или не mesh, но определенно что-то похожее
+class MeshDrawable : public IDrawable
 {
 public:
 	void Draw(const std::shared_ptr<IRenderer>& renderer) override

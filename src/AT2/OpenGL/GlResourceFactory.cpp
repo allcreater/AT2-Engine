@@ -187,7 +187,7 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_DevIL(const str& filena
 		}
 		else
 		{
-			auto glTexture = std::make_shared<AT2::GlTexture2D>(GetInternalFormat(imageInfo.Format, imageInfo.Type), size.xy, storageLevels);
+			auto glTexture = std::make_shared<AT2::GlTexture2D>(GetInternalFormat(imageInfo.Format, imageInfo.Type), glm::xy(size), storageLevels);
 
 			for (unsigned int level = 0; level < mipmapLevels; ++level)
 			{

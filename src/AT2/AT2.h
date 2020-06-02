@@ -1,14 +1,14 @@
 #ifndef AT2_MAIN_HEADER_H
 #define AT2_MAIN_HEADER_H
 
-#define GLM_FORCE_SWIZZLE
+//#define GLM_FORCE_SWIZZLE
+#include <glm/gtx/vec_swizzle.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 
-#include <exception>
 #include <string>
 #include <vector>
 #include <set>
@@ -288,7 +288,8 @@ public:
 	virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
 	virtual void Shutdown() = 0;
-
+	
+	virtual void SetViewport(const AABB2d& viewport) = 0;
 	virtual void ClearBuffer(const glm::vec4& color) = 0;
 	virtual void ClearDepth(float depth) = 0;
 	virtual void FinishFrame() = 0;

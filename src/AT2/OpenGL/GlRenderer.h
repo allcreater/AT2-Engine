@@ -55,6 +55,7 @@ public:
 
 	void Shutdown() override;
 
+	void SetViewport(const AABB2d& viewport) override;
 	void ClearBuffer(const glm::vec4& color) override;
 	void ClearDepth(float depth) override;
 	void FinishFrame() override;

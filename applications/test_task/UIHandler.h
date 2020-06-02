@@ -36,11 +36,14 @@ namespace AT2::UI
 
 		void Draw()
 		{
-			glViewport(0, 0, m_windowSize.x, m_windowSize.y);
-			m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4(1.0f));
-			m_quadDrawable->Draw(m_renderer.lock());
+			if (auto renderer = m_renderer.lock())
+			{
+				renderer->SetViewport(AABB2d({}, m_windowSize));
+				m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4(1.0f));
+				m_quadDrawable->Draw(renderer);
 
-			m_uiRoot->TraverseBreadthFirst(std::bind(&UiRenderer::RenderNode, this, std::placeholders::_1));
+				m_uiRoot->TraverseBreadthFirst(std::bind(&UiRenderer::RenderNode, this, std::placeholders::_1));
+			}
 		}
 
 		void SetWindowSize(const glm::uvec2& windowSize) { m_windowSize = windowSize; }
@@ -49,15 +52,17 @@ namespace AT2::UI
 
 		void RenderNode(const std::shared_ptr<Node>& node)
 		{
-			auto aabb = node->GetScreenPosition();
-			//glViewport(aabb.MinBound.x, m_windowSize.y - aabb.MinBound.y - aabb.GetHeight(), aabb.GetWidth(), aabb.GetHeight());
-			glViewport(aabb.MinBound.x, aabb.MinBound.y, aabb.GetWidth(), aabb.GetHeight());
+			if (auto renderer = m_renderer.lock())
+			{
+				auto aabb = node->GetScreenPosition();
+				renderer->SetViewport(aabb);
 
-			//m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
-			//m_quadDrawable->Draw(m_renderer.lock());
+				//m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
+				//m_quadDrawable->Draw(m_renderer.lock());
 
-			if (auto nr = node->GetNodeRenderer().lock())
-				nr->Draw(m_renderer.lock());
+				if (auto nr = node->GetNodeRenderer().lock())
+					nr->Draw(renderer);
+			}
 		}
 
 		glm::vec4 DebugColor(const std::shared_ptr<Node>& node)

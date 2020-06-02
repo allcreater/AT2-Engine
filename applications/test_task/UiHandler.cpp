@@ -1,7 +1,7 @@
 #include "UIHandler.h"
 
 #include <random>
-
+#include <glm/gtx/vec_swizzle.hpp>
 
 using namespace AT2;
 using namespace AT2::UI;
@@ -51,8 +51,8 @@ struct PlotCurveSwitchingAnimation : public IAnimation
 			auto& hidingCurve = plot->GetOrCreateCurve(m_hidingCurveName);
 			auto& appearingCurve = plot->GetOrCreateCurve(m_appearingCurveName);
 
-			hidingCurve.SetColor(glm::vec4(hidingCurve.GetColor().rgb, 1.0f - t));
-			appearingCurve.SetColor(glm::vec4(appearingCurve.GetColor().rgb, t));
+			hidingCurve.SetColor(glm::vec4(xyz(hidingCurve.GetColor()), 1.0f - t));
+			appearingCurve.SetColor(glm::vec4(xyz(appearingCurve.GetColor()), t));
 		}
 
 		m_elapsedTime += dt;
@@ -133,7 +133,7 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 			//TODO: implement general way for UI coordinate system transitions
 			//dirty code :(
 			auto scrAABB = plot->GetScreenPosition();
-			glm::vec2 localMousePos = (mousePos.getPos() - scrAABB.MinBound) * plotBounds.GetSize() / scrAABB.GetSize() + plotBounds.MinBound;
+			glm::vec2 localMousePos = (static_cast<glm::vec2>(mousePos.getPos()) - scrAABB.MinBound) * plotBounds.GetSize() / scrAABB.GetSize() + plotBounds.MinBound;
 
 			auto desiredAABB = AABB2d((plotBounds.MinBound - localMousePos)*scale + localMousePos, (plotBounds.MaxBound - localMousePos)*scale + localMousePos);
 			if (desiredAABB.GetWidth() >= 200.0 && desiredAABB.GetWidth() <= 1000.0) //technical requirement :)
@@ -150,7 +150,7 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 		{
 			auto plotBounds = plot->GetObservingZone();
 			auto scrAABB = plot->GetScreenPosition();
-			glm::vec2 localMouseDelta = mousePos.getDeltaPos() * plotBounds.GetSize() / scrAABB.GetSize();
+			glm::vec2 localMouseDelta = static_cast<glm::vec2>(mousePos.getDeltaPos()) * plotBounds.GetSize() / scrAABB.GetSize();
 
 			plot->SetObservingZone(AABB2d(plotBounds.MinBound - localMouseDelta, plotBounds.MaxBound - localMouseDelta));
 

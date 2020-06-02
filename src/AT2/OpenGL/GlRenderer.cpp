@@ -86,6 +86,16 @@ void GlRenderer::Shutdown()
 {
 }
 
+void GlRenderer::SetViewport(const AABB2d& viewport)
+{
+	glViewport(
+		static_cast<GLint>(viewport.MinBound.x),
+		static_cast<GLint>(viewport.MinBound.y),
+		static_cast<GLint>(viewport.GetWidth()),
+		static_cast<GLint>(viewport.GetHeight())
+	);
+}
+
 void GlRenderer::GlErrorCallback(GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length, const GLchar * _message, const GLvoid * _userParam)
 {
 	auto rendererInstance = reinterpret_cast<const GlRenderer*>(_userParam);

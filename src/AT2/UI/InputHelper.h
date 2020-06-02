@@ -1,8 +1,8 @@
 #ifndef UI_INPUT_VISITOR_HEADER
 #define UI_INPUT_VISITOR_HEADER
 
+#include "../OpenGL/GLFW/callback_types.h" //TODO: detach type MousePos from GLFW
 #include "UI.h"
-#include "../OpenGL/GLFW/glfw_window.h" //TODO: detach type MousePos from GLFW
 
 namespace AT2::UI
 {

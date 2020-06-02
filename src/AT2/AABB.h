@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <limits>
+
 struct AABB2d
 {
 	glm::vec2 MinBound;
@@ -13,7 +14,7 @@ public:
 	AABB2d () = default;
 	AABB2d (const AABB2d&) = default;
 
-	bool operator ==(const AABB2d& other) const
+	bool operator ==(const AABB2d& other) const noexcept
 	{
 		return (MinBound == other.MinBound) && (MaxBound == other.MaxBound);
 	}
