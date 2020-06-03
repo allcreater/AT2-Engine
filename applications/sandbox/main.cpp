@@ -10,7 +10,9 @@
 #include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
 
-#include <At2/camera.h>
+
+#include <AT2/TextureLoader.h>
+#include <AT2/camera.h>
 
 #include "../drawable.h"
 #include <AT2/OpenGL/GlDrawPrimitive.h>
@@ -406,11 +408,11 @@ private:
 
 		Noise3Tex = std::shared_ptr<AT2::ITexture>(texture);
 
-		GrassTex = m_renderer->GetResourceFactory().LoadTexture("resources/grass03.dds");
-		RockTex = m_renderer->GetResourceFactory().LoadTexture("resources/rock04.dds");
-		NormalMapTex = m_renderer->GetResourceFactory().LoadTexture("resources/terrain_normalmap.dds");
-		HeightMapTex = m_renderer->GetResourceFactory().LoadTexture("resources/heightmap.dds");
-		EnvironmentMapTex = m_renderer->GetResourceFactory().LoadTexture("resources/04-23_Day_D.hdr");
+		GrassTex = AT2::TextureLoader::LoadTexture(*m_renderer, "resources/grass03.dds");
+		RockTex = AT2::TextureLoader::LoadTexture(*m_renderer, "resources/rock04.dds");
+		NormalMapTex = AT2::TextureLoader::LoadTexture(*m_renderer, "resources/terrain_normalmap.dds");
+		HeightMapTex = AT2::TextureLoader::LoadTexture(*m_renderer, "resources/heightmap.dds");
+		EnvironmentMapTex = AT2::TextureLoader::LoadTexture(*m_renderer, "resources/04-23_Day_D.hdr");
 
 		CameraUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(terrainShader)->GetUniformBlockInfo("CameraBlock"));
 		CameraUB->SetBindingPoint(1);

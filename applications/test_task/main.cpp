@@ -55,7 +55,7 @@ private:
 
 	void OnRender(double dt)
 	{
-		glViewport(0, 0, m_window->getSize().x, m_window->getSize().y);
+		m_renderer->SetViewport(AABB2d{ {0, 0}, m_window->getSize() });
 		m_renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
 		m_renderer->ClearDepth(0);
 

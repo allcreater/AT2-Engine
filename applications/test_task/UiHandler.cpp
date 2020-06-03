@@ -1,5 +1,7 @@
 #include "UIHandler.h"
 
+#include <AT2/TextureLoader.h>
+
 #include <random>
 #include <glm/gtx/vec_swizzle.hpp>
 
@@ -70,6 +72,65 @@ private:
 	double m_Duration, m_elapsedTime = 0.0;
 	std::string m_hidingCurveName, m_appearingCurveName;
 };
+
+UiRenderer::UiRenderer(std::shared_ptr<AT2::IRenderer>& renderer, std::shared_ptr<AT2::UI::Node> node):
+    m_renderer(renderer),
+    m_uiRoot(node)
+{
+    auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        {
+            R"(resources/shaders/background.vs.glsl)",
+            R"(resources/shaders/background.fs.glsl)"
+        });
+
+    auto texture = AT2::TextureLoader::LoadTexture(*renderer, R"(resources/helix_nebula.jpg)");
+
+    m_quadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(renderer);
+    m_quadDrawable->Shader = postprocessShader;
+    m_quadDrawable->Textures = {texture};
+    {
+        auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
+        //uniformStorage->SetUniform("u_phase", Phase);
+        uniformStorage->SetUniform("u_BackgroundTexture", texture);
+        //uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
+        //uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
+        m_quadDrawable->UniformBuffer = uniformStorage;
+    }
+}
+
+void UiRenderer::Draw()
+{
+    if (auto renderer = m_renderer.lock())
+    {
+        renderer->SetViewport(AABB2d({}, m_windowSize));
+        m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4(1.0f));
+        m_quadDrawable->Draw(renderer);
+
+        m_uiRoot->TraverseBreadthFirst(std::bind(&UiRenderer::RenderNode, this, std::placeholders::_1));
+    }
+}
+
+void UiRenderer::RenderNode(const std::shared_ptr<Node>& node)
+{
+    if (auto renderer = m_renderer.lock())
+    {
+        auto aabb = node->GetScreenPosition();
+        renderer->SetViewport(aabb);
+
+        //m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
+        //m_quadDrawable->Draw(m_renderer.lock());
+
+        if (auto nr = node->GetNodeRenderer().lock())
+            nr->Draw(renderer);
+    }
+}
+
+glm::vec4 UiRenderer::DebugColor(const std::shared_ptr<Node>& node)
+{
+    std::hash<std::string> hash_fn;
+    auto h = hash_fn(std::string(node->GetName()));
+    return glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0);
+}
 
 void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 {

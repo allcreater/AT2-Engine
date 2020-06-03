@@ -3,27 +3,13 @@
 #include "GlVertexArray.h"
 #include "GlShaderProgram.h"
 
-#ifdef USE_GLI
-#include <gli/gli.hpp>
-#endif
-
-#include <IL/il.h>
-#include <IL/ilu.h>
-
-
-#include <unordered_map>
 #include <fstream>
-#include <algorithm>
 
-using namespace std::literals;
+
+
 using namespace AT2;
 
-//TODO add caching
-std::shared_ptr<ITexture> GlResourceFactory::LoadTexture(const str& _filename) const
-{
-	return LoadTexture_DevIL(_filename);
-}
-
+/*
 std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filename) const
 {
 #ifdef USE_GLI
@@ -105,8 +91,9 @@ std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filenam
 	return nullptr;
 #endif
 }
+*/
 
-GLint GlResourceFactory::GetInternalFormat(GLuint externalFormat, GLuint externalType) const
+GLint GlResourceFactory::GetInternalFormat(GLuint externalFormat, GLuint externalType)
 {
 	if (externalType == GL_UNSIGNED_BYTE)
 	{
@@ -138,111 +125,13 @@ GLint GlResourceFactory::GetInternalFormat(GLuint externalFormat, GLuint externa
 		throw AT2::AT2Exception("GlResourceFactory: not supported texture data type");
 }
 
-class IlImage
-{
-public:
-	IlImage()
-	{
-		m_id = ilGenImage();
-	}
-
-	~IlImage()
-	{
-		ilDeleteImage(m_id);
-	}
-
-    [[nodiscard]] ILuint getId() const noexcept { return m_id; }
-
-private:
-	ILuint m_id;
-};
-
-std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_DevIL(const str& filename) const
-{
-	const bool enableAutomipmaps = true;
-
-	const IlImage ilImage;
-	ilBindImage(ilImage.getId());
-
-	if (ilLoadImage(filename.c_str()) == IL_TRUE)
-	{
-		ILinfo imageInfo;
-		iluGetImageInfo(&imageInfo);
-
-		GlTexture::BufferData bd;
-		bd.ExternalFormat = imageInfo.Format;
-
-		auto size = glm::uvec3(imageInfo.Width, imageInfo.Height, imageInfo.Depth);
-
-		ILuint mipmapLevels = std::max(imageInfo.NumMips, 1u);
-		ILuint storageLevels = (imageInfo.NumMips || !enableAutomipmaps) ? imageInfo.NumMips : static_cast<ILuint>(log(std::max({ size.x, size.y, size.z })) / log(2));
-
-
-		if (imageInfo.Depth > 1)
-		{
-			auto glTexture = std::make_shared<AT2::GlTexture3D>(GetInternalFormat(imageInfo.Format, imageInfo.Type), size, storageLevels);
-			
-			for (unsigned int level = 0; level < mipmapLevels; ++level)
-			{
-				ilActiveMipmap(level);
-			
-				ILinfo mipmapImageInfo;
-				iluGetImageInfo(&mipmapImageInfo);
-
-				bd.Height = mipmapImageInfo.Height;
-				bd.Width = mipmapImageInfo.Width;
-				bd.Depth = mipmapImageInfo.Depth;
-				bd.Data = mipmapImageInfo.Data;
-				bd.DataType = mipmapImageInfo.Type;
-
-				glTexture->SetData(level, bd);
-			}
-
-			if (storageLevels != imageInfo.NumMips)
-				glTexture->BuildMipmaps();
-
-			return glTexture;
-		}
-
-        auto glTexture = std::make_shared<AT2::GlTexture2D>(GetInternalFormat(imageInfo.Format, imageInfo.Type), glm::xy(size), storageLevels);
-
-        for (unsigned int level = 0; level < mipmapLevels; ++level)
-        {
-            ilActiveMipmap(level);
-
-            ILinfo mipmapImageInfo;
-            iluGetImageInfo(&mipmapImageInfo);
-
-            bd.Height = mipmapImageInfo.Height;
-            bd.Width = mipmapImageInfo.Width;
-            bd.Depth = 1;
-            bd.Data = mipmapImageInfo.Data;
-            bd.DataType = mipmapImageInfo.Type;
-
-            glTexture->SetData(level, bd);
-        }
-
-        if (storageLevels != imageInfo.NumMips)
-            glTexture->BuildMipmaps();
-
-        return glTexture;
-    }
-
-    throw AT2Exception(AT2Exception::ErrorCase::File, "GlResourceFactory: could not load image");
-}
 
 GlResourceFactory::GlResourceFactory(GlRenderer* renderer) : m_renderer(renderer)
 {
-	ilInit();
-	iluInit();
-
-	ilEnable(IL_ORIGIN_SET);
-	ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT);
 }
 
 GlResourceFactory::~GlResourceFactory()
 {
-	ilShutDown();
 }
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const

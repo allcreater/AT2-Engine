@@ -10,9 +10,11 @@
 
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <set>
 #include <memory>
+#include <variant>
 
 #include "log.h"
 #include "utils.hpp"
@@ -21,6 +23,8 @@
 const double pi = std::acos(-1);
 
 #include "AT2_types.hpp"
+
+using namespace std::literals;
 
 namespace AT2
 {
@@ -265,10 +269,9 @@ public:
 	IResourceFactory(const IResourceFactory& other) = delete;
 	IResourceFactory& operator= (const IResourceFactory& other) = delete;
 
-	virtual ~IResourceFactory() {}
+	virtual ~IResourceFactory() = default;
 
 public:
-	virtual std::shared_ptr<ITexture> LoadTexture(const str& filename) const = 0; //TODO: maybe I need to detach load functionality 
 	virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const = 0; //TODO: provide possibility to create different textures with different formats
 	virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const = 0;

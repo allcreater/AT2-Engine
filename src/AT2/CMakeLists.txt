@@ -22,7 +22,7 @@ add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
 )
 
-target_link_libraries(${PROJECT_NAME} glfw assimp::assimp ${IL_LIBRARIES} ${ILU_LIBRARIES}
-                         GLEW::glew glm) 
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw assimp::assimp ${IL_LIBRARIES} ${ILU_LIBRARIES}
+                         PUBLIC GLEW::glew glm) 
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

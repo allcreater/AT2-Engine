@@ -27,7 +27,6 @@ public:
 	~GlResourceFactory();
 
 public:
-	std::shared_ptr<ITexture> LoadTexture(const str& filename) const override;
 	std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const override;
 	std::shared_ptr<IVertexArray> CreateVertexArray() const override;
 	std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const override;
@@ -36,9 +35,7 @@ public:
 	void ReloadResources(ReloadableGroup group) override;
 
 protected:
-	GLint GetInternalFormat(GLuint externalFormat, GLuint externalType) const;
-	std::shared_ptr<ITexture> LoadTexture_GLI(const str& filename) const;
-	std::shared_ptr<ITexture> LoadTexture_DevIL(const str& filename) const;
+	static GLint GetInternalFormat(GLuint externalFormat, GLuint externalType);
 
 private:
 	GlRenderer* m_renderer;

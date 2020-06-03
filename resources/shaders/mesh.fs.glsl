@@ -45,6 +45,6 @@ void main()
 
 	FragColor.rgba = texture (u_texDiffuse, texCoord.st*vec2(1,-1));
 
-	vec3 normal = u_matNormal * input.normal;
+	vec3 normal = input.normal;
 	FragNormal = vec4(normal, 1.0);
 }
