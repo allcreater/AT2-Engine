@@ -7,6 +7,9 @@ namespace AT2
 {
 	
 class GlRenderer;
+class GlTexture;
+class GlFrameBuffer;
+
 
 class GlRendererCapabilities : public IRendererCapabilities
 {
@@ -49,9 +52,9 @@ public:
 	virtual ~GlRenderer();
 
 public:
-	IResourceFactory& GetResourceFactory() const override				{ return *m_resourceFactory.get(); }
-	IStateManager& GetStateManager() const override						{ return *m_stateManager.get(); }
-	IRendererCapabilities& GetRendererCapabilities() const override		{ return *m_rendererCapabilities.get(); }
+	IResourceFactory& GetResourceFactory() const override				{ return *m_resourceFactory; }
+	IStateManager& GetStateManager() const override						{ return *m_stateManager; }
+	IRendererCapabilities& GetRendererCapabilities() const override		{ return *m_rendererCapabilities; }
 
 	void Shutdown() override;
 

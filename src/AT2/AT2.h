@@ -69,7 +69,7 @@ public:
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
-	
+
 };
 
 class IVertexBuffer// : public IBuffer
@@ -210,6 +210,7 @@ public:
 		Renderer,
 		Shader,
 		Buffer,
+		Texture,
 		UI,
 		File
 	} Case;

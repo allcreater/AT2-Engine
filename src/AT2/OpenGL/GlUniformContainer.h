@@ -112,7 +112,7 @@ private:
 	IGlUniform* GetOrCreateUniform(const str& name);
 
 private:
-	std::map<str, IGlUniform*> m_uniformsMap; //TODO achtung: поле name и map key дублируются
+	std::map<str, IGlUniform*> m_uniformsMap; //TODO achtung: РїРѕР»Рµ name Рё map key РґСѓР±Р»РёСЂСѓСЋС‚СЃСЏ
 	std::weak_ptr<GlShaderProgram> m_program;
 };
 

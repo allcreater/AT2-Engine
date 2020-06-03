@@ -10,6 +10,8 @@
 #include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
 
+#include <At2/camera.h>
+
 #include "../drawable.h"
 #include <AT2/OpenGL/GlDrawPrimitive.h>
 
@@ -124,6 +126,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 		{
 			BuildVAO();
 			TraverseNode(m_scene->mRootNode, aiMatrix4x4());
+			ExtractMaterials();
 		}
 
 	protected:
@@ -142,7 +145,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 	protected:
 		void AddMesh(const aiMesh* _mesh)
 		{
-			auto vertexOffset = m_verticesVec.size();
+			const auto vertexOffset = m_verticesVec.size();
 
 			m_meshIndexOffsets.push_back(m_indicesVec.size());
 
@@ -184,6 +187,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 			for (int i = 0; i < m_scene->mNumMaterials; ++i)
 			{
 				const aiMaterial* material = m_scene->mMaterials[i];
+
 
 				aiString path;
 				if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS)
@@ -227,7 +231,7 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 
 		glm::mat4 ConvertMatrix(const aiMatrix4x4& _t) const
 		{
-			return glm::transpose(*(reinterpret_cast<const glm::mat4*>(&_t)));
+			return glm::transpose(glm::make_mat4(&_t.a1));
 		}
 		
 	};
@@ -270,7 +274,7 @@ float Render(const std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer*
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glDepthMask(GL_TRUE);
-	glCullFace(GL_BACK);
+	glCullFace(GL_FRONT);
 	glPatchParameteri( GL_PATCH_VERTICES, 4 );
 	TerrainDrawable->Draw(renderer);
 
@@ -561,23 +565,19 @@ private:
 
 		glEnable(GL_CULL_FACE);
 
-		matProj = glm::perspective(glm::radians(90.0), -1.0, 1.0, 10000.0);//
+		m_camera.setProjection(glm::perspective(glm::radians(90.0), 1.0, 1.0, 10000.0));
 	}
 
 	void OnRender(double dt)
 	{
-		right = glm::vec3(sin(heading - 3.14f / 2.0f), 0, cos(heading - 3.14f / 2.0f));
-		up = glm::cross(right, direction);
-		matMV = glm::lookAt(position, position + direction, up);
+		m_renderer->SetViewport(AABB2d({ 0, 0 }, m_framebufferPhysicalSize));
 
-
-		glViewport(0, 0, m_framebufferPhysicalSize.x, m_framebufferPhysicalSize.y);
 
 		if (MovingLightMode)
-			LightsArray[0]->SetUniform("u_lightPos", glm::vec4(position, 1.0));
+			LightsArray[0]->SetUniform("u_lightPos", glm::vec4(m_camera.getPosition(), 1.0));
 
 #ifndef AT2_USE_OCULUS_RIFT
-		Render(m_renderer, NullFBO.get(), matProj, matMV);
+		Render(m_renderer, NullFBO.get(), m_camera.getProjection(), m_camera.getView());
 #else
 		// Get eye poses, feeding in correct IPD offset
 		ovrVector3f      ViewOffset[2] = { EyeRenderDesc[0].HmdToEyeViewOffset, EyeRenderDesc[1].HmdToEyeViewOffset };
@@ -630,18 +630,6 @@ private:
 		m_renderer->FinishFrame();
 	}
 
-	void OnKeyPress(int key)
-	{
-		if (key == GLFW_KEY_W)
-			position += direction;
-		else if (key == GLFW_KEY_S)
-			position -= direction;
-		else if (key == GLFW_KEY_A)
-			position += right;
-		else if (key == GLFW_KEY_D)
-			position -= right;
-	}
-
 	void SetupWindowCallbacks()
 	{
 
@@ -656,13 +644,6 @@ private:
 				MovingLightMode = !MovingLightMode;
 			else if (key == GLFW_KEY_R)
 				m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
-
-			OnKeyPress(key);
-		};
-
-		m_window->KeyRepeatCallback = [&](int key)
-		{
-			OnKeyPress(key);
 		};
 
 		m_window->ResizeCallback = [&](const glm::ivec2& newSize)
@@ -677,11 +658,12 @@ private:
 
 		m_window->MouseMoveCallback = [&](const MousePos& pos)
 		{
-			heading += pos.getDeltaPos().x * 0.01f;
-			pitch += pos.getDeltaPos().y * 0.01f;
-			pitch = glm::clamp(pitch, -glm::pi<float>() / 2, glm::pi<float>() / 2);
+			const auto relativePos = pos.getPos() / static_cast<glm::dvec2>(m_window->getSize());
 
-			direction = glm::normalize(glm::vec3(cos(pitch) * sin(heading), sin(pitch), cos(pitch) * cos(heading)));
+			m_camera.setRotation(
+				glm::angleAxis(glm::mix(-glm::pi<float>(), glm::pi<float>(), relativePos.x), glm::vec3{ 0.0, -1.0, 0.0 }) *
+				glm::angleAxis(glm::mix(-glm::pi<float>() / 2, glm::pi<float>() / 2, relativePos.y), glm::vec3{ 1.0, 0.0, 0.0 })
+			);
 		};
 
 		m_window->InitializeCallback = [&]()
@@ -694,6 +676,19 @@ private:
 			m_renderer->Shutdown();
 		};
 
+		m_window->UpdateCallback = [&](double dt)
+		{
+			const float moveSpeed = dt * 50.0f;
+			if (m_window->isKeyDown(GLFW_KEY_W))
+				m_camera.setPosition(m_camera.getPosition() + m_camera.getForward() * moveSpeed);
+			if (m_window->isKeyDown(GLFW_KEY_S))
+				m_camera.setPosition(m_camera.getPosition() - m_camera.getForward() * moveSpeed);
+			if (m_window->isKeyDown(GLFW_KEY_A))
+				m_camera.setPosition(m_camera.getPosition() + m_camera.getLeft() * moveSpeed);
+			if (m_window->isKeyDown(GLFW_KEY_D))
+				m_camera.setPosition(m_camera.getPosition() - m_camera.getLeft() * moveSpeed);
+		};
+
 		m_window->RenderCallback = std::bind(&App::OnRender, this, std::placeholders::_1);
 		m_window->InitializeCallback = std::bind(&App::OnInitialize, this);
 	}
@@ -704,12 +699,7 @@ private:
 
 	glm::ivec2 m_framebufferPhysicalSize = glm::ivec2(1024, 1024);
 
-	
-	//TODO: remake
-	glm::mat4 matProj, matMV;
-	float heading = 0.0f, pitch = 0.0f;
-	glm::vec3 position = glm::vec3(0.0, 0.0, 0.0), direction;
-	glm::vec3 right, up;
+	AT2::Camera m_camera;
 };
 
 int main(int argc, char *argv[])

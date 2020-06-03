@@ -71,7 +71,7 @@ namespace AT2
 		GlTexture1D(GLint internalFormat, GLuint size, GLuint levels=1);
 		
 	public:
-		void SetData(GLuint level, BufferData data); //TODO!!! external format - характеристика входных данных! Передавать надо в SetData!
+		void SetData(GLuint level, BufferData data); //TODO!!! external format - С…Р°СЂР°РєС‚РµСЂРёСЃС‚РёРєР° РІС…РѕРґРЅС‹С… РґР°РЅРЅС‹С…! РџРµСЂРµРґР°РІР°С‚СЊ РЅР°РґРѕ РІ SetData!
 	};
 
 
@@ -79,7 +79,7 @@ namespace AT2
 	{
 	public:
 		GlTexture2D(GLint internalFormat, glm::uvec2 size, GLuint levels=1);
-		GlTexture2D(GLuint id, GLint internalFormat, glm::uvec2 size, GLuint levels = 1); //TODO временный костыль для LibOVR
+		GlTexture2D(GLuint id, GLint internalFormat, glm::uvec2 size, GLuint levels = 1); //TODO РІСЂРµРјРµРЅРЅС‹Р№ РєРѕСЃС‚С‹Р»СЊ РґР»СЏ LibOVR
 
 	public:
 		void SetData(GLuint level, BufferData data);
