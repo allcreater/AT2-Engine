@@ -60,7 +60,7 @@ std::shared_ptr<AT2::IFrameBuffer> NullFBO;
 std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, TerrainDrawable, SphereLightDrawable;
 std::vector<std::shared_ptr<AT2::IDrawable>> SceneDrawables;
 
-bool WireframeMode = false, MovingLightMode = true;
+bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true;
 size_t NumActiveLights = 50;
 
 GLfloat Phase = 0.0;
@@ -125,8 +125,8 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 		void Build()
 		{
 			BuildVAO();
-			TraverseNode(m_scene->mRootNode, aiMatrix4x4());
-			ExtractMaterials();
+            ExtractMaterials();
+			TraverseNode(m_scene->mRootNode, glm::scale(glm::mat4{1.0f}, {10.0, 10.0, 10.0}));
 		}
 
 	protected:
@@ -172,10 +172,10 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 
 			auto& rf = m_renderer->GetResourceFactory();
 			auto vao = rf.CreateVertexArray();
-			vao->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_verticesVec.size(), m_verticesVec.data()));
-			vao->SetVertexBuffer(2, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_texCoordVec.size(), m_texCoordVec.data()));
-			vao->SetVertexBuffer(3, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_normalsVec.size(), m_normalsVec.data()));
-			vao->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size(), m_indicesVec.data()));
+			vao->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_verticesVec.size() * sizeof(glm::vec3), m_verticesVec.data()));
+			vao->SetVertexBuffer(2, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_texCoordVec.size() * sizeof(glm::vec3), m_texCoordVec.data()));
+			vao->SetVertexBuffer(3, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_normalsVec.size() * sizeof(glm::vec3), m_normalsVec.data()));
+			vao->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size() * sizeof(GLuint), m_indicesVec.data()));
 
 			m_buildedMesh = std::make_shared<GlMeshDrawable>();
 			m_buildedMesh->Shader = MeshShader;
@@ -195,14 +195,14 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 					std::filesystem::path modelPath = m_scenePath.parent_path();
 					modelPath /= path.data;
 
-					auto texDiffuse = m_renderer->GetResourceFactory().LoadTexture(modelPath.string());
+					//auto texDiffuse = m_renderer->GetResourceFactory().LoadTexture(modelPath.string());
 					//pp.Textures.insert(texDiffuse);
 					//storage->SetUniform("u_texDiffuse", texDiffuse);
 				}
 			}
 		}
 
-		void TraverseNode(const aiNode* _node, aiMatrix4x4 _transform)
+		void TraverseNode(const aiNode* _node, glm::mat4 _transform)
 		{
 			if (_node->mNumMeshes)
 			{
@@ -212,8 +212,8 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 					const aiMesh* mesh = m_scene->mMeshes[meshIndex];
 
 					GlMeshDrawable::ParametrizedPrimitive pp;
-					pp.Primitive = std::make_shared<AT2::GlDrawElementsPrimitive>(AT2::GlDrawPrimitiveType::Triangles, mesh->mNumFaces * 3, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, m_meshIndexOffsets[meshIndex]*sizeof(GLuint));
-					pp.ModelMatrix = ConvertMatrix(_transform);
+					pp.Primitive = std::make_shared<AT2::GlDrawElementsPrimitive>(AT2::GlDrawPrimitiveType::Triangles, mesh->mNumFaces * 3, AT2::GlDrawElementsPrimitive::IndicesType::UnsignedInt, m_meshIndexOffsets[meshIndex] * sizeof(GLuint));
+					pp.ModelMatrix = _transform;
 					
 					m_buildedMesh->Primitives.push_back(pp);
 					if (!m_buildedMesh->UniformBuffer)
@@ -222,14 +222,14 @@ std::shared_ptr<AT2::IDrawable> LoadModel(const AT2::str& _filename, const std::
 			}
 			else
 			{
-				_transform = _node->mTransformation * _transform;
+				_transform = ConvertMatrix(_node->mTransformation) * _transform;
 			}
 
 			for (int i = 0; i < _node->mNumChildren; i++)
 				TraverseNode(_node->mChildren[i], _transform);
 		}
 
-		glm::mat4 ConvertMatrix(const aiMatrix4x4& _t) const
+		static glm::mat4 ConvertMatrix(const aiMatrix4x4& _t)
 		{
 			return glm::transpose(glm::make_mat4(&_t.a1));
 		}
@@ -294,7 +294,7 @@ float Render(const std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer*
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	glDepthMask(GL_FALSE);
 	glDepthFunc(GL_GREATER);
-	glCullFace(GL_FRONT);
+	glCullFace(GL_BACK);
 
 	for (const auto& light : LightsArray)
 	{
@@ -505,7 +505,7 @@ private:
 		LightsArray[0]->SetUniform("u_lightColor", glm::vec3(1.0f, 0.0f, 0.5f));
 
 #ifdef USE_ASSIMP
-		SceneDrawables.push_back(LoadModel("resources/jeep1.3ds", m_renderer));
+		SceneDrawables.push_back(LoadModel("resources/matball.glb", m_renderer));
 #endif
 
 
@@ -570,6 +570,13 @@ private:
 
 	void OnRender(double dt)
 	{
+		if (NeedResourceReload)
+		{
+			m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
+			NeedResourceReload = false;
+		}
+
+
 		m_renderer->SetViewport(AABB2d({ 0, 0 }, m_framebufferPhysicalSize));
 
 
@@ -643,7 +650,7 @@ private:
 			else if (key == GLFW_KEY_M)
 				MovingLightMode = !MovingLightMode;
 			else if (key == GLFW_KEY_R)
-				m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
+				NeedResourceReload = true;
 		};
 
 		m_window->ResizeCallback = [&](const glm::ivec2& newSize)
@@ -687,6 +694,9 @@ private:
 				m_camera.setPosition(m_camera.getPosition() + m_camera.getLeft() * moveSpeed);
 			if (m_window->isKeyDown(GLFW_KEY_D))
 				m_camera.setPosition(m_camera.getPosition() - m_camera.getLeft() * moveSpeed);
+
+			if (m_window->isKeyDown(GLFW_KEY_ESCAPE))
+				m_window->setCloseFlag(true);
 		};
 
 		m_window->RenderCallback = std::bind(&App::OnRender, this, std::placeholders::_1);

@@ -24,7 +24,7 @@ void main()
 	vec4 viewSpacePos = u_matView * u_matModel * vec4(a_Position, 1.0);
 
 	output.texCoord = a_TexCoord;
-	output.normal = a_Normal;
+	output.normal = u_matNormal * a_Normal;
 	output.position = viewSpacePos.xyz;
 
 	gl_Position = u_matProjection * viewSpacePos;
