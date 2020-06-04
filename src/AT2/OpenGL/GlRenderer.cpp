@@ -1,4 +1,6 @@
 #include "GlRenderer.h"
+
+#include "GlFrameBuffer.h"
 #include "../StateManager.h"
 
 using namespace AT2;
@@ -67,6 +69,11 @@ void GlRenderer::FinishFrame()
 {
 	glFinish();
 	//SDL_GL_SwapWindow(m_window);
+}
+
+IFrameBuffer& GlRenderer::GetDefaultFramebuffer() const
+{
+	return GlScreenFrameBuffer::Get();
 }
 
 void GlRenderer::ClearBuffer(const glm::vec4& color)

@@ -23,7 +23,7 @@ public:
 	std::weak_ptr<IVertexArray> GetActiveVertexArray() const override;
 
 private:
-	Utils::dynarray<std::shared_ptr<ITexture>> m_bindedTextures;
+	std::vector<std::shared_ptr<ITexture>> m_bindedTextures;
 	std::shared_ptr<IShaderProgram> m_activeShader;
 	std::shared_ptr<IFrameBuffer> m_activeFramebuffer;
 	std::shared_ptr<IVertexArray> m_activeVertexArray;

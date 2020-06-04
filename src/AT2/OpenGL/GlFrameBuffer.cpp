@@ -20,6 +20,8 @@ void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const st
 	if (attachementNumber >= m_colorAttachements.size())
 		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: unsupported attachement number");
 
+	m_dirtyFlag = true;
+
 	auto texture = std::dynamic_pointer_cast<GlTexture>(abstractTexture);
 
 	const auto attachement = GL_COLOR_ATTACHMENT0 + attachementNumber;
@@ -46,8 +48,6 @@ void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const st
 	}
 
     m_colorAttachements[attachementNumber] = texture;
-
-	//Validate();
 }
 
 std::shared_ptr<ITexture> GlFrameBuffer::GetColorAttachement(unsigned int attachementNumber) const
@@ -60,6 +60,8 @@ std::shared_ptr<ITexture> GlFrameBuffer::GetColorAttachement(unsigned int attach
 
 void GlFrameBuffer::SetDepthAttachement(const std::shared_ptr<ITexture> abstractTexture)
 {
+	m_dirtyFlag = true;
+
 	m_depthAttachement = std::dynamic_pointer_cast<GlTexture>(abstractTexture);
 	if (!m_depthAttachement)
 	{
@@ -70,49 +72,33 @@ void GlFrameBuffer::SetDepthAttachement(const std::shared_ptr<ITexture> abstract
     else
         glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, static_cast<GLenum>(m_depthAttachement->GetTargetType()), m_depthAttachement->GetId(), 0);
 
-    //Validate();
-    }
+}
 
-    std::shared_ptr<ITexture> GlFrameBuffer::GetDepthAttachement() const
+std::shared_ptr<ITexture> GlFrameBuffer::GetDepthAttachement() const
+{
+    return m_depthAttachement;
+}
+
+void GlFrameBuffer::Bind()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+
+	//validating
+    if(m_dirtyFlag)
     {
-        return m_depthAttachement;
+	    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		    throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: framebuffer validation failed");
+
+	    m_size = m_colorAttachements[0]->GetSize();
+	    m_dirtyFlag = false;
     }
 
-    void GlFrameBuffer::Validate()
-    {
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: framebuffer validation failed");
-    }
+    const size_t numAttachements = m_colorAttachements.size();
+    std::vector<GLenum> buffers (numAttachements);
+    for (size_t i = 0; i < numAttachements; ++i)
+        buffers[i] = (m_colorAttachements[i]) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
 
+    glViewport(0, 0, m_size.x, m_size.y); //TODO
 
-    void GlFrameBuffer::Resize (const glm::ivec2& _size)
-    {
-        /*
-	glGenRenderbuffers (1, &renderbufferId );
-	glNamedRenderbufferStorageEXT (renderbufferId, GL_DEPTH_COMPONENT, _size.x, _size.y );
-	glNamedFramebufferRenderbufferEXT (m_id, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbufferId );
-
-
-	glNamedFramebufferTexture2DEXT (m_id, GL_COLOR_ATTACHMENT0, target, texId, 0);
-
-	if (glCheckNamedFramebufferStatusEXT (m_id, static_cast<GLenum>(m_type)) != GL_FRAMEBUFFER_COMPLETE)
-		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: framebuffer is incorrect");
-	*/
-        m_size = _size;
-    }
-
-    void GlFrameBuffer::Bind()
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-        //Validate();
-
-        const size_t numAttachements = m_colorAttachements.size();
-        Utils::dynarray<GLenum> buffers(numAttachements);
-        for (size_t i = 0; i < numAttachements; ++i)
-            buffers[i] = (m_colorAttachements[i]) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
-
-        auto size = m_colorAttachements[0]->GetSize();
-        glViewport(0, 0, size.x, size.y); //TODO
-
-        glDrawBuffers(buffers.size(), buffers.data());
-    }
+    glDrawBuffers(buffers.size(), buffers.data());
+}

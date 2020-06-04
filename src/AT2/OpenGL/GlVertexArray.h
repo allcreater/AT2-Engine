@@ -27,7 +27,7 @@ private:
 	GLuint m_id;
 
 	//we are sure that all buffer will be at least GlVertexBuffer or derived types
-	Utils::dynarray<std::shared_ptr<IVertexBuffer>> m_buffers;
+	std::vector<std::shared_ptr<IVertexBuffer>> m_buffers;
 	std::shared_ptr<IVertexBuffer> m_indexBuffer;
 };
 

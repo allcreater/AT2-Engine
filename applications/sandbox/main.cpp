@@ -34,7 +34,6 @@ std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
 
 std::shared_ptr<AT2::GlFrameBuffer> Stage1FBO, Stage2FBO;
-std::shared_ptr<AT2::IFrameBuffer> NullFBO;
 
 std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, TerrainDrawable, SphereLightDrawable;
 AT2::Scene Scene;
@@ -47,7 +46,7 @@ GLfloat Phase = 0.0;
 std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 
 //returns frame time
-float Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer* framebuffer, const AT2::Camera& camera)
+float Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer& framebuffer, const AT2::Camera& camera)
 {
 	auto timeBefore = std::chrono::high_resolution_clock::now();
 
@@ -107,7 +106,7 @@ float Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer* frame
 	SkylightDrawable->Draw(renderer);
 	
 	//Postprocess stage
-	framebuffer->Bind();
+	framebuffer.Bind();
 	//glEnable(GL_FRAMEBUFFER_SRGB);
 
 	glDepthMask(GL_TRUE);
@@ -263,9 +262,6 @@ private:
 			Stage2FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, m_window->getSize()));
 			Stage2FBO->SetDepthAttachement(Stage1FBO->GetDepthAttachement()); //depth is common with previous stage
 
-
-			NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
-
 			//terrain
 			TerrainDrawable = AT2::MeshDrawable::MakeTerrainDrawable(m_renderer, 64, 64);
 			TerrainDrawable->Shader = TerrainShader;
@@ -334,7 +330,7 @@ private:
 		if (MovingLightMode)
 			LightsArray[0]->SetUniform("u_lightPos", glm::vec4(m_camera.getPosition(), 1.0));
 
-		Render(m_renderer, NullFBO.get(), m_camera);
+		Render(m_renderer, m_renderer->GetDefaultFramebuffer(), m_camera);
 
 
 		m_renderer->FinishFrame();

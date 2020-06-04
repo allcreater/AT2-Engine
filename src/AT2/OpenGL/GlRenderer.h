@@ -60,6 +60,7 @@ public:
 	void ClearDepth(float depth) override;
 	void FinishFrame() override;
 
+	IFrameBuffer& GetDefaultFramebuffer() const override;
 
 private:
 	static void GlErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar * message, const GLvoid * userParam);

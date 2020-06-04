@@ -18,30 +18,34 @@ public:
 	void Bind() override;
 	unsigned int GetId() const override { return m_id; }
 
-	virtual void Resize (const glm::ivec2& size);
-
 	void SetColorAttachement(unsigned int attachementNumber, std::shared_ptr<ITexture> texture) override;
 	std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const override;
 	void SetDepthAttachement(const std::shared_ptr<ITexture> texture) override;
 	std::shared_ptr<ITexture> GetDepthAttachement() const override;
-
-private:
-	void Validate();
+	const glm::ivec2& GetActualSize() const override { return m_size; }
 
 private:
 	GLuint m_id;
 
-	glm::ivec2 m_size;
+	glm::ivec2 m_size {0, 0};
 
-	Utils::dynarray<std::shared_ptr<GlTexture>> m_colorAttachements;
+	std::vector<std::shared_ptr<GlTexture>> m_colorAttachements;
 	std::shared_ptr<GlTexture> m_depthAttachement;
 
-	//Utils::ControlledList<Utils::dynarray<std::shared_ptr<GlTexture>>, std::shared_ptr<GlTexture>> m_attachementsView;
+	bool m_dirtyFlag { true };
 };
 
 class GlScreenFrameBuffer : public IFrameBuffer
 {
+	GlScreenFrameBuffer() = default;
+
 public:
+	static GlScreenFrameBuffer& Get()
+	{
+		static GlScreenFrameBuffer defaultFB;
+		return defaultFB;
+	}
+
 	void Bind() override
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -66,6 +70,14 @@ public:
 	std::shared_ptr<ITexture> GetDepthAttachement() const override
 	{
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
+	}
+
+	const glm::ivec2& GetActualSize() const
+	{
+		GLint viewport[4];
+		glGetIntegerv(GL_VIEWPORT, viewport);
+
+		return { viewport[2] - viewport[0], viewport[3] - viewport[1] };
 	}
 };
 

@@ -81,6 +81,8 @@ public:
 	virtual void SetDepthAttachement(const std::shared_ptr<ITexture> texture) = 0;
 	virtual std::shared_ptr<ITexture> GetDepthAttachement() const = 0;
 
+	virtual const glm::ivec2& GetActualSize() const = 0;
+
 };
 
 class IVertexBuffer// : public IBuffer
@@ -305,6 +307,8 @@ public:
 	virtual void ClearBuffer(const glm::vec4& color) = 0;
 	virtual void ClearDepth(float depth) = 0;
 	virtual void FinishFrame() = 0;
+
+	virtual IFrameBuffer& GetDefaultFramebuffer() const = 0;
 };
 
 
