@@ -28,7 +28,7 @@
 
 #include "AT2/OpenGL/GLFW/glfw_application.h"
 
-std::shared_ptr<AT2::IShaderProgram> MeshShader;
+std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader, SphereLightShader, DayLightShader, PostprocessShader;
 
 std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
 std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
@@ -39,7 +39,7 @@ std::shared_ptr<AT2::IFrameBuffer> NullFBO;
 std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, TerrainDrawable, SphereLightDrawable;
 AT2::Scene Scene;
 
-bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true;
+bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true, NeedFramebufferResize = true;
 size_t NumActiveLights = 50;
 
 GLfloat Phase = 0.0;
@@ -144,7 +144,7 @@ public:
 
 		m_window->
 			setLabel("Some engine test").
-			setSize(m_framebufferPhysicalSize).
+			setSize({1024, 768}).
 			setCursorMode(GlfwCursorMode::Normal);
 
 
@@ -166,22 +166,22 @@ private:
 		m_renderer = std::make_unique<AT2::GlRenderer>();
 
 
-		auto postprocessShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
+		PostprocessShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources/shaders/postprocess.vs.glsl",
 			"resources/shaders/postprocess.fs.glsl" });
 
-		auto terrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
+		TerrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources/shaders/terrain.vs.glsl",
 			"resources/shaders/terrain.tcs.glsl",
 			"resources/shaders/terrain.tes.glsl",
 			"resources/shaders/terrain.fs.glsl" });
 
-		auto sphereLightShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
+		SphereLightShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources/shaders/spherelight.vs.glsl",
 			"resources/shaders/pbr.fs.glsl",
 			"resources/shaders/spherelight.fs.glsl" });
 
-		auto dayLightShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
+		DayLightShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources/shaders/skylight.vs.glsl",
 			"resources/shaders/pbr.fs.glsl",
 			"resources/shaders/skylight.fs.glsl" });
@@ -209,86 +209,17 @@ private:
 		HeightMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/heightmap.dds");
 		EnvironmentMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
-		CameraUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(terrainShader)->GetUniformBlockInfo("CameraBlock"));
+		CameraUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(TerrainShader)->GetUniformBlockInfo("CameraBlock"));
 		CameraUB->SetBindingPoint(1);
-		LightUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(sphereLightShader)->GetUniformBlockInfo("LightingBlock"));
-
-		//FBOs
-		Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
-		Stage1FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024)));
-		Stage1FBO->SetColorAttachement(1, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024)));
-		Stage1FBO->SetColorAttachement(2, std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024)));
-		Stage1FBO->SetDepthAttachement(std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(1024, 1024)));
-
-		Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
-		Stage2FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024)));
-		Stage2FBO->SetDepthAttachement(Stage1FBO->GetDepthAttachement()); //depth is common with previous stage
-
-		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
-
-		//terrain
-		TerrainDrawable = AT2::MeshDrawable::MakeTerrainDrawable(m_renderer, 64, 64);
-		TerrainDrawable->Shader = terrainShader;
-		TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
-		{
-			auto uniformStorage = terrainShader->CreateAssociatedUniformStorage();
-			uniformStorage->SetUniform("u_phase", Phase);
-			uniformStorage->SetUniform("u_scaleH", 10000.0f);
-			uniformStorage->SetUniform("u_scaleV", 800.0f);
-			uniformStorage->SetUniform("u_texHeight", HeightMapTex);
-			uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
-			uniformStorage->SetUniform("u_texGrass", GrassTex);
-			uniformStorage->SetUniform("u_texRock", RockTex);
-			TerrainDrawable->UniformBuffer = uniformStorage;
-		}
-
-		SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer);
-		SphereLightDrawable->Shader = sphereLightShader;
-		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex };
-		{
-			auto uniformStorage = sphereLightShader->CreateAssociatedUniformStorage();
-			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
-			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
-			uniformStorage->SetUniform("u_roughnessMetallicMap", Stage1FBO->GetColorAttachement(2));
-			uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
-
-			SphereLightDrawable->UniformBuffer = uniformStorage;
-		}
+		LightUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(SphereLightShader)->GetUniformBlockInfo("LightingBlock"));
 
 
-		SkylightDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
-		SkylightDrawable->Shader = dayLightShader;
-		SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
-		{
-			auto uniformStorage = dayLightShader->CreateAssociatedUniformStorage();
-			uniformStorage->SetUniform("u_phase", Phase);
-			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
-			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
-			uniformStorage->SetUniform("u_roughnessMetallicMap", Stage1FBO->GetColorAttachement(2));
-			uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
-			uniformStorage->SetUniform("u_environmentMap", EnvironmentMapTex);
-			SkylightDrawable->UniformBuffer = uniformStorage;
-		}
 
-		//Postprocess quad
-		QuadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
-		QuadDrawable->Shader = postprocessShader;
-		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex };
-		{
-			auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
-			uniformStorage->SetUniform("u_phase", Phase);
-			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-			uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
-			uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
-			QuadDrawable->UniformBuffer = uniformStorage;
-		}
 
 
 		for (int i = 0; i < NumActiveLights; ++i)
 		{
-			auto light = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(sphereLightShader)->GetUniformBlockInfo("LightingBlock"));
+			auto light = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(SphereLightShader)->GetUniformBlockInfo("LightingBlock"));
 
 			light->SetUniform("u_lightPos", glm::vec4(glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0), 1.0));
 			light->SetUniform("u_lightRadius", glm::linearRand(300.0f, 700.0f)*2.0f);
@@ -306,7 +237,6 @@ private:
 
 		glEnable(GL_CULL_FACE);
 
-		m_camera.setProjection(glm::perspective(glm::radians(90.0), 1.0, 1.0, 10000.0));
 
 		auto mesh = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb", MeshShader);
 		mesh->SetTransform(mesh->GetTransform() * glm::scale(glm::mat4{ 1 }, { 10, 10, 10 }));
@@ -321,7 +251,84 @@ private:
 			NeedResourceReload = false;
 		}
 
-		m_renderer->SetViewport(AABB2d({ 0, 0 }, m_framebufferPhysicalSize));
+		if (NeedFramebufferResize)
+		{
+			Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
+			Stage1FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA8, m_window->getSize()));
+			Stage1FBO->SetColorAttachement(1, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, m_window->getSize()));
+			Stage1FBO->SetColorAttachement(2, std::make_shared<AT2::GlTexture2D>(GL_RGBA8, m_window->getSize()));
+			Stage1FBO->SetDepthAttachement(std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, m_window->getSize()));
+
+			Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
+			Stage2FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, m_window->getSize()));
+			Stage2FBO->SetDepthAttachement(Stage1FBO->GetDepthAttachement()); //depth is common with previous stage
+
+
+			NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
+
+			//terrain
+			TerrainDrawable = AT2::MeshDrawable::MakeTerrainDrawable(m_renderer, 64, 64);
+			TerrainDrawable->Shader = TerrainShader;
+			TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
+			{
+				auto uniformStorage = TerrainShader->CreateAssociatedUniformStorage();
+				uniformStorage->SetUniform("u_phase", Phase);
+				uniformStorage->SetUniform("u_scaleH", 10000.0f);
+				uniformStorage->SetUniform("u_scaleV", 800.0f);
+				uniformStorage->SetUniform("u_texHeight", HeightMapTex);
+				uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
+				uniformStorage->SetUniform("u_texGrass", GrassTex);
+				uniformStorage->SetUniform("u_texRock", RockTex);
+				TerrainDrawable->UniformBuffer = uniformStorage;
+			}
+
+			SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer);
+			SphereLightDrawable->Shader = SphereLightShader;
+			SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex };
+			{
+				auto uniformStorage = SphereLightShader->CreateAssociatedUniformStorage();
+				uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+				uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
+				uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
+				uniformStorage->SetUniform("u_roughnessMetallicMap", Stage1FBO->GetColorAttachement(2));
+				uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
+
+				SphereLightDrawable->UniformBuffer = uniformStorage;
+			}
+
+
+			SkylightDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
+			SkylightDrawable->Shader = DayLightShader;
+			SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
+			{
+				auto uniformStorage = DayLightShader->CreateAssociatedUniformStorage();
+				uniformStorage->SetUniform("u_phase", Phase);
+				uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+				uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
+				uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
+				uniformStorage->SetUniform("u_roughnessMetallicMap", Stage1FBO->GetColorAttachement(2));
+				uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
+				uniformStorage->SetUniform("u_environmentMap", EnvironmentMapTex);
+				SkylightDrawable->UniformBuffer = uniformStorage;
+			}
+
+			//Postprocess quad
+			QuadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
+			QuadDrawable->Shader = PostprocessShader;
+			QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex };
+			{
+				auto uniformStorage = PostprocessShader->CreateAssociatedUniformStorage();
+				uniformStorage->SetUniform("u_phase", Phase);
+				uniformStorage->SetUniform("u_texNoise", Noise3Tex);
+				uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
+				uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
+				QuadDrawable->UniformBuffer = uniformStorage;
+			}
+
+			NeedFramebufferResize = false;
+		}
+
+		m_renderer->SetViewport(AABB2d({ 0, 0 }, m_window->getSize()));
 
 
 		if (MovingLightMode)
@@ -351,7 +358,8 @@ private:
 
 		m_window->ResizeCallback = [&](const glm::ivec2& newSize)
 		{
-			m_framebufferPhysicalSize = newSize;
+			m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(m_window->getSize().x), static_cast<float>(m_window->getSize().y), 1.0f, 10000.0f));
+			NeedFramebufferResize = true;
 		};
 
 		m_window->MouseUpCallback = [](int key)
@@ -403,7 +411,6 @@ private:
 	std::shared_ptr<GlfwWindow> m_window;
 	std::shared_ptr<AT2::IRenderer> m_renderer;
 
-	glm::ivec2 m_framebufferPhysicalSize = glm::ivec2(1024, 1024);
 
 	AT2::Camera m_camera;
 };
