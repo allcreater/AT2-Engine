@@ -27,6 +27,7 @@ public:
     [[nodiscard]] const glm::mat4& getView() const noexcept { return view; }
     [[nodiscard]] const glm::mat4& getViewInverse() const noexcept { return view_inverse; }
     [[nodiscard]] const glm::mat4& getProjection() const noexcept { return projection; }
+    [[nodiscard]] const glm::mat4& getProjectionInverse() const noexcept { return projection_inverse; }
 
     Camera& setPosition(const glm::vec3 newPosition)
     {
@@ -59,6 +60,7 @@ public:
     Camera& setProjection(const glm::mat4& newProjection)
     {
         projection = newProjection;
+        projection_inverse = glm::inverse(projection);
 
         return *this;
     }
@@ -81,6 +83,7 @@ private:
     
     //derived values
     glm::mat4 view, view_inverse;
+    glm::mat4 projection_inverse;
     
 };
 

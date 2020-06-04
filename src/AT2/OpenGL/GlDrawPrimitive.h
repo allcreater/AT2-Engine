@@ -25,8 +25,9 @@ enum class GlDrawPrimitiveType
 class GlDrawPrimitive : public IDrawPrimitive
 {
 public:
-	GlDrawPrimitive(GlDrawPrimitiveType mode) : m_primitiveMode(mode) {}
-	~GlDrawPrimitive() {}
+	GlDrawPrimitive(GlDrawPrimitiveType mode) :
+        m_primitiveMode(mode)
+    {}
 
 	GlDrawPrimitiveType GetPrimitiveMode() const {return m_primitiveMode;}
 
@@ -38,8 +39,11 @@ private:
 class GlDrawArraysPrimitive : public GlDrawPrimitive
 {
 public:
-	GlDrawArraysPrimitive(GlDrawPrimitiveType mode, GLint first, GLsizei count) : GlDrawPrimitive(mode), m_firstIndex(first), m_count(count) {}
-	~GlDrawArraysPrimitive() {}
+	GlDrawArraysPrimitive(GlDrawPrimitiveType mode, GLint first, GLsizei count) :
+        GlDrawPrimitive(mode),
+        m_firstIndex(first),
+        m_count(count)
+    {}
 
 public:
 	void Draw() const override
@@ -64,8 +68,12 @@ public:
 	};
 
 public:
-	GlDrawElementsPrimitive(GlDrawPrimitiveType mode, GLsizei count, IndicesType indicesType, GLint first) : GlDrawPrimitive(mode), m_firstIndex(first), m_count(count), m_indicesType(indicesType) {}
-	~GlDrawElementsPrimitive() {}
+	GlDrawElementsPrimitive(GlDrawPrimitiveType mode, GLsizei count, IndicesType indicesType, GLint first) :
+        GlDrawPrimitive(mode),
+        m_firstIndex(first),
+        m_count(count),
+        m_indicesType(indicesType)
+    {}
 
 public:
 	void Draw() const override

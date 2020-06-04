@@ -5,9 +5,11 @@ using namespace AT2;
 
 struct RenderVisitor : NodeVisitor
 {
-    RenderVisitor(IRenderer& renderer, const Camera& camera) : renderer(renderer)
+    RenderVisitor(IRenderer& renderer, const Camera& camera) :
+        camera(camera),
+        renderer(renderer)
     {
-        transforms.reset(camera.getView(), camera.getProjection());
+        //transforms.reset(camera.getView(), camera.getProjection());
     }
 
     virtual void Visit(Node& node)
@@ -32,8 +34,8 @@ struct RenderVisitor : NodeVisitor
 
             stateManager.BindTextures(submesh->Textures);
 
-            submesh->UniformBuffer->SetUniform("u_matModel", submesh->GetTransform());
-            submesh->UniformBuffer->SetUniform("u_matNormal", glm::transpose(transforms.getModelViewInverse()));
+            submesh->UniformBuffer->SetUniform("u_matModel", transforms.getModelView());
+            submesh->UniformBuffer->SetUniform("u_matNormal", glm::mat3(glm::transpose(glm::inverse(camera.getView() * transforms.getModelView()))));
             submesh->UniformBuffer->Bind();
 
             for (auto& primitive : submesh->Primitives)
@@ -47,6 +49,7 @@ struct RenderVisitor : NodeVisitor
     }
 
 private:
+    const Camera& camera;
     MeshNode* active_mesh = nullptr;
 
     IRenderer& renderer;

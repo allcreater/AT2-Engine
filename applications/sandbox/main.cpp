@@ -32,16 +32,6 @@
 
 #include "AT2/OpenGL/GLFW/glfw_application.h"
 
-#define USE_ASSIMP
-
-#ifdef USE_ASSIMP
-#include <assimp/cimport.h>
-#include <assimp/scene.h>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#endif
-
-
 std::shared_ptr<AT2::IShaderProgram> MeshShader;
 
 std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
@@ -71,7 +61,7 @@ float Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer* frame
 	CameraUB->SetUniform("u_matView", camera.getView());
 	CameraUB->SetUniform("u_matInverseView", camera.getViewInverse());
 	CameraUB->SetUniform("u_matProjection", camera.getProjection());
-	CameraUB->SetUniform("u_matInverseProjection", glm::inverse(camera.getProjection()));
+	CameraUB->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
 	CameraUB->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
 	//CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
 	CameraUB->Bind();
@@ -200,11 +190,10 @@ private:
 			"resources/shaders/pbr.fs.glsl",
 			"resources/shaders/skylight.fs.glsl" });
 
-#ifdef USE_ASSIMP
 		MeshShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
 			"resources/shaders/mesh.vs.glsl",
 			"resources/shaders/mesh.fs.glsl" });
-#endif
+
 		auto texture = new AT2::GlTexture3D(GL_RGBA8, glm::uvec3(256, 256, 256), 1);
 		AT2::GlTexture::BufferData data;
 		data.Height = 256;
@@ -229,13 +218,15 @@ private:
 		CameraUB->SetBindingPoint(1);
 		LightUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(sphereLightShader)->GetUniformBlockInfo("LightingBlock"));
 
-		auto texDiffuseRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024));
+		auto texAlbedoRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024));
 		auto texNormalRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
+		auto texMaterialRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
 		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(1024, 1024));
 
 		Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
-		Stage1FBO->SetColorAttachement(0, texDiffuseRT);
+		Stage1FBO->SetColorAttachement(0, texAlbedoRT);
 		Stage1FBO->SetColorAttachement(1, texNormalRT);
+		Stage1FBO->SetColorAttachement(2, texMaterialRT);
 		Stage1FBO->SetDepthAttachement(texDepthRT);
 
 		auto texColorRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
@@ -264,12 +255,13 @@ private:
 
 		SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer);
 		SphereLightDrawable->Shader = sphereLightShader;
-		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex };
+		SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex };
 		{
 			auto uniformStorage = sphereLightShader->CreateAssociatedUniformStorage();
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
 			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
+			uniformStorage->SetUniform("u_roughnessMetallicMap", Stage1FBO->GetColorAttachement(2));
 			uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
 
 			SphereLightDrawable->UniformBuffer = uniformStorage;
@@ -278,13 +270,14 @@ private:
 
 		SkylightDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
 		SkylightDrawable->Shader = dayLightShader;
-		SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
+		SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
 		{
 			auto uniformStorage = dayLightShader->CreateAssociatedUniformStorage();
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 			uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
 			uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
+			uniformStorage->SetUniform("u_roughnessMetallicMap", Stage1FBO->GetColorAttachement(2));
 			uniformStorage->SetUniform("u_depthMap", Stage1FBO->GetDepthAttachement());
 			uniformStorage->SetUniform("u_environmentMap", EnvironmentMapTex);
 			SkylightDrawable->UniformBuffer = uniformStorage;
@@ -293,7 +286,7 @@ private:
 		//Postprocess quad
 		QuadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
 		QuadDrawable->Shader = postprocessShader;
-		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex, Stage1FBO->GetColorAttachement(0), GrassTex };
+		QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex };
 		{
 			auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
 			uniformStorage->SetUniform("u_phase", Phase);
@@ -317,12 +310,9 @@ private:
 
 		LightsArray[0]->SetUniform("u_lightColor", glm::vec3(1.0f, 0.0f, 0.5f));
 
-#ifdef USE_ASSIMP
-		//SceneDrawables.push_back(LoadModel("resources/matball.glb", m_renderer));
-#endif
-
 		//Init
 		glEnable(GL_BLEND);
+		//glDisable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glEnable(GL_CULL_FACE);
@@ -330,6 +320,7 @@ private:
 		m_camera.setProjection(glm::perspective(glm::radians(90.0), 1.0, 1.0, 10000.0));
 
 		auto mesh = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb", MeshShader);
+		mesh->SetTransform(mesh->GetTransform() * glm::scale(glm::mat4{ 1 }, { 10, 10, 10 }));
 		Scene.GetRoot().AddChild(std::move(mesh));
 	}
 
@@ -341,63 +332,14 @@ private:
 			NeedResourceReload = false;
 		}
 
-
 		m_renderer->SetViewport(AABB2d({ 0, 0 }, m_framebufferPhysicalSize));
 
 
 		if (MovingLightMode)
 			LightsArray[0]->SetUniform("u_lightPos", glm::vec4(m_camera.getPosition(), 1.0));
 
-#ifndef AT2_USE_OCULUS_RIFT
 		Render(m_renderer, NullFBO.get(), m_camera);
-#else
-		// Get eye poses, feeding in correct IPD offset
-		ovrVector3f      ViewOffset[2] = { EyeRenderDesc[0].HmdToEyeViewOffset, EyeRenderDesc[1].HmdToEyeViewOffset };
-		ovrPosef         EyeRenderPose[2];
 
-		ovrFrameTiming   ftiming = ovr_GetFrameTiming(HMD, 0);
-		ovrTrackingState hmdState = ovr_GetTrackingState(HMD, ftiming.DisplayMidpointSeconds);
-		ovr_CalcEyePoses(hmdState.HeadPose.ThePose, ViewOffset, EyeRenderPose);
-
-		//render
-		for (int eye = 0; eye < 2; ++eye)
-		{
-			eyeTextureSet[eye]->CurrentIndex = (eyeTextureSet[eye]->CurrentIndex + 1) % eyeTextureSet[eye]->TextureCount;
-
-			eyeFrameBuffer[eye]->SetDepthAttachement(eyeRenderTextureDepth[eye]);
-			eyeFrameBuffer[eye]->SetColorAttachement(0, eyeRenderTextureList[eye][eyeTextureSet[eye]->CurrentIndex]);
-
-			Render(m_renderer, eyeFrameBuffer[eye].get(), matProj, matMV);
-			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-			eyeFrameBuffer[eye]->SetColorAttachement(0, nullptr);
-			eyeFrameBuffer[eye]->SetDepthAttachement(nullptr);
-
-		}
-
-		// Set up positional data.
-		ovrViewScaleDesc viewScaleDesc;
-		viewScaleDesc.HmdSpaceToWorldScaleInMeters = 1.0f;
-		viewScaleDesc.HmdToEyeViewOffset[0] = ViewOffset[0];
-		viewScaleDesc.HmdToEyeViewOffset[1] = ViewOffset[1];
-
-		ovrLayerEyeFov ld;
-		ld.Header.Type = ovrLayerType_EyeFov;
-		ld.Header.Flags = ovrLayerFlag_TextureOriginAtBottomLeft;   // Because OpenGL.
-
-		for (int eye = 0; eye < 2; ++eye)
-		{
-			ld.ColorTexture[eye] = eyeTextureSet[eye];
-			ld.Viewport[eye] = OVR::Recti(eyeTextureSet[eye]->Textures[eyeTextureSet[eye]->CurrentIndex].Header.TextureSize);
-			ld.Fov[eye] = hmdDesc.DefaultEyeFov[eye];
-			ld.RenderPose[eye] = EyeRenderPose[eye];
-		}
-
-		ovrLayerHeader* layers = &ld.Header;
-		ovrResult result = ovr_SubmitFrame(HMD, 0, &viewScaleDesc, &layers, 1);
-
-		Render(m_renderer, NullFBO.get(), matProj, matMV);
-#endif
 
 		m_renderer->FinishFrame();
 	}

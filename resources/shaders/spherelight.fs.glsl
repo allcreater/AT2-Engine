@@ -20,8 +20,10 @@ layout(binding = 2) uniform LightingBlock
 };
 
 uniform sampler3D u_texNoise;
+
 uniform sampler2D u_colorMap;
 uniform sampler2D u_normalMap;
+uniform sampler2D u_roughnessMetallicMap;
 uniform sampler2D u_depthMap;
 
 layout (location = 0) out vec4 FragColor;
@@ -42,7 +44,7 @@ vec3 getFragPos(in vec3 screenCoord)
 
 void main()
 {
-	vec2 texCoord = gl_FragCoord.xy/1024.0;
+	vec2 texCoord = gl_FragCoord.xy / textureSize(u_colorMap, 0);;
 
 	float z = texture (u_depthMap, texCoord).r;
 	vec3 fragPos = getFragPos(vec3(texCoord, z));
@@ -51,12 +53,17 @@ void main()
 	vec3 lightVector = (u_matView * u_lightPos).xyz - fragPos;
 	vec3 normal = texture(u_normalMap, texCoord).rgb;
 	
+	vec2 roughnessMetallic = texture (u_roughnessMetallicMap, texCoord).rg;
+
+
+
 	vec3 F0 = vec3(0.05);
-	float roughness = 0.1;
+	float roughness = roughnessMetallic.r;
 	vec4 color = texture(u_colorMap, texCoord);
 
 	vec3 lighting = computeLighting(lightVector, u_lightRadius, u_lightColor, normal, normalize(-fragPos), roughness, F0, color.rgb)*1000.0;
 	
 
 	FragColor = vec4(lighting, 1.0);
+	//FragColor = vec4(0);
 }

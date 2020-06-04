@@ -19,6 +19,7 @@ in tesResult {
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 FragNormal;
+layout (location = 2) out vec4 RoughnessMetallic; 
 
 //not using there
 mat3 cotangent_frame(in vec3 normal, in vec3 pos, in vec2 uv)
@@ -47,7 +48,7 @@ void main()
 	vec2 texCoord = input.texCoord*200.0;
 	FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, smoothstep(0.1, 0.5, length(normalFromMap.xz)));
 
-	if (input.elevation <= 0.01)
+	if (input.elevation <= 0.001)
 		FragColor.rgb = vec3(0.2, 0.3, 1.0);
 
 	FragColor.rgb = mix(FragColor.rgb, vec3(1.0), smoothstep(0.31, 0.35, input.elevation * (-length(normalFromMap.xz)+0.95)));
@@ -56,4 +57,7 @@ void main()
 
 	vec3 normal = u_matNormal * normalFromMap;
 	FragNormal = vec4(normal, 1.0);
+
+	RoughnessMetallic = vec4(0.01 + step(0.001, input.elevation) * 0.8, 0.0, 1.0, 1.0);
+	
 }

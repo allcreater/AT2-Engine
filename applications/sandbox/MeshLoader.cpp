@@ -194,10 +194,32 @@ protected:
 
 };
 
+constexpr uint32_t flags =  
+    aiProcess_GenSmoothNormals | //can't be specified with aiProcess_GenNormals
+	aiProcess_FindInstances |
+	aiProcess_FindDegenerates |
+	aiProcess_FindInvalidData |
+	aiProcess_CalcTangentSpace |
+	aiProcess_ValidateDataStructure |
+	aiProcess_OptimizeMeshes |
+	aiProcess_OptimizeGraph |
+	aiProcess_JoinIdenticalVertices |
+	aiProcess_ImproveCacheLocality |
+	aiProcess_LimitBoneWeights |
+	aiProcess_RemoveRedundantMaterials |
+	aiProcess_SplitLargeMeshes |
+	aiProcess_Triangulate |
+	aiProcess_GenUVCoords |
+	aiProcess_GenBoundingBoxes |
+	aiProcess_SplitByBoneCount |
+	aiProcess_SortByPType |
+	aiProcess_FlipUVs;
+
+
 NodeRef MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename, std::shared_ptr<IShaderProgram> program)
 {
     Assimp::Importer importer;
-    auto* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+    auto* scene = importer.ReadFile(filename, flags);
 
 	GlMeshBuilder builder { renderer, scene };
 	
