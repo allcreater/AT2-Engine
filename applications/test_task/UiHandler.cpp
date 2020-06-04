@@ -83,7 +83,7 @@ UiRenderer::UiRenderer(std::shared_ptr<AT2::IRenderer>& renderer, std::shared_pt
             R"(resources/shaders/background.fs.glsl)"
         });
 
-    auto texture = AT2::TextureLoader::LoadTexture(*renderer, R"(resources/helix_nebula.jpg)");
+    auto texture = AT2::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
 
     m_quadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(renderer);
     m_quadDrawable->Shader = postprocessShader;

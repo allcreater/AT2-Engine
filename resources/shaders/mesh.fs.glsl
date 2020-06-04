@@ -3,11 +3,13 @@
 layout(binding = 1) uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
-	mat3 u_matNormal;
 };
+uniform mat4 u_matModel;
+uniform mat3 u_matNormal;
+
 
 uniform sampler2D u_texNormalMap;
-uniform sampler2D u_texDiffuse;
+uniform sampler2D u_texAlbedo;
 
 in fsInput {
 	vec3 texCoord;
@@ -43,7 +45,7 @@ void main()
 
 	vec2 texCoord = input.texCoord.st;
 
-	FragColor.rgba = texture (u_texDiffuse, texCoord.st*vec2(1,-1));
+	FragColor.rgba = texture (u_texAlbedo, texCoord.st);
 
 	vec3 normal = input.normal;
 	FragNormal = vec4(normal, 1.0);

@@ -90,7 +90,7 @@ static GLint GetInternalFormat(GLuint externalFormat, GLuint externalType)
 }
 
 
-static std::shared_ptr<ITexture> Load(IRenderer& renderer, std::function<bool()> imageLoader)
+static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, std::function<bool()> imageLoader)
 {
 	const bool enableAutomipmaps = true;
 
@@ -165,16 +165,22 @@ static std::shared_ptr<ITexture> Load(IRenderer& renderer, std::function<bool()>
 }
 
 //TODO: make API-independ
-std::shared_ptr<ITexture> TextureLoader::LoadTexture(IRenderer& renderer, const str& filename)
+TextureRef TextureLoader::LoadTexture(std::shared_ptr<IRenderer> renderer, const str& filename)
 {
-	return Load(renderer, [filename] {return ilLoadImage(filename.c_str()) == IL_TRUE; });
+	return Load(std::move(renderer), [filename]
+	{
+	    return ilLoadImage(filename.c_str()) == IL_TRUE;
+	});
 }
 
-std::shared_ptr<ITexture> TextureLoader::LoadTexture(IRenderer& renderer, void* data, size_t size)
+TextureRef TextureLoader::LoadTexture(std::shared_ptr<IRenderer> renderer, void* data, size_t size)
 {
 	ILenum type = ilDetermineTypeL(data, size);
 	if (type == IL_TYPE_UNKNOWN)
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "Couldn't determine texture format while reading from memory");
 
-	return Load(renderer, [=] {return ilLoadL(type, data, size) == IL_TRUE; });
+	return Load(std::move(renderer), [=]
+	{
+	    return ilLoadL(type, data, size) == IL_TRUE;
+	});
 }

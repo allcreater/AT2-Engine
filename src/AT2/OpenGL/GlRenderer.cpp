@@ -55,7 +55,7 @@ GlRenderer::GlRenderer()
 
 	m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
 	m_resourceFactory = std::make_unique<GlResourceFactory>(this);
-	m_stateManager = std::make_unique<StateManager>(*m_rendererCapabilities.get());
+	m_stateManager = std::make_unique<StateManager>(*m_rendererCapabilities);
 }
 
 GlRenderer::~GlRenderer()

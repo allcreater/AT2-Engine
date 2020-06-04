@@ -9,8 +9,8 @@ class TextureLoader
 {
 public:
     //TODO: make async
-    static std::shared_ptr<ITexture> LoadTexture(IRenderer&, const str& filename);
-    static std::shared_ptr<ITexture> LoadTexture(IRenderer&, void* data, size_t size);
+    static TextureRef LoadTexture(std::shared_ptr<IRenderer> renderer, const str& filename);
+    static TextureRef LoadTexture(std::shared_ptr<IRenderer> renderer, void* data, size_t size);
 };
 
 }

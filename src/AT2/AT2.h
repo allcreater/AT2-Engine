@@ -230,13 +230,13 @@ public:
 	IRendererCapabilities() = default;
 	IRendererCapabilities(const IRendererCapabilities& other) = delete;
 	IRendererCapabilities& operator= (const IRendererCapabilities& other) = delete;
-	virtual ~IRendererCapabilities() {}
+	virtual ~IRendererCapabilities() = default;
 
 public:
-	virtual unsigned int GetMaxNumberOfTextureUnits() const = 0;
-	virtual unsigned int GetMaxTextureSize() const = 0;
-	virtual unsigned int GetMaxNumberOfVertexAttributes() const = 0;
-	virtual unsigned int GetMaxNumberOfColorAttachements() const = 0;
+	[[nodiscard]] virtual unsigned int GetMaxNumberOfTextureUnits() const = 0;
+	[[nodiscard]] virtual unsigned int GetMaxTextureSize() const = 0;
+	[[nodiscard]] virtual unsigned int GetMaxNumberOfVertexAttributes() const = 0;
+	[[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachements() const = 0;
 };
 
 typedef std::set<std::shared_ptr<ITexture>> TextureSet;
@@ -298,6 +298,9 @@ public:
 	virtual void ClearDepth(float depth) = 0;
 	virtual void FinishFrame() = 0;
 };
+
+
+using TextureRef = std::shared_ptr<ITexture>;
 
 }
 
