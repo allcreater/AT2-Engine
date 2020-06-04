@@ -4,9 +4,7 @@
 #include <AT2/OpenGL/GlShaderProgram.h>
 #include <AT2/OpenGL/GlUniformBuffer.h>
 #include <AT2/OpenGL/GlTexture.h>
-#include <AT2/OpenGL/GlVertexArray.h>
 #include <AT2/OpenGL/GlFrameBuffer.h>
-#include <AT2/OpenGL/GlUniformContainer.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
 
@@ -17,8 +15,6 @@
 #include "../drawable.h"
 #include "Scene.h"
 #include "MeshLoader.h"
-
-#include <AT2/OpenGL/GlDrawPrimitive.h>
 
 #include <iostream>
 #include <fstream>
@@ -149,7 +145,7 @@ public:
 		m_window->
 			setLabel("Some engine test").
 			setSize(m_framebufferPhysicalSize).
-			setCursorMode(GlfwCursorMode::Disabled);
+			setCursorMode(GlfwCursorMode::Normal);
 
 
 		SetupWindowCallbacks();
@@ -199,12 +195,11 @@ private:
 		data.Height = 256;
 		data.Width = 256;
 		data.Depth = 256;
-		GLubyte* arr = new GLubyte [data.Height * data.Width * data.Depth * 4];
+		auto arr = std::make_unique<GLubyte[]>(data.Height * data.Width * data.Depth * 4);
 		for (int i = 0; i < data.Height * data.Width * data.Depth * 4; ++i)
 			arr[i] = (rand() & 0xFF);
-		data.Data = arr;
+		data.Data = arr.get();
 		texture->SetData(0, data);
-		delete [] arr;
 
 		Noise3Tex = std::shared_ptr<AT2::ITexture>(texture);
 
@@ -218,22 +213,16 @@ private:
 		CameraUB->SetBindingPoint(1);
 		LightUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(sphereLightShader)->GetUniformBlockInfo("LightingBlock"));
 
-		auto texAlbedoRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024));
-		auto texNormalRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
-		auto texMaterialRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
-		auto texDepthRT = std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(1024, 1024));
-
+		//FBOs
 		Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
-		Stage1FBO->SetColorAttachement(0, texAlbedoRT);
-		Stage1FBO->SetColorAttachement(1, texNormalRT);
-		Stage1FBO->SetColorAttachement(2, texMaterialRT);
-		Stage1FBO->SetDepthAttachement(texDepthRT);
-
-		auto texColorRT = std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024));
+		Stage1FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024)));
+		Stage1FBO->SetColorAttachement(1, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024)));
+		Stage1FBO->SetColorAttachement(2, std::make_shared<AT2::GlTexture2D>(GL_RGBA8, glm::uvec2(1024, 1024)));
+		Stage1FBO->SetDepthAttachement(std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, glm::uvec2(1024, 1024)));
 
 		Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
-		Stage2FBO->SetColorAttachement(0, texColorRT);
-		Stage2FBO->SetDepthAttachement(texDepthRT); //depth is common with previous stage
+		Stage2FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, glm::uvec2(1024, 1024)));
+		Stage2FBO->SetDepthAttachement(Stage1FBO->GetDepthAttachement()); //depth is common with previous stage
 
 		NullFBO = std::make_shared<AT2::GlScreenFrameBuffer>();
 
@@ -431,10 +420,5 @@ int main(int argc, char *argv[])
 		std::cout << "Runtime exception:" << exception.what() << std::endl;
 	}
 	
-#ifdef AT2_USE_OCULUS_RIFT
-	ovr_Destroy(HMD);
-	OVR::System::Destroy();
-#endif 
-
 	return 0;
 }

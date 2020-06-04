@@ -62,17 +62,24 @@ public:
 	//virtual void Unlock() = 0;
 };
 
+class ITexture;
+
 class IFrameBuffer
 {
 public:
 	IFrameBuffer() = default;
 	IFrameBuffer(const IFrameBuffer& other) = delete;
 	IFrameBuffer& operator= (const IFrameBuffer& other) = delete;
-	virtual ~IFrameBuffer() {};
+	virtual ~IFrameBuffer() = default;
 
 public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
+
+	virtual void SetColorAttachement(unsigned int attachementNumber, std::shared_ptr<ITexture> texture) = 0;
+	virtual std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const = 0;
+	virtual void SetDepthAttachement(const std::shared_ptr<ITexture> texture) = 0;
+	virtual std::shared_ptr<ITexture> GetDepthAttachement() const = 0;
 
 };
 
@@ -211,6 +218,7 @@ public:
 	enum struct ErrorCase
 	{
 		Unknown = -1,
+		NotImplemented,
 		Renderer,
 		Shader,
 		Buffer,

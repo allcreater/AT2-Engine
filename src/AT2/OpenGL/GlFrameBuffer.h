@@ -15,20 +15,16 @@ public:
 	~GlFrameBuffer();
 
 public:
-	virtual void Bind();
-	virtual unsigned int GetId() const { return m_id; }
+	void Bind() override;
+	unsigned int GetId() const override { return m_id; }
 
 	virtual void Resize (const glm::ivec2& size);
 
-	virtual void SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<GlTexture> texture);
-	virtual std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const;
-	virtual void SetDepthAttachement(const std::shared_ptr<GlTexture> texture);
-	virtual std::shared_ptr<ITexture> GetDepthAttachement() const;
-	/*
-	Utils::ControlledList<Utils::dynarray<std::shared_ptr<GlTexture>>, std::shared_ptr<GlTexture>>& GetColorAttachementsList()
-	{
-		return m_attachementsView; 
-	}*/
+	void SetColorAttachement(unsigned int attachementNumber, std::shared_ptr<ITexture> texture) override;
+	std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const override;
+	void SetDepthAttachement(const std::shared_ptr<ITexture> texture) override;
+	std::shared_ptr<ITexture> GetDepthAttachement() const override;
+
 private:
 	void Validate();
 
@@ -46,13 +42,30 @@ private:
 class GlScreenFrameBuffer : public IFrameBuffer
 {
 public:
-	virtual void Bind()
+	void Bind() override
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
-	virtual unsigned int GetId() const
+	unsigned int GetId() const override
 	{
 		return 0;
+	}
+
+	void SetColorAttachement(unsigned int attachementNumber, std::shared_ptr<ITexture> texture) override
+	{
+		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
+	}
+	std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const override
+	{
+		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
+	}
+	void SetDepthAttachement(const std::shared_ptr<ITexture> texture) override
+	{
+		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
+	}
+	std::shared_ptr<ITexture> GetDepthAttachement() const override
+	{
+		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}
 };
 

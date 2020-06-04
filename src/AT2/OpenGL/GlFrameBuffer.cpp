@@ -15,12 +15,14 @@ GlFrameBuffer::~GlFrameBuffer()
 	glDeleteFramebuffers(1, &m_id);
 }
 
-void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<GlTexture> texture)
+void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<ITexture> abstractTexture)
 {
 	if (attachementNumber >= m_colorAttachements.size())
 		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: unsupported attachement number");
 
-	auto attachement = GL_COLOR_ATTACHMENT0 + attachementNumber;
+	auto texture = std::dynamic_pointer_cast<GlTexture>(abstractTexture);
+
+	const auto attachement = GL_COLOR_ATTACHMENT0 + attachementNumber;
 	if (texture)
 	{
 		if (dynamic_cast<GlTexture1D*>(texture.get()) != nullptr)
@@ -35,6 +37,12 @@ void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const st
 	else
 	{
 		glNamedFramebufferTextureEXT(m_id, attachement, 0, 0);
+
+		if (abstractTexture)
+		{
+			m_colorAttachements[attachementNumber] = nullptr;
+			throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: attachement texture should be GlTexture");
+		}
 	}
 
     m_colorAttachements[attachementNumber] = texture;
@@ -50,32 +58,36 @@ std::shared_ptr<ITexture> GlFrameBuffer::GetColorAttachement(unsigned int attach
 	return m_colorAttachements[attachementNumber];
 }
 
-void GlFrameBuffer::SetDepthAttachement(const std::shared_ptr<GlTexture> texture)
+void GlFrameBuffer::SetDepthAttachement(const std::shared_ptr<ITexture> abstractTexture)
 {
-	m_depthAttachement = texture;
-	if (texture)
-		glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, static_cast<GLenum>(texture->GetTargetType()), texture->GetId(), 0);
-	else
+	m_depthAttachement = std::dynamic_pointer_cast<GlTexture>(abstractTexture);
+	if (!m_depthAttachement)
+	{
 		glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+		if (abstractTexture)
+			throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: attachement texture should be GlTexture");
+	}
+    else
+        glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, static_cast<GLenum>(m_depthAttachement->GetTargetType()), m_depthAttachement->GetId(), 0);
 
-	//Validate();
-}
+    //Validate();
+    }
 
-std::shared_ptr<ITexture> GlFrameBuffer::GetDepthAttachement() const
-{
-	return m_depthAttachement;
-}
+    std::shared_ptr<ITexture> GlFrameBuffer::GetDepthAttachement() const
+    {
+        return m_depthAttachement;
+    }
 
-void GlFrameBuffer::Validate()
-{
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: framebuffer validation failed");
-}
+    void GlFrameBuffer::Validate()
+    {
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: framebuffer validation failed");
+    }
 
 
-void GlFrameBuffer::Resize (const glm::ivec2& _size)
-{
-	/*
+    void GlFrameBuffer::Resize (const glm::ivec2& _size)
+    {
+        /*
 	glGenRenderbuffers (1, &renderbufferId );
 	glNamedRenderbufferStorageEXT (renderbufferId, GL_DEPTH_COMPONENT, _size.x, _size.y );
 	glNamedFramebufferRenderbufferEXT (m_id, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbufferId );
@@ -86,21 +98,21 @@ void GlFrameBuffer::Resize (const glm::ivec2& _size)
 	if (glCheckNamedFramebufferStatusEXT (m_id, static_cast<GLenum>(m_type)) != GL_FRAMEBUFFER_COMPLETE)
 		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: framebuffer is incorrect");
 	*/
-	m_size = _size;
-}
+        m_size = _size;
+    }
 
-void GlFrameBuffer::Bind()
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-    //Validate();
+    void GlFrameBuffer::Bind()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+        //Validate();
 
-	const size_t numAttachements = m_colorAttachements.size();
-	Utils::dynarray<GLenum> buffers(numAttachements);
-	for (size_t i = 0; i < numAttachements; ++i)
-		buffers[i] = (m_colorAttachements[i]) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
+        const size_t numAttachements = m_colorAttachements.size();
+        Utils::dynarray<GLenum> buffers(numAttachements);
+        for (size_t i = 0; i < numAttachements; ++i)
+            buffers[i] = (m_colorAttachements[i]) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
 
-    auto size = m_colorAttachements[0]->GetSize();
-    glViewport(0, 0, size.x, size.y); //TODO
+        auto size = m_colorAttachements[0]->GetSize();
+        glViewport(0, 0, size.x, size.y); //TODO
 
-	glDrawBuffers(buffers.size(), buffers.data());
-}
+        glDrawBuffers(buffers.size(), buffers.data());
+    }
