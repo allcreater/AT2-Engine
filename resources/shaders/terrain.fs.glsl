@@ -16,6 +16,7 @@ in tesResult {
 	vec2 texCoord;
 	float elevation;
 	vec3 position; //in view-space
+	vec3 normal; //ws
 } input;
 
 layout (location = 0) out vec4 FragColor;
@@ -56,9 +57,9 @@ void main()
 
 	FragColor.a = 1.0;
 
-	vec3 normal = u_matNormal * normalFromMap;
+	vec3 normal = normalize(input.normal); //normalize(u_matNormal * normalFromMap);
 	FragNormal = vec4(normal, 1.0);
 
-	RoughnessMetallic = vec4(0.01 + step(0.001, input.elevation) * 0.8, 0.0, 1.0, 1.0);
+	RoughnessMetallic = vec4(0.01 + step(0.001, input.elevation) * 0.7, 0.0, 1.0, 1.0);
 	
 }

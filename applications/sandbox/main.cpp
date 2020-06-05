@@ -44,7 +44,7 @@ public:
 		m_window->
 			setLabel("Some engine test").
 			setSize({1024, 768}).
-			setCursorMode(GlfwCursorMode::Normal);
+			setCursorMode(GlfwCursorMode::Disabled);
 
 
 		SetupWindowCallbacks();
@@ -153,11 +153,10 @@ private:
 
 
 		TerrainNode = MakeTerrain(*m_renderer, TerrainShader, 64, 64);
+		TerrainNode->SetTransform(glm::scale(glm::mat4{ 1.0 }, { 10000, 800, 10000}));
 		TerrainNode->GetChild<DrawableNode>(0).Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 		{
 			auto uniformStorage = TerrainNode->GetChild<DrawableNode>(0).UniformBuffer;
-			uniformStorage->SetUniform("u_scaleH", 10000.0f);
-			uniformStorage->SetUniform("u_scaleV", 800.0f);
 			uniformStorage->SetUniform("u_texHeight", HeightMapTex);
 			uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
 			uniformStorage->SetUniform("u_texGrass", GrassTex);

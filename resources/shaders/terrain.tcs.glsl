@@ -33,7 +33,7 @@ void main()
 {
 	if (gl_InvocationID == 0)
 	{
-		float level = (PointInFrustum(gl_in[0].gl_Position) || PointInFrustum(gl_in[1].gl_Position) || PointInFrustum(gl_in[2].gl_Position) || PointInFrustum(gl_in[3].gl_Position)) ? unMaxTessLevel : 2.0;
+		float level = 64;//(PointInFrustum(gl_in[0].gl_Position) || PointInFrustum(gl_in[1].gl_Position) || PointInFrustum(gl_in[2].gl_Position) || PointInFrustum(gl_in[3].gl_Position)) ? unMaxTessLevel : 2.0;
 		gl_TessLevelInner[0] = level;
 		gl_TessLevelInner[1] = level;
 

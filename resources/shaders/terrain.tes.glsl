@@ -10,7 +10,6 @@ layout(binding = 1) uniform CameraBlock
 uniform mat4 u_matModel;
 uniform mat3 u_matNormal;
 
-uniform float u_scaleH, u_scaleV;
 uniform sampler2D u_texHeight;
 uniform sampler2D u_texNoise;
 
@@ -22,6 +21,7 @@ out tesResult {
 	vec2 texCoord;
 	float elevation;
 	vec3 position; //in view-space
+	vec3 normal; //ws
 } output;
 
 
@@ -34,7 +34,21 @@ out tesResult {
 
 float getHeight (in vec2 texCoord)
 {
-	return (textureLod(u_texHeight, texCoord, 0.0).r + textureLod(u_texHeight, texCoord, 4.0).r*0.00390625*2.0) * u_scaleV;// + texture(u_texNoise, texCoord*10.0).r * 3.0;
+	return (textureLod(u_texHeight, texCoord, 0.0).r + textureLod(u_texHeight, texCoord, 4.0).r*0.00390625*2.0);// + texture(u_texNoise, texCoord*10.0).r * 3.0;
+}
+
+uniform float step = 1.9/4096.0;
+
+vec3 getNormal(in vec2 texCoord)
+{
+	//vec4 heights = textureGather(u_texHeight, texCoord);
+	//return normalize(vec3(heights.w - heights.z, 0.0005, heights.w - heights.x));
+
+	return normalize(vec3(
+		getHeight(texCoord+vec2(-1,0)*step) - getHeight(texCoord+vec2(0,1)*step),
+		0.0005, 
+		getHeight(texCoord+vec2(0,-1)*step) - getHeight(texCoord+vec2(0,1)*step)
+	));
 }
 
 void main()
@@ -47,7 +61,9 @@ void main()
 
 
 	output.texCoord = texCoord;
-	output.elevation = height/u_scaleV;
+	output.elevation = height;
 	output.position = vec3(u_matView * worldPos);
-	gl_Position = u_matProjection * u_matView * worldPos;
+
+	output.normal = u_matNormal * getNormal(texCoord);
+	gl_Position = u_matProjection * u_matView * u_matModel * worldPos;
 }

@@ -10,8 +10,6 @@ layout(binding = 1) uniform CameraBlock
 uniform mat4 u_matModel;
 uniform mat3 u_matNormal;
 
-uniform float u_scaleH, u_scaleV;
-
 out	vsResult {
 	vec2 texCoord;
 } output;
@@ -21,5 +19,5 @@ void main()
 	vec2 texCoord = a_TexCoord;
 
 	output.texCoord = texCoord;
-	gl_Position = vec4((texCoord.x-0.5)*u_scaleH, -u_scaleV*0.5, (texCoord.y-0.5)*u_scaleH, 1.0);
+	gl_Position = vec4((texCoord.x-0.5), -0.5, (texCoord.y-0.5), 1.0);
 }
