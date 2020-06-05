@@ -13,6 +13,8 @@ uniform mat3 u_matNormal;
 uniform sampler2D u_texHeight;
 uniform sampler2D u_texNoise;
 
+uniform sampler2D u_texRock; //just as noise source for water
+
 in	tcsResult {
 	vec2 texCoord;
 } input[];
@@ -34,7 +36,14 @@ out tesResult {
 
 float getHeight (in vec2 texCoord)
 {
-	return (textureLod(u_texHeight, texCoord, 0.0).r + textureLod(u_texHeight, texCoord, 4.0).r*0.00390625*2.0);// + texture(u_texNoise, texCoord*10.0).r * 3.0;
+	float result =  (textureLod(u_texHeight, texCoord, 0.0).r + textureLod(u_texHeight, texCoord, 4.0).r*0.00390625*2.0);// + texture(u_texNoise, texCoord*10.0).r * 3.0;
+	if (result < 0.001) //water effect
+	{
+		float t = float(u_time);
+		result = sin(texture(u_texRock, texCoord + t * 0.001).r) * 0.005 - 0.01;
+	}
+
+	return result;
 }
 
 uniform float step = 1.9/4096.0;
