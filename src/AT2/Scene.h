@@ -1,8 +1,7 @@
 #pragma once
 
-#include <map>
-#include <AT2/AT2.h>
-#include <AT2/camera.h>
+#include "AT2.h"
+#include "camera.h"
 
 //TODO encapsulate all graphic API calls
 
@@ -77,8 +76,6 @@ class Scene
 {
 public:
     Node& GetRoot() { return *root; }
-
-    void Render(IRenderer& renderer, const Camera& camera);
 
 private:
     NodeRef root = std::make_shared<Node>();

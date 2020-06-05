@@ -1,131 +1,32 @@
 //This file is something like sandbox. It is just functionality test, not example.
 
+#include <AT2/camera.h>
+#include <AT2/MeshLoader.h>
+#include <AT2/Scene.h>
+#include <AT2/TextureLoader.h>
+#include <AT2/OpenGL/GlFrameBuffer.h>
 #include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/OpenGL/GlShaderProgram.h>
-#include <AT2/OpenGL/GlUniformBuffer.h>
 #include <AT2/OpenGL/GlTexture.h>
-#include <AT2/OpenGL/GlFrameBuffer.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
+#include <AT2/OpenGL/GlUniformBuffer.h>
+#include <AT2/OpenGL/GLFW/glfw_application.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
 
-
-#include <AT2/TextureLoader.h>
-#include <AT2/camera.h>
-
 #include "../drawable.h"
-#include "Scene.h"
-#include "MeshLoader.h"
 
-#include <iostream>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 
-#include <glm/gtc/random.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/random.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 #include <chrono>
 
-#include "AT2/OpenGL/GLFW/glfw_application.h"
+#include "SceneRenderer.h"
 
-std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader, SphereLightShader, DayLightShader, PostprocessShader;
-
-std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
-std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
-
-std::shared_ptr<AT2::GlFrameBuffer> Stage1FBO, Stage2FBO;
-
-std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, TerrainDrawable, SphereLightDrawable;
-AT2::Scene Scene;
-
-bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true, NeedFramebufferResize = true;
-size_t NumActiveLights = 50;
-
-GLfloat Phase = 0.0;
-
-std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
-
-//returns frame time
-float Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer& framebuffer, const AT2::Camera& camera)
-{
-	auto timeBefore = std::chrono::high_resolution_clock::now();
-
-	AT2::GlTimerQuery glTimer;
-	glTimer.Begin();
-
-	CameraUB->SetUniform("u_matView", camera.getView());
-	CameraUB->SetUniform("u_matInverseView", camera.getViewInverse());
-	CameraUB->SetUniform("u_matProjection", camera.getProjection());
-	CameraUB->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
-	CameraUB->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
-	//CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
-	CameraUB->Bind();
-	
-
-	//Scene stage
-	Stage1FBO->Bind();
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
-	renderer->ClearDepth(1.0);
-
-	glPolygonMode(GL_FRONT_AND_BACK, (WireframeMode) ? GL_LINE : GL_FILL);
-
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glDepthMask(GL_TRUE);
-	glCullFace(GL_FRONT);
-	glPatchParameteri( GL_PATCH_VERTICES, 4 );
-	TerrainDrawable->UniformBuffer->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
-	TerrainDrawable->Draw(renderer);
-
-	Scene.Render(*renderer, camera);
-
-	
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	
-	//Light stage
-	Stage2FBO->Bind();
-
-	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
-	//glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	glDepthMask(GL_FALSE);
-	glDepthFunc(GL_GREATER);
-	glCullFace(GL_BACK);
-
-	for (const auto& light : LightsArray)
-	{
-		light->SetBindingPoint(2);
-		light->Bind();
-		SphereLightDrawable->Draw(renderer);
-	}
-	
-	glCullFace(GL_BACK);
-	glDisable(GL_DEPTH_TEST);
-	SkylightDrawable->Draw(renderer);
-	
-	//Postprocess stage
-	framebuffer.Bind();
-	//glEnable(GL_FRAMEBUFFER_SRGB);
-
-	glDepthMask(GL_TRUE);
-	renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
-	renderer->ClearDepth(0);
-
-	glCullFace(GL_BACK);
-	glDisable(GL_DEPTH_TEST);
-	(dynamic_cast<AT2::GlShaderProgram*>(QuadDrawable->Shader.get()))->SetUBO("CameraBlock", 1);
-	QuadDrawable->Draw(renderer);
-
-
-	glTimer.End();
-	float frameTime = glTimer.WaitForResult() * 0.000001; //in ms
-
-	glFinish();
-
-	return frameTime;
-}
 
 class App
 {
@@ -336,6 +237,88 @@ private:
 		m_renderer->FinishFrame();
 	}
 
+	float Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer& framebuffer, const AT2::Camera& camera)
+	{
+		auto timeBefore = std::chrono::high_resolution_clock::now();
+
+		AT2::GlTimerQuery glTimer;
+		glTimer.Begin();
+
+		CameraUB->SetUniform("u_matView", camera.getView());
+		CameraUB->SetUniform("u_matInverseView", camera.getViewInverse());
+		CameraUB->SetUniform("u_matProjection", camera.getProjection());
+		CameraUB->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
+		CameraUB->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
+		//CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
+		CameraUB->Bind();
+
+
+		//Scene stage
+		Stage1FBO->Bind();
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
+		renderer->ClearDepth(1.0);
+
+		glPolygonMode(GL_FRONT_AND_BACK, (WireframeMode) ? GL_LINE : GL_FILL);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glDepthMask(GL_TRUE);
+		glCullFace(GL_FRONT);
+		glPatchParameteri(GL_PATCH_VERTICES, 4);
+		TerrainDrawable->UniformBuffer->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
+		TerrainDrawable->Draw(renderer);
+
+		RenderVisitor::RenderScene(Scene, *renderer, camera);
+
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		//Light stage
+		Stage2FBO->Bind();
+
+		renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
+		//glDisable(GL_DEPTH_TEST);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glDepthMask(GL_FALSE);
+		glDepthFunc(GL_GREATER);
+		glCullFace(GL_BACK);
+
+		for (const auto& light : LightsArray)
+		{
+			light->SetBindingPoint(2);
+			light->Bind();
+			SphereLightDrawable->Draw(renderer);
+		}
+
+		glCullFace(GL_BACK);
+		glDisable(GL_DEPTH_TEST);
+		SkylightDrawable->Draw(renderer);
+
+		//Postprocess stage
+		framebuffer.Bind();
+		//glEnable(GL_FRAMEBUFFER_SRGB);
+
+		glDepthMask(GL_TRUE);
+		renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
+		renderer->ClearDepth(0);
+
+		glCullFace(GL_BACK);
+		glDisable(GL_DEPTH_TEST);
+		(dynamic_cast<AT2::GlShaderProgram*>(QuadDrawable->Shader.get()))->SetUBO("CameraBlock", 1);
+		QuadDrawable->Draw(renderer);
+
+
+		glTimer.End();
+		float frameTime = glTimer.WaitForResult() * 0.000001; //in ms
+
+		glFinish();
+
+		return frameTime;
+	}
+
+
 	void SetupWindowCallbacks()
 	{
 
@@ -407,8 +390,25 @@ private:
 	std::shared_ptr<GlfwWindow> m_window;
 	std::shared_ptr<AT2::IRenderer> m_renderer;
 
-
 	AT2::Camera m_camera;
+
+
+	std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader, SphereLightShader, DayLightShader, PostprocessShader;
+
+	std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
+	std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
+
+	std::shared_ptr<AT2::GlFrameBuffer> Stage1FBO, Stage2FBO;
+
+	std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, TerrainDrawable, SphereLightDrawable;
+	AT2::Scene Scene;
+
+	bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true, NeedFramebufferResize = true;
+	size_t NumActiveLights = 50;
+
+	GLfloat Phase = 0.0;
+
+	std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 };
 
 int main(int argc, char *argv[])

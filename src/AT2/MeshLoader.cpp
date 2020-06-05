@@ -9,9 +9,11 @@
 
 #include <GL/glew.h>
 
-#include "../drawable.h"
-#include <AT2/OpenGL/GlDrawPrimitive.h>
-#include <AT2/TextureLoader.h>
+#include <map>
+#include "OpenGL/GlDrawPrimitive.h"
+#include "TextureLoader.h""
+
+
 using namespace AT2;
 
 
@@ -86,10 +88,10 @@ protected:
 
 		auto& rf = m_renderer->GetResourceFactory();
 		auto vao = rf.CreateVertexArray();
-		vao->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_verticesVec.size() * sizeof(glm::vec3), m_verticesVec.data()));
-		vao->SetVertexBuffer(2, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_texCoordVec.size() * sizeof(glm::vec3), m_texCoordVec.data()));
-		vao->SetVertexBuffer(3, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_normalsVec.size() * sizeof(glm::vec3), m_normalsVec.data()));
-		vao->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size() * sizeof(GLuint), m_indicesVec.data()));
+		vao->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_verticesVec.size() * sizeof(glm::vec3), m_verticesVec.data()));
+		vao->SetVertexBuffer(2, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_texCoordVec.size() * sizeof(glm::vec3), m_texCoordVec.data()));
+		vao->SetVertexBuffer(3, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_normalsVec.size() * sizeof(glm::vec3), m_normalsVec.data()));
+		vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size() * sizeof(GLuint), m_indicesVec.data()));
 
 		m_buildedMesh->VertexArray = vao;
 	}
