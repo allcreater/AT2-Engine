@@ -33,9 +33,15 @@ public:
         nv.UnVisit(*this);
     }
 
-    void AddChild(NodeRef node)
+    Node& AddChild(NodeRef node)
     {
-        child_nodes.push_back(std::move(node));
+        return *child_nodes.emplace_back(std::move(node));
+    }
+
+    template <typename T>
+    T& GetChild(size_t index)
+    {
+        return dynamic_cast<T&>(*child_nodes[index]);
     }
 
     const glm::mat4& GetTransform() const noexcept { return transform; }

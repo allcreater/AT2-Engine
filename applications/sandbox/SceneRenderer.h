@@ -5,6 +5,8 @@
 
 using namespace AT2;
 
+
+
 struct RenderVisitor : NodeVisitor
 {
     RenderVisitor(IRenderer& renderer, const Camera& camera);
@@ -26,3 +28,5 @@ private:
     IRenderer& renderer;
     MatrixStack transforms;
 };
+
+std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);

@@ -141,6 +141,21 @@ private:
 		auto mesh = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb", MeshShader);
 		mesh->SetTransform( glm::scale(glm::translate(mesh->GetTransform(), { 0, -140, 0 }), { 10, 10, 10 }));
 		Scene.GetRoot().AddChild(std::move(mesh));
+
+		TerrainNode = MakeTerrain(*m_renderer, TerrainShader, 64, 64);
+		TerrainNode->GetChild<DrawableNode>(0).Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
+		{
+			auto uniformStorage = TerrainNode->UniformBuffer;
+			uniformStorage->SetUniform("u_phase", Phase);
+			uniformStorage->SetUniform("u_scaleH", 10000.0f);
+			uniformStorage->SetUniform("u_scaleV", 800.0f);
+			uniformStorage->SetUniform("u_texHeight", HeightMapTex);
+			uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
+			uniformStorage->SetUniform("u_texGrass", GrassTex);
+			uniformStorage->SetUniform("u_texRock", RockTex);
+		}
+
+		Scene.GetRoot().AddChild(std::move(TerrainNode));
 	}
 
 	void OnRender(double dt)
@@ -164,6 +179,7 @@ private:
 			Stage2FBO->SetDepthAttachement(Stage1FBO->GetDepthAttachement()); //depth is common with previous stage
 
 			//terrain
+			/*
 			TerrainDrawable = AT2::MeshDrawable::MakeTerrainDrawable(m_renderer, 64, 64);
 			TerrainDrawable->Shader = TerrainShader;
 			TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
@@ -178,6 +194,7 @@ private:
 				uniformStorage->SetUniform("u_texRock", RockTex);
 				TerrainDrawable->UniformBuffer = uniformStorage;
 			}
+			*/
 
 			SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer);
 			SphereLightDrawable->Shader = SphereLightShader;
@@ -267,8 +284,8 @@ private:
 		glDepthMask(GL_TRUE);
 		glCullFace(GL_FRONT);
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
-		TerrainDrawable->UniformBuffer->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
-		TerrainDrawable->Draw(renderer);
+		//TerrainDrawable->UniformBuffer->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
+		//TerrainDrawable->Draw(renderer);
 
 		RenderVisitor::RenderScene(Scene, *renderer, camera);
 
@@ -400,7 +417,9 @@ private:
 
 	std::shared_ptr<AT2::GlFrameBuffer> Stage1FBO, Stage2FBO;
 
-	std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, TerrainDrawable, SphereLightDrawable;
+	std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, SphereLightDrawable;
+
+	std::shared_ptr<AT2::MeshNode> TerrainNode;
 	AT2::Scene Scene;
 
 	bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true, NeedFramebufferResize = true;
