@@ -4,6 +4,8 @@
 
 std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const std::shared_ptr<IRenderer>& renderer, int segX, int segY)
 {
+	assert(segX <= 1024 && segY <= 512);
+
 	std::vector<glm::vec3> normals; normals.reserve(segX * segY);
 	std::vector<glm::uint> indices; indices.reserve(segX * segY * 6);
 
@@ -49,13 +51,15 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const s
 
 std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeTerrainDrawable(const std::shared_ptr<IRenderer>& renderer, int segX, int segY)
 {
+	assert(segX < 1024 && segY < 1024);
+
 	std::vector<glm::vec2> texCoords(segX * segY * 4);//TODO! GlVertexBuffer - take iterators!
 
-	for (int j = 0; j < segY; ++j)
+	for (size_t j = 0; j < segY; ++j)
 	{
-		for (int i = 0; i < segX; ++i)
+		for (size_t i = 0; i < segX; ++i)
 		{
-			const int num = (i + j * segX) * 4;
+			const auto num = (i + j * segX) * 4;
 			texCoords[num] = glm::vec2(float(i) / segX, float(j) / segY);
 			texCoords[num + 1] = glm::vec2(float(i + 1) / segX, float(j) / segY);
 			texCoords[num + 2] = glm::vec2(float(i + 1) / segX, float(j + 1) / segY);

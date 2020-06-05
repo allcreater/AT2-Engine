@@ -81,7 +81,7 @@ public:
 	virtual void SetDepthAttachement(const std::shared_ptr<ITexture> texture) = 0;
 	virtual std::shared_ptr<ITexture> GetDepthAttachement() const = 0;
 
-	virtual const glm::ivec2& GetActualSize() const = 0;
+	virtual glm::ivec2 GetActualSize() const = 0;
 
 };
 
@@ -103,7 +103,7 @@ public:
 	virtual const BufferTypeInfo& GetDataType() const = 0;
 	virtual void SetDataType(const BufferTypeInfo& typeInfo) = 0;
 
-	virtual void SetData(unsigned int length, const void* data) = 0;
+	virtual void SetData(size_t length, const void* data) = 0;
 };
 
 class IVertexArray

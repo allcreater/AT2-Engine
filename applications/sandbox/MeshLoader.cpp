@@ -18,7 +18,7 @@ using namespace AT2;
 class GlMeshBuilder
 {
 public:
-	GlMeshBuilder(const std::shared_ptr<AT2::IRenderer> _renderer, const aiScene* scene) :
+	GlMeshBuilder(std::shared_ptr<AT2::IRenderer> _renderer, const aiScene* scene) :
         m_renderer(std::move(_renderer)),
         m_scene(scene)
 	{
@@ -58,7 +58,7 @@ protected:
 protected:
 	void AddMesh(const aiMesh* _mesh)
 	{
-		const auto vertexOffset = m_verticesVec.size();
+		const auto vertexOffset = static_cast<GLuint>(m_verticesVec.size());
 
 		m_meshIndexOffsets.push_back(m_indicesVec.size());
 
@@ -66,7 +66,7 @@ protected:
 		m_texCoordVec.insert(m_texCoordVec.end(), reinterpret_cast<glm::vec3*>(_mesh->mTextureCoords[0]), reinterpret_cast<glm::vec3*>(_mesh->mTextureCoords[0]) + _mesh->mNumVertices);
 		m_normalsVec.insert(m_normalsVec.end(), reinterpret_cast<glm::vec3*>(_mesh->mNormals), reinterpret_cast<glm::vec3*>(_mesh->mNormals) + _mesh->mNumVertices);
 
-		for (int j = 0; j < _mesh->mNumFaces; ++j)
+		for (size_t j = 0; j < _mesh->mNumFaces; ++j)
 		{
 			const aiFace& face = _mesh->mFaces[j];
 			assert(face.mNumIndices == 3);
@@ -163,8 +163,8 @@ protected:
 				submesh->Primitives.push_back(std::make_unique<GlDrawElementsPrimitive>(
 					GlDrawPrimitiveType::Triangles, 
 					mesh->mNumFaces * 3, 
-					GlDrawElementsPrimitive::IndicesType::UnsignedInt, 
-					m_meshIndexOffsets[meshIndex] * sizeof(GLuint)
+					GlDrawElementsPrimitive::IndicesType::UnsignedInt,
+                    reinterpret_cast<void*>(m_meshIndexOffsets[meshIndex] * sizeof(GLuint))
 				));
 
 				baseNode->AddChild(std::move(submesh));
@@ -175,7 +175,7 @@ protected:
 		//	transform = ConvertMatrix(node->mTransformation) * transform;
 		//}
 
-		for (int i = 0; i < node->mNumChildren; i++)
+		for (size_t i = 0; i < node->mNumChildren; i++)
 		{
 			auto* children = node->mChildren[i];
 

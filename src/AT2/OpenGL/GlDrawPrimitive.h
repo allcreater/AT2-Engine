@@ -68,23 +68,23 @@ public:
 	};
 
 public:
-	GlDrawElementsPrimitive(GlDrawPrimitiveType mode, GLsizei count, IndicesType indicesType, GLint first) :
+	GlDrawElementsPrimitive(GlDrawPrimitiveType mode, GLsizei count, IndicesType indicesType, const void* first) :
         GlDrawPrimitive(mode),
-        m_firstIndex(first),
         m_count(count),
-        m_indicesType(indicesType)
+        m_indicesType(indicesType),
+        m_firstIndex(first)
     {}
 
 public:
 	void Draw() const override
 	{
-		glDrawElements(static_cast<GLenum>(GetPrimitiveMode()), m_count, static_cast<GLenum>(m_indicesType), reinterpret_cast<GLvoid*>(m_firstIndex));
+		glDrawElements(static_cast<GLenum>(GetPrimitiveMode()), m_count, static_cast<GLenum>(m_indicesType), m_firstIndex);
 	}
 
 private:
 	GLsizei m_count;
 	IndicesType m_indicesType;
-	GLint m_firstIndex;
+	const void* m_firstIndex;
 };
 
 }

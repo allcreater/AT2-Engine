@@ -47,10 +47,11 @@ namespace AT2
 				
 				return nullptr;
 			}
+
 		private:
-			GLuint m_blockIndex; 
-			GLint m_blockSize;
-			GLint m_numActiveUniforms;
+			GLuint m_blockIndex {0};
+			GLint m_blockSize {0};
+			GLint m_numActiveUniforms {0};
 
 			std::map<str, UniformInfo> m_uniforms;
 		};
@@ -82,7 +83,7 @@ namespace AT2
 		void CleanUp();
 		
 	private:
-		GLuint m_programId;
+		GLuint m_programId {0};
 		std::vector<GLuint> m_shaderId[5];
 		str m_name;
 	};

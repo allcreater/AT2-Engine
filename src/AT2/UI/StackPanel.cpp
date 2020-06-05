@@ -15,10 +15,10 @@ void StackPanel::Measure(const glm::ivec2& position, const glm::uvec2& possibleS
 	Func verticalFunc = [](std::shared_ptr<Node> nodePtr) { return nodePtr->GetMinimalSize().y == 0; };
 	Func isAutoSizedFunc = (m_Orientation == Orientation::Horizontal) ? horizontalFunc : verticalFunc;
 
-	unsigned int numberOfAutoSizedChildren = std::count_if(m_Children.begin(), m_Children.end(), isAutoSizedFunc);
+	const auto numberOfAutoSizedChildren = std::count_if(m_Children.begin(), m_Children.end(), isAutoSizedFunc);
 
 	//numberOfAutoSizedChildren == 0 is special case when elementCharacteristicalSize don't using at all, so it could be random, just not division by zero :)
-	auto elementCharacteristicalSize = (GetCanvasData().MeasuredSize - GetMinimalSize()) / std::max<unsigned int>(numberOfAutoSizedChildren, 1u);
+	const auto elementCharacteristicalSize = (GetCanvasData().MeasuredSize - GetMinimalSize()) / std::max<unsigned int>(numberOfAutoSizedChildren, 1u);
 	glm::ivec2 currentPosition = GetCanvasData().Position;
 	for (auto child : m_Children)
 	{

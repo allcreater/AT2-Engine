@@ -31,7 +31,7 @@ namespace AT2::UI
 		std::shared_ptr<IUniformContainer> m_uniformBuffer;
 
 		std::map<std::string, std::shared_ptr<CurveDrawable>> m_curves;
-		glm::mat4 m_projectionMatrix;
+		glm::mat4 m_projectionMatrix {1.0};
 	};
 
 

@@ -22,7 +22,8 @@ public:
 	size_t GetLength() const override					{ return m_length; }
 
 	void Bind() override;
-	void SetData(unsigned int length, const void* data) override;
+	void SetData(size_t length, const void* data) override;
+
 protected:
 	enum class GlBufferType : GLenum//TODO: Not full list of types!
 	{
@@ -78,7 +79,7 @@ protected:
 
 protected:
 	GLuint m_id;
-	size_t m_length;
+	size_t m_length {0};
 
 	VertexBufferType m_publicType;
 	GlBufferType m_privateType;

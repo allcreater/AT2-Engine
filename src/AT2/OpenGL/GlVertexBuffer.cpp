@@ -67,8 +67,14 @@ GlVertexBuffer::~GlVertexBuffer()
 	glDeleteBuffers(1, &m_id);
 }
 
-void GlVertexBuffer::SetData(unsigned int _size, const void* _data)
+void GlVertexBuffer::SetData(size_t _size, const void* _data)
 {
-	assert(GLEW_EXT_direct_state_access && __glewNamedBufferDataEXT);
-	glNamedBufferDataEXT(m_id, _size, _data, static_cast<GLenum>(m_usageHint));
+	if (__glewNamedBufferDataEXT)
+		glNamedBufferDataEXT(m_id, _size, _data, static_cast<GLenum>(m_usageHint));
+	else
+		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlVertexBuffer: glNamedBufferData not available");
+
+	m_length = _size;
+
+
 }

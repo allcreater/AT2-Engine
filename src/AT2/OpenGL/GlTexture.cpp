@@ -2,21 +2,19 @@
 
 using namespace AT2;
 
-GlTexture::GlTexture(TextureType _type, GLint _internalFormat) :
-	m_targetType(_type),
-	m_internalFormat(_internalFormat),
-	m_currentTextureModule(-1)
+GlTexture::GlTexture(TextureType type, GLint internalFormat) :
+	m_targetType(type),
+	m_internalFormat(internalFormat)
 {
 	glGenTextures(1, &m_id);
 
 	DetermineExternalFormatAndDataType();
 }
 
-AT2::GlTexture::GlTexture(GLuint _id, TextureType _type, GLint _internalFormat) :
-	m_id(_id),
-	m_targetType(_type),
-	m_internalFormat(_internalFormat),
-	m_currentTextureModule(-1)
+AT2::GlTexture::GlTexture(GLuint id, TextureType type, GLint internalFormat) :
+	m_id(id),
+	m_targetType(type),
+	m_internalFormat(internalFormat)
 {
 	glGenTextures(1, &m_id);
 
@@ -26,8 +24,7 @@ GlTexture::GlTexture(TextureType type, GLint internalFormat, GLenum format, GLen
 	m_targetType(type),
 	m_internalFormat(internalFormat),
 	m_format(format),
-	m_dataType(dataType),
-	m_currentTextureModule(-1)
+	m_dataType(dataType)
 {
 	glGenTextures(1, &m_id);
 }

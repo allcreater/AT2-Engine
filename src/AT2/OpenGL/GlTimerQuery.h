@@ -17,8 +17,8 @@ namespace AT2
 		GLuint64 WaitForResult();
 
 	private:
-		GLuint m_id;
-		GLuint64 m_resultValue;
+		GLuint m_id {0};
+		GLuint64 m_resultValue {0};
 	};
 
 }

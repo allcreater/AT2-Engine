@@ -25,9 +25,8 @@ void StateManager::BindTextures(const TextureSet& _textures)
 	}
 	
 
-	size_t currentModule = 0;
 	auto textureToBoundIterator = _textures.begin();
-	for (; currentModule < numModules && textureToBoundIterator != _textures.end(); ++currentModule)
+	for (unsigned currentModule = 0; currentModule < numModules && textureToBoundIterator != _textures.end(); ++currentModule)
 	{
 		if ((*textureToBoundIterator)->GetCurrentModule() < 0)
 		{
@@ -39,11 +38,11 @@ void StateManager::BindTextures(const TextureSet& _textures)
 
 				texture = *textureToBoundIterator;
 				texture->Bind(currentModule);
-				textureToBoundIterator++;
+				++textureToBoundIterator;
 			}
 		}
 		else
-			textureToBoundIterator++;
+			++textureToBoundIterator;
 	}
 }
 

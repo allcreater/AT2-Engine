@@ -24,6 +24,7 @@ void GlTimerQuery::End()
 
 GLuint64 GlTimerQuery::WaitForResult()
 {
+	m_resultValue = 0;
 	glGetQueryObjectui64v(m_id, GL_QUERY_RESULT, &m_resultValue);
 	return m_resultValue;
 }

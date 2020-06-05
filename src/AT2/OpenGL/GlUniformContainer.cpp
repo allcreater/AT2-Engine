@@ -23,9 +23,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform1d(programID, GetLocation(), m_value); }
 	
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	GLdouble m_value;
+	GLdouble m_value {};
 };
 
 template <>
@@ -38,9 +38,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform2dv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::dvec2 m_value;
+	glm::dvec2 m_value {};
 };
 
 template <>
@@ -53,9 +53,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform3dv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::dvec3 m_value;
+	glm::dvec3 m_value {};
 };
 
 template <>
@@ -68,9 +68,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform4dv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::dvec4 m_value;
+	glm::dvec4 m_value {};
 };
 
 template <>
@@ -83,9 +83,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniformMatrix2dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::dmat2 m_value;
+	glm::dmat2 m_value {};
 };
 
 template <>
@@ -98,9 +98,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniformMatrix3dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::dmat3 m_value;
+	glm::dmat3 m_value {};
 };
 
 template <>
@@ -113,9 +113,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniformMatrix4dv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::dmat4 m_value;
+	glm::dmat4 m_value {};
 };
 
 //floats
@@ -129,9 +129,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform1f(programID, GetLocation(), m_value); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	GLfloat m_value;
+	GLfloat m_value {};
 };
 
 template <>
@@ -144,9 +144,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform2fv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::vec2 m_value;
+	glm::vec2 m_value {};
 };
 
 template <>
@@ -159,9 +159,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform3fv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::vec3 m_value;
+	glm::vec3 m_value {};
 };
 
 template <>
@@ -174,9 +174,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform4fv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::vec4 m_value;
+	glm::vec4 m_value {};
 };
 
 template <>
@@ -189,9 +189,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniformMatrix2fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::mat2 m_value;
+	glm::mat2 m_value {};
 };
 
 template <>
@@ -204,9 +204,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniformMatrix3fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::mat3 m_value;
+	glm::mat3 m_value {};
 };
 
 template <>
@@ -219,9 +219,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniformMatrix4fv(programID, GetLocation(), 1, GL_FALSE, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::mat4 m_value;
+	glm::mat4 m_value {};
 };
 
 //integers
@@ -235,9 +235,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform1i(programID, GetLocation(), m_value); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	GLint m_value;
+	GLint m_value {};
 };
 
 template <>
@@ -250,9 +250,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform2iv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::ivec2 m_value;
+	glm::ivec2 m_value {};
 };
 
 template <>
@@ -265,9 +265,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform3iv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::ivec3 m_value;
+	glm::ivec3 m_value {};
 };
 
 template <>
@@ -280,9 +280,9 @@ public:
 	void Bind(GLuint programID) override		{ glProgramUniform4iv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	glm::ivec4 m_value;
+	glm::ivec4 m_value {};
 };
 
 //unsigned integers
@@ -296,9 +296,9 @@ public:
 	void Bind(GLuint programID) override { glProgramUniform1ui(programID, GetLocation(), m_value); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform() {}
+
 private:
-	GLuint m_value;
+	GLuint m_value {};
 };
 
 template <>
@@ -311,9 +311,9 @@ public:
 	void Bind(GLuint programID) override { glProgramUniform2uiv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform() {}
+
 private:
-	glm::uvec2 m_value;
+	glm::uvec2 m_value {};
 };
 
 template <>
@@ -326,9 +326,9 @@ public:
 	void Bind(GLuint programID) override { glProgramUniform3uiv(programID, 1, GetLocation(), glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform() {}
+
 private:
-	glm::uvec3 m_value;
+	glm::uvec3 m_value {};
 };
 
 template <>
@@ -341,9 +341,9 @@ public:
 	void Bind(GLuint programID) override { glProgramUniform4uiv(programID, GetLocation(), 1, glm::value_ptr(m_value)); }
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform() {}
+
 private:
-	glm::uvec4 m_value;
+	glm::uvec4 m_value {};
 };
 
 template <>
@@ -364,9 +364,9 @@ public:
 	}
 
 	GlUniform() : IGlUniform() {}
-	~GlUniform(){}
+
 private:
-	std::weak_ptr<const ITexture> m_value;
+	std::weak_ptr<const ITexture> m_value {};
 };
 
 //
@@ -380,7 +380,6 @@ GlUniformContainer::GlUniformContainer(std::weak_ptr<GlShaderProgram> _program)
 
 GlUniformContainer::~GlUniformContainer()
 {
-
 }
 
 template <typename T>

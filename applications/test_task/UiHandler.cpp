@@ -46,7 +46,7 @@ struct PlotCurveSwitchingAnimation : public IAnimation
 
 	void Animate(double dt) override
 	{
-		float t = m_elapsedTime / m_Duration;
+		const auto t = m_elapsedTime / m_Duration;
 
 		if (auto plot = m_plotNode.lock())
 		{

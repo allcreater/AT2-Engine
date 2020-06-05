@@ -175,6 +175,9 @@ TextureRef TextureLoader::LoadTexture(std::shared_ptr<IRenderer> renderer, const
 
 TextureRef TextureLoader::LoadTexture(std::shared_ptr<IRenderer> renderer, void* data, size_t size)
 {
+	if (size > std::numeric_limits<ILuint>::max())
+		throw AT2Exception(AT2Exception::ErrorCase::Texture, "DevIL does not support images more than 4GB");
+
 	ILenum type = ilDetermineTypeL(data, size);
 	if (type == IL_TYPE_UNKNOWN)
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "Couldn't determine texture format while reading from memory");

@@ -19,9 +19,9 @@ namespace AT2::UI
 	struct CanvasData
 	{
 		//TODO: replace to AABB
-		glm::ivec2 Position; //top left point of the UI AABB
-		glm::uvec2 MinimalSize; //minimal measured size
-		glm::uvec2 MeasuredSize;
+		glm::ivec2 Position {}; //top left point of the UI AABB
+		glm::uvec2 MinimalSize {}; //minimal measured size
+		glm::uvec2 MeasuredSize {};
 	};
 
 	class Node;

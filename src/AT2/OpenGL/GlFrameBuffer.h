@@ -22,7 +22,7 @@ public:
 	std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const override;
 	void SetDepthAttachement(const std::shared_ptr<ITexture> texture) override;
 	std::shared_ptr<ITexture> GetDepthAttachement() const override;
-	const glm::ivec2& GetActualSize() const override { return m_size; }
+	glm::ivec2 GetActualSize() const override { return m_size; }
 
 private:
 	GLuint m_id;
@@ -72,7 +72,7 @@ public:
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}
 
-	const glm::ivec2& GetActualSize() const
+	glm::ivec2 GetActualSize() const
 	{
 		GLint viewport[4];
 		glGetIntegerv(GL_VIEWPORT, viewport);

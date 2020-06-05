@@ -195,7 +195,7 @@ private:
 		data.Width = 256;
 		data.Depth = 256;
 		auto arr = std::make_unique<GLubyte[]>(data.Height * data.Width * data.Depth * 4);
-		for (int i = 0; i < data.Height * data.Width * data.Depth * 4; ++i)
+		for (size_t i = 0; i < data.Height * data.Width * data.Depth * 4; ++i)
 			arr[i] = (rand() & 0xFF);
 		data.Data = arr.get();
 		texture->SetData(0, data);
@@ -238,7 +238,7 @@ private:
 
 
 		auto mesh = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb", MeshShader);
-		mesh->SetTransform(mesh->GetTransform() * glm::scale(glm::mat4{ 1 }, { 10, 10, 10 }));
+		mesh->SetTransform( glm::scale(glm::translate(mesh->GetTransform(), { 0, -140, 0 }), { 10, 10, 10 }));
 		Scene.GetRoot().AddChild(std::move(mesh));
 	}
 

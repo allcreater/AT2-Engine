@@ -93,12 +93,12 @@ void GlFrameBuffer::Bind()
 	    m_dirtyFlag = false;
     }
 
-    const size_t numAttachements = m_colorAttachements.size();
+    const auto numAttachements = m_colorAttachements.size();
     std::vector<GLenum> buffers (numAttachements);
-    for (size_t i = 0; i < numAttachements; ++i)
+    for (GLenum i = 0; i < numAttachements; ++i)
         buffers[i] = (m_colorAttachements[i]) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
 
     glViewport(0, 0, m_size.x, m_size.y); //TODO
 
-    glDrawBuffers(buffers.size(), buffers.data());
+    glDrawBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
 }

@@ -56,13 +56,13 @@ namespace AT2
 
 	protected:
 		TextureType m_targetType;
-		GLuint m_id;
-		int m_currentTextureModule;
+		GLuint m_id {0};
+		int m_currentTextureModule {-1};
 
-		GLint m_internalFormat;
-		GLenum m_format, m_dataType;
+		GLint m_internalFormat {0};
+		GLenum m_format {0}, m_dataType {0};
 
-		glm::uvec3 m_size;
+		glm::uvec3 m_size {};
 	};
 
 	class GlTexture1D : public GlTexture
