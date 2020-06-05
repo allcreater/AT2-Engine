@@ -145,7 +145,7 @@ private:
 		TerrainNode = MakeTerrain(*m_renderer, TerrainShader, 64, 64);
 		TerrainNode->GetChild<DrawableNode>(0).Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 		{
-			auto uniformStorage = TerrainNode->UniformBuffer;
+			auto uniformStorage = TerrainNode->GetChild<DrawableNode>(0).UniformBuffer;
 			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_scaleH", 10000.0f);
 			uniformStorage->SetUniform("u_scaleV", 800.0f);

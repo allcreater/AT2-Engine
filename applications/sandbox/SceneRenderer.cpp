@@ -34,9 +34,7 @@ void RenderVisitor::Visit(Node& node)
         stateManager.BindTextures(submesh->Textures);
 
         submesh->UniformBuffer->SetUniform("u_matModel", transforms.getModelView());
-        submesh->UniformBuffer->SetUniform("u_matNormal",
-                                           glm::mat3(glm::transpose(
-                                               glm::inverse(camera.getView() * transforms.getModelView()))));
+        submesh->UniformBuffer->SetUniform("u_matNormal",glm::mat3(transpose( inverse(camera.getView() * transforms.getModelView()))));
         submesh->UniformBuffer->Bind();
 
         for (auto& primitive : submesh->Primitives)
@@ -73,7 +71,6 @@ std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShad
 
     auto mesh = std::make_shared<MeshNode>();
     mesh->SetName("Terrain");
-    //mesh->Primitives.push_back(new AT2::GlDrawArraysPrimitive(AT2::GlDrawPrimitiveType::Patches, 0, texCoords.size()));
     mesh->Shader = program;
     mesh->UniformBuffer = program->CreateAssociatedUniformStorage();
     mesh->VertexArray = vao;
@@ -82,7 +79,6 @@ std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShad
     drawable->SetName("Terrain drawable");
     //drawable->SetTransform(ConvertMatrix(node->mTransformation));
     drawable->UniformBuffer = mesh->Shader->CreateAssociatedUniformStorage();
-
     drawable->Primitives.push_back(std::make_unique<GlDrawArraysPrimitive>(AT2::GlDrawPrimitiveType::Patches, 0, texCoords.size()));
 
     mesh->AddChild(std::move(drawable));
