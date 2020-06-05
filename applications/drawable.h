@@ -38,7 +38,6 @@ public:
 public:
 
 	static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(const std::shared_ptr<IRenderer>& renderer, int segX = 32, int segY = 16);
-	static std::shared_ptr<AT2::MeshDrawable> MakeTerrainDrawable(const std::shared_ptr<IRenderer>& renderer, int segX, int segY);
 	static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer);
 private:
 	

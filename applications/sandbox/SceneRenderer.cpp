@@ -24,7 +24,8 @@ void RenderVisitor::Visit(Node& node)
         stateManager.BindShader(mesh->Shader);
         stateManager.BindVertexArray(mesh->VertexArray);
 
-        mesh->UniformBuffer->Bind();
+        if (mesh->UniformBuffer)
+            mesh->UniformBuffer->Bind();
     }
     else if (auto submesh = dynamic_cast<DrawableNode*>(&node))
     {
@@ -33,9 +34,13 @@ void RenderVisitor::Visit(Node& node)
 
         stateManager.BindTextures(submesh->Textures);
 
-        submesh->UniformBuffer->SetUniform("u_matModel", transforms.getModelView());
-        submesh->UniformBuffer->SetUniform("u_matNormal",glm::mat3(transpose( inverse(camera.getView() * transforms.getModelView()))));
-        submesh->UniformBuffer->Bind();
+        if (submesh->UniformBuffer)
+        {
+            //submesh->UniformBuffer->SetUniform("u_time", time);
+            submesh->UniformBuffer->SetUniform("u_matModel", transforms.getModelView());
+            submesh->UniformBuffer->SetUniform("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
+            submesh->UniformBuffer->Bind();
+        }
 
         for (auto& primitive : submesh->Primitives)
             primitive->Draw();

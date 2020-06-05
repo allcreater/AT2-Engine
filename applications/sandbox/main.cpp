@@ -23,7 +23,6 @@
 #include <glm/gtc/random.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include <chrono>
 
 #include "SceneRenderer.h"
 
@@ -61,7 +60,7 @@ private:
 	{
 		glewExperimental = GL_TRUE;
 		if (glewInit() != GLEW_OK)
-			throw new GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
+			throw GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
 
 		m_renderer = std::make_unique<AT2::GlRenderer>();
 
@@ -117,7 +116,7 @@ private:
 
 
 
-		for (int i = 0; i < NumActiveLights; ++i)
+		for (size_t i = 0; i < NumActiveLights; ++i)
 		{
 			auto light = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(SphereLightShader)->GetUniformBlockInfo("LightingBlock"));
 
@@ -138,15 +137,25 @@ private:
 		glEnable(GL_CULL_FACE);
 
 
+		SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer);
+		SphereLightDrawable->Shader = SphereLightShader;
+
+		SkylightDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
+		SkylightDrawable->Shader = DayLightShader;
+
+		QuadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
+		QuadDrawable->Shader = PostprocessShader;
+
+		//Scene
 		auto mesh = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb", MeshShader);
 		mesh->SetTransform( glm::scale(glm::translate(mesh->GetTransform(), { 0, -140, 0 }), { 10, 10, 10 }));
 		Scene.GetRoot().AddChild(std::move(mesh));
+
 
 		TerrainNode = MakeTerrain(*m_renderer, TerrainShader, 64, 64);
 		TerrainNode->GetChild<DrawableNode>(0).Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
 		{
 			auto uniformStorage = TerrainNode->GetChild<DrawableNode>(0).UniformBuffer;
-			uniformStorage->SetUniform("u_phase", Phase);
 			uniformStorage->SetUniform("u_scaleH", 10000.0f);
 			uniformStorage->SetUniform("u_scaleV", 800.0f);
 			uniformStorage->SetUniform("u_texHeight", HeightMapTex);
@@ -178,26 +187,6 @@ private:
 			Stage2FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, m_window->getSize()));
 			Stage2FBO->SetDepthAttachement(Stage1FBO->GetDepthAttachement()); //depth is common with previous stage
 
-			//terrain
-			/*
-			TerrainDrawable = AT2::MeshDrawable::MakeTerrainDrawable(m_renderer, 64, 64);
-			TerrainDrawable->Shader = TerrainShader;
-			TerrainDrawable->Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
-			{
-				auto uniformStorage = TerrainShader->CreateAssociatedUniformStorage();
-				uniformStorage->SetUniform("u_phase", Phase);
-				uniformStorage->SetUniform("u_scaleH", 10000.0f);
-				uniformStorage->SetUniform("u_scaleV", 800.0f);
-				uniformStorage->SetUniform("u_texHeight", HeightMapTex);
-				uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
-				uniformStorage->SetUniform("u_texGrass", GrassTex);
-				uniformStorage->SetUniform("u_texRock", RockTex);
-				TerrainDrawable->UniformBuffer = uniformStorage;
-			}
-			*/
-
-			SphereLightDrawable = AT2::MeshDrawable::MakeSphereDrawable(m_renderer);
-			SphereLightDrawable->Shader = SphereLightShader;
 			SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex };
 			{
 				auto uniformStorage = SphereLightShader->CreateAssociatedUniformStorage();
@@ -211,12 +200,9 @@ private:
 			}
 
 
-			SkylightDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
-			SkylightDrawable->Shader = DayLightShader;
 			SkylightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex, EnvironmentMapTex };
 			{
 				auto uniformStorage = DayLightShader->CreateAssociatedUniformStorage();
-				uniformStorage->SetUniform("u_phase", Phase);
 				uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 				uniformStorage->SetUniform("u_colorMap", Stage1FBO->GetColorAttachement(0));
 				uniformStorage->SetUniform("u_normalMap", Stage1FBO->GetColorAttachement(1));
@@ -227,12 +213,9 @@ private:
 			}
 
 			//Postprocess quad
-			QuadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(m_renderer);
-			QuadDrawable->Shader = PostprocessShader;
 			QuadDrawable->Textures = { Stage2FBO->GetColorAttachement(0), Stage2FBO->GetDepthAttachement(), Noise3Tex };
 			{
 				auto uniformStorage = PostprocessShader->CreateAssociatedUniformStorage();
-				uniformStorage->SetUniform("u_phase", Phase);
 				uniformStorage->SetUniform("u_texNoise", Noise3Tex);
 				uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
 				uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
@@ -254,10 +237,8 @@ private:
 		m_renderer->FinishFrame();
 	}
 
-	float Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer& framebuffer, const AT2::Camera& camera)
+	double Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer& framebuffer, const AT2::Camera& camera)
 	{
-		auto timeBefore = std::chrono::high_resolution_clock::now();
-
 		AT2::GlTimerQuery glTimer;
 		glTimer.Begin();
 
@@ -266,7 +247,7 @@ private:
 		CameraUB->SetUniform("u_matProjection", camera.getProjection());
 		CameraUB->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
 		CameraUB->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
-		//CameraUB->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
+		CameraUB->SetUniform("u_time", Time);
 		CameraUB->Bind();
 
 
@@ -328,7 +309,7 @@ private:
 
 
 		glTimer.End();
-		float frameTime = glTimer.WaitForResult() * 0.000001; //in ms
+		double frameTime = glTimer.WaitForResult() * 0.000001; //in ms
 
 		glFinish();
 
@@ -385,7 +366,9 @@ private:
 
 		m_window->UpdateCallback = [&](double dt)
 		{
-			const float moveSpeed = dt * 50.0f;
+			Time += dt;
+
+			const float moveSpeed = static_cast<float>(dt) * 50.0f;
 			if (m_window->isKeyDown(GLFW_KEY_W))
 				m_camera.setPosition(m_camera.getPosition() + m_camera.getForward() * moveSpeed);
 			if (m_window->isKeyDown(GLFW_KEY_S))
@@ -425,7 +408,7 @@ private:
 	bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true, NeedFramebufferResize = true;
 	size_t NumActiveLights = 50;
 
-	GLfloat Phase = 0.0;
+	double Time = 0.0;
 
 	std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 };

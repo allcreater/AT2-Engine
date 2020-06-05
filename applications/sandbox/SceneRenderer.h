@@ -17,16 +17,17 @@ struct RenderVisitor : NodeVisitor
 
     static void RenderScene(Scene& scene, IRenderer& renderer, const Camera& camera)
     {
-        RenderVisitor rv{ renderer, camera };
+        RenderVisitor rv { renderer, camera };
         scene.GetRoot().Accept(rv);
     }
 
 private:
     const Camera& camera;
+    IRenderer& renderer;
+
+    MatrixStack transforms;
     MeshNode* active_mesh = nullptr;
 
-    IRenderer& renderer;
-    MatrixStack transforms;
 };
 
 std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);

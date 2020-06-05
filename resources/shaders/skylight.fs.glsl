@@ -9,6 +9,7 @@ in vec2 v_texCoord;
 layout(binding = 1) uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
+    double u_time;
 };
 //uniform mat4 u_matModel;
 //uniform mat3 u_matNormal;
@@ -20,7 +21,6 @@ layout(binding = 2) uniform LightingBlock
 	vec3 u_lightColor;
 };
 
-uniform float u_phase;
 uniform sampler3D u_texNoise;
 uniform sampler2D u_environmentMap;
 

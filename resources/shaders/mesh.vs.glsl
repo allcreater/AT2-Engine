@@ -7,6 +7,7 @@ layout(location = 3) in vec3 a_Normal;
 layout (binding = 1) uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
+	double u_time;
 };
 uniform mat4 u_matModel;
 uniform mat3 u_matNormal;

@@ -7,7 +7,6 @@ uniform CameraBlock
 	mat4 u_matMW, u_matInverseMW, u_matProj, u_matInverseProj;
 };
 
-uniform float u_phase;
 uniform sampler3D u_texNoise;
 
 uniform vec3 u_sunDirection = normalize(vec3(0.0, 1.0, 0.2));
