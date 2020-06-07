@@ -27,6 +27,10 @@
 #include "SceneRenderer.h"
 
 
+constexpr auto RGBA8 = ExternalTextureFormat{ TextureLayout::RGBA, BufferDataType::UByte };
+constexpr auto RGBA32F = ExternalTextureFormat{ TextureLayout::RGBA, BufferDataType::Float };
+constexpr auto DEPTH32F = ExternalTextureFormat{ TextureLayout::DepthComponent, BufferDataType::Float };
+
 class App
 {
 public:
@@ -91,18 +95,15 @@ private:
 			"resources/shaders/mesh.vs.glsl",
 			"resources/shaders/mesh.fs.glsl" });
 
-		auto texture = new AT2::GlTexture3D(GL_RGBA8, glm::uvec3(256, 256, 256), 1);
-		AT2::GlTexture::BufferData data;
-		data.Height = 256;
-		data.Width = 256;
-		data.Depth = 256;
-		auto arr = std::make_unique<GLubyte[]>(data.Height * data.Width * data.Depth * 4);
-		for (size_t i = 0; i < data.Height * data.Width * data.Depth * 4; ++i)
-			arr[i] = (rand() & 0xFF);
-		data.Data = arr.get();
-		texture->SetData(0, data);
 
-		Noise3Tex = std::shared_ptr<AT2::ITexture>(texture);
+		Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D{ {64, 64, 64}, 1 }, RGBA8);
+		{
+			const int l = 64 * 64 * 64 * 4;
+			auto arr = std::make_unique<GLubyte[]>(l); //TODO: make basic texture data available without std::holds_alternative =/
+			for (size_t i = 0; i < l; ++i)
+				arr[i] = (rand() & 0xFF);
+			Noise3Tex->SubImage3D({ 0, 0, 0 }, { 64, 64, 64 }, 0, RGBA8, arr.get());
+		}
 
 		GrassTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/grass03.dds");
 		RockTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
@@ -174,14 +175,16 @@ private:
 
 		if (NeedFramebufferResize)
 		{
-			Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
-			Stage1FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA8, m_window->getSize()));
-			Stage1FBO->SetColorAttachement(1, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, m_window->getSize()));
-			Stage1FBO->SetColorAttachement(2, std::make_shared<AT2::GlTexture2D>(GL_RGBA8, m_window->getSize()));
-			Stage1FBO->SetDepthAttachement(std::make_shared<AT2::GlTexture2D>(GL_DEPTH_COMPONENT32F, m_window->getSize()));
+			auto& rf = m_renderer->GetResourceFactory();
+
+			Stage1FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities()); 
+			Stage1FBO->SetColorAttachement(0, rf.CreateTexture(Texture2D{ m_window->getSize() }, RGBA8));
+			Stage1FBO->SetColorAttachement(1, rf.CreateTexture(Texture2D{ m_window->getSize() }, RGBA32F));
+			Stage1FBO->SetColorAttachement(2, rf.CreateTexture(Texture2D{ m_window->getSize() }, RGBA8));
+			Stage1FBO->SetDepthAttachement(rf.CreateTexture(Texture2D{ m_window->getSize() }, DEPTH32F));
 
 			Stage2FBO = std::make_shared<AT2::GlFrameBuffer>(m_renderer->GetRendererCapabilities());
-			Stage2FBO->SetColorAttachement(0, std::make_shared<AT2::GlTexture2D>(GL_RGBA32F, m_window->getSize()));
+			Stage2FBO->SetColorAttachement(0, rf.CreateTexture(Texture2D{ m_window->getSize() }, RGBA32F));
 			Stage2FBO->SetDepthAttachement(Stage1FBO->GetDepthAttachement()); //depth is common with previous stage
 
 			SphereLightDrawable->Textures = { Stage1FBO->GetColorAttachement(0), Stage1FBO->GetColorAttachement(1), Stage1FBO->GetColorAttachement(2), Stage1FBO->GetDepthAttachement(), Noise3Tex };

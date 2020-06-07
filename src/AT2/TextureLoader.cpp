@@ -56,7 +56,7 @@ public:
 using namespace AT2;
 
 //from OpenGL-friendly to platform-independ and back again at resources factory :)
-static ExternalTextureFormat GetInternalFormat(GLuint externalFormat, GLuint externalType)
+static ExternalTextureFormat GetExternalFormat(ILuint externalFormat, ILuint externalType)
 {
 	auto convertType = [](ILenum type)
 	{
@@ -119,14 +119,11 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const
 	ILinfo imageInfo;
 	iluGetImageInfo(&imageInfo);
 
-	GlTexture::BufferData bd;
-	bd.ExternalFormat = imageInfo.Format;
-
 	auto size = glm::uvec3(imageInfo.Width, imageInfo.Height, imageInfo.Depth);
 
 	ILuint mipmapLevels = std::max(imageInfo.NumMips, 1u);
 	ILuint storageLevels = (imageInfo.NumMips || !enableAutomipmaps) ? imageInfo.NumMips : static_cast<ILuint>(log(std::max({ size.x, size.y, size.z })) / log(2));
-	
+
 	if (auto flags = ilGetInteger(IL_IMAGE_CUBEFLAGS))//TODO: and how to live with it? :)
 	{
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Cube maps still unsupported :(");
@@ -135,7 +132,7 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const
 
 	if (imageInfo.Depth > 1)
 	{
-		auto glTexture = std::static_pointer_cast<GlTexture2D>(renderer->GetResourceFactory().CreateTexture(Texture3D{ size, storageLevels }, GetInternalFormat(imageInfo.Format, imageInfo.Type)));
+		auto texture = renderer->GetResourceFactory().CreateTexture(Texture3D{ size, storageLevels }, GetExternalFormat(imageInfo.Format, imageInfo.Type));
 
 		for (unsigned int level = 0; level < mipmapLevels; ++level)
 		{
@@ -144,24 +141,17 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const
 			ILinfo mipmapImageInfo;
 			iluGetImageInfo(&mipmapImageInfo);
 
-			bd.Height = mipmapImageInfo.Height;
-			bd.Width = mipmapImageInfo.Width;
-			bd.Depth = mipmapImageInfo.Depth;
-			bd.Data = mipmapImageInfo.Data;
-			bd.DataType = mipmapImageInfo.Type;
-
-			glTexture->SetData(level, bd);
+			texture->SubImage3D({ 0, 0, 0 }, { mipmapImageInfo.Width, mipmapImageInfo.Height, mipmapImageInfo.Depth }, level, GetExternalFormat(mipmapImageInfo.Format, mipmapImageInfo.Type), mipmapImageInfo.Data);
 		}
 
 		if (storageLevels != imageInfo.NumMips)
-			glTexture->BuildMipmaps();
+			texture->BuildMipmaps();
 
-		return glTexture;
+		return texture;
 	}
 
-	auto glTexture = std::static_pointer_cast<GlTexture2D>(
-		renderer->GetResourceFactory().CreateTexture(Texture2D{ glm::xy(size), storageLevels }, GetInternalFormat(imageInfo.Format, imageInfo.Type))
-	);
+	//Texture 2d
+	auto texture = renderer->GetResourceFactory().CreateTexture(Texture2D{ glm::xy(size), storageLevels }, GetExternalFormat(imageInfo.Format, imageInfo.Type));
 
 	for (unsigned int level = 0; level < mipmapLevels; ++level)
 	{
@@ -170,19 +160,13 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const
 		ILinfo mipmapImageInfo;
 		iluGetImageInfo(&mipmapImageInfo);
 
-		bd.Height = mipmapImageInfo.Height;
-		bd.Width = mipmapImageInfo.Width;
-		bd.Depth = 1;
-		bd.Data = mipmapImageInfo.Data;
-		bd.DataType = mipmapImageInfo.Type;
-
-		glTexture->SetData(level, bd);
+		texture->SubImage2D({ 0, 0 }, { mipmapImageInfo.Width, mipmapImageInfo.Height }, level, GetExternalFormat(mipmapImageInfo.Format, mipmapImageInfo.Type), mipmapImageInfo.Data);
 	}
 
 	if (storageLevels != imageInfo.NumMips)
-		glTexture->BuildMipmaps();
+		texture->BuildMipmaps();
 
-	return glTexture;
+	return texture;
 }
 
 //TODO: make API-independ

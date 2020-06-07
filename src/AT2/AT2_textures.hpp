@@ -4,15 +4,25 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 
-template <size_t N, typename = std::enable_if<N <= 4> >
+
+template <size_t N, bool SupportsMipmapping = 1, typename = std::enable_if<N <= 4> >
 class BaseTexture
 {
 public:
 	using size_vec = glm::vec<N, glm::u32>;
+
+	BaseTexture(size_vec size) : size(size) {}
+
+	[[nodiscard]] size_vec getSize() const noexcept { return size; }
+
+
+	template <std::enable_if_t<SupportsMipmapping, int> = 0>
 	BaseTexture(size_vec size, unsigned int levels) : size(size), levels(levels) {}
 
+	template <std::enable_if_t<SupportsMipmapping, int> = 0>
 	[[nodiscard]] unsigned int getLevels() const noexcept { return levels; }
-	[[nodiscard]] size_vec getSize() const noexcept { return size; }
+
+	
 
 protected:
 	//void checkSize() const
@@ -23,7 +33,7 @@ protected:
 	//
 private:
 	size_vec size;
-	glm::u8 levels;
+	std::enable_if_t<SupportsMipmapping, glm::u8> levels = 1;
 };
 
 template <size_t N, typename = std::enable_if<N < 4> >
@@ -47,9 +57,31 @@ struct Texture2D : BaseTexture<2>
 	Texture2D(glm::uvec2 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
 };
 
+struct Texture2DMultisample : BaseTexture<2>
+{
+	Texture2DMultisample(glm::uvec2 size, glm::u8 samples, unsigned int levels = 1) : BaseTexture(size, levels), samples(samples) { }
+	[[nodiscard]] unsigned int getSamples() const noexcept { return samples; }
+private:
+	glm::u8 samples;
+};
+
+struct Texture2DRectangle : BaseTexture<2>
+{
+	Texture2DRectangle(glm::uvec2 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
+};
+
 struct Texture2DArray : BaseTextureArray<2>
 {
 	Texture2DArray(glm::uvec3 size, unsigned int levels = 1) : BaseTextureArray(size, levels) { }
+};
+
+struct Texture2DMultisampleArray : BaseTextureArray<2>
+{
+	Texture2DMultisampleArray(glm::uvec3 size, glm::u8 samples, unsigned int levels = 1) : BaseTextureArray(size, levels), samples(samples) { }
+	[[nodiscard]] unsigned int getSamples() const noexcept { return samples; }
+
+private:
+	glm::u8 samples;
 };
 
 struct TextureCube : BaseTexture<2>

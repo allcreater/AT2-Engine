@@ -1,55 +1,162 @@
 #include "GlTexture.h"
+#include <optional>
 
 using namespace AT2;
 
-GlTexture::GlTexture(TextureType type, GLint internalFormat) :
-	m_targetType(type),
-	m_internalFormat(internalFormat)
+GLenum GlTexture::GetTarget() const
+{
+	return std::visit(Utils::overloaded{
+		[=](const Texture1D& texture)
+		{
+			return GL_TEXTURE_1D;
+		},
+		[=](const Texture1DArray& texture)
+		{
+			return GL_TEXTURE_1D_ARRAY;
+		},
+		[=](const Texture2D& texture)
+		{
+			return GL_TEXTURE_2D;
+		},
+		[=](const Texture2DMultisample& texture)
+		{
+			return GL_TEXTURE_2D_MULTISAMPLE;
+		},
+		[=](const Texture2DRectangle& texture)
+		{
+			return GL_TEXTURE_RECTANGLE;
+		},
+		[=](const Texture2DArray& texture)
+		{
+			return GL_TEXTURE_2D_ARRAY;
+		},
+		[=](const Texture2DMultisampleArray& texture)
+		{
+			return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+		},
+		[=](const TextureCube& texture)
+		{
+			return GL_TEXTURE_CUBE_MAP;
+		},
+		[=](const TextureCubeArray& texture)
+		{
+			return GL_TEXTURE_CUBE_MAP_ARRAY;
+		},
+		[=](const Texture3D& texture)
+		{
+			return GL_TEXTURE_3D;
+		}
+		}, m_flavor);
+}
+
+GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m_internalFormat(internalFormat)
 {
 	glGenTextures(1, &m_id);
 
-	DetermineExternalFormatAndDataType();
+	const auto target = GetTarget();
+
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, GL_REPEAT);
+
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
+
+	//TODO: test all cases
+	//todo: remove EXT?
+	std::visit(Utils::overloaded{
+	    [=](const Texture1D& texture)
+		{
+	        glTextureStorage1DEXT(m_id, GL_TEXTURE_1D, texture.getLevels(), m_internalFormat , texture.getSize().x);
+
+			glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+			glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+	    },
+	    [=](const Texture1DArray& texture)
+	    {
+			glTextureStorage2DEXT(m_id, GL_TEXTURE_1D_ARRAY, texture.getLevels(), m_internalFormat, texture.getSize().x, texture.getSize().y);
+		    return ;
+	    },
+	    [=](const Texture2D& texture)
+	    {
+	        glTextureStorage2DEXT(m_id, GL_TEXTURE_2D, texture.getLevels(), m_internalFormat, texture.getSize().x, texture.getSize().y);
+
+	        glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+	        glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+	    },
+	    [=](const Texture2DMultisample& texture)
+	    {
+			const bool fixedSampleLocations = true; //TODO: move to texture declaration? Also levels are not using
+			glTextureStorage2DMultisample(m_id, texture.getSamples(), m_internalFormat, texture.getSize().x, texture.getSize().y, fixedSampleLocations);
+
+			//glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+			//glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+			//
+	    },
+	    [=](const Texture2DRectangle& texture)
+	    {
+			glTextureStorage2DEXT(m_id, GL_TEXTURE_RECTANGLE, texture.getLevels(), m_internalFormat, texture.getSize().x, texture.getSize().y);
+	    },
+	    [=](const Texture2DArray& texture)
+	    {
+            glTextureStorage3DEXT(m_id, GL_TEXTURE_2D_ARRAY, texture.getLevels(), m_internalFormat, texture.getSize().x, texture.getSize().y, texture.getSize().z);
+
+            glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+            glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+	    },
+	    [=](const Texture2DMultisampleArray& texture)
+	    {
+			const bool fixedSampleLocations = true; //TODO: move to texture declaration? Also levels are not using
+			//std::unique_ptr<>
+			glTextureStorage3DMultisample(m_id, texture.getSamples(), m_internalFormat, texture.getSize().x, texture.getSize().y, texture.getSize().z, fixedSampleLocations);
+	    },
+	    [=](const TextureCube& texture)
+	    {
+			glTextureStorage2DEXT(m_id, GL_TEXTURE_CUBE_MAP, texture.getLevels(), m_internalFormat, texture.getSize().x, texture.getSize().y);
+
+            glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+			glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+			glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+	    },
+	    [=](const TextureCubeArray& texture)
+	    {
+			glTextureStorage3DEXT(m_id, GL_TEXTURE_CUBE_MAP_ARRAY, texture.getLevels(), m_internalFormat, texture.getSize().x, texture.getSize().y, texture.getSize().z);
+	    },
+	    [=](const Texture3D& texture)
+	    {
+			glTextureStorage3DEXT(m_id, GL_TEXTURE_3D, texture.getLevels(), m_internalFormat, texture.getSize().x, texture.getSize().y, texture.getSize().z);
+			glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+			glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+	    }
+    }, flavor);
+
 }
 
-AT2::GlTexture::GlTexture(GLuint id, TextureType type, GLint internalFormat) :
-	m_id(id),
-	m_targetType(type),
-	m_internalFormat(internalFormat)
-{
-	glGenTextures(1, &m_id);
-
-	DetermineExternalFormatAndDataType();
-}
-GlTexture::GlTexture(TextureType type, GLint internalFormat, GLenum format, GLenum dataType) :
-	m_targetType(type),
-	m_internalFormat(internalFormat),
-	m_format(format),
-	m_dataType(dataType)
-{
-	glGenTextures(1, &m_id);
-}
 
 GlTexture::~GlTexture()
 {
 	glDeleteTextures(1, &m_id);
 }
 
-void GlTexture::DetermineExternalFormatAndDataType()
-{
-	GLint value;
-	//auto-detect internal format
-	
-	glGetInternalformativ(static_cast<GLenum>(m_targetType), m_internalFormat, GL_TEXTURE_IMAGE_FORMAT, 1, &value);
-	m_format = value;
-	//auto-detect target type
-	glGetInternalformativ(static_cast<GLenum>(m_targetType), m_internalFormat, GL_TEXTURE_IMAGE_TYPE, 1, &value);
-	m_dataType = value;
-}
+//void GlTexture::DetermineExternalFormatAndDataType()
+//{
+//	GLint value;
+//	//auto-detect internal format
+//	
+//	glGetInternalformativ(static_cast<GLenum>(m_targetType), m_internalFormat, GL_TEXTURE_IMAGE_FORMAT, 1, &value);
+//	m_format = value;
+//	//auto-detect target type
+//	glGetInternalformativ(static_cast<GLenum>(m_targetType), m_internalFormat, GL_TEXTURE_IMAGE_TYPE, 1, &value);
+//	m_dataType = value;
+//}
 
 void GlTexture::Bind(unsigned int module)
 {
 	glActiveTexture(GL_TEXTURE0 + module);
-	glBindTexture(static_cast<GLenum>(m_targetType), m_id);
+	glBindTexture(GetTarget(), m_id);
 
 	m_currentTextureModule = module;
 }
@@ -61,138 +168,170 @@ void GlTexture::Unbind()
 
 void GlTexture::BuildMipmaps()
 {
-	glGenerateTextureMipmapEXT(m_id, static_cast<GLenum>(m_targetType));
+	glGenerateTextureMipmapEXT(m_id, GetTarget());
 }
 
-//
-GlTexture1D::GlTexture1D(GLint _internalFormat, GLuint _size, GLuint _levels) : GlTexture(GlTexture::TextureType::Texture1D, _internalFormat)
+glm::uvec3 GlTexture::GetSize() const
 {
-	const GLenum target = static_cast<GLenum>(m_targetType);
-	m_size = glm::uvec3(_size, 1, 1);
-	glTextureStorage1DEXT(m_id, target, _levels, _internalFormat, _size);
 
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (_levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, _levels);
+	//TODO: remake :/
+	return std::visit(Utils::overloaded{
+		[=](const Texture1D& texture)
+		{
+			return glm::uvec3 {texture.getSize().x, 1, 1};
+		},
+		[=](const Texture1DArray& texture)
+		{
+			return glm::uvec3 {texture.getSize(), 1};
+		},
+		[=](const Texture2D& texture)
+		{
+			return glm::uvec3 {texture.getSize(), 1};
+		},
+		[=](const Texture2DMultisample& texture)
+		{
+			return glm::uvec3 {texture.getSize(), 1};
+		},
+		[=](const Texture2DRectangle& texture)
+		{
+			return glm::uvec3 {texture.getSize(), 1};
+		},
+		[=](const Texture2DArray& texture)
+		{
+			return texture.getSize();
+		},
+		[=](const Texture2DMultisampleArray& texture)
+		{
+			return texture.getSize();
+		},
+		[=](const TextureCube& texture)
+		{
+			return glm::uvec3 {texture.getSize(), 1};
+		},
+		[=](const TextureCubeArray& texture)
+		{
+			return texture.getSize();
+		},
+		[=](const Texture3D& texture)
+		{
+			return texture.getSize();
+		}
+		}, m_flavor);
 }
 
-void GlTexture1D::SetData(GLuint _level, BufferData _data)
+void GlTexture::SetWrapMode(TextureWrapMode wrapMode)
 {
-	const GLenum extFormat = _data.ExternalFormat ? _data.ExternalFormat : m_format, extDataType = _data.DataType ? _data.DataType : m_dataType;
-	glTextureSubImage1DEXT(m_id, static_cast<GLenum>(m_targetType), _level, m_internalFormat, _data.Width, extFormat, extDataType, _data.Data);
+	//TODO: use dirty flag and set it on bind
+    m_wrapMode = wrapMode;
+
+	const auto target = GetTarget();
+    const int mode = [=]
+    {
+		switch(wrapMode)
+		{
+		case TextureWrapMode::ClampToEdge:			return GL_CLAMP_TO_EDGE;
+		case TextureWrapMode::ClampToBorder:		return GL_CLAMP_TO_BORDER;
+		case TextureWrapMode::MirroredRepeat:		return GL_MIRRORED_REPEAT;
+		case TextureWrapMode::Repeat:				return GL_REPEAT;
+		case TextureWrapMode::MirrorClampToEdge:	return GL_MIRROR_CLAMP_TO_EDGE;
+		default:
+			assert(0);
+		}
+	}();
+
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, mode);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, mode);
+	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, mode);
 }
 
-
-GlTexture2D::GlTexture2D(GLint _internalFormat, glm::uvec2 _size, GLuint _levels) :
-	GlTexture(GlTexture::TextureType::Texture2D, _internalFormat)
+static GLenum translateExternalFormat(TextureLayout layout)
 {
-	const GLenum target = static_cast<GLenum>(m_targetType);
+	switch (layout)
+	{
+	case TextureLayout::Red: return GL_RED;
+	case TextureLayout::RG: return GL_RG;
+	case TextureLayout::RGB: return GL_RGB;
+	case TextureLayout::BGR: return GL_BGR;
+	case TextureLayout::RGBA: return GL_RGBA;
+	case TextureLayout::BGRA: return GL_BGRA;
+	case TextureLayout::DepthComponent: return GL_DEPTH_COMPONENT;
+	case TextureLayout::StencilIndex: return GL_STENCIL_INDEX;
+	default:
+		assert(false);
+	}
 
-	m_size = glm::uvec3(_size, 1);
-	glTextureStorage2DEXT(m_id, target, _levels, _internalFormat, _size.x, _size.y);
-
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (_levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, _levels);
+	return 0;
 }
 
-AT2::GlTexture2D::GlTexture2D(GLuint _id, GLint _internalFormat, glm::uvec2 _size, GLuint _levels) :
-	GlTexture(_id, GlTexture::TextureType::Texture2D, _internalFormat)
+static GLenum translateExternalType(BufferDataType type)
 {
-	const GLenum target = static_cast<GLenum>(m_targetType);
+	switch (type)
+	{
+	case BufferDataType::Byte:		return GL_BYTE;
+	case BufferDataType::UByte:		return GL_UNSIGNED_BYTE;
+	case BufferDataType::Short:		return GL_SHORT;
+	case BufferDataType::UShort:	return GL_UNSIGNED_SHORT;
+	case BufferDataType::Int:		return GL_INT;
+	case BufferDataType::UInt:		return GL_UNSIGNED_INT;
+	case BufferDataType::HalfFloat:	return GL_HALF_FLOAT;
+	case BufferDataType::Float:		return GL_FLOAT;
+	case BufferDataType::Double:	return GL_DOUBLE;
+	case BufferDataType::Fixed:		return GL_FIXED;
+	default:
+		assert(false);
+	}
 
-	m_size = glm::uvec3(_size, 1);
-
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	return 0;
 }
 
-void GlTexture2D::SetData(GLuint _level, BufferData _data)
+void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data)
 {
-	const GLenum extFormat = _data.ExternalFormat ? _data.ExternalFormat : m_format, extDataType = _data.DataType ? _data.DataType : m_dataType;
+	const auto externalFormat = translateExternalFormat(dataFormat.ChannelsLayout);
+	const auto externalType = translateExternalType(dataFormat.DataType);
 
-	glTextureSubImage2DEXT(m_id, static_cast<GLenum>(m_targetType), _level, 0, 0, _data.Width, _data.Height, extFormat, extDataType, _data.Data);
+	std::visit(Utils::overloaded {
+ [=](const Texture1D& type)
+		{
+			glTextureSubImage1DEXT(m_id, GL_TEXTURE_1D, level, m_internalFormat, size, externalFormat, externalType, data);
+		},
+ [=](auto&& type) //do nothing
+		{
+		}
+		}, GetType());
 }
 
-void GlTexture2D::CopyFromFramebuffer(GLuint _level, glm::ivec2 pos, glm::uvec2 size)
+void GlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data)
 {
-	glCopyTextureSubImage2DEXT(m_id, static_cast<GLenum>(m_targetType), _level, 0, 0, pos.x, pos.y, size.x, size.y);
+	const auto externalFormat = translateExternalFormat(dataFormat.ChannelsLayout);
+	const auto externalType = translateExternalType(dataFormat.DataType);
+
+	std::visit(Utils::overloaded{
+ [=](const Texture2D& type)
+		{
+			glTextureSubImage2DEXT(m_id, GL_TEXTURE_2D, level, 0, 0, size.x, size.y, externalFormat, externalType, data);
+		},
+ [=](auto&& type) //do nothing
+		{
+			throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Probably not implemented");
+;		}
+		}, GetType());
 }
 
-GlTexture2DArray::GlTexture2DArray(GLint _internalFormat, glm::uvec3 _size, GLuint _levels) :
-	GlTexture(GlTexture::TextureType::Texture2DArray, _internalFormat)
+void GlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data)
 {
-	const GLenum target = static_cast<GLenum>(m_targetType);
+	const auto externalFormat = translateExternalFormat(dataFormat.ChannelsLayout);
+	const auto externalType = translateExternalType(dataFormat.DataType);
 
-	m_size = _size;
-	glTextureStorage3DEXT(m_id, target, _levels, _internalFormat, _size.x, _size.y, _size.z);
-
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, _levels);
-}
-
-void GlTexture2DArray::SetLayer(GLuint _level, GLuint _layer, BufferData _data)
-{
-	const GLenum extFormat = _data.ExternalFormat ? _data.ExternalFormat : m_format, extDataType = _data.DataType ? _data.DataType : m_dataType;
-	glTextureSubImage3DEXT(m_id, static_cast<GLenum>(m_targetType), _level, 0, 0, _layer, _data.Width, _data.Height, 1, extFormat, extDataType, _data.Data);
-}
-
-GlTexture3D::GlTexture3D(GLint _internalFormat, glm::uvec3 _size, GLuint _levels) : GlTexture(GlTexture::TextureType::Texture3D, _internalFormat)
-{
-	const GLenum target = static_cast<GLenum>(m_targetType);
-	m_size = _size;
-	glTextureStorage3DEXT(m_id, target, _levels, _internalFormat, _size.x, _size.y, _size.z);
-
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, GL_REPEAT);
-
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MIN_FILTER, (_levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_BASE_LEVEL, 0);
-	glTextureParameteriEXT(m_id, static_cast<GLenum>(m_targetType), GL_TEXTURE_MAX_LEVEL, _levels);
-}
-
-void GlTexture3D::SetLayer(GLuint _level, GLuint _layer, BufferData _data)
-{
-	const GLenum target = static_cast<GLenum>(m_targetType);
-	const GLenum extFormat = _data.ExternalFormat ? _data.ExternalFormat : m_format, extDataType = _data.DataType ? _data.DataType : m_dataType;
-	glTextureSubImage3DEXT(m_id, target, _level, 0, 0, _layer, _data.Width, _data.Height, 1, extFormat, extDataType, _data.Data);
-}
-
-void GlTexture3D::SetData(GLuint _level, BufferData _data)
-{
-	const GLenum target = static_cast<GLenum>(m_targetType);
-
-	glTextureSubImage3DEXT(m_id, target, _level, 0, 0, 0, _data.Width, _data.Height, _data.Depth, m_format, m_dataType, _data.Data);
-}
-
-GlTextureCube::GlTextureCube(GLint _internalFormat, glm::uvec2 _size, GLuint _levels) : GlTexture(GlTexture::TextureType::CubeMap, _internalFormat)
-{
-	const GLenum target = static_cast<GLenum>(m_targetType);
-	m_size = glm::uvec3(_size, 1);
-	glTextureStorage2DEXT(m_id, target, _levels, _internalFormat, _size.x, _size.y);
-
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER, (_levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
-	glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, _levels);
+	std::visit(Utils::overloaded{
+ [=](const Texture3D& type)
+		{
+			glTextureSubImage3DEXT(m_id, GL_TEXTURE_3D, level, offset.x, offset.y, offset.z, size.x, size.y, size.z, externalFormat, externalType, data);
+		},
+ [=](auto&& type) //do nothing
+		{
+	 throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Probably not implemented");
+		}
+		}, GetType());
 }
 
 
-void GlTextureCube::SetFace(CubeMapFace _face, GLuint _level, BufferData _data)
-{
-	const GLenum target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(_face);
-	const GLenum extFormat = _data.ExternalFormat ? _data.ExternalFormat : m_format, extDataType = _data.DataType ? _data.DataType : m_dataType;
-	glTextureSubImage2DEXT(m_id, target, _level, 0, 0, _data.Width, _data.Height, extFormat, extDataType, _data.Data);
-}

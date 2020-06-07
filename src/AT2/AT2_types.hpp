@@ -110,6 +110,15 @@ struct ExternalTextureFormat
 	BufferDataType DataType;
 };
 
+enum class TextureWrapMode
+{
+	ClampToEdge,
+	ClampToBorder,
+	MirroredRepeat,
+	Repeat,
+	MirrorClampToEdge
+};
+
 }
 
 #endif

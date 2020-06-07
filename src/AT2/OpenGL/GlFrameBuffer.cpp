@@ -27,14 +27,24 @@ void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const st
 	const auto attachement = GL_COLOR_ATTACHMENT0 + attachementNumber;
 	if (texture)
 	{
-		if (dynamic_cast<GlTexture1D*>(texture.get()) != nullptr)
-			glNamedFramebufferTexture1DEXT(m_id, attachement, static_cast<GLenum>(texture->GetTargetType()), texture->GetId(), 0); //I don't know practical purpose of it, but let it be =)
-		else if (dynamic_cast<GlTexture2D*>(texture.get()) != nullptr)
-			glNamedFramebufferTexture2DEXT(m_id, attachement, static_cast<GLenum>(texture->GetTargetType()), texture->GetId(), 0);
-		else if (dynamic_cast<GlTexture3D*>(texture.get()) != nullptr)
-			glNamedFramebufferTexture3DEXT(m_id, attachement, static_cast<GLenum>(texture->GetTargetType()), texture->GetId(), 0, 0); //TODO: zoffset controlling
-		else
-			return;
+		std::visit(Utils::overloaded {
+     [=](const Texture1D& type)
+            {
+				glNamedFramebufferTexture1DEXT(m_id, attachement, texture->GetTarget(), texture->GetId(), 0); //I don't know practical purpose of it, but let it be =)
+            },
+	 [=](const Texture2D& type)
+			{
+				glNamedFramebufferTexture2DEXT(m_id, attachement, static_cast<GLenum>(texture->GetTarget()), texture->GetId(), 0);
+			},
+	 [=](const Texture3D& type)
+			{
+				glNamedFramebufferTexture3DEXT(m_id, attachement, static_cast<GLenum>(texture->GetTarget()), texture->GetId(), 0, 0); //TODO: zoffset controlling
+			},
+	 [=](auto&& type) //do nothing
+			{
+			}
+	    }, texture->GetType());
+
 	}
 	else
 	{
@@ -69,8 +79,10 @@ void GlFrameBuffer::SetDepthAttachement(const std::shared_ptr<ITexture> abstract
 		if (abstractTexture)
 			throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: attachement texture should be GlTexture");
 	}
-    else
-        glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, static_cast<GLenum>(m_depthAttachement->GetTargetType()), m_depthAttachement->GetId(), 0);
+	else if (std::holds_alternative<Texture2D>(m_depthAttachement->GetType()))
+		glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, static_cast<GLenum>(m_depthAttachement->GetTarget()), m_depthAttachement->GetId(), 0);
+	else
+		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: depth attachment should be Texture2D");
 
 }
 

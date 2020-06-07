@@ -128,9 +128,11 @@ GlResourceFactory::~GlResourceFactory()
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const
 {
-	auto texture = std::make_shared<GlTexture2D>(GL_RGBA8, size); //TODO: is framebuffer could be something another than RGBA8?
-	texture->CopyFromFramebuffer(0, pos, size);
-	return texture;
+
+	throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Не успел");
+	//auto texture = std::make_shared<GlTexture2D>(GL_RGBA8, size); //TODO: is framebuffer could be something another than RGBA8?
+	//texture->CopyFromFramebuffer(0, pos, size);
+	//return texture;
 }
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const
@@ -139,29 +141,7 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declar
 	if (!internalFormat)
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "Unsupported texture format");
 
-
-	return std::visit(Utils::overloaded {
-		[=](Texture1D texture) -> std::shared_ptr<ITexture>
-		{
-			return std::make_shared<GlTexture1D>(*internalFormat, texture.getSize().x, texture.getLevels());
-		},
-		[=](Texture2D texture) -> std::shared_ptr<ITexture>
-		{
-			return std::make_shared<GlTexture2D>(*internalFormat, texture.getSize(), texture.getLevels());
-		},
-		[=](Texture2DArray texture) -> std::shared_ptr<ITexture>
-		{
-			return std::make_shared<GlTexture2DArray>(*internalFormat, texture.getSize(), texture.getLevels());
-		},
-		[=](Texture3D texture) -> std::shared_ptr<ITexture>
-		{
-			return std::make_shared<GlTexture2DArray>(*internalFormat, texture.getSize(), texture.getLevels());
-		},
-		[=](TextureCube texture) -> std::shared_ptr<ITexture>
-		{
-			return std::make_shared<GlTextureCube>(*internalFormat, texture.getSize(), texture.getLevels());
-		}
-	}, declaration);
+	return std::make_shared<GlTexture> ( declaration, *internalFormat);
 }
 
 std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const

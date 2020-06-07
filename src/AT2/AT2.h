@@ -142,6 +142,15 @@ public:
 	virtual int GetCurrentModule() const  = 0;
 	virtual unsigned int GetId() const = 0;
 	virtual glm::uvec3 GetSize() const = 0;
+
+	virtual const Texture& GetType() const = 0;
+	virtual void SetWrapMode(TextureWrapMode wrapMode) = 0;
+	virtual const TextureWrapMode& GetWrapMode() const = 0;
+
+	//TODO: think how to make better
+	virtual void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data) = 0;
+	virtual void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data) = 0;
+	virtual void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data) = 0;
 };
 
 class IUniformContainer;
