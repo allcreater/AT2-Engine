@@ -55,38 +55,52 @@ public:
 
 using namespace AT2;
 
-
-static GLint GetInternalFormat(GLuint externalFormat, GLuint externalType)
+//from OpenGL-friendly to platform-independ and back again at resources factory :)
+static ExternalTextureFormat GetInternalFormat(GLuint externalFormat, GLuint externalType)
 {
-	if (externalType == GL_UNSIGNED_BYTE)
+	auto convertType = [](ILenum type)
 	{
-		if (externalFormat == GL_RED)
-			return GL_R8;
-        if (externalFormat == GL_RG)
-            return GL_RG8;
-        if (externalFormat == GL_RGB)
-            return GL_RGB8;
-        if (externalFormat == GL_RGBA)
-            return GL_RGBA8;
-        
-        throw AT2Exception("GlResourceFactory: not supported texture format?!");
-    }
+		switch (type)
+		{
+		case IL_BYTE:			return BufferDataType::Byte;
+		case IL_UNSIGNED_BYTE:	return BufferDataType::UByte;
+		case IL_SHORT:			return BufferDataType::Short;
+		case IL_UNSIGNED_SHORT:	return BufferDataType::UShort;
+		case IL_INT:			return BufferDataType::Int;
+		case IL_UNSIGNED_INT:	return BufferDataType::UInt;
+		case IL_FLOAT:			return BufferDataType::Float;
+		case IL_DOUBLE:			return BufferDataType::Double;
+		case IL_HALF:			return BufferDataType::HalfFloat;
+		default:
+			assert(false);
+		}
+	};
 
-	if (externalType == GL_FLOAT)
+	auto convertFormat = [](ILenum format)
 	{
-		if (externalFormat == GL_RED)
-			return GL_R32F;
-		if (externalFormat == GL_RG)
-			return GL_RG32F;
-		if (externalFormat == GL_RGB)
-			return GL_RGB32F;
-		if (externalFormat == GL_RGBA)
-			return GL_RGBA32F;
-		
-		throw AT2Exception("GlResourceFactory: not supported texture format?!");
-	}
-	
-	throw AT2Exception("GlResourceFactory: not supported texture data type");
+		switch (format)
+		{
+		case IL_ALPHA:
+		case IL_LUMINANCE:
+			Log::Info() << "Texture loader will treat alpha and luminance textures as Red" << std::endl;
+			return TextureLayout::Red;
+		case IL_RGB:
+			return TextureLayout::RGB;
+		case IL_RGBA:
+			return TextureLayout::RGBA;
+		case IL_BGR:
+			return TextureLayout::BGR;
+		case IL_BGRA:
+			return TextureLayout::BGRA;
+		case IL_LUMINANCE_ALPHA:
+			Log::Info() << "Texture loader will convert alpha and luminance textures to RG" << std::endl;
+			return TextureLayout::RG;
+		default:
+			assert(false);
+		}
+	};
+
+	return { convertFormat(externalFormat), convertType(externalType) };
 }
 
 
@@ -112,11 +126,16 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, std::
 
 	ILuint mipmapLevels = std::max(imageInfo.NumMips, 1u);
 	ILuint storageLevels = (imageInfo.NumMips || !enableAutomipmaps) ? imageInfo.NumMips : static_cast<ILuint>(log(std::max({ size.x, size.y, size.z })) / log(2));
+	
+	if (auto flags = ilGetInteger(IL_IMAGE_CUBEFLAGS))//TODO: and how to live with it? :)
+	{
+		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Cube maps still unsupported :(");
+	}
 
 
 	if (imageInfo.Depth > 1)
 	{
-		auto glTexture = std::make_shared<AT2::GlTexture3D>(GetInternalFormat(imageInfo.Format, imageInfo.Type), size, storageLevels);
+		auto glTexture = std::static_pointer_cast<GlTexture2D>(renderer->GetResourceFactory().CreateTexture(Texture3D{ size, static_cast<int>(storageLevels) }, GetInternalFormat(imageInfo.Format, imageInfo.Type)));
 
 		for (unsigned int level = 0; level < mipmapLevels; ++level)
 		{
@@ -140,7 +159,9 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, std::
 		return glTexture;
 	}
 
-	auto glTexture = std::make_shared<AT2::GlTexture2D>(GetInternalFormat(imageInfo.Format, imageInfo.Type), glm::xy(size), storageLevels);
+	auto glTexture = std::static_pointer_cast<GlTexture2D>(
+		renderer->GetResourceFactory().CreateTexture(Texture2D{ glm::xy(size), static_cast<int>(storageLevels) }, GetInternalFormat(imageInfo.Format, imageInfo.Type))
+	);
 
 	for (unsigned int level = 0; level < mipmapLevels; ++level)
 	{

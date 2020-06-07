@@ -49,6 +49,8 @@ void main()
 	vec4 color = texture(u_colorMap, v_texCoord);
 	FragColor = toneMapping(color);
 
+	//FragColor *= vec4(sin(texture(u_depthMap, v_texCoord).rrr), 1.0);
+
 /*
 	if (FragColor.r > 1.0 || FragColor.g > 1.0 || FragColor.b > 1.0)
 		FragColor.rgb = vec3(1.0, 0.0, 0.0);

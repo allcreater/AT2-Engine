@@ -3,126 +3,118 @@
 #include "GlVertexArray.h"
 #include "GlShaderProgram.h"
 
-#include <fstream>
+#include "../utils.hpp"
 
+#include <fstream>
+#include <optional>
 
 
 using namespace AT2;
 
-/*
-std::shared_ptr<ITexture> GlResourceFactory::LoadTexture_GLI(const str& _filename) const
+constexpr std::optional<GLint> DetermineInternalFormat(ExternalTextureFormat format)
 {
-#ifdef USE_GLI
-	gli::storage Storage(gli::load_dds(_filename.c_str()));
-	assert(!Storage.empty());
-
-	bool enableAutomipmaps = true;
-
-	if (Storage.layers() > 1)
+	switch (format.ChannelsLayout)
 	{
-		gli::texture2DArray tex2d_array(Storage);
-
-		unsigned int storageLevels = (tex2d_array.levels() > 1 || !enableAutomipmaps) ? tex2d_array.levels() : static_cast<unsigned int>(log(std::max(tex2d_array.dimensions().x, tex2d_array.dimensions().y)) / log(2));
-		auto glTexture = std::make_shared<AT2::GlTexture2DArray>(
-			gli::internal_format(tex2d_array.format()),
-			glm::uvec3(tex2d_array.dimensions(), tex2d_array.layers()),
-			storageLevels);
-
-		AT2::GlTexture::BufferData bd;
-		bd.ExternalFormat = gli::external_format(tex2d_array.format());
-		bd.DataType = gli::type_format(tex2d_array.format());
-
-		if (gli::is_compressed(tex2d_array.format()))
+	case TextureLayout::Red:
+		switch (format.DataType)
 		{
-			throw AT2::AT2Exception("GlResourceFactory: compressed textures is not supported yet"); //TODO!
-		}
-		else
-		{
-			for (unsigned int layer = 0; layer < tex2d_array.layers(); ++layer)
-				for (unsigned int level = 0; level < tex2d_array.levels(); ++level)
-				{
-					bd.Height = tex2d_array[layer][level].dimensions().x;
-					bd.Width = tex2d_array[layer][level].dimensions().y;
-					bd.Depth = 1;
-					bd.Data = tex2d_array[layer][level].data();
-
-					glTexture->SetLayer(level, layer, bd);
-				}
+		    case BufferDataType::Byte:
+		    case BufferDataType::UByte:
+			    return GL_R8;
+		    case BufferDataType::Short:
+		    case BufferDataType::UShort:
+			    return GL_R16;
+		    case BufferDataType::Int:
+		    case BufferDataType::UInt:
+			    return GL_R32I; //TODO: check correctness
+		    case BufferDataType::HalfFloat:
+			    return GL_R16F;
+		    case BufferDataType::Float:
+			    return GL_R32F;
+		    default:
+			    return {};
 		}
 
-		if (storageLevels != tex2d_array.levels())
-			glTexture->BuildMipmaps();
-
-		return glTexture;
-	}
-	else
-	{
-		gli::texture2D tex2d(Storage);
-
-		unsigned int storageLevels = (tex2d.levels() > 1 || !enableAutomipmaps) ? tex2d.levels() : static_cast<unsigned int>(log(std::max(tex2d.dimensions().x, tex2d.dimensions().y)) / log(2));
-		auto glTexture = std::make_shared<AT2::GlTexture2D>(gli::internal_format(tex2d.format()), tex2d.dimensions(), storageLevels);
-
-		AT2::GlTexture::BufferData bd;
-		bd.ExternalFormat = gli::external_format(tex2d.format());
-		bd.DataType = gli::type_format(tex2d.format());
-
-		if (gli::is_compressed(tex2d.format()))
+	case TextureLayout::RG:
+		switch (format.DataType)
 		{
-			throw AT2::AT2Exception("GlResourceFactory: compressed textures is not supported yet"); //TODO!
+		    case BufferDataType::Byte:
+		    case BufferDataType::UByte:
+			    return GL_RG8;
+		    case BufferDataType::Short:
+		    case BufferDataType::UShort:
+			    return GL_RG16;
+		    case BufferDataType::Int:
+		    case BufferDataType::UInt:
+			    return GL_RG32I; //TODO: check correctness
+		    case BufferDataType::HalfFloat:
+			    return GL_RG16F;
+		    case BufferDataType::Float:
+			    return GL_RG32F;
+		    default:
+			    return {};
 		}
-		else
+
+	case TextureLayout::RGB:
+	case TextureLayout::BGR:
+		switch (format.DataType)
 		{
-			for (unsigned int level = 0; level < tex2d.levels(); ++level)
-			{
-				bd.Height = tex2d[level].dimensions().x;
-				bd.Width = tex2d[level].dimensions().y;
-				bd.Depth = 1;
-				bd.Data = tex2d[level].data();
-
-				glTexture->SetData(level, bd);
-			}
-
-			if (storageLevels != tex2d.levels())
-				glTexture->BuildMipmaps();
-		}
-		return glTexture;
-	}
-#else
-	return nullptr;
-#endif
-}
-*/
-
-GLint GlResourceFactory::GetInternalFormat(GLuint externalFormat, GLuint externalType)
-{
-	if (externalType == GL_UNSIGNED_BYTE)
-	{
-	  if (externalFormat == GL_RED)
-			return GL_R8;
-		else if (externalFormat == GL_RG)
-			return GL_RG8;
-		else if (externalFormat == GL_RGB)
+		case BufferDataType::Byte:
+		case BufferDataType::UByte:
 			return GL_RGB8;
-		else if (externalFormat == GL_RGBA)
-			return GL_RGBA8;
-		else
-			throw AT2::AT2Exception("GlResourceFactory: not supported texture format?!");
-	}
-	else if (externalType == GL_FLOAT)
-	{
-		if (externalFormat == GL_RED)
-			return GL_R32F;
-		else if (externalFormat == GL_RG)
-			return GL_RG32F;
-		else if (externalFormat == GL_RGB)
+		case BufferDataType::Short:
+		case BufferDataType::UShort:
+			return GL_RGB16;
+		case BufferDataType::Int:
+		case BufferDataType::UInt:
+			return GL_RGB32I; //TODO: check correctness
+		case BufferDataType::HalfFloat:
+			return GL_RGB16F;
+		case BufferDataType::Float:
 			return GL_RGB32F;
-		else if (externalFormat == GL_RGBA)
+		default:
+			return {};
+		}
+
+	case TextureLayout::RGBA:
+	case TextureLayout::BGRA:
+		switch (format.DataType)
+		{
+		case BufferDataType::Byte:
+		case BufferDataType::UByte:
+			return GL_RGBA8;
+		case BufferDataType::Short:
+		case BufferDataType::UShort:
+			return GL_RGBA16;
+		case BufferDataType::Int:
+		case BufferDataType::UInt:
+			return GL_RGBA32I; //TODO: check correctness
+		case BufferDataType::HalfFloat:
+			return GL_RGBA16F;
+		case BufferDataType::Float:
 			return GL_RGBA32F;
-		else
-			throw AT2::AT2Exception("GlResourceFactory: not supported texture format?!");
-	}
-	else
-		throw AT2::AT2Exception("GlResourceFactory: not supported texture data type");
+		default:
+			return {};
+		}
+
+	case TextureLayout::DepthComponent:
+		switch (format.DataType)
+		{
+		case BufferDataType::Short:
+		case BufferDataType::UShort:
+			return GL_DEPTH_COMPONENT16;
+		case BufferDataType::Int:
+		case BufferDataType::UInt:
+			return GL_DEPTH_COMPONENT32; //TODO: check correctness
+		case BufferDataType::Float:
+			return GL_DEPTH_COMPONENT32F;
+		default:
+			return {};
+		}
+
+	default:
+		return {};
+	}		 
 }
 
 
@@ -136,9 +128,40 @@ GlResourceFactory::~GlResourceFactory()
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const
 {
-	auto texture = std::make_shared<GlTexture2D>(GL_RGBA8, size);
+	auto texture = std::make_shared<GlTexture2D>(GL_RGBA8, size); //TODO: is framebuffer could be something another than RGBA8?
 	texture->CopyFromFramebuffer(0, pos, size);
 	return texture;
+}
+
+std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const
+{
+	const auto internalFormat = DetermineInternalFormat(desiredFormat);
+	if (!internalFormat)
+		throw AT2Exception(AT2Exception::ErrorCase::Texture, "Unsupported texture format");
+
+
+	return std::visit(Utils::overloaded {
+		[=](Texture1D texture) -> std::shared_ptr<ITexture>
+		{
+			return std::make_shared<GlTexture1D>(*internalFormat, texture.getSize(), texture.getLevels());
+		},
+		[=](Texture2D texture) -> std::shared_ptr<ITexture>
+		{
+			return std::make_shared<GlTexture2D>(*internalFormat, texture.getSize(), texture.getLevels());
+		},
+		[=](Texture2DArray texture) -> std::shared_ptr<ITexture>
+		{
+			return std::make_shared<GlTexture2DArray>(*internalFormat, glm::uvec3{texture.getSize(), texture.getLength()}, texture.getLevels());
+		},
+		[=](Texture3D texture) -> std::shared_ptr<ITexture>
+		{
+			return std::make_shared<GlTexture2DArray>(*internalFormat, texture.getSize(), texture.getLevels());
+		},
+		[=](TextureCube texture) -> std::shared_ptr<ITexture>
+		{
+			return std::make_shared<GlTextureCube>(*internalFormat, texture.getSize(), texture.getLevels());
+		}
+	}, declaration);
 }
 
 std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const

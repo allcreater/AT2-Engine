@@ -5,55 +5,41 @@
 
 using namespace AT2;
 
+static int GetInteger(GLenum parameter, GLint min = std::numeric_limits<GLint>::min(), GLint max = std::numeric_limits<GLint>::max())
+{
+	GLint result = 0;
+	glGetIntegerv(parameter, &result); //GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS ???
 
+	if (result < min || result > max)
+		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
+
+	return result;
+
+}
 
 unsigned int GlRendererCapabilities::GetMaxNumberOfTextureUnits() const
 {
-	GLint numTexUnits = 0;
-	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &numTexUnits); //GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS ???
-
-	if (numTexUnits < 0)
-		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
-
-	return numTexUnits;
+	return GetInteger(GL_MAX_TEXTURE_IMAGE_UNITS, 1);
 }
 unsigned int GlRendererCapabilities::GetMaxNumberOfColorAttachements() const
 {
-	GLint numRenderTargets = 0;
-	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &numRenderTargets);
-
-	if (numRenderTargets < 0)
-		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
-
-	return numRenderTargets;
+	return GetInteger(GL_MAX_COLOR_ATTACHMENTS, 1);
 }
 unsigned int GlRendererCapabilities::GetMaxTextureSize() const
 {
-	GLint maxTextureSize = 0;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
-
-	if (maxTextureSize < 0)
-		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
-
-	return maxTextureSize;
+	return GetInteger(GL_MAX_TEXTURE_SIZE, 1);
 }
 unsigned int GlRendererCapabilities::GetMaxNumberOfVertexAttributes() const
 {
-	GLint maxVertexAttribs = 0;
-	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
-
-	if (maxVertexAttribs < 0)
-		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
-
-	return maxVertexAttribs;
+	return GetInteger(GL_MAX_VERTEX_ATTRIBS, 1);
 }
 
 GlRenderer::GlRenderer()
 {
 	//TODO: return it
-	//glDebugMessageCallback(GlErrorCallback, this);
-	//glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
-	//glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(GlErrorCallback, this);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
 	m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
 	m_resourceFactory = std::make_unique<GlResourceFactory>(this);

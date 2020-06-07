@@ -39,7 +39,9 @@ public:
 		};
 
 
-		m_window = GlfwApplication::get().createWindow();
+		m_window = GlfwApplication::get().createWindow(
+			{ GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true }
+		);
 
 		m_window->
 			setLabel("Some engine test").
@@ -111,10 +113,6 @@ private:
 		CameraUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(TerrainShader)->GetUniformBlockInfo("CameraBlock"));
 		CameraUB->SetBindingPoint(1);
 		LightUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(SphereLightShader)->GetUniformBlockInfo("LightingBlock"));
-
-
-
-
 
 		for (size_t i = 0; i < NumActiveLights; ++i)
 		{
@@ -230,8 +228,9 @@ private:
 		if (MovingLightMode)
 			LightsArray[0]->SetUniform("u_lightPos", glm::vec4(m_camera.getPosition(), 1.0));
 
-		Render(m_renderer, m_renderer->GetDefaultFramebuffer(), m_camera);
-
+		double frameTime = Render(m_renderer, m_renderer->GetDefaultFramebuffer(), m_camera);
+		if (floor(Time) < floor(Time + dt))
+			AT2::Log::Debug() << "Frame time: " << frameTime << std::endl;
 
 		m_renderer->FinishFrame();
 	}
@@ -253,7 +252,6 @@ private:
 		//Scene stage
 		Stage1FBO->Bind();
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 		renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
 		renderer->ClearDepth(1.0);
 
@@ -264,8 +262,7 @@ private:
 		glDepthMask(GL_TRUE);
 		glCullFace(GL_FRONT);
 		glPatchParameteri(GL_PATCH_VERTICES, 4);
-		//TerrainDrawable->UniformBuffer->SetUniform("u_matNormal", glm::transpose(glm::inverse(glm::mat3(camera.getView()))));
-		//TerrainDrawable->Draw(renderer);
+
 
 		RenderVisitor::RenderScene(Scene, *renderer, camera);
 
@@ -397,7 +394,7 @@ private:
 	std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
 	std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
 
-	std::shared_ptr<AT2::GlFrameBuffer> Stage1FBO, Stage2FBO;
+	std::shared_ptr<AT2::IFrameBuffer> Stage1FBO, Stage2FBO;
 
 	std::shared_ptr<AT2::MeshDrawable> QuadDrawable, SkylightDrawable, SphereLightDrawable;
 

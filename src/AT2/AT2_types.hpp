@@ -79,6 +79,37 @@ namespace BufferDataTypes
 	const BufferTypeInfo DVec4 = MakeBufferTypeInfo<glm::dvec4>(BufferDataType::Double, 4);
 }
 
+
+/// <summary>
+/// Texture input data layout
+/// </summary>
+
+//subset from https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml
+enum class TextureLayout
+{
+	//Index,
+	Red,
+	//Green,
+	//Blue,
+	//Alpha,
+	RG,
+	RGB,
+	BGR,
+	RGBA,
+	BGRA,
+
+	//Luminance,
+	//LuminanceAlpha
+	DepthComponent,
+	StencilIndex
+};
+
+struct ExternalTextureFormat
+{
+	TextureLayout ChannelsLayout;
+	BufferDataType DataType;
+};
+
 }
 
 #endif

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <functional>
 
 namespace AT2::Utils
@@ -10,6 +12,9 @@ bool is_uninitialized(std::weak_ptr<T> const& weak) {
 	return !weak.owner_before(wt{}) && !wt{}.owner_before(weak);
 }
 
+//overloaded trick
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...)->overloaded<Ts...>;
 
 template <typename T>
 class RaiiWrapper

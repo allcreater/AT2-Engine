@@ -23,6 +23,7 @@
 const double pi = std::acos(-1);
 
 #include "AT2_types.hpp"
+#include "AT2_textures.hpp"
 
 using namespace std::literals;
 
@@ -54,11 +55,11 @@ public:
 class IBuffer
 {
 public:
-	virtual ~IBuffer() {};
+	virtual ~IBuffer() = default;
 
 public:
 	virtual void SetData(unsigned int length, const void* data) = 0;
-	//virtual Utils::wraparray<T> Lock() = 0;
+	//virtual std::unique_ptr<void*> Lock() = 0; //TODO: think about more useful wrapper
 	//virtual void Unlock() = 0;
 };
 
@@ -91,7 +92,7 @@ public:
 	IVertexBuffer() = default;
 	IVertexBuffer(const IVertexBuffer& other) = delete;
 	IVertexBuffer& operator= (const IVertexBuffer& other) = delete;
-	virtual ~IVertexBuffer() {};
+	virtual ~IVertexBuffer() = default;
 
 public:
 	virtual void Bind() = 0;
@@ -112,7 +113,7 @@ public:
 	IVertexArray() = default;
 	IVertexArray(const IVertexArray& other) = delete;
 	IVertexArray& operator= (const IVertexArray& other) = delete;
-	virtual ~IVertexArray() {};
+	virtual ~IVertexArray() = default;
 
 public:
 	virtual void Bind() = 0;
@@ -131,7 +132,7 @@ public:
 	ITexture() = default;
 	ITexture(const ITexture& other) = delete; //maybe temporary
 	ITexture& operator= (const ITexture& other) = delete; //maybe temporary
-	virtual ~ITexture(){};
+	virtual ~ITexture() = default;
 
 public:
 	virtual void Bind(unsigned int module) = 0;
@@ -151,7 +152,7 @@ public:
 	IShaderProgram() = default;
 	IShaderProgram(const IShaderProgram& other) = delete;
 	IShaderProgram& operator= (const IShaderProgram& other) = delete;
-	virtual ~IShaderProgram() {};
+	virtual ~IShaderProgram() = default;
 
 public:
 	virtual void Bind() = 0;
@@ -164,7 +165,7 @@ public:
 class IDrawPrimitive
 {
 public:
-	virtual ~IDrawPrimitive() {}
+	virtual ~IDrawPrimitive() = default;
 public:
 	virtual void Draw() const = 0;
 
@@ -282,7 +283,8 @@ public:
 	virtual ~IResourceFactory() = default;
 
 public:
-	virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const = 0; //TODO: provide possibility to create different textures with different formats
+	virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const = 0; 
+	virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const = 0;
 	virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const = 0;
 	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const = 0;
