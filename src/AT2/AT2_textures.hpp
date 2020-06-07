@@ -4,65 +4,68 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 
+template <size_t N, typename = std::enable_if<N <= 4> >
 class BaseTexture
 {
-	glm::u8 levels = 1;
+public:
+	using size_vec = glm::vec<N, glm::u32>;
+	BaseTexture(size_vec size, unsigned int levels) : size(size), levels(levels) {}
+
+	[[nodiscard]] unsigned int getLevels() const noexcept { return levels; }
+	[[nodiscard]] size_vec getSize() const noexcept { return size; }
+
 protected:
-	//void checkSize(glm::uvec3 size) const
+	//void checkSize() const
 	//{
-	//	const int maxLevels = glm::log2(glm::max(size.x, glm::max(size.y, size.z)));
+	//	const int maxLevels = log2(glm::max(size.x, glm::max(size.y, size.z)));
 	//	assert(levels <= maxLevels);
 	//}
-
-public:
-	BaseTexture(unsigned int levels) : levels(levels) {}
-	[[nodiscard]] unsigned int getLevels() const noexcept { return levels; }
+	//
+private:
+	size_vec size;
+	glm::u8 levels;
 };
 
-class Texture1D : public BaseTexture
+template <size_t N, typename = std::enable_if<N < 4> >
+struct BaseTextureArray : BaseTexture<N+1>
 {
-	glm::uvec1 size;
-public:
-	Texture1D(glm::u32 size, int levels = 1) : BaseTexture(levels), size(size) { }
-
-	[[nodiscard]] glm::u32 getSize() const noexcept { return size.x; }
+	BaseTextureArray(typename BaseTexture<N + 1>::size_vec size, unsigned int levels) : BaseTexture(size, levels) {}
 };
 
-class Texture2D : public BaseTexture
+struct Texture1D : BaseTexture<1>
 {
-	glm::uvec2 size;
-public:
-	Texture2D(glm::uvec2 size, int levels = 1) : BaseTexture(levels), size(size) {}
-
-	[[nodiscard]] glm::uvec2 getSize() const noexcept { return size; }
+	Texture1D(glm::uvec1 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
 };
 
-class Texture2DArray : public BaseTexture
+struct Texture1DArray : BaseTextureArray<1>
 {
-	glm::uvec3 size;
-public:
-	Texture2DArray(glm::uvec2 size, glm::u32 length, int levels = 1) : BaseTexture(levels), size({size, length}) {}
-
-	[[nodiscard]] glm::uvec2 getSize() const noexcept { return glm::xy(size); }
-	[[nodiscard]] glm::u32 getLength() const noexcept { return size.z; }
+	Texture1DArray(glm::uvec2 size, unsigned int levels = 1) : BaseTextureArray(size, levels) { }
 };
 
-class TextureCube : public BaseTexture
+struct Texture2D : BaseTexture<2>
 {
-	glm::uvec2 size;
-public:
-	TextureCube(glm::uvec2 size, int levels = 1) : BaseTexture(levels), size(size) {}
-
-	[[nodiscard]] glm::uvec2 getSize() const noexcept { return size; }
+	Texture2D(glm::uvec2 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
 };
 
-class Texture3D : public BaseTexture
+struct Texture2DArray : BaseTextureArray<2>
 {
-	glm::uvec3 size;
-public:
-	Texture3D(glm::uvec3 size, int levels = 1) : BaseTexture(levels), size(size) {}
-
-	[[nodiscard]] glm::uvec3 getSize() const noexcept { return size; }
+	Texture2DArray(glm::uvec3 size, unsigned int levels = 1) : BaseTextureArray(size, levels) { }
 };
 
-using Texture = std::variant<Texture1D, Texture2D, Texture2DArray, TextureCube, Texture3D>;
+struct TextureCube : BaseTexture<2>
+{
+	TextureCube(glm::uvec2 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
+};
+
+struct TextureCubeArray : BaseTextureArray<2>
+{
+	TextureCubeArray(glm::uvec3 size, unsigned int levels = 1) : BaseTextureArray(size, levels) { }
+};
+
+struct Texture3D : BaseTexture<3>
+{
+	Texture3D(glm::uvec3 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
+};
+
+//TODO: support all texture types
+using Texture = std::variant<Texture1D, Texture2D, Texture2DArray, TextureCube, Texture3D>; 

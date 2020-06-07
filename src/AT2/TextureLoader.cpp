@@ -104,7 +104,7 @@ static ExternalTextureFormat GetInternalFormat(GLuint externalFormat, GLuint ext
 }
 
 
-static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, std::function<bool()> imageLoader)
+static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const std::function<bool()>& imageLoader)
 {
 	const bool enableAutomipmaps = true;
 
@@ -135,7 +135,7 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, std::
 
 	if (imageInfo.Depth > 1)
 	{
-		auto glTexture = std::static_pointer_cast<GlTexture2D>(renderer->GetResourceFactory().CreateTexture(Texture3D{ size, static_cast<int>(storageLevels) }, GetInternalFormat(imageInfo.Format, imageInfo.Type)));
+		auto glTexture = std::static_pointer_cast<GlTexture2D>(renderer->GetResourceFactory().CreateTexture(Texture3D{ size, storageLevels }, GetInternalFormat(imageInfo.Format, imageInfo.Type)));
 
 		for (unsigned int level = 0; level < mipmapLevels; ++level)
 		{
@@ -160,7 +160,7 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, std::
 	}
 
 	auto glTexture = std::static_pointer_cast<GlTexture2D>(
-		renderer->GetResourceFactory().CreateTexture(Texture2D{ glm::xy(size), static_cast<int>(storageLevels) }, GetInternalFormat(imageInfo.Format, imageInfo.Type))
+		renderer->GetResourceFactory().CreateTexture(Texture2D{ glm::xy(size), storageLevels }, GetInternalFormat(imageInfo.Format, imageInfo.Type))
 	);
 
 	for (unsigned int level = 0; level < mipmapLevels; ++level)

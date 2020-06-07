@@ -143,7 +143,7 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declar
 	return std::visit(Utils::overloaded {
 		[=](Texture1D texture) -> std::shared_ptr<ITexture>
 		{
-			return std::make_shared<GlTexture1D>(*internalFormat, texture.getSize(), texture.getLevels());
+			return std::make_shared<GlTexture1D>(*internalFormat, texture.getSize().x, texture.getLevels());
 		},
 		[=](Texture2D texture) -> std::shared_ptr<ITexture>
 		{
@@ -151,7 +151,7 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declar
 		},
 		[=](Texture2DArray texture) -> std::shared_ptr<ITexture>
 		{
-			return std::make_shared<GlTexture2DArray>(*internalFormat, glm::uvec3{texture.getSize(), texture.getLength()}, texture.getLevels());
+			return std::make_shared<GlTexture2DArray>(*internalFormat, texture.getSize(), texture.getLevels());
 		},
 		[=](Texture3D texture) -> std::shared_ptr<ITexture>
 		{

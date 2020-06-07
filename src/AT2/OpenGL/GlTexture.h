@@ -71,7 +71,7 @@ namespace AT2
 		GlTexture1D(GLint internalFormat, GLuint size, GLuint levels=1);
 		
 	public:
-		void SetData(GLuint level, BufferData data); //TODO!!! external format - характеристика входных данных! Передавать надо в SetData!
+		void SetData(GLuint level, BufferData data);
 	};
 
 
