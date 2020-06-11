@@ -126,6 +126,14 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const
 
 	if (auto flags = ilGetInteger(IL_IMAGE_CUBEFLAGS))//TODO: and how to live with it? :)
 	{
+		for (size_t i = 0; i <= 5; ++i)
+		{
+			ilBindImage(image.getId());
+			ilActiveImage(i);
+
+			//...
+		}
+
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Cube maps still unsupported :(");
 	}
 

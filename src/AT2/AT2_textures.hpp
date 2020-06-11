@@ -59,10 +59,12 @@ struct Texture2D : BaseTexture<2>
 
 struct Texture2DMultisample : BaseTexture<2>
 {
-	Texture2DMultisample(glm::uvec2 size, glm::u8 samples, unsigned int levels = 1) : BaseTexture(size, levels), samples(samples) { }
+	Texture2DMultisample(glm::uvec2 size, glm::u8 samples, bool fixedSampleLocations) : BaseTexture(size, 0), samples(samples), fixedSampleLocations(fixedSampleLocations) { }
 	[[nodiscard]] unsigned int getSamples() const noexcept { return samples; }
+	[[nodiscard]] bool getFixedSampleLocations() const noexcept { return fixedSampleLocations; }
 private:
 	glm::u8 samples;
+	bool fixedSampleLocations;
 };
 
 struct Texture2DRectangle : BaseTexture<2>
@@ -77,11 +79,12 @@ struct Texture2DArray : BaseTextureArray<2>
 
 struct Texture2DMultisampleArray : BaseTextureArray<2>
 {
-	Texture2DMultisampleArray(glm::uvec3 size, glm::u8 samples, unsigned int levels = 1) : BaseTextureArray(size, levels), samples(samples) { }
+	Texture2DMultisampleArray(glm::uvec3 size, glm::u8 samples, bool fixedSampleLocations = true) : BaseTextureArray(size, 0), samples(samples), fixedSampleLocations(fixedSampleLocations) { }
 	[[nodiscard]] unsigned int getSamples() const noexcept { return samples; }
-
+	[[nodiscard]] bool getFixedSampleLocations() const noexcept { return fixedSampleLocations; }
 private:
 	glm::u8 samples;
+	bool fixedSampleLocations;
 };
 
 struct TextureCube : BaseTexture<2>

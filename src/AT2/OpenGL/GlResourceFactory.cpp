@@ -128,11 +128,9 @@ GlResourceFactory::~GlResourceFactory()
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const
 {
-
-	throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Не успел");
-	//auto texture = std::make_shared<GlTexture2D>(GL_RGBA8, size); //TODO: is framebuffer could be something another than RGBA8?
-	//texture->CopyFromFramebuffer(0, pos, size);
-	//return texture;
+    auto texture = std::make_shared<GlTexture>(Texture2D { size }, *DetermineInternalFormat(TextureFormats::RGBA8)); //TODO: choose formats?
+    texture->CopyFromFramebuffer(0, pos, size);
+    return texture;
 }
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const
