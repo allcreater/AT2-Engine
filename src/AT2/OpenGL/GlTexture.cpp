@@ -63,48 +63,18 @@ static GLenum translateExternalType(BufferDataType type)
 
 GLenum GlTexture::GetTarget() const
 {
-    return std::visit(Utils::overloaded{
-        [=](const Texture1D& texture)
-        {
-            return GL_TEXTURE_1D;
-        },
-        [=](const Texture1DArray& texture)
-        {
-            return GL_TEXTURE_1D_ARRAY;
-        },
-        [=](const Texture2D& texture)
-        {
-            return GL_TEXTURE_2D;
-        },
-        [=](const Texture2DMultisample& texture)
-        {
-            return GL_TEXTURE_2D_MULTISAMPLE;
-        },
-        [=](const Texture2DRectangle& texture)
-        {
-            return GL_TEXTURE_RECTANGLE;
-        },
-        [=](const Texture2DArray& texture)
-        {
-            return GL_TEXTURE_2D_ARRAY;
-        },
-        [=](const Texture2DMultisampleArray& texture)
-        {
-            return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
-        },
-        [=](const TextureCube& texture)
-        {
-            return GL_TEXTURE_CUBE_MAP;
-        },
-        [=](const TextureCubeArray& texture)
-        {
-            return GL_TEXTURE_CUBE_MAP_ARRAY;
-        },
-        [=](const Texture3D& texture)
-        {
-            return GL_TEXTURE_3D;
-        }
-        }, m_flavor);
+    return std::visit( Utils::overloaded {
+        [](const Texture1D& texture)                   { return GL_TEXTURE_1D;                     },
+        [](const Texture1DArray& texture)              { return GL_TEXTURE_1D_ARRAY;               },
+        [](const Texture2DArray& texture)              { return GL_TEXTURE_2D_ARRAY;               },
+        [](const Texture2D& texture)                   { return GL_TEXTURE_2D;                     },
+        [](const Texture2DMultisample& texture)        { return GL_TEXTURE_2D_MULTISAMPLE;         },
+        [](const Texture2DRectangle& texture)          { return GL_TEXTURE_RECTANGLE;              },
+        [](const Texture2DMultisampleArray& texture)   { return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;   },
+        [](const TextureCube& texture)                 { return GL_TEXTURE_CUBE_MAP;               },
+        [](const TextureCubeArray& texture)            { return GL_TEXTURE_CUBE_MAP_ARRAY;         },
+        [](const Texture3D& texture)                   { return GL_TEXTURE_3D;                     }
+    }, m_flavor);
 }
 
 
@@ -244,7 +214,7 @@ void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, Exter
         glTextureSubImage1DEXT(m_id, GL_TEXTURE_1D, level, m_internalFormat, size, externalFormat, externalType, data);
     }
     else
-        throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "This texture doesn't suppport SubImage1D operation");
+        throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "SubImage1D operation could be performed only at Texture1D target");
 }
 
 void GlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data, int cubeMapFace)
@@ -309,5 +279,3 @@ void GlTexture::CopyFromFramebuffer(GLuint level, glm::ivec2 pos, glm::uvec2 siz
             throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Probably not implemented");
     }, GetType());
 }
-
-

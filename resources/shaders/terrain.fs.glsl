@@ -43,23 +43,42 @@ mat3 cotangent_frame(in vec3 normal, in vec3 pos, in vec2 uv)
     return mat3( T * invmax, B * invmax, normal );
 }
 
+//input: screen coord is in range -1..1
+//output: position in eye space
+vec3 getFragPos(in vec3 screenCoord)
+{
+    vec4 pos = u_matInverseProjection * vec4(screenCoord, 1.0);
+    return pos.xyz/pos.w;
+}
+
 void main()
 {
-	vec3 normalFromMap = (texture(u_texNormalMap, input.texCoord).rbg * 2.0 - 1.0)*vec3(1.0, 1.0, -1.0);
-
-	vec2 texCoord = input.texCoord*200.0;
-	FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, smoothstep(0.1, 0.5, length(normalFromMap.xz)));
-
 	const float waterLine = 0.003;
+
+	const vec2 texCoord = input.texCoord*40.0;
+
+	vec3 normal = normalize(input.normal);
+	
+	//apply normal deviation in TBN space
+	const vec3 matNormal = mix(vec3(0,0,1), (texture(u_texNormalMap, texCoord).rgb*2.0 - 1.0)*normalize(vec3(1,1,5)), step(waterLine, input.elevation));
+	const mat3 tbn = cotangent_frame(normal, -getFragPos(vec3(gl_FragCoord.xy*2.0 - 1.0, 0)), texCoord);
+	normal = normalize(tbn * matNormal);
+
+
+	const vec3 normalWS = normalize( inverse(u_matNormal) * normal);
+
+	
+	FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, smoothstep(0.1, 0.5, length(normalWS.xz)*0.4));
+
 
 	if (input.elevation <= waterLine)
 		FragColor.rgb = vec3(0.2, 0.3, 1.0);
 
-	FragColor.rgb = mix(FragColor.rgb, vec3(1.0), smoothstep(0.31, 0.35, input.elevation * (-length(normalFromMap.xz)+0.95)));
+	FragColor.rgb = mix(FragColor.rgb, vec3(1.0), smoothstep(0.31, 0.35, input.elevation * (-length(normalWS.xz)*0.4+0.95)));
 
 	FragColor.a = 1.0;
 
-	vec3 normal = normalize(input.normal); //normalize(u_matNormal * normalFromMap);
+	
 	FragNormal = vec4(normal, 1.0);
 
 	RoughnessMetallic = vec4(0.01 + step(waterLine, input.elevation) * 0.7, 0.0, 1.0, 1.0);

@@ -42,6 +42,14 @@ mat3 cotangent_frame(in vec3 normal, in vec3 pos, in vec2 uv)
     return mat3( T * invmax, B * invmax, normal );
 }
 
+//input: screen coord is in range -1..1
+//output: position in eye space
+vec3 getFragPos(in vec3 screenCoord)
+{
+    vec4 pos = u_matInverseProjection * vec4(screenCoord, 1.0);
+    return pos.xyz/pos.w;
+}
+
 //SRGB -> RGB
 vec3 to_linear(in vec3 color)
 {
@@ -72,7 +80,11 @@ void main()
 
 
 	vec3 normal = normalize(input.normal);
-	FragNormal = vec4(normal, 1.0);
+
+	const vec3 matNormal = (texture(u_texNormalMap, texCoord).rgb*2.0 - 1.0);
+	const mat3 tbn = cotangent_frame(normal, -getFragPos(vec3(gl_FragCoord.xy*2.0 - 1.0, 0)), texCoord);
+
+	FragNormal = vec4(tbn * matNormal, 1.0);
 
 
     RoughnessMetallic = vec4(roughness, metallic, 1.0, 1.0);

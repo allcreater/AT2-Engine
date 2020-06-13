@@ -100,9 +100,10 @@ private:
 			Noise3Tex->SubImage3D({ 0, 0, 0 }, { 64, 64, 64 }, 0, TextureFormats::RGBA8, arr.get());
 		}
 
-		GrassTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/grass03.dds");
+		GrassTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
+		NormalMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
 		RockTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
-		NormalMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/terrain_normalmap.dds");
+
 		HeightMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/heightmap.dds");
 		EnvironmentMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
@@ -121,7 +122,7 @@ private:
 			LightsArray.push_back(light);
 		}
 
-		LightsArray[0]->SetUniform("u_lightColor", glm::vec3(1.0f, 0.0f, 0.5f));
+		LightsArray[0]->SetUniform("u_lightColor", glm::vec3(0.3f, 0.4f, 1.0f));
 
 		//Init
 		glEnable(GL_BLEND);
