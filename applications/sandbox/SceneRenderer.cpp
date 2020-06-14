@@ -1,6 +1,5 @@
 #include "SceneRenderer.h"
 
-#include "AT2/OpenGL/GlDrawPrimitive.h"
 #include "AT2/OpenGL/GlFrameBuffer.h"
 #include "AT2/OpenGL/GlShaderProgram.h"
 #include "AT2/OpenGL/GlUniformBuffer.h"
@@ -34,15 +33,10 @@ void RenderVisitor::Visit(Node& node)
             return;
 
         const auto& submesh = active_mesh->Submeshes[submeshNode->SubmeshIndex];
-
-        stateManager.BindTextures(submesh.Textures);
-
         if (submesh.UniformBuffer)
         {
-            //submesh->UniformBuffer->SetUniform("u_time", time);
             submesh.UniformBuffer->SetUniform("u_matModel", transforms.getModelView());
             submesh.UniformBuffer->SetUniform("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
-            submesh.UniformBuffer->Bind();
         }
         scene_renderer.DrawSubmesh(submesh);
     }
@@ -152,8 +146,10 @@ void SceneRenderer::ResizeFramebuffers(glm::ivec2 newSize)
 }
 
 //TODO: render context class
-void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer& targetFramebuffer)
+void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer& targetFramebuffer, double time)
 {
+    this->time = time;
+
     if (dirtyFramebuffers)
     {
         auto& rf = renderer->GetResourceFactory();
@@ -267,7 +263,7 @@ void SceneRenderer::SetupCamera(const Camera& camera)
     cameraUniformBuffer->SetUniform("u_matProjection", camera.getProjection());
     cameraUniformBuffer->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
     cameraUniformBuffer->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
-    cameraUniformBuffer->SetUniform("u_time", 0.0f);//Time); //TODO: fix
+    cameraUniformBuffer->SetUniform("u_time", time);
     cameraUniformBuffer->Bind();
 
 }
@@ -301,6 +297,7 @@ void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program)
     //there could be more optimal code
     DrawMesh(*quadMesh, program);
 }
+
 
 
 std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY)

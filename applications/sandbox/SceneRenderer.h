@@ -62,7 +62,7 @@ public:
 
     void Initialize(std::shared_ptr<IRenderer> renderer);
     void ResizeFramebuffers(glm::ivec2 newSize);
-    void RenderScene(Scene& scene, const Camera& camera, IFrameBuffer& targetFramebuffer);
+    void RenderScene(Scene& scene, const Camera& camera, IFrameBuffer& targetFramebuffer, double time);
 
 
 private:
@@ -84,7 +84,8 @@ private:
     std::shared_ptr<AT2::IFrameBuffer> gBufferFBO, postProcessFBO;
 
     bool dirtyFramebuffers = false;
-    glm::ivec2 framebuffer_size;
+    glm::ivec2 framebuffer_size = {512, 512};
+    double time = 0.0;
 };
 
 

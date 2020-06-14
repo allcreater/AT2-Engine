@@ -88,11 +88,11 @@ void GlRenderer::Draw(Primitives::Primitive type, long first, long count, int nu
 
     const auto platformPrimitiveMode = Mappings::TranslatePrimitiveType(type);
 
+    if (const auto patchParams = std::get_if<Primitives::Patches>(&type))
+        glPatchParameteri(GL_PATCH_VERTICES, patchParams->NumControlPoints);
+
     if ( const auto indexDataType = GetStateManager().GetIndexDataType())
     {
-        if (auto patchParams = std::get_if<Primitives::Patches>(&type))
-            glPatchParameteri(GL_PATCH_VERTICES, patchParams->NumControlPoints);
-
         const auto platformIndexBufferType = Mappings::TranslateExternalType(*indexDataType);
         if (numInstances > 1)
         {

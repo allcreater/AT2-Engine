@@ -4,16 +4,11 @@
 #include <AT2/MeshLoader.h>
 #include <AT2/Scene.h>
 #include <AT2/TextureLoader.h>
-#include <AT2/OpenGL/GlFrameBuffer.h>
 #include <AT2/OpenGL/GlRenderer.h>
-#include <AT2/OpenGL/GlShaderProgram.h>
-#include <AT2/OpenGL/GlTexture.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GlUniformBuffer.h>
 #include <AT2/OpenGL/GLFW/glfw_application.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
-
-#include "../drawable.h"
 
 #include <filesystem>
 #include <fstream>
@@ -23,8 +18,9 @@
 #include <glm/gtc/random.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-
 #include "SceneRenderer.h"
+
+constexpr size_t NumActiveLights = 50;
 
 class App
 {
@@ -102,7 +98,7 @@ private:
 		{
 			lightsRoot->AddChild(std::make_shared<LightNode>(
 				SphereLight{ }, 
-				linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 1000.0f
+				linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f
 			)).SetTransform(glm::translate(glm::mat4{1.0}, { glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0) }));
 		}
 
@@ -112,7 +108,6 @@ private:
 		glEnable(GL_BLEND);
 		//glDisable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glPatchParameteri(GL_PATCH_VERTICES, 4);
 
 		glEnable(GL_CULL_FACE);
 
@@ -150,28 +145,16 @@ private:
 		//if (MovingLightMode)
 		//	LightsArray[0]->SetUniform("u_lightPos", glm::vec4(m_camera.getPosition(), 1.0));
 
-		double frameTime = Render(m_renderer, m_renderer->GetDefaultFramebuffer(), m_camera);
-		if (floor(Time) < floor(Time + dt))
-			AT2::Log::Debug() << "Frame time: " << frameTime << std::endl;
+        GlTimerQuery glTimer;
+        glTimer.Begin();
+        sr.RenderScene(Scene, m_camera, m_renderer->GetDefaultFramebuffer(), Time);
+        glTimer.End();
 
-		m_renderer->FinishFrame();
-	}
+        const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
+        if (floor(Time) < floor(Time + dt))
+            Log::Debug() << "Frame time: " << frameTime << std::endl;
 
-	double Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::IFrameBuffer& framebuffer, const AT2::Camera& camera)
-	{
-		AT2::GlTimerQuery glTimer;
-		glTimer.Begin();
-
-
-		sr.RenderScene(Scene, camera, framebuffer);
-
-
-		glTimer.End();
-		double frameTime = glTimer.WaitForResult() * 0.000001; //in ms
-
-		glFinish();
-
-		return frameTime;
+        m_renderer->FinishFrame();
 	}
 
 
@@ -226,7 +209,12 @@ private:
 		{
 			Time += dt;
 
-			const float moveSpeed = static_cast<float>(dt) * 50.0f;
+			if (m_window->isKeyDown(GLFW_KEY_LEFT_SHIFT))
+                acceleration = std::min(acceleration + static_cast<float>(dt), 200.0f);
+            else
+                acceleration *= 0.98;
+
+			const float moveSpeed = static_cast<float>(dt) * 50.0f + acceleration;
 			if (m_window->isKeyDown(GLFW_KEY_W))
 				m_camera.setPosition(m_camera.getPosition() + m_camera.getForward() * moveSpeed);
 			if (m_window->isKeyDown(GLFW_KEY_S))
@@ -245,26 +233,23 @@ private:
 	}
 
 private:
-	std::shared_ptr<GlfwWindow> m_window;
-	std::shared_ptr<AT2::IRenderer> m_renderer;
+    std::shared_ptr<GlfwWindow> m_window;
+    std::shared_ptr<AT2::IRenderer> m_renderer;
 
-	AT2::Camera m_camera;
+    AT2::Camera m_camera;
 
 
-	std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader;
+    std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader;
+    std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
 
-	std::shared_ptr<AT2::GlUniformBuffer> CameraUB, LightUB;
-	std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
+    Scene Scene;
+    SceneRenderer sr;
 
-	AT2::Scene Scene;
-	SceneRenderer sr;
+    bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true;
+    double Time = 0.0;
+    float acceleration = 0.0;
 
-	bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true;
-	size_t NumActiveLights = 50;
-
-	double Time = 0.0;
-
-	std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
+    std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 };
 
 int main(int argc, char *argv[])
