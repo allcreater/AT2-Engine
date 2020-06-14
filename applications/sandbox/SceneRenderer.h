@@ -3,11 +3,13 @@
 #include <AT2/Scene.h>
 #include <AT2/matrix_stack.h>
 
+class SceneRenderer;
+
 using namespace AT2;
 
 struct RenderVisitor : NodeVisitor
 {
-    RenderVisitor(IRenderer& renderer, const Camera& camera);
+    RenderVisitor(SceneRenderer&, const Camera& camera);
 
     void Visit(Node& node) override;
 
@@ -15,26 +17,26 @@ struct RenderVisitor : NodeVisitor
 
 private:
     const Camera& camera;
-    IRenderer& renderer;
 
     MatrixStack transforms;
     Mesh* active_mesh = nullptr;
+    SceneRenderer& scene_renderer;
 
 };
 
 struct LightRenderVisitor : NodeVisitor
 {
-    LightRenderVisitor(IRenderer& renderer, const Camera& camera);
+    LightRenderVisitor(SceneRenderer& sceneRenderer, const Camera& camera);
 
     void Visit(Node& node) override;
 
     void UnVisit(Node& node) override;
 
-    void DrawLights(class SceneRenderer*);
+    void DrawLights();
 
 private:
     const Camera& camera;
-    IRenderer& renderer;
+    SceneRenderer &scene_renderer;
 
     MatrixStack transforms;
 
@@ -52,6 +54,7 @@ private:
 
 class SceneRenderer
 {
+    friend struct RenderVisitor;
     friend struct LightRenderVisitor;
 
 public:
@@ -64,6 +67,8 @@ public:
 
 private:
     void SetupCamera(const Camera& camera);
+    void DrawSubmesh(const SubMesh &, int numInstances = 1) const;
+    void DrawMesh(const Mesh&, const std::shared_ptr<IShaderProgram>&);
     void DrawQuad(const std::shared_ptr<IShaderProgram>&);
 
 private:

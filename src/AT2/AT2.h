@@ -273,14 +273,16 @@ public:
 
 public:
 	virtual void BindTextures(const TextureSet& textures) = 0;
-	virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
-	virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
-	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
+	virtual void BindFramebuffer(std::shared_ptr<IFrameBuffer> framebuffer) = 0;
+	virtual void BindShader(std::shared_ptr<IShaderProgram> shader) = 0;
+	virtual void BindVertexArray(std::shared_ptr<IVertexArray> vertexArray) = 0;
 
 	//virtual TextureSet& GetActiveTextures() const = 0;
 	virtual std::weak_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
 	virtual std::weak_ptr<IShaderProgram> GetActiveShader() const = 0;
 	virtual std::weak_ptr<IVertexArray> GetActiveVertexArray() const = 0;
+
+	virtual std::optional<BufferDataType> GetIndexDataType() const noexcept = 0;
 };
 
 class IResourceFactory
@@ -314,7 +316,10 @@ public:
 	virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
 	virtual void Shutdown() = 0;
-	
+
+	//Draws count vertices connected by primitive type.
+	virtual void Draw(Primitives::Primitive type, long int first, long int count, int numInstances = 1, int baseVertex = 0) = 0;
+
 	virtual void SetViewport(const AABB2d& viewport) = 0;
 	virtual void ClearBuffer(const glm::vec4& color) = 0;
 	virtual void ClearDepth(float depth) = 0;

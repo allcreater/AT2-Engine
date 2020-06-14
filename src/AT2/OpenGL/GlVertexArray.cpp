@@ -9,6 +9,7 @@ GlVertexArray::GlVertexArray(const IRendererCapabilities& _rendererCapabilities)
 	glGenVertexArrays(1, &m_id);
 }
 
+//TODO: unlink vertex array from index buffer?
 void GlVertexArray::Bind()
 {
 	glBindVertexArray(m_id);
@@ -23,15 +24,20 @@ GlVertexArray::~GlVertexArray()
 
 void GlVertexArray::SetIndexBuffer(const std::shared_ptr<IVertexBuffer>& _buffer)
 {
-	if (_buffer) //if present we must ensure that it right
-	{
-		assert(dynamic_cast<GlVertexBuffer*>(_buffer.get()));
+    if (_buffer) //if present we must ensure that it right
+    {
+        assert(dynamic_cast<GlVertexBuffer*>(_buffer.get()));
 
-		if (_buffer->GetType() != VertexBufferType::IndexBuffer)
-			throw AT2Exception("GlVertexBuffer: must be index buffer!");
-	}
+        if (_buffer->GetType() != VertexBufferType::IndexBuffer)
+            throw AT2Exception("GlVertexBuffer: must be index buffer!");
 
-	m_indexBuffer = _buffer;
+        if (_buffer->GetDataType().Type != BufferDataType::UByte &&
+            _buffer->GetDataType().Type != BufferDataType::UShort &&
+            _buffer->GetDataType().Type != BufferDataType::UInt)
+            throw AT2Exception("GlVertexBuffer: index buffer must be one of three types: UByte, UShort, UInt");
+    }
+
+    m_indexBuffer = _buffer;
 }
 
 std::shared_ptr<IVertexBuffer> GlVertexArray::GetIndexBuffer() const

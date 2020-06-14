@@ -1,5 +1,6 @@
 #include "GlRenderer.h"
 
+#include "Mappings.h"
 #include "GlFrameBuffer.h"
 #include "../StateManager.h"
 
@@ -77,6 +78,45 @@ void GlRenderer::ClearDepth(float depth)
 
 void GlRenderer::Shutdown()
 {
+}
+
+//sub-optimal but abstract :)
+void GlRenderer::Draw(Primitives::Primitive type, long first, long count, int numInstances, int baseVertex)
+{
+    if (first < 0 || count < 0 || numInstances < 0 || baseVertex < 0)
+        throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GlRenderer: Draw arguments should be positive!");
+
+    const auto platformPrimitiveMode = Mappings::TranslatePrimitiveType(type);
+
+    if ( const auto indexDataType = GetStateManager().GetIndexDataType())
+    {
+        if (auto patchParams = std::get_if<Primitives::Patches>(&type))
+            glPatchParameteri(GL_PATCH_VERTICES, patchParams->NumControlPoints);
+
+        const auto platformIndexBufferType = Mappings::TranslateExternalType(*indexDataType);
+        if (numInstances > 1)
+        {
+            glDrawElementsInstancedBaseVertex(platformPrimitiveMode, static_cast<GLsizei>(count),
+                                              platformIndexBufferType, reinterpret_cast<void *>(first),
+                                              static_cast<GLsizei>(numInstances),
+                                              baseVertex);
+        }
+        else
+        {
+            glDrawElementsBaseVertex(platformPrimitiveMode, static_cast<GLsizei>(count), platformIndexBufferType,
+                                     reinterpret_cast<void *>(first), baseVertex);
+        }
+    }
+    else
+    {
+        if (baseVertex != 0)
+            throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GlRenderer: baseVertex supported only with index buffers");
+
+        if (numInstances > 1)
+            glDrawArraysInstanced(platformPrimitiveMode, static_cast<GLint>(first), static_cast<GLsizei>(count), numInstances);
+        else
+            glDrawArrays(platformPrimitiveMode, static_cast<GLint>(first), static_cast<GLsizei>(count));
+    }
 }
 
 void GlRenderer::SetViewport(const AABB2d& viewport)

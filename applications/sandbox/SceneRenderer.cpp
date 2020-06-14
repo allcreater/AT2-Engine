@@ -6,9 +6,9 @@
 #include "AT2/OpenGL/GlUniformBuffer.h"
 
 
-RenderVisitor::RenderVisitor(IRenderer& renderer, const Camera& camera):
+RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera):
     camera(camera),
-    renderer(renderer)
+    scene_renderer(renderer)
 {
 }
 
@@ -16,7 +16,7 @@ void RenderVisitor::Visit(Node& node)
 {
     transforms.pushModelView(node.GetTransform());
 
-    auto& stateManager = renderer.GetStateManager();
+    auto &stateManager = scene_renderer.renderer->GetStateManager();
 
     if (const auto meshNode = dynamic_cast<MeshNode*>(&node))
     {
@@ -44,9 +44,7 @@ void RenderVisitor::Visit(Node& node)
             submesh.UniformBuffer->SetUniform("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
             submesh.UniformBuffer->Bind();
         }
-
-        for (const auto& primitive : submesh.Primitives)
-            primitive->Draw();
+        scene_renderer.DrawSubmesh(submesh);
     }
 
 }
@@ -56,9 +54,8 @@ void RenderVisitor::UnVisit(Node& node)
     transforms.popModelView();
 }
 
-LightRenderVisitor::LightRenderVisitor(IRenderer& renderer, const Camera& camera) :
-    camera(camera),
-    renderer(renderer)
+LightRenderVisitor::LightRenderVisitor(SceneRenderer& sceneRenderer, const Camera& camera) :
+    camera(camera), scene_renderer(sceneRenderer)
 {
 }
 
@@ -84,12 +81,12 @@ void LightRenderVisitor::UnVisit(Node& node)
     transforms.popModelView();
 }
 
-void LightRenderVisitor::DrawLights(SceneRenderer* sceneRenderer)
+void LightRenderVisitor::DrawLights()
 {
 
     //update our vertex buffer...
-    auto& rf = renderer.GetResourceFactory();
-    auto& vao = sceneRenderer->lightMesh->VertexArray;
+    auto &rf = scene_renderer.renderer->GetResourceFactory();
+    auto &vao = scene_renderer.lightMesh->VertexArray;
 
     vao->SetVertexBuffer(2,
         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
@@ -116,13 +113,13 @@ void LightRenderVisitor::DrawLights(SceneRenderer* sceneRenderer)
     vao->SetVertexBufferDivisor(4, 1);
 
 
-    auto& stateManager = renderer.GetStateManager();
-    stateManager.BindShader(sceneRenderer->lightMesh->Shader);
-    stateManager.BindVertexArray(sceneRenderer->lightMesh->VertexArray);
-    stateManager.BindTextures({}); //TODO
+    auto &stateManager = scene_renderer.renderer->GetStateManager();
+    stateManager.BindShader(scene_renderer.lightMesh->Shader);
+    stateManager.BindVertexArray(scene_renderer.lightMesh->VertexArray);
+    //stateManager.BindTextures({}); //TODO
 
-    GlDrawElementsInstancedPrimitive(GlDrawPrimitiveType::Triangles, 2880, GlDrawElementsInstancedPrimitive::IndicesType::UnsignedInt, nullptr, collectedLights.size()).Draw();
-    
+    scene_renderer.DrawSubmesh(scene_renderer.lightMesh->Submeshes.front(), collectedLights.size());
+
 }
 
 void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
@@ -152,20 +149,6 @@ void SceneRenderer::ResizeFramebuffers(glm::ivec2 newSize)
 {
     framebuffer_size = newSize;
     dirtyFramebuffers = true;
-}
-
-void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program)
-{
-    auto& stateManager = renderer->GetStateManager();
-    stateManager.BindShader(program);
-    stateManager.BindVertexArray(quadMesh->VertexArray);
-
-    //TODO: remake
-    stateManager.BindTextures(quadMesh->Submeshes[0].Textures);
-    quadMesh->Submeshes[0].UniformBuffer->Bind();
-
-    quadMesh->Submeshes[0].Primitives[0]->Draw();
-
 }
 
 //TODO: render context class
@@ -241,7 +224,7 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
 
 
     //objects
-    RenderVisitor rv{ *renderer.get(), camera };
+    RenderVisitor rv { *this, camera };
     scene.GetRoot().Accept(rv);
 
 
@@ -255,9 +238,9 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
     glCullFace(GL_BACK);
 
     //lights
-    LightRenderVisitor lrv{ *renderer.get(), camera };
+    LightRenderVisitor lrv{ *this, camera };
     scene.GetRoot().Accept(lrv);
-    lrv.DrawLights(this);
+    lrv.DrawLights();
 
 
     targetFramebuffer.Bind();
@@ -289,7 +272,35 @@ void SceneRenderer::SetupCamera(const Camera& camera)
 
 }
 
+void SceneRenderer::DrawSubmesh(const SubMesh & subMesh, int numInstances) const
+{
+    auto &stateManager = renderer->GetStateManager();
+    stateManager.BindTextures(subMesh.Textures);
+    if (subMesh.UniformBuffer)
+        subMesh.UniformBuffer->Bind();
 
+    for (const auto &primitive : subMesh.Primitives)
+        renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, numInstances, primitive.BaseVertex);
+}
+
+void SceneRenderer::DrawMesh(const Mesh& mesh, const std::shared_ptr<IShaderProgram>& program)
+{
+    auto& stateManager = renderer->GetStateManager();
+
+    if (program)
+        stateManager.BindShader(program);
+
+    stateManager.BindVertexArray(mesh.VertexArray);
+
+    for (const auto &submesh : mesh.Submeshes)
+        DrawSubmesh(submesh);
+}
+
+void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program)
+{
+    //there could be more optimal code
+    DrawMesh(*quadMesh, program);
+}
 
 
 std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY)
@@ -323,7 +334,8 @@ std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShad
 
     SubMesh subMesh;
     subMesh.UniformBuffer = mesh.Shader->CreateAssociatedUniformStorage();
-    subMesh.Primitives.push_back(std::make_unique<GlDrawArraysPrimitive>(AT2::GlDrawPrimitiveType::Patches, 0, texCoords.size()));
+    subMesh.Primitives.emplace_back(Primitives::Patches{4}, 0, texCoords.size());
+
     mesh.Submeshes.push_back(std::move(subMesh));
 
 
@@ -384,7 +396,7 @@ std::unique_ptr<Mesh> MakeSphere(IRenderer& renderer, std::shared_ptr<IShaderPro
 
     //don't know how to make it better
     SubMesh subMesh;
-    subMesh.Primitives.push_back(std::make_unique<GlDrawElementsPrimitive>(GlDrawPrimitiveType::Triangles, indices.size(), GlDrawElementsPrimitive::IndicesType::UnsignedInt, nullptr));
+    subMesh.Primitives.emplace_back(Primitives::Triangles{}, 0, indices.size());
     mesh->Submeshes.push_back(std::move(subMesh));
 
     return mesh;
@@ -400,7 +412,7 @@ std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer
 
 
     SubMesh subMesh;
-    subMesh.Primitives.push_back( std::make_unique<GlDrawArraysPrimitive>(AT2::GlDrawPrimitiveType::TriangleFan, 0, 4));
+    subMesh.Primitives.emplace_back(Primitives::TriangleFan{}, 0, 4);
 
     auto mesh = std::make_unique<Mesh>();
     mesh->VertexArray = vao;

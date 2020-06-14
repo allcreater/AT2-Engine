@@ -80,12 +80,14 @@ protected:
 
 		SubMesh submesh;
 		submesh.UniformBuffer = m_buildedMesh.Shader->CreateAssociatedUniformStorage();
-		submesh.Primitives.push_back(std::make_unique<GlDrawElementsPrimitive>(
-			GlDrawPrimitiveType::Triangles,
-			mesh->mNumFaces * 3,
-			GlDrawElementsPrimitive::IndicesType::UnsignedInt,
-			reinterpret_cast<void*>(previousIndexOffset * sizeof(GLuint))
-			));
+
+        submesh.Primitives.emplace_back(Primitives::Triangles {}, previousIndexOffset, mesh->mNumFaces * 3);
+		//submesh.Primitives.push_back(std::make_unique<GlDrawElementsPrimitive>(
+		//	GlDrawPrimitiveType::Triangles,
+		//	mesh->mNumFaces * 3,
+		//	GlDrawElementsPrimitive::IndicesType::UnsignedInt,
+		//	reinterpret_cast<void*>(previousIndexOffset * sizeof(GLuint))
+		//	));
 
 		TranslateMaterial(m_scene->mMaterials[mesh->mMaterialIndex], submesh);
 

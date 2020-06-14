@@ -2,6 +2,7 @@
 
 #include "AT2.h"
 #include "camera.h"
+#include "Mesh.h"
 
 //TODO encapsulate all graphic API calls
 
@@ -62,50 +63,6 @@ protected:
     std::vector<NodeRef> child_nodes;
 };
 
-struct SubMesh
-{
-    SubMesh() = default;
-    SubMesh(SubMesh&&) = default;
-    SubMesh& operator=(SubMesh&&) = default;
-
-    SubMesh(const SubMesh&) = delete;
-    SubMesh& operator=(const SubMesh&) = delete;
-
-    //SubMesh(std::vector<std::unique_ptr<IDrawPrimitive>> primitives) : Primitives(std::move(primitives)) {}
-    std::string Name;
-
-    TextureSet Textures;
-    std::shared_ptr<IUniformContainer> UniformBuffer;
-    std::vector<std::unique_ptr<IDrawPrimitive>> Primitives;
-};
-
-struct Mesh
-{
-    Mesh() = default;
-    Mesh(Mesh&&) = default;
-    Mesh& operator=(Mesh&&) = default;
-
-    Mesh(const Mesh&) = delete;
-    Mesh& operator=(const Mesh&) = delete;
-
-    std::string Name;
-    std::shared_ptr<IShaderProgram> Shader;
-    std::shared_ptr<IVertexArray> VertexArray;
-    std::shared_ptr<IUniformContainer> UniformBuffer;
-
-    std::vector<SubMesh> Submeshes; //TODO: move Mesh and Submesh from scene so that nodes could be builded by Mesh
-};
-
-class MeshNode : public Node
-{
-public:
-    void SetMesh(Mesh&& newMesh) { mesh = std::move(newMesh); }
-    Mesh& GetMesh() noexcept { return mesh; }
-
-private:
-    Mesh mesh;
-};
-
 struct SphereLight {};
 
 struct DirectionalLight
@@ -145,6 +102,16 @@ private:
     float m_effectiveRadius = 10.0;
 };
 
+
+class MeshNode : public Node
+{
+public:
+    void SetMesh(Mesh&& newMesh) { mesh = std::move(newMesh); }
+    Mesh& GetMesh() noexcept { return mesh; }
+
+private:
+    Mesh mesh;
+};
 
 class DrawableNode : public Node
 {
