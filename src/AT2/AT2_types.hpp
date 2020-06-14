@@ -1,6 +1,7 @@
 #ifndef AT2_TYPES_H
 #define AT2_TYPES_H
 
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include "AABB.h"
 
@@ -128,6 +129,38 @@ namespace AT2
         constexpr auto DEPTH32F = ExternalTextureFormat{ TextureLayout::DepthComponent, BufferDataType::Float };
     }
 
+}
+
+namespace Primitives
+{
+    struct Points {};
+    struct LineStrip {};
+    struct LineLoop {};
+    struct Lines {};
+    struct LineStripAdjacency {};
+    struct LinesAdjacency {};
+    struct TriangleStrip {};
+    struct TriangleFan {};
+    struct Triangles {};
+    struct TriangleStripAdjacency {};
+    struct TrianglesAdjacency {};
+    struct Patches { const int NumControlPoints = 3; };
+
+    using Primitive = std::variant
+    <
+        Points,
+        LineStrip,
+        LineLoop,
+        Lines,
+        LineStripAdjacency,
+        LinesAdjacency,
+        TriangleStrip,
+        TriangleFan,
+        Triangles,
+        TriangleStripAdjacency,
+        TrianglesAdjacency,
+        Patches
+    >;
 }
 
 

@@ -45,7 +45,7 @@ public:
 	//because we want to reload resources by their types, not all together
 	virtual ReloadableGroup getReloadableClass() const = 0;
 
-	virtual ~IReloadable() {}
+	virtual ~IReloadable() = default;
 
 public:
 	virtual void Reload() = 0;
@@ -184,7 +184,7 @@ public:
 class IUniformContainer
 {
 public:
-	virtual ~IUniformContainer() {}
+	virtual ~IUniformContainer() = default;
 
 public:
 	//doubles
@@ -269,7 +269,7 @@ public:
 	IStateManager() = default;
 	IStateManager(const IStateManager& other) = delete;
 	IStateManager& operator= (const IStateManager& other) = delete;
-	virtual ~IStateManager() {}
+	virtual ~IStateManager() = default;
 
 public:
 	virtual void BindTextures(const TextureSet& textures) = 0;
@@ -306,7 +306,7 @@ public:
 class IRenderer
 {
 public:
-	virtual ~IRenderer() {};
+	virtual ~IRenderer() = default;
 
 public:
 	virtual IResourceFactory& GetResourceFactory() const = 0;

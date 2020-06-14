@@ -64,7 +64,6 @@ class GlUniformContainer : public IUniformContainer
 {
 public:
 	GlUniformContainer(std::weak_ptr<GlShaderProgram> program);
-	~GlUniformContainer();
 
 public:
 	//doubles
@@ -109,10 +108,10 @@ public:
 
 private:
 	template <typename T>
-	IGlUniform* GetOrCreateUniform(const str& name);
+	IGlUniform& GetOrCreateUniform(const str& name);
 
 private:
-	std::map<str, IGlUniform*> m_uniformsMap; //TODO achtung: поле name и map key дублируются
+	std::unordered_map<str, std::unique_ptr<IGlUniform>> m_uniformsMap;
 	std::weak_ptr<GlShaderProgram> m_program;
 };
 

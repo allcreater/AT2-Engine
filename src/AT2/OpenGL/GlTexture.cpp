@@ -1,80 +1,13 @@
 #include "GlTexture.h"
-
-#include <algorithm>
-#include <optional>
+#include "Mappings.h"
 
 using namespace AT2;
 
-static GLint translateWrapMode(TextureWrapMode wrapMode)
-{
-    switch (wrapMode)
-    {
-    case TextureWrapMode::ClampToEdge:			return GL_CLAMP_TO_EDGE;
-    case TextureWrapMode::ClampToBorder:		return GL_CLAMP_TO_BORDER;
-    case TextureWrapMode::MirroredRepeat:		return GL_MIRRORED_REPEAT;
-    case TextureWrapMode::Repeat:				return GL_REPEAT;
-    case TextureWrapMode::MirrorClampToEdge:	return GL_MIRROR_CLAMP_TO_EDGE;
-    default:
-        assert(false);
-    }
 
-    return 0;
-}
-
-static GLenum translateExternalFormat(TextureLayout layout)
-{
-    switch (layout)
-    {
-    case TextureLayout::Red: return GL_RED;
-    case TextureLayout::RG: return GL_RG;
-    case TextureLayout::RGB: return GL_RGB;
-    case TextureLayout::BGR: return GL_BGR;
-    case TextureLayout::RGBA: return GL_RGBA;
-    case TextureLayout::BGRA: return GL_BGRA;
-    case TextureLayout::DepthComponent: return GL_DEPTH_COMPONENT;
-    case TextureLayout::StencilIndex: return GL_STENCIL_INDEX;
-    default:
-        assert(false);
-    }
-
-    return 0;
-}
-
-static GLenum translateExternalType(BufferDataType type)
-{
-    switch (type)
-    {
-    case BufferDataType::Byte:		return GL_BYTE;
-    case BufferDataType::UByte:		return GL_UNSIGNED_BYTE;
-    case BufferDataType::Short:		return GL_SHORT;
-    case BufferDataType::UShort:	return GL_UNSIGNED_SHORT;
-    case BufferDataType::Int:		return GL_INT;
-    case BufferDataType::UInt:		return GL_UNSIGNED_INT;
-    case BufferDataType::HalfFloat:	return GL_HALF_FLOAT;
-    case BufferDataType::Float:		return GL_FLOAT;
-    case BufferDataType::Double:	return GL_DOUBLE;
-    case BufferDataType::Fixed:		return GL_FIXED;
-    default:
-        assert(false);
-    }
-
-    return 0;
-}
 
 GLenum GlTexture::GetTarget() const
 {
-    return std::visit( Utils::overloaded {
-        [](const Texture1D& texture)                   { return GL_TEXTURE_1D;                     },
-        [](const Texture1DArray& texture)              { return GL_TEXTURE_1D_ARRAY;               },
-        [](const Texture2DArray& texture)              { return GL_TEXTURE_2D_ARRAY;               },
-        [](const Texture2D& texture)                   { return GL_TEXTURE_2D;                     },
-        [](const Texture2DMultisample& texture)        { return GL_TEXTURE_2D_MULTISAMPLE;         },
-        [](const Texture2DRectangle& texture)          { return GL_TEXTURE_RECTANGLE;              },
-        [](const Texture2DMultisampleArray& texture)   { return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;   },
-        [](const TextureCube& texture)                 { return GL_TEXTURE_CUBE_MAP;               },
-        [](const TextureCubeArray& texture)            { return GL_TEXTURE_CUBE_MAP_ARRAY;         },
-        [](const Texture3D& texture)                   { return GL_TEXTURE_3D;                     }
-    }, m_flavor);
+    return Mappings::TranslateTextureTarget(m_flavor);
 }
 
 
@@ -191,7 +124,7 @@ void GlTexture::SetWrapMode(TextureWrapMode wrapMode)
     m_wrapMode = wrapMode;
 
     const auto target = GetTarget();
-    const auto mode = translateWrapMode(wrapMode);
+    const auto mode = Mappings::TranslateWrapMode(wrapMode);
 
     glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, mode);
     glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, mode);
@@ -200,8 +133,8 @@ void GlTexture::SetWrapMode(TextureWrapMode wrapMode)
 
 void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data)
 {
-    const auto externalFormat = translateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = translateExternalType(dataFormat.DataType);
+    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
+    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
 
     if (size + offset > GetSize().x)
         throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
@@ -219,8 +152,8 @@ void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, Exter
 
 void GlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data, int cubeMapFace)
 {
-    const auto externalFormat = translateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = translateExternalType(dataFormat.DataType);
+    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
+    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
 
     if (cubeMapFace < 0 || cubeMapFace > 5)
         throw AT2Exception("GlTexture:SubImage2D cube map face must be in range [0-5]");
@@ -243,8 +176,8 @@ void GlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, E
 
 void GlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data)
 {
-    const auto externalFormat = translateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = translateExternalType(dataFormat.DataType);
+    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
+    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
 
     if (const auto maxCoord = size + offset; maxCoord.x > GetSize().x || maxCoord.y > GetSize().y || maxCoord.z > GetSize().z)
         throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");

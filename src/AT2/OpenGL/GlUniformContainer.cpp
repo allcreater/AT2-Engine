@@ -378,53 +378,49 @@ GlUniformContainer::GlUniformContainer(std::weak_ptr<GlShaderProgram> _program)
 	SetProgram(_program);
 }
 
-GlUniformContainer::~GlUniformContainer()
-{
-}
-
 template <typename T>
-IGlUniform* GlUniformContainer::GetOrCreateUniform(const str& _name)
+IGlUniform& GlUniformContainer::GetOrCreateUniform(const str& _name)
 {
 	auto& value = m_uniformsMap[_name];
-	if (value == nullptr)
-		value = new GlUniform<T>();
+	if (!value)
+		value = std::make_unique<GlUniform<T>>();
 
-	return value;
+	return *value;
 }
 
-void GlUniformContainer::SetUniform(const str& name, const GLdouble& value)		{ GetOrCreateUniform<GLdouble>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::dvec2& value)	{ GetOrCreateUniform<dvec2>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::dvec3& value)	{ GetOrCreateUniform<dvec3>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::dvec4& value)	{ GetOrCreateUniform<dvec4>(name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const GLdouble& value)		{ GetOrCreateUniform<GLdouble>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::dvec2& value)	{ GetOrCreateUniform<dvec2>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::dvec3& value)	{ GetOrCreateUniform<dvec3>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::dvec4& value)	{ GetOrCreateUniform<dvec4>(name).set(value); }
 
-void GlUniformContainer::SetUniform(const str& name, const glm::dmat2& value)	{ GetOrCreateUniform<dmat2>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::dmat3& value)	{ GetOrCreateUniform<dmat3>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::dmat4& value)	{ GetOrCreateUniform<dmat4>(name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::dmat2& value)	{ GetOrCreateUniform<dmat2>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::dmat3& value)	{ GetOrCreateUniform<dmat3>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::dmat4& value)	{ GetOrCreateUniform<dmat4>(name).set(value); }
 
 //floats
-void GlUniformContainer::SetUniform(const str& name, const GLfloat& value)		{ GetOrCreateUniform<GLfloat>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::vec2& value)	{ GetOrCreateUniform<vec2>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::vec3& value)	{ GetOrCreateUniform<vec3>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::vec4& value)	{ GetOrCreateUniform<vec4>(name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const GLfloat& value)		{ GetOrCreateUniform<GLfloat>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::vec2& value)	{ GetOrCreateUniform<vec2>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::vec3& value)	{ GetOrCreateUniform<vec3>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::vec4& value)	{ GetOrCreateUniform<vec4>(name).set(value); }
 
-void GlUniformContainer::SetUniform(const str& name, const glm::mat2& value)	{ GetOrCreateUniform<mat2>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::mat3& value)	{ GetOrCreateUniform<mat3>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::mat4& value)	{ GetOrCreateUniform<mat4>(name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::mat2& value)	{ GetOrCreateUniform<mat2>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::mat3& value)	{ GetOrCreateUniform<mat3>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::mat4& value)	{ GetOrCreateUniform<mat4>(name).set(value); }
 
 //integers	
-void GlUniformContainer::SetUniform(const str& name, const GLint& value)		{ GetOrCreateUniform<GLint>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::ivec2& value)	{ GetOrCreateUniform<ivec2>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::ivec3& value)	{ GetOrCreateUniform<ivec3>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::ivec4& value)	{ GetOrCreateUniform<ivec4>(name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const GLint& value)		{ GetOrCreateUniform<GLint>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::ivec2& value)	{ GetOrCreateUniform<ivec2>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::ivec3& value)	{ GetOrCreateUniform<ivec3>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::ivec4& value)	{ GetOrCreateUniform<ivec4>(name).set(value); }
 
 //unsigned integers	
-void GlUniformContainer::SetUniform(const str& name, const glm::uint&  value)	{ GetOrCreateUniform<GLuint>(name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::uvec2& value)	{ GetOrCreateUniform<uvec2> (name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::uvec3& value)	{ GetOrCreateUniform<uvec3> (name)->set(value); }
-void GlUniformContainer::SetUniform(const str& name, const glm::uvec4& value)	{ GetOrCreateUniform<uvec4> (name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uint&  value)	{ GetOrCreateUniform<GLuint>(name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec2& value)	{ GetOrCreateUniform<uvec2> (name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec3& value)	{ GetOrCreateUniform<uvec3> (name).set(value); }
+void GlUniformContainer::SetUniform(const str& name, const glm::uvec4& value)	{ GetOrCreateUniform<uvec4> (name).set(value); }
 
 //texture
-void GlUniformContainer::SetUniform(const str& name, std::weak_ptr<const ITexture> value)	{ GetOrCreateUniform<std::weak_ptr<const ITexture>>(name)->set(value); }
+void GlUniformContainer::SetUniform(const str& name, std::weak_ptr<const ITexture> value)	{ GetOrCreateUniform<std::weak_ptr<const ITexture>>(name).set(value); }
 
 //TODO: maybe it's better to detach uniform container from specific program at all?
 void GlUniformContainer::Bind()
