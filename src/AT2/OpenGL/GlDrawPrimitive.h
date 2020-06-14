@@ -87,6 +87,38 @@ private:
 	const void* m_firstIndex;
 };
 
+class GlDrawElementsInstancedPrimitive : public GlDrawPrimitive
+{
+public:
+    enum class IndicesType
+    {
+        UnsignedByte = GL_UNSIGNED_BYTE,
+        UnsignedShort = GL_UNSIGNED_SHORT,
+        UnsignedInt = GL_UNSIGNED_INT
+    };
+
+public:
+    GlDrawElementsInstancedPrimitive(GlDrawPrimitiveType mode, GLsizei count, IndicesType indicesType, const void* first, GLsizei numInstances) :
+        GlDrawPrimitive(mode),
+        m_count(count),
+        m_indicesType(indicesType),
+        m_firstIndex(first),
+        m_numInstances(numInstances)
+    {}
+
+public:
+    void Draw() const override
+    {
+        glDrawElementsInstanced(static_cast<GLenum>(GetPrimitiveMode()), m_count, static_cast<GLenum>(m_indicesType), m_firstIndex, m_numInstances);
+    }
+
+private:
+    GLsizei m_count;
+    IndicesType m_indicesType;
+    const void* m_firstIndex;
+    GLsizei m_numInstances;
+};
+
 }
 
 #endif

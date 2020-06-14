@@ -2,8 +2,14 @@
 
 precision mediump float;
 
-in vec3 v_pos;
-in vec2 v_texCoord;
+in	vsResult {
+	vec3 pos;
+	vec2 texCoord;
+
+	vec4 lightPos;
+	vec3 lightIntensity;
+	float lightRadius;
+} fsIn;
 
 layout(binding = 1) uniform CameraBlock
 {
@@ -13,12 +19,12 @@ layout(binding = 1) uniform CameraBlock
 //uniform mat4 u_matModel;
 //uniform mat3 u_matNormal;
 
-layout(binding = 2) uniform LightingBlock
-{
-	vec4 u_lightPos; //in view space
-	float u_lightRadius;
-	vec3 u_lightColor;
-};
+// layout(binding = 2) uniform LightingBlock
+// {
+// 	vec4 u_lightPos; //in view space
+// 	float u_lightRadius;
+// 	vec3 u_lightColor;
+// };
 
 uniform sampler3D u_texNoise;
 
@@ -51,7 +57,7 @@ void main()
 	vec3 fragPos = getFragPos(vec3(texCoord, z));
 
 
-	vec3 lightVector = (u_matView * u_lightPos).xyz - fragPos;
+	vec3 lightVector = (u_matView * fsIn.lightPos).xyz - fragPos;
 	vec3 normal = texture(u_normalMap, texCoord).rgb;
 	
 	vec2 roughnessMetallic = texture (u_roughnessMetallicMap, texCoord).rg;
@@ -62,9 +68,9 @@ void main()
 	float roughness = roughnessMetallic.r;
 	vec4 color = texture(u_colorMap, texCoord);
 
-	vec3 lighting = computeLighting(lightVector, u_lightRadius, u_lightColor, normal, normalize(-fragPos), roughness, F0, color.rgb);
+	vec3 lighting = computeLighting(lightVector, fsIn.lightRadius, fsIn.lightIntensity, normal, normalize(-fragPos), roughness, F0, color.rgb);
 	
 
 	FragColor = vec4(lighting, 1.0);
-	//FragColor = vec4(0);
+	FragColor = vec4(normal, 1.0);
 }

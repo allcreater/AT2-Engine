@@ -23,6 +23,9 @@ struct NodeVisitor
 class Node
 {
 public:
+    Node() = default;
+    Node(std::string name) : name(std::move(name)) {}
+
     virtual void Accept(NodeVisitor& nv)
     {
         nv.Visit(*this);
@@ -59,23 +62,94 @@ protected:
     std::vector<NodeRef> child_nodes;
 };
 
-class MeshNode : public Node
+struct SubMesh
 {
-public:
+    SubMesh() = default;
+    SubMesh(SubMesh&&) = default;
+    SubMesh& operator=(SubMesh&&) = default;
+
+    SubMesh(const SubMesh&) = delete;
+    SubMesh& operator=(const SubMesh&) = delete;
+
+    //SubMesh(std::vector<std::unique_ptr<IDrawPrimitive>> primitives) : Primitives(std::move(primitives)) {}
+    std::string Name;
+
+    TextureSet Textures;
+    std::shared_ptr<IUniformContainer> UniformBuffer;
+    std::vector<std::unique_ptr<IDrawPrimitive>> Primitives;
+};
+
+struct Mesh
+{
+    Mesh() = default;
+    Mesh(Mesh&&) = default;
+    Mesh& operator=(Mesh&&) = default;
+
+    Mesh(const Mesh&) = delete;
+    Mesh& operator=(const Mesh&) = delete;
+
+    std::string Name;
     std::shared_ptr<IShaderProgram> Shader;
     std::shared_ptr<IVertexArray> VertexArray;
     std::shared_ptr<IUniformContainer> UniformBuffer;
 
-private:
-
+    std::vector<SubMesh> Submeshes; //TODO: move Mesh and Submesh from scene so that nodes could be builded by Mesh
 };
+
+class MeshNode : public Node
+{
+public:
+    void SetMesh(Mesh&& newMesh) { mesh = std::move(newMesh); }
+    Mesh& GetMesh() noexcept { return mesh; }
+
+private:
+    Mesh mesh;
+};
+
+struct SphereLight {};
+
+struct DirectionalLight
+{
+    glm::vec3 Direction;
+};
+
+struct LightNode : Node
+{
+    using LightFlavor = std::variant<SphereLight, DirectionalLight>;
+
+    LightNode() = default;
+    LightNode(LightFlavor flavor, glm::vec3 color) : flavor(flavor), intensity(color) { UpdateEffectiveRadius(); }
+
+    LightNode& SetIntensity(glm::vec3 newIntensity)
+    {
+        intensity = newIntensity;
+        UpdateEffectiveRadius();
+
+        return *this;
+    }
+    const glm::vec3& GetIntensity() const noexcept { return intensity; }
+
+    float GetEffectiveRadius() const noexcept { return m_effectiveRadius; }
+
+    const LightFlavor& GetFlavor() const noexcept { return flavor; }
+
+protected:
+    void UpdateEffectiveRadius()
+    {
+        m_effectiveRadius = glm::length(intensity) * 0.5; //TODO: think about it :)
+    }
+
+private:
+    LightFlavor flavor = SphereLight{};
+    glm::vec3 intensity = { 100, 100, 100 };
+    float m_effectiveRadius = 10.0;
+};
+
 
 class DrawableNode : public Node
 {
 public:
-    TextureSet Textures;
-    std::shared_ptr<IUniformContainer> UniformBuffer;
-    std::vector<std::unique_ptr<IDrawPrimitive>> Primitives;
+    size_t SubmeshIndex;
 };
 
 class Scene

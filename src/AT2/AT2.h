@@ -123,6 +123,7 @@ public:
 	virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
 	//virtual std::shared_ptr<IVertexBuffer> GetOrSetIndexBuffer() const;
 	virtual void SetVertexBuffer(unsigned int index, const std::shared_ptr<IVertexBuffer>& buffer) = 0;
+	virtual void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) = 0;
 	virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
 };
 

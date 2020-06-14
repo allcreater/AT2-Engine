@@ -38,7 +38,7 @@ std::shared_ptr<IVertexBuffer> GlVertexArray::GetIndexBuffer() const
 {
 	return m_indexBuffer;
 }
-
+//TODO: one vertex buffer could be binded multiple times with different stride, offsets etc!
 void GlVertexArray::SetVertexBuffer(unsigned int _index, const std::shared_ptr<IVertexBuffer>& _buffer)
 {
 	m_buffers.at(_index) = _buffer;
@@ -52,7 +52,7 @@ void GlVertexArray::SetVertexBuffer(unsigned int _index, const std::shared_ptr<I
 
 		auto dataType = reinterpret_cast<const GlVertexBuffer::GlBufferTypeInfo&>(_buffer->GetDataType());
 
-		glVertexArrayVertexAttribOffsetEXT(m_id, _buffer->GetId(), _index, static_cast<GLint>(dataType.Count), static_cast<GLenum>(dataType.GlDataType), dataType.IsNormalized ? GL_TRUE : GL_FALSE, dataType.Stride, 0);
+		glVertexArrayVertexAttribOffsetEXT(m_id, _buffer->GetId(), _index, static_cast<GLint>(dataType.Count), static_cast<GLenum>(dataType.GlDataType), dataType.IsNormalized ? GL_TRUE : GL_FALSE, dataType.Stride, dataType.Offset);
 		glEnableVertexArrayAttribEXT(m_id, _index);
 	}
 	else
@@ -60,6 +60,12 @@ void GlVertexArray::SetVertexBuffer(unsigned int _index, const std::shared_ptr<I
 		glDisableVertexArrayAttribEXT(m_id, _index);
 	}
 }
+
+void GlVertexArray::SetVertexBufferDivisor(unsigned index, unsigned divisor)
+{
+	glVertexArrayVertexAttribDivisorEXT(m_id, index, divisor);
+}
+
 std::shared_ptr<IVertexBuffer> GlVertexArray::GetVertexBuffer(unsigned int _index) const
 {
 	return m_buffers.at(_index);

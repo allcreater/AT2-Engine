@@ -21,6 +21,7 @@ public:
 	//virtual std::shared_ptr<GlVertexBuffer> GetOrSetIndexBuffer() const;
 
 	void SetVertexBuffer(unsigned int index, const std::shared_ptr<IVertexBuffer>& buffer) override;
+	void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) override;
 	std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const override;
 	
 private:

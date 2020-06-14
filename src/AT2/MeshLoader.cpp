@@ -11,39 +11,42 @@
 
 #include <map>
 #include "OpenGL/GlDrawPrimitive.h"
-#include "TextureLoader.h""
+#include "TextureLoader.h"
 
 
 using namespace AT2;
 
 
-class GlMeshBuilder
+class MeshBuilder
 {
 public:
-	GlMeshBuilder(std::shared_ptr<AT2::IRenderer> _renderer, const aiScene* scene) :
+	MeshBuilder(std::shared_ptr<AT2::IRenderer> _renderer, const aiScene* scene) :
         m_renderer(std::move(_renderer)),
         m_scene(scene)
 	{
 	}
 
 public:
-	std::shared_ptr <MeshNode> m_buildedMesh;
-
 	std::shared_ptr <MeshNode> Build(std::shared_ptr<IShaderProgram> program)
 	{
-		m_buildedMesh = std::make_shared<MeshNode>();
-		m_buildedMesh->SetName("Root");
+		assert(m_indicesVec.empty());
 
-		m_buildedMesh->Shader = program;
-		m_buildedMesh->UniformBuffer = program->CreateAssociatedUniformStorage();
+		m_buildedMesh.Shader = program;
+		m_buildedMesh.UniformBuffer = program->CreateAssociatedUniformStorage();
 
 		BuildVAO();
-		TraverseNode(m_scene->mRootNode, m_buildedMesh);
 
-		return std::move(m_buildedMesh);
+		auto meshNode = std::make_shared<MeshNode>();
+		meshNode->SetName("Root");
+		meshNode->SetMesh(std::move(m_buildedMesh));
+
+		TraverseNode(m_scene->mRootNode, meshNode);
+
+		return meshNode;
 	}
 
 protected:
+	Mesh m_buildedMesh;
 	std::filesystem::path m_scenePath;
 	Assimp::Importer m_importer;
 	const aiScene* m_scene;
@@ -55,36 +58,44 @@ protected:
 	std::vector<glm::vec3> m_normalsVec;
 	std::vector<GLuint> m_indicesVec;
 
-	std::vector<GLint> m_meshIndexOffsets;
-
 protected:
-	void AddMesh(const aiMesh* _mesh)
+	void AddMesh(const aiMesh* mesh)
 	{
 		const auto vertexOffset = static_cast<GLuint>(m_verticesVec.size());
+		const auto previousIndexOffset = m_indicesVec.size();
 
-		m_meshIndexOffsets.push_back(m_indicesVec.size());
+		m_verticesVec.insert(m_verticesVec.end(), reinterpret_cast<glm::vec3*>(mesh->mVertices), reinterpret_cast<glm::vec3*>(mesh->mVertices) + mesh->mNumVertices);
+		m_texCoordVec.insert(m_texCoordVec.end(), reinterpret_cast<glm::vec3*>(mesh->mTextureCoords[0]), reinterpret_cast<glm::vec3*>(mesh->mTextureCoords[0]) + mesh->mNumVertices);
+		m_normalsVec.insert(m_normalsVec.end(), reinterpret_cast<glm::vec3*>(mesh->mNormals), reinterpret_cast<glm::vec3*>(mesh->mNormals) + mesh->mNumVertices);
 
-		m_verticesVec.insert(m_verticesVec.end(), reinterpret_cast<glm::vec3*>(_mesh->mVertices), reinterpret_cast<glm::vec3*>(_mesh->mVertices) + _mesh->mNumVertices);
-		m_texCoordVec.insert(m_texCoordVec.end(), reinterpret_cast<glm::vec3*>(_mesh->mTextureCoords[0]), reinterpret_cast<glm::vec3*>(_mesh->mTextureCoords[0]) + _mesh->mNumVertices);
-		m_normalsVec.insert(m_normalsVec.end(), reinterpret_cast<glm::vec3*>(_mesh->mNormals), reinterpret_cast<glm::vec3*>(_mesh->mNormals) + _mesh->mNumVertices);
-
-		for (size_t j = 0; j < _mesh->mNumFaces; ++j)
+		for (size_t j = 0; j < mesh->mNumFaces; ++j)
 		{
-			const aiFace& face = _mesh->mFaces[j];
+			const aiFace& face = mesh->mFaces[j];
 			assert(face.mNumIndices == 3);
 
 			m_indicesVec.push_back(face.mIndices[0] + vertexOffset);
 			m_indicesVec.push_back(face.mIndices[2] + vertexOffset);
 			m_indicesVec.push_back(face.mIndices[1] + vertexOffset);
 		}
+
+		SubMesh submesh;
+		submesh.UniformBuffer = m_buildedMesh.Shader->CreateAssociatedUniformStorage();
+		submesh.Primitives.push_back(std::make_unique<GlDrawElementsPrimitive>(
+			GlDrawPrimitiveType::Triangles,
+			mesh->mNumFaces * 3,
+			GlDrawElementsPrimitive::IndicesType::UnsignedInt,
+			reinterpret_cast<void*>(previousIndexOffset * sizeof(GLuint))
+			));
+
+		TranslateMaterial(m_scene->mMaterials[mesh->mMaterialIndex], submesh);
+
+		m_buildedMesh.Submeshes.push_back(std::move(submesh));
 	}
 
 	void BuildVAO()
 	{
 		for (unsigned i = 0; i < m_scene->mNumMeshes; ++i)
-		{
 			AddMesh(m_scene->mMeshes[i]);
-		}
 
 		auto& rf = m_renderer->GetResourceFactory();
 		auto vao = rf.CreateVertexArray();
@@ -93,10 +104,11 @@ protected:
 		vao->SetVertexBuffer(3, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_normalsVec.size() * sizeof(glm::vec3), m_normalsVec.data()));
 		vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size() * sizeof(GLuint), m_indicesVec.data()));
 
-		m_buildedMesh->VertexArray = vao;
+		m_buildedMesh.VertexArray = vao;
 	}
 
-	void TranslateMaterial(const aiMaterial* material, std::shared_ptr<DrawableNode> node)
+	//TODO: translate materials once
+	void TranslateMaterial(const aiMaterial* material, SubMesh& submesh)
 	{
 
 		const static std::tuple<aiTextureType, unsigned, std::string_view> knownTextureFlavours[] =
@@ -113,13 +125,9 @@ protected:
 			if (const aiTexture* embeddedTexture = m_scene->GetEmbeddedTexture(path))
 			{
 				if (embeddedTexture->mHeight)
-				{
 					throw AT2Exception(AT2Exception::ErrorCase::Texture, "reading raw texture from memory not implemented yet");
-				}
-				else
-				{
-					return TextureLoader::LoadTexture(m_renderer, embeddedTexture->pcData, embeddedTexture->mWidth);
-				}
+
+				return TextureLoader::LoadTexture(m_renderer, embeddedTexture->pcData, embeddedTexture->mWidth);
 			}
 
 			//it's not embedded
@@ -138,8 +146,9 @@ protected:
 				if (auto texture = loadTexture(path.C_Str()))
 				{
 					textures.emplace(name, texture);
-					node->UniformBuffer->SetUniform(str{name}, texture);
-					node->Textures.emplace(std::move(texture));
+
+					submesh.UniformBuffer->SetUniform(str{name}, texture);
+					submesh.Textures.emplace(std::move(texture));
 				}
 			}
 		}
@@ -147,35 +156,19 @@ protected:
 
 	void TraverseNode(const aiNode* node, std::shared_ptr<Node> baseNode)
 	{
-		if (node->mNumMeshes)
+		for (unsigned i = 0; i < node->mNumMeshes; i++)
 		{
-			for (unsigned i = 0; i < node->mNumMeshes; i++)
-			{
-				const int meshIndex = node->mMeshes[i];
-				const aiMesh* mesh = m_scene->mMeshes[meshIndex];
-				const aiMaterial* material = m_scene->mMaterials[mesh->mMaterialIndex];
+			const int meshIndex = node->mMeshes[i];
+			const aiMesh* mesh = m_scene->mMeshes[meshIndex];
 
-				//TODO: don't multiply nodes when materials are the same
-			    auto submesh = std::make_shared<DrawableNode>();
-				submesh->SetName("Submesh "s + mesh->mName.C_Str());
-				submesh->SetTransform(ConvertMatrix(node->mTransformation));
-                submesh->UniformBuffer = m_buildedMesh->Shader->CreateAssociatedUniformStorage();
+			//TODO: don't multiply nodes when materials are the same
+			auto submesh = std::make_shared<DrawableNode>();
+			submesh->SetName("Submesh "s + mesh->mName.C_Str());
+			submesh->SetTransform(ConvertMatrix(node->mTransformation));
+			submesh->SubmeshIndex = meshIndex;
 
-				TranslateMaterial(material, submesh);
-				submesh->Primitives.push_back(std::make_unique<GlDrawElementsPrimitive>(
-					GlDrawPrimitiveType::Triangles, 
-					mesh->mNumFaces * 3, 
-					GlDrawElementsPrimitive::IndicesType::UnsignedInt,
-                    reinterpret_cast<void*>(m_meshIndexOffsets[meshIndex] * sizeof(GLuint))
-				));
-
-				baseNode->AddChild(std::move(submesh));
-			}
+			baseNode->AddChild(std::move(submesh));
 		}
-		//else
-		//{
-		//	transform = ConvertMatrix(node->mTransformation) * transform;
-		//}
 
 		for (size_t i = 0; i < node->mNumChildren; i++)
 		{
@@ -223,8 +216,6 @@ NodeRef MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& fil
     Assimp::Importer importer;
     auto* scene = importer.ReadFile(filename, flags);
 
-	GlMeshBuilder builder { renderer, scene };
-	
-
+    MeshBuilder builder { renderer, scene };
     return builder.Build(std::move(program));
 }

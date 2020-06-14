@@ -77,7 +77,7 @@ void main()
 
 	vec3 lighting = computeLighting(mat3(u_matView) * u_sunDirection, 0.0, u_lightColor, normal, normalize(-fragPos), roughness, F0, color.rgb);
 	lighting += computeIBL(20, normal, normalize(-fragPos), roughness, F0);
-	//lighting *= 0.1;
+	lighting *= 5.0;
 	
 	if (color.a < 0.5)
 		FragColor = getReflection(-normalize(fragPos), 0)*2.0;

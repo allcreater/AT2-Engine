@@ -34,10 +34,11 @@ namespace AT2
 		BufferDataType Type;
 		unsigned char Count;
 		unsigned int Stride;
+		unsigned int Offset;
 		bool IsNormalized;
 
 		BufferTypeInfo() = default;
-		BufferTypeInfo(BufferDataType type, unsigned char count, unsigned int stride, bool isNormalized = false) : Type(type), Count(count), Stride(stride), IsNormalized(isNormalized) {}
+		BufferTypeInfo(BufferDataType type, unsigned char count, unsigned int stride, unsigned int offset = 0, bool isNormalized = false) : Type(type), Count(count), Stride(stride), Offset(offset), IsNormalized(isNormalized) {}
 	};
 
 
@@ -45,7 +46,7 @@ namespace AT2
 	{
 		template<typename T> BufferTypeInfo MakeBufferTypeInfo(BufferDataType type, unsigned char count, bool isNormalized = false)
 		{
-			return BufferTypeInfo(type, count, sizeof(T), isNormalized);
+			return BufferTypeInfo(type, count, sizeof(T), 0, isNormalized);
 		}
 
 		//scalars
