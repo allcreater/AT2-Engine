@@ -62,6 +62,19 @@ inline GLenum TranslateExternalType(BufferDataType type)
 
     return 0;
 }
+inline GLenum TranslateBufferType(VertexBufferType bufferType)
+{
+    switch (bufferType)
+    {
+    case VertexBufferType::ArrayBuffer: return GL_ARRAY_BUFFER;
+    case VertexBufferType::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
+    case VertexBufferType::UniformBuffer: return GL_UNIFORM_BUFFER;
+    default:
+        assert(false); //not supported yet :(
+    }
+}
+
+
 
 inline GLenum TranslateTextureTarget(const Texture& texture)
 {

@@ -119,10 +119,10 @@ public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 
-	virtual void SetIndexBuffer(const std::shared_ptr<IVertexBuffer>& buffer) = 0;
+	virtual void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer) = 0;
 	virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
 	//virtual std::shared_ptr<IVertexBuffer> GetOrSetIndexBuffer() const;
-	virtual void SetVertexBuffer(unsigned int index, const std::shared_ptr<IVertexBuffer>& buffer) = 0;
+	virtual void SetVertexBuffer(unsigned int index, std::shared_ptr<IVertexBuffer> buffer) = 0;
 	virtual void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) = 0;
 	virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
 };
@@ -140,11 +140,12 @@ public:
 	virtual void Unbind() = 0;
 	virtual void BuildMipmaps() = 0;
 
-	virtual int GetCurrentModule() const  = 0;
-	virtual unsigned int GetId() const = 0;
-	virtual glm::uvec3 GetSize() const = 0;
+	virtual int GetCurrentModule() const noexcept = 0;
+	virtual unsigned int GetId() const noexcept = 0;
+	virtual glm::uvec3 GetSize() const noexcept = 0;
+    virtual size_t GetDataLength() const noexcept = 0;
 
-	virtual const Texture& GetType() const = 0;
+	virtual const Texture& GetType() const noexcept = 0;
 	virtual void SetWrapMode(TextureWrapMode wrapMode) = 0;
 	virtual const TextureWrapMode& GetWrapMode() const = 0;
 

@@ -37,14 +37,13 @@ unsigned int GlRendererCapabilities::GetMaxNumberOfVertexAttributes() const
 
 GlRenderer::GlRenderer()
 {
-	//TODO: return it
     glDebugMessageCallback(GlErrorCallback, this);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
-	m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
-	m_resourceFactory = std::make_unique<GlResourceFactory>(this);
-	m_stateManager = std::make_unique<StateManager>(*m_rendererCapabilities);
+    m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
+    m_resourceFactory = std::make_unique<GlResourceFactory>(this);
+    m_stateManager = std::make_unique<StateManager>(*m_rendererCapabilities);
 }
 
 GlRenderer::~GlRenderer()

@@ -1,6 +1,6 @@
 #include "TextureLoader.h"
 
-#include "OpenGL/GlTexture.h"
+#include "AT2.h"
 
 #ifdef USE_GLI
 #include <gli/gli.hpp>
@@ -177,7 +177,6 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const
 	return texture;
 }
 
-//TODO: make API-independ
 TextureRef TextureLoader::LoadTexture(std::shared_ptr<IRenderer> renderer, const str& filename)
 {
 	return Load(std::move(renderer), [filename]

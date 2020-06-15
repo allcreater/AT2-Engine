@@ -4,10 +4,23 @@
 using namespace AT2;
 
 
-
 GLenum GlTexture::GetTarget() const
 {
     return Mappings::TranslateTextureTarget(m_flavor);
+}
+
+void GlTexture::ReadChannelSizes()
+{
+    const auto target = GetTarget();
+    glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_RED_SIZE, 1, &m_channelSizes.red);
+    glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_GREEN_SIZE, 1, &m_channelSizes.green);
+    glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_BLUE_SIZE, 1, &m_channelSizes.blue);
+    glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_ALPHA_SIZE, 1, &m_channelSizes.alpha);
+    glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_DEPTH_SIZE, 1, &m_channelSizes.depth);
+    glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_STENCIL_SIZE, 1, &m_channelSizes.stencil);
+    glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_SHARED_SIZE, 1, &m_channelSizes.shared);
+
+    m_dataSize = m_size.x * m_size.y * m_size.z * m_channelSizes.InBytes();
 }
 
 
@@ -93,6 +106,7 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m
         }
     }, flavor);
 
+    ReadChannelSizes();
 }
 
 GlTexture::~GlTexture()

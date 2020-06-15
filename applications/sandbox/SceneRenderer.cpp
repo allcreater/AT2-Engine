@@ -200,11 +200,12 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
             quadMesh->Submeshes[0].UniformBuffer = uniformStorage;
         }
         
-        renderer->SetViewport(AABB2d({ 0, 0 }, framebuffer_size));
         dirtyFramebuffers = false;
     }
 
     SetupCamera(camera);
+
+    renderer->SetViewport(AABB2d({0, 0}, framebuffer_size));
 
     gBufferFBO->Bind();
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));

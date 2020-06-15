@@ -75,8 +75,8 @@ private:
 
 		Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D{ {64, 64, 64}, 1 }, TextureFormats::RGBA8);
 		{
-			const int l = 64 * 64 * 64 * 4;
-			auto arr = std::make_unique<GLubyte[]>(l); //TODO: make basic texture data available without std::holds_alternative =/
+			const int l = Noise3Tex->GetDataLength();
+			auto arr = std::make_unique<GLubyte[]>(l);
 			for (size_t i = 0; i < l; ++i)
 				arr[i] = (rand() & 0xFF);
 			Noise3Tex->SubImage3D({ 0, 0, 0 }, { 64, 64, 64 }, 0, TextureFormats::RGBA8, arr.get());

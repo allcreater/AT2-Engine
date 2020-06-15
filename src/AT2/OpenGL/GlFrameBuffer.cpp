@@ -110,7 +110,6 @@ void GlFrameBuffer::Bind()
     for (GLenum i = 0; i < numAttachements; ++i)
         buffers[i] = (m_colorAttachements[i]) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
 
-    glViewport(0, 0, m_size.x, m_size.y); //TODO
 
     glDrawBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
 }

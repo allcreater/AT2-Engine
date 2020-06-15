@@ -5,9 +5,7 @@
 
 namespace AT2
 {
-
-	//TODO: make it more useful, something like DrawableNode?
-	class IDrawable
+	class [[deprecated]] IDrawable
 	{
 	public:
 		virtual void Draw(const std::shared_ptr<IRenderer>& renderer) = 0;

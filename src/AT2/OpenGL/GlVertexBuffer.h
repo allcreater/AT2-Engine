@@ -17,7 +17,7 @@ public:
 	VertexBufferType GetType() const override			{ return m_publicType; }
 
 	const BufferTypeInfo& GetDataType() const override	{ return m_typeInfo; }
-	void				SetDataType(const BufferTypeInfo& typeInfo) override;
+    void SetDataType(const BufferTypeInfo &typeInfo) override { m_typeInfo = typeInfo; }
 
 	size_t GetLength() const override					{ return m_length; }
 
@@ -25,12 +25,23 @@ public:
 	void SetData(size_t length, const void* data) override;
 
 protected:
-	enum class GlBufferType : GLenum//TODO: Not full list of types!
-	{
-		ArrayBuffer = GL_ARRAY_BUFFER,
-		ElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
-		UniformBuffer = GL_UNIFORM_BUFFER
-	};
+    enum class GlBufferType : GLenum//TODO: properly handle all of them :)
+    {
+        ArrayBuffer = GL_ARRAY_BUFFER,
+        AtomicCounterBuffer = GL_ATOMIC_COUNTER_BUFFER,
+        CopyReadBuffer = GL_COPY_READ_BUFFER,
+        CopyWriteBuffer = GL_COPY_WRITE_BUFFER,
+        DispatchIndirectBuffer = GL_DISPATCH_INDIRECT_BUFFER,
+        DrawIndirectBuffer = GL_DRAW_INDIRECT_BUFFER,
+        ElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
+        PixelPackBuffer = GL_PIXEL_PACK_BUFFER,
+        PixelUnpackBuffer = GL_PIXEL_UNPACK_BUFFER,
+        QueryBuffer = GL_QUERY_BUFFER,
+        ShaderStorageBuffer = GL_SHADER_STORAGE_BUFFER,
+        TextureBuffer = GL_TEXTURE_BUFFER,
+        TransformFeedbackBuffer = GL_TRANSFORM_FEEDBACK_BUFFER,
+        UniformBuffer = GL_UNIFORM_BUFFER
+    };
 
 	enum class GlBufferUsageHint : GLenum
 	{
@@ -45,37 +56,7 @@ protected:
 		DynamicCopy = GL_DYNAMIC_COPY
 	};
 
-	enum class GlBufferDataType : GLenum
-	{
-		//both for glVertexAttribIPointer and glVertexAttribPointer
-		Byte = GL_BYTE,
-		UByte = GL_UNSIGNED_BYTE,
-		Short = GL_SHORT,
-		UShort = GL_UNSIGNED_SHORT,
-		Int = GL_INT,
-		UInt = GL_UNSIGNED_INT,
-		//for glVertexAttribPointer only
-		HalfFloat = GL_HALF_FLOAT,
-		Float = GL_FLOAT,
-		Double = GL_DOUBLE,
-		Fixed = GL_FIXED,
-		//???
-		Int2_10_10_10 = GL_INT_2_10_10_10_REV,
-		UInt2_10_10_10 = GL_UNSIGNED_INT_2_10_10_10_REV,
-		UInt10F_11F_11F = GL_UNSIGNED_INT_10F_11F_11F_REV
-	};
 
-public:
-	struct GlBufferTypeInfo : public BufferTypeInfo
-	{
-		//BufferTypeInfo();
-
-		GlBufferDataType GlDataType;
-	};
-
-protected:
-	GlBufferType		DetermineGlBufferType (VertexBufferType bufferType) const;
-	GlBufferDataType	DetermineGlDataType (const BufferDataType& dataType) const;
 
 protected:
 	GLuint m_id;
@@ -84,7 +65,7 @@ protected:
 	VertexBufferType m_publicType;
 	GlBufferType m_privateType;
 	GlBufferUsageHint m_usageHint = GlBufferUsageHint::StaticDraw;
-	GlBufferTypeInfo m_typeInfo;
+	BufferTypeInfo m_typeInfo;
 };
 
 }
