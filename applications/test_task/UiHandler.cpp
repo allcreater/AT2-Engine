@@ -4,6 +4,7 @@
 
 #include <random>
 #include <glm/gtx/vec_swizzle.hpp>
+#include <utility>
 
 using namespace AT2;
 using namespace AT2::UI;
@@ -36,9 +37,9 @@ static std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_
 
 struct PlotCurveSwitchingAnimation : public IAnimation
 {
-	PlotCurveSwitchingAnimation(float duration, std::weak_ptr<AT2::UI::Plot> plotNode, std::string_view hidingCurveName, std::string_view appearingCurveName) :
+	PlotCurveSwitchingAnimation(float duration, std::weak_ptr<Plot> plotNode, std::string_view hidingCurveName, std::string_view appearingCurveName) :
 		m_Duration(duration),
-		m_plotNode(plotNode),
+		m_plotNode(std::move(plotNode)),
 		m_hidingCurveName(hidingCurveName),
 		m_appearingCurveName(appearingCurveName)
 	{
@@ -73,9 +74,9 @@ private:
 	std::string m_hidingCurveName, m_appearingCurveName;
 };
 
-UiRenderer::UiRenderer(std::shared_ptr<AT2::IRenderer>& renderer, std::shared_ptr<AT2::UI::Node> node):
+UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_ptr<Node> node):
     m_renderer(renderer),
-    m_uiRoot(node)
+    m_uiRoot(std::move(node))
 {
     auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
         {
@@ -85,7 +86,7 @@ UiRenderer::UiRenderer(std::shared_ptr<AT2::IRenderer>& renderer, std::shared_pt
 
     auto texture = AT2::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
 
-    m_quadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(renderer);
+    m_quadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(*renderer);
     m_quadDrawable->Shader = postprocessShader;
     m_quadDrawable->Textures = {texture};
     {
@@ -104,31 +105,33 @@ void UiRenderer::Draw()
     {
         renderer->SetViewport(AABB2d({}, m_windowSize));
         m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4(1.0f));
-        m_quadDrawable->Draw(renderer);
+        m_quadDrawable->Draw(*renderer);
 
-        m_uiRoot->TraverseBreadthFirst(std::bind(&UiRenderer::RenderNode, this, std::placeholders::_1));
+        m_uiRoot->TraverseBreadthFirst( [this](const std::shared_ptr<Node>& node) {
+            RenderNode(*node);
+        });
     }
 }
 
-void UiRenderer::RenderNode(const std::shared_ptr<Node>& node)
+void UiRenderer::RenderNode(const Node& node)
 {
     if (auto renderer = m_renderer.lock())
     {
-        auto aabb = node->GetScreenPosition();
+        auto aabb = node.GetScreenPosition();
         renderer->SetViewport(aabb);
 
         //m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
         //m_quadDrawable->Draw(m_renderer.lock());
 
-        if (auto nr = node->GetNodeRenderer().lock())
-            nr->Draw(renderer);
+        if (auto nr = node.GetNodeRenderer().lock())
+            nr->Draw(*renderer);
     }
 }
 
-glm::vec4 UiRenderer::DebugColor(const std::shared_ptr<Node>& node)
+glm::vec4 UiRenderer::DebugColor(const Node& node)
 {
     std::hash<std::string> hash_fn;
-    auto h = hash_fn(std::string(node->GetName()));
+    auto h = hash_fn(std::string(node.GetName()));
     return glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0);
 }
 
@@ -157,7 +160,7 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 	}
 
 
-	auto windowRendererSharedData = std::make_shared<WindowRendererSharedInfo>(renderer);
+	auto windowRendererSharedData = std::make_shared<WindowRendererSharedInfo>(*renderer);
 	m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
 	panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, windowRendererSharedData, glm::vec2(0, 0), glm::vec4(0.5, 0.5, 0.5, 0.5)));
 	button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, windowRendererSharedData, glm::vec2(4, 4), glm::vec4(2.0, 0.5, 0.5, 0.6)));

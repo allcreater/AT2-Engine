@@ -18,9 +18,9 @@ public:
 	void Bind() override;
 	unsigned int GetId() const override { return m_id; }
 
-	void SetColorAttachement(unsigned int attachementNumber, std::shared_ptr<ITexture> texture) override;
+	void SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<ITexture>& texture) override;
 	std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const override;
-	void SetDepthAttachement(const std::shared_ptr<ITexture> texture) override;
+	void SetDepthAttachement(const std::shared_ptr<ITexture>& texture) override;
 	std::shared_ptr<ITexture> GetDepthAttachement() const override;
 	glm::ivec2 GetActualSize() const override { return m_size; }
 
@@ -55,7 +55,7 @@ public:
 		return 0;
 	}
 
-	void SetColorAttachement(unsigned int attachementNumber, std::shared_ptr<ITexture> texture) override
+	void SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<ITexture>& texture) override
 	{
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}
@@ -63,7 +63,7 @@ public:
 	{
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}
-	void SetDepthAttachement(const std::shared_ptr<ITexture> texture) override
+	void SetDepthAttachement(const std::shared_ptr<ITexture>& texture) override
 	{
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}

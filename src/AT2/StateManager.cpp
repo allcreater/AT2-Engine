@@ -46,7 +46,7 @@ void StateManager::BindTextures(const TextureSet& _textures)
 	}
 }
 
-void StateManager::BindFramebuffer(std::shared_ptr<IFrameBuffer> _framebuffer)
+void StateManager::BindFramebuffer(const std::shared_ptr<IFrameBuffer>& _framebuffer)
 {
 	assert(_framebuffer);
 
@@ -54,10 +54,10 @@ void StateManager::BindFramebuffer(std::shared_ptr<IFrameBuffer> _framebuffer)
 		return;
 
 	_framebuffer->Bind();
-	m_activeFramebuffer = std::move(_framebuffer);
+	m_activeFramebuffer = _framebuffer;
 }
 
-void StateManager::BindShader(std::shared_ptr<IShaderProgram> _shader)
+void StateManager::BindShader(const std::shared_ptr<IShaderProgram>& _shader)
 {
 	assert(_shader);
 
@@ -65,10 +65,10 @@ void StateManager::BindShader(std::shared_ptr<IShaderProgram> _shader)
 		return;
 
 	_shader->Bind();
-	m_activeShader = std::move(_shader);
+	m_activeShader = _shader;
 }
 
-void StateManager::BindVertexArray(std::shared_ptr<IVertexArray> _vertexArray)
+void StateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexArray)
 {
     if (m_activeVertexArray && m_activeVertexArray == _vertexArray)
         return;
@@ -82,8 +82,7 @@ void StateManager::BindVertexArray(std::shared_ptr<IVertexArray> _vertexArray)
             : std::optional<BufferDataType>{};
     }
 
-     
-    m_activeVertexArray = std::move(_vertexArray);
+    m_activeVertexArray = _vertexArray;
 }
 
 //TextureSet& StateManager::GetActiveTextures() const

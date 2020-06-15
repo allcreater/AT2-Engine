@@ -15,7 +15,7 @@ GlFrameBuffer::~GlFrameBuffer()
 	glDeleteFramebuffers(1, &m_id);
 }
 
-void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<ITexture> abstractTexture)
+void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<ITexture>& abstractTexture)
 {
 	if (attachementNumber >= m_colorAttachements.size())
 		throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: unsupported attachement number");
@@ -57,7 +57,7 @@ void GlFrameBuffer::SetColorAttachement(unsigned int attachementNumber, const st
 		}
 	}
 
-    m_colorAttachements[attachementNumber] = texture;
+    m_colorAttachements[attachementNumber] = std::move(texture);
 }
 
 std::shared_ptr<ITexture> GlFrameBuffer::GetColorAttachement(unsigned int attachementNumber) const
@@ -68,7 +68,7 @@ std::shared_ptr<ITexture> GlFrameBuffer::GetColorAttachement(unsigned int attach
 	return m_colorAttachements[attachementNumber];
 }
 
-void GlFrameBuffer::SetDepthAttachement(const std::shared_ptr<ITexture> abstractTexture)
+void GlFrameBuffer::SetDepthAttachement(const std::shared_ptr<ITexture>& abstractTexture)
 {
 	m_dirtyFlag = true;
 

@@ -90,6 +90,6 @@ private:
 
 
 
-std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);
-std::unique_ptr<Mesh> MakeSphere(IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);
-std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer);
+std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);
+std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);
+std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer);

@@ -12,9 +12,9 @@ namespace AT2
 class MeshDrawable : public IDrawable
 {
 public:
-	void Draw(const std::shared_ptr<IRenderer>& renderer) override
+	void Draw(const IRenderer& renderer) override
 	{
-		auto& stateManager = renderer->GetStateManager();
+		auto& stateManager = renderer.GetStateManager();
 
 		stateManager.BindShader(Shader);
 		stateManager.BindVertexArray(VertexArray);
@@ -26,8 +26,6 @@ public:
 			primitive->Draw();
 	}
 
-	~MeshDrawable() {}
-
 	std::shared_ptr<IShaderProgram> Shader;
 	std::shared_ptr<IVertexArray> VertexArray;
 	std::shared_ptr<IUniformContainer> UniformBuffer;
@@ -37,8 +35,8 @@ public:
 
 public:
 
-	static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(const std::shared_ptr<IRenderer>& renderer, int segX = 32, int segY = 16);
-	static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer);
+	static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(const IRenderer& renderer, int segX = 32, int segY = 16);
+	static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(const IRenderer& renderer);
 private:
 	
 };

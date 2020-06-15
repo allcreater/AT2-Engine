@@ -104,7 +104,7 @@ static ExternalTextureFormat GetExternalFormat(ILuint externalFormat, ILuint ext
 }
 
 
-static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const std::function<bool()>& imageLoader)
+static std::shared_ptr<ITexture> Load(const std::shared_ptr<IRenderer>& renderer, const std::function<bool()>& imageLoader)
 {
 	const bool enableAutomipmaps = true;
 
@@ -177,15 +177,15 @@ static std::shared_ptr<ITexture> Load(std::shared_ptr<IRenderer> renderer, const
 	return texture;
 }
 
-TextureRef TextureLoader::LoadTexture(std::shared_ptr<IRenderer> renderer, const str& filename)
+TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, const str& filename)
 {
-	return Load(std::move(renderer), [filename]
+	return Load(renderer, [filename]
 	{
 	    return ilLoadImage(filename.c_str()) == IL_TRUE;
 	});
 }
 
-TextureRef TextureLoader::LoadTexture(std::shared_ptr<IRenderer> renderer, void* data, size_t size)
+TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, void* data, size_t size)
 {
 	if (size > std::numeric_limits<ILuint>::max())
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "DevIL does not support images more than 4GB");
@@ -194,7 +194,7 @@ TextureRef TextureLoader::LoadTexture(std::shared_ptr<IRenderer> renderer, void*
 	if (type == IL_TYPE_UNKNOWN)
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "Couldn't determine texture format while reading from memory");
 
-	return Load(std::move(renderer), [=]
+	return Load(renderer, [=]
 	{
 	    return ilLoadL(type, data, size) == IL_TRUE;
 	});

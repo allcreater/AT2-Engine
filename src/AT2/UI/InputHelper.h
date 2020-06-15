@@ -28,7 +28,7 @@ namespace AT2::UI
 		void OnMouseScroll(const glm::vec2& scrollDir);
 
 	protected:
-		bool isPointInsideNode(const std::shared_ptr<Node>& node, const glm::vec2& pos);
+		bool isPointInsideNode(const Node& node, const glm::vec2& pos);
 
 	private:
 		std::shared_ptr<Node> m_rootNode;

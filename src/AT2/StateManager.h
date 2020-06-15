@@ -13,9 +13,9 @@ public:
 
 public:
 	void BindTextures(const TextureSet& _textures) override;
-	void BindFramebuffer(std::shared_ptr<IFrameBuffer> _framebuffer) override;
-	void BindShader(std::shared_ptr<IShaderProgram> _shader) override;
-	void BindVertexArray(std::shared_ptr<IVertexArray> _vertexArray) override;
+	void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& _framebuffer) override;
+	void BindShader(const std::shared_ptr<IShaderProgram>& _shader) override;
+	void BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexArray) override;
 	//TODO: BindIndexArray?
 
 	//TextureSet& GetActiveTextures() const override;

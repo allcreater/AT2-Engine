@@ -135,8 +135,8 @@ void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
         "resources/shaders/skylight.fs.glsl" });
 
 
-    lightMesh = MakeSphere(*renderer.get(), resources.sphereLightsShader, 32, 16);
-    quadMesh = MakeFullscreenQuadDrawable(renderer);
+    lightMesh = MakeSphere(*renderer, resources.sphereLightsShader, 32, 16);
+    quadMesh = MakeFullscreenQuadDrawable(*renderer);
 }
 
 void SceneRenderer::ResizeFramebuffers(glm::ivec2 newSize)
@@ -301,7 +301,7 @@ void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program)
 
 
 
-std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY)
+std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY)
 {
     assert(segX < 1024 && segY < 1024);
 
@@ -347,7 +347,7 @@ std::shared_ptr<MeshNode> MakeTerrain(IRenderer& renderer, std::shared_ptr<IShad
     return rootNode;
 }
 
-std::unique_ptr<Mesh> MakeSphere(IRenderer& renderer, std::shared_ptr<IShaderProgram> program,  int segX, int segY)
+std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program,  int segX, int segY)
 {
     assert(segX <= 1024 && segY <= 512);
 
@@ -400,11 +400,11 @@ std::unique_ptr<Mesh> MakeSphere(IRenderer& renderer, std::shared_ptr<IShaderPro
     return mesh;
 }
 
-std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer)
+std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer)
 {
     static glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
 
-    auto& rf = renderer->GetResourceFactory();
+    auto& rf = renderer.GetResourceFactory();
     auto vao = rf.CreateVertexArray();
     vao->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, 4 * sizeof(glm::vec3), positions));
 

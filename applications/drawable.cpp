@@ -2,7 +2,7 @@
 
 #include <AT2/OpenGL/GlDrawPrimitive.h> //Unfortunately right now it don't be created abstractrly
 
-std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const std::shared_ptr<IRenderer>& renderer, int segX, int segY)
+std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const IRenderer& renderer, int segX, int segY)
 {
 	assert(segX <= 1024 && segY <= 512);
 
@@ -36,7 +36,7 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const s
 		}
 	}
 
-	auto& rf = renderer->GetResourceFactory();
+	auto& rf = renderer.GetResourceFactory();
 	
 	auto vao = rf.CreateVertexArray();
 	vao->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, normals.size() * sizeof(glm::vec3), normals.data()));
@@ -49,11 +49,11 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const s
 	return drawable;
 }
 
-std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeFullscreenQuadDrawable(const std::shared_ptr<IRenderer>& renderer)
+std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeFullscreenQuadDrawable(const IRenderer& renderer)
 {
 	static glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
 
-	auto& rf = renderer->GetResourceFactory();
+	auto& rf = renderer.GetResourceFactory();
 
 	auto vao = rf.CreateVertexArray();
 	vao->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, 4*sizeof(glm::vec3), positions));

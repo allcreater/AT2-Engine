@@ -8,7 +8,7 @@ namespace AT2
 	class [[deprecated]] IDrawable
 	{
 	public:
-		virtual void Draw(const std::shared_ptr<IRenderer>& renderer) = 0;
+		virtual void Draw(const IRenderer& renderer) = 0;
 		virtual ~IDrawable() {}
 
 	private:

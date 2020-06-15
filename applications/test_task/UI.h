@@ -17,11 +17,11 @@ namespace AT2::UI
 		}
 
 
-		void Draw(const std::shared_ptr<IRenderer>& renderer) override;
+		void Draw(const IRenderer& renderer) override;
 
 	protected:
-		void PrepareData(const std::shared_ptr<IRenderer>& renderer);
-		void Init(const std::shared_ptr<IRenderer>& renderer);
+		void PrepareData(const IRenderer& renderer);
+		void Init(const IRenderer& renderer);
 		void UpdateCanvasGeometry(const AABB2d& observingRange);
 
 	private:
@@ -37,7 +37,7 @@ namespace AT2::UI
 
 	struct WindowRendererSharedInfo
 	{
-		WindowRendererSharedInfo(const std::shared_ptr<IRenderer>& renderer);
+		WindowRendererSharedInfo(const IRenderer& renderer);
 
 		friend struct WindowRenderer;
 
@@ -57,7 +57,7 @@ namespace AT2::UI
 		{
 		}
 
-		void Draw(const std::shared_ptr<IRenderer>& renderer) override;
+		void Draw(const IRenderer& renderer) override;
 
 	private:
 		std::weak_ptr<Node> m_Control;

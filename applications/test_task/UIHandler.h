@@ -11,13 +11,13 @@ namespace AT2::UI
 	class UiRenderer
 	{
 	public:
-        UiRenderer(std::shared_ptr<AT2::IRenderer>& renderer, std::shared_ptr<AT2::UI::Node> node);
+        UiRenderer(const std::shared_ptr<AT2::IRenderer>& renderer, std::shared_ptr<AT2::UI::Node> node);
         void Draw();
 		void SetWindowSize(const glm::uvec2& windowSize) { m_windowSize = windowSize; }
 
 	private:
-        void RenderNode(const std::shared_ptr<Node>& node);
-        glm::vec4 DebugColor(const std::shared_ptr<Node>& node);
+        void RenderNode(const Node& node);
+        glm::vec4 DebugColor(const Node& node);
 
 	private:
 		std::shared_ptr<AT2::MeshDrawable> m_quadDrawable;

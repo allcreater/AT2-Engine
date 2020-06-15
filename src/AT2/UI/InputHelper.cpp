@@ -14,7 +14,7 @@ void UiInputHandler::OnMouseMove(const MousePos& mousePos)
 	bool eventCatched = false;
 
 	m_rootNode->TraverseDepthFirst([&](const std::shared_ptr<Node>& node) {
-		if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
+		if (!eventCatched && isPointInsideNode(*node, m_mousePos.getPos()))
 		{
 			if (auto& vector = m_mouseDownOnControl[0]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
 				if (EventClicked)
@@ -27,7 +27,7 @@ void UiInputHandler::OnMouseMove(const MousePos& mousePos)
 void UiInputHandler::OnMouseDown(int key)
 {
 	m_rootNode->TraverseDepthFirst([&](const std::shared_ptr<Node>& node) {
-		if (isPointInsideNode(node, m_mousePos.getPos()))
+		if (isPointInsideNode(*node, m_mousePos.getPos()))
 			m_mouseDownOnControl[key].push_back(node);
 	});
 
@@ -39,7 +39,7 @@ void UiInputHandler::OnMouseUp(int key)
 	if (key == 0)
 	{
 		m_rootNode->TraverseDepthFirst([&](const std::shared_ptr<Node>& node) {
-			if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
+			if (!eventCatched && isPointInsideNode(*node, m_mousePos.getPos()))
 			{
 				if (auto& vector = m_mouseDownOnControl[key]; std::find_if(vector.begin(), vector.end(), [&](const std::weak_ptr<Node>& n) {return n.lock() == node; }) != vector.end())
 					if (EventClicked)
@@ -56,7 +56,7 @@ void UiInputHandler::OnMouseScroll(const glm::vec2& scrollDir)
 	bool eventCatched = false;
 
 	m_rootNode->TraverseDepthFirst([&](const std::shared_ptr<Node>& node) {
-		if (!eventCatched && isPointInsideNode(node, m_mousePos.getPos()))
+		if (!eventCatched && isPointInsideNode(*node, m_mousePos.getPos()))
 		{
 			if (EventScrolled)
 				eventCatched |= EventScrolled(node, m_mousePos, scrollDir);
@@ -66,7 +66,7 @@ void UiInputHandler::OnMouseScroll(const glm::vec2& scrollDir)
 	});
 }
 
-bool UiInputHandler::isPointInsideNode(const std::shared_ptr<Node>& node, const glm::vec2& pos)
+bool UiInputHandler::isPointInsideNode(const Node& node, const glm::vec2& pos)
 {
-	return node->GetScreenPosition().IsPointInside(pos);
+	return node.GetScreenPosition().IsPointInside(pos);
 }

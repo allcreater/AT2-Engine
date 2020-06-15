@@ -9,7 +9,7 @@ LinesHelper::LinesHelper()
 
 }
 
-void LinesHelper::Draw(const std::shared_ptr<IRenderer>& renderer)
+void LinesHelper::Draw(const IRenderer& renderer)
 {
 	if (m_vertexBufferNeedUpdate)
 	{
@@ -17,7 +17,7 @@ void LinesHelper::Draw(const std::shared_ptr<IRenderer>& renderer)
 		m_vertexBufferNeedUpdate = false;
 	}
 
-	auto& stateManager = renderer->GetStateManager();
+	auto& stateManager = renderer.GetStateManager();
 	stateManager.BindVertexArray(m_VAO);
 	m_DrawPrimitive->Draw();
 }
@@ -41,9 +41,9 @@ void LinesHelper::Clear()
 	m_vertexBufferNeedUpdate = true;
 }
 
-void LinesHelper::Init(const std::shared_ptr<IRenderer>& renderer)
+void LinesHelper::Init(const IRenderer& renderer)
 {
-	auto& rf = renderer->GetResourceFactory();
+	auto& rf = renderer.GetResourceFactory();
 
 	m_VAO = rf.CreateVertexArray();
 	m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, BufferDataTypes::Vec2, 0, nullptr));
@@ -51,7 +51,7 @@ void LinesHelper::Init(const std::shared_ptr<IRenderer>& renderer)
 	//m_VAO->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, BufferDataTypes::UInt, 0, nullptr));
 }
 
-void LinesHelper::UpdateVAO(const std::shared_ptr<IRenderer>& renderer)
+void LinesHelper::UpdateVAO(const IRenderer& renderer)
 {
 	if (m_VAO == nullptr)
 		Init(renderer);

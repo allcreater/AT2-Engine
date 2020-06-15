@@ -17,12 +17,12 @@ public:
 	{
 	}
 
-	void Draw(const std::shared_ptr<IRenderer>& renderer) override
+	void Draw(const IRenderer& renderer) override
 	{
 		if (m_VAO == nullptr)
 			Init(renderer);
 
-		auto& stateManager = renderer->GetStateManager();
+		auto& stateManager = renderer.GetStateManager();
 		stateManager.BindVertexArray(m_VAO);
 		glLineWidth(1.5);
 		m_uniforms->SetUniform("u_matProjection", m_projectionMatrix);
@@ -31,7 +31,7 @@ public:
 		m_DrawPrimitive->Draw();
 	}
 
-	void RebuildFromData(const std::shared_ptr<IRenderer>& renderer, const Plot::CurveData& data)
+	void RebuildFromData(const IRenderer& renderer, const Plot::CurveData& data)
 	{
 		if (m_VAO == nullptr)
 			Init(renderer);
@@ -46,7 +46,7 @@ public:
 		m_uniforms->SetUniform("u_Color", data.GetColor());
 	}
 
-	void RefreshFromData(const std::shared_ptr<IRenderer>& renderer, const Plot::CurveData& data)
+	void RefreshFromData(const IRenderer& renderer, const Plot::CurveData& data)
 	{
 		if (m_VAO == nullptr)
 			throw AT2::AT2Exception("AT2::UI::CurveDrawable should be created before refreshing!");
@@ -60,15 +60,15 @@ public:
 		m_projectionMatrix = matProj;
 	}
 private:
-	void Init(const std::shared_ptr<IRenderer>& renderer)
+	void Init(const IRenderer& renderer)
 	{
-		auto& rf = renderer->GetResourceFactory();
+		auto& rf = renderer.GetResourceFactory();
 
 		m_VAO = rf.CreateVertexArray();
 		m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Float, 0, 0));
 
 
-		m_uniforms = renderer->GetStateManager().GetActiveShader().lock()->CreateAssociatedUniformStorage();
+		m_uniforms = renderer.GetStateManager().GetActiveShader().lock()->CreateAssociatedUniformStorage();
 	}
 
 private:
@@ -80,12 +80,12 @@ private:
 
 
 
-void PlotRenderer::Draw(const std::shared_ptr<IRenderer>& renderer)
+void PlotRenderer::Draw(const IRenderer& renderer)
 {
 	if (m_uiShader == nullptr)
 		Init(renderer);
 
-	auto& stateManager = renderer->GetStateManager();
+	auto& stateManager = renderer.GetStateManager();
 
 	stateManager.BindShader(m_uiShader);
 	m_uniformBuffer->Bind();
@@ -100,7 +100,7 @@ void PlotRenderer::Draw(const std::shared_ptr<IRenderer>& renderer)
 
 }
 
-void PlotRenderer::PrepareData(const std::shared_ptr<IRenderer>& renderer)
+void PlotRenderer::PrepareData(const IRenderer& renderer)
 {
 	if (auto controlPtr = m_Control.lock())
 	{
@@ -149,15 +149,15 @@ void PlotRenderer::UpdateCanvasGeometry(const AABB2d& observingRange)
 		AddLine(glm::vec2(observingRange.MinBound.x, y), glm::vec2(observingRange.MaxBound.x, y), glm::vec4(1.0, 1.0, 1.0, 0.3));
 }
 
-void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
+void PlotRenderer::Init(const IRenderer& renderer)
 {
-	m_uiShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+	m_uiShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
 		{
 			"resources//shaders//simple.vs.glsl",
 			"resources//shaders//simple.fs.glsl"
 		});
 
-	m_curveShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+	m_curveShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
 		{
 			"resources//shaders//curve.vs.glsl",
 			"resources//shaders//curve.fs.glsl"
@@ -168,23 +168,23 @@ void PlotRenderer::Init(const std::shared_ptr<IRenderer>& renderer)
 }
 
 
-WindowRendererSharedInfo::WindowRendererSharedInfo(const std::shared_ptr<IRenderer>& renderer)
+WindowRendererSharedInfo::WindowRendererSharedInfo(const IRenderer& renderer)
 {
 	static glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
-	auto& rf = renderer->GetResourceFactory();
+	auto& rf = renderer.GetResourceFactory();
 
 	m_VAO = rf.CreateVertexArray();
 	m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, 4 * sizeof(glm::vec3), positions));
 	m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(AT2::GlDrawPrimitiveType::TriangleFan, 0, 4);
 
-	m_Shader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+	m_Shader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
 	{
 		R"(resources/shaders/window.vs.glsl)",
 		R"(resources/shaders/window.fs.glsl)"
 	});
 }
 
-void AT2::UI::WindowRenderer::Draw(const std::shared_ptr<IRenderer>& renderer)
+void WindowRenderer::Draw(const IRenderer& renderer)
 {
 	if (m_uniforms == nullptr)
 		m_uniforms = m_SharedInfo->m_Shader->CreateAssociatedUniformStorage();
@@ -195,9 +195,9 @@ void AT2::UI::WindowRenderer::Draw(const std::shared_ptr<IRenderer>& renderer)
 		auto screenAABB = control->GetScreenPosition();
 
 		//it's preety costly and not so important, but looks nice. Until it's not bottleneck, let's continue
-		std::shared_ptr<ITexture> texture = renderer->GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
+		auto texture = renderer.GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
 
-		auto& stateManager = renderer->GetStateManager();
+		auto& stateManager = renderer.GetStateManager();
 		stateManager.BindTextures({ texture });
 		stateManager.BindShader(m_SharedInfo->m_Shader);
 		stateManager.BindVertexArray(m_SharedInfo->m_VAO);

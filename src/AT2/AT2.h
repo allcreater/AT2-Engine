@@ -77,9 +77,9 @@ public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 
-	virtual void SetColorAttachement(unsigned int attachementNumber, std::shared_ptr<ITexture> texture) = 0;
+	virtual void SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<ITexture>& texture) = 0;
 	virtual std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const = 0;
-	virtual void SetDepthAttachement(const std::shared_ptr<ITexture> texture) = 0;
+	virtual void SetDepthAttachement(const std::shared_ptr<ITexture>& texture) = 0;
 	virtual std::shared_ptr<ITexture> GetDepthAttachement() const = 0;
 
 	virtual glm::ivec2 GetActualSize() const = 0;
@@ -274,9 +274,9 @@ public:
 
 public:
 	virtual void BindTextures(const TextureSet& textures) = 0;
-	virtual void BindFramebuffer(std::shared_ptr<IFrameBuffer> framebuffer) = 0;
-	virtual void BindShader(std::shared_ptr<IShaderProgram> shader) = 0;
-	virtual void BindVertexArray(std::shared_ptr<IVertexArray> vertexArray) = 0;
+	virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
+	virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
+	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 
 	//virtual TextureSet& GetActiveTextures() const = 0;
 	virtual std::weak_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
