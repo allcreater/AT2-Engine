@@ -122,6 +122,11 @@ void GlTexture::Bind(unsigned int module)
     m_currentTextureModule = module;
 }
 
+void GlTexture::BindAsImage(unsigned module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
+{
+    glBindImageTexture(module, GetId(), level, isLayered, layer, Mappings::TranslateBufferUsage(usage), m_internalFormat);
+}
+
 void GlTexture::Unbind()
 {
     m_currentTextureModule = -1;

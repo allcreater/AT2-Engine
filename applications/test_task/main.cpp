@@ -36,7 +36,7 @@ private:
 	{
 		glewExperimental = GL_TRUE;
 		if (glewInit() != GLEW_OK)
-			throw new GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
+			throw GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
 
 		m_renderer = std::make_unique<AT2::GlRenderer>();
 

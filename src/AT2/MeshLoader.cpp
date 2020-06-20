@@ -2,17 +2,18 @@
 
 
 #include <filesystem>
-#include <assimp/scene.h>
 #include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include <assimp/pbrmaterial.h>
-
-#include <GL/glew.h>
-
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #include <map>
-#include "OpenGL/GlDrawPrimitive.h"
+
+//#include <GL/glew.h>
+
 #include "TextureLoader.h"
 
+
+using namespace std::literals;
 
 using namespace AT2;
 

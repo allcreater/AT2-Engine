@@ -25,8 +25,6 @@ const double pi = std::acos(-1);
 #include "AT2_types.hpp"
 #include "AT2_textures.hpp"
 
-using namespace std::literals;
-
 namespace AT2
 {
 
@@ -137,6 +135,8 @@ public:
 
 public:
 	virtual void Bind(unsigned int module) = 0;
+	//TODO: think about interface
+	virtual void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage = BufferUsage::ReadWrite) const = 0;
 	virtual void Unbind() = 0;
 	virtual void BuildMipmaps() = 0;
 
@@ -318,6 +318,7 @@ public:
 
 	virtual void Shutdown() = 0;
 
+	virtual void DispatchCompute(glm::uvec3 threadGroupSize) = 0;
 	//Draws count vertices connected by primitive type.
 	virtual void Draw(Primitives::Primitive type, long int first, long int count, int numInstances = 1, int baseVertex = 0) = 0;
 

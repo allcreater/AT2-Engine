@@ -9,7 +9,7 @@ using namespace AT2;
 static int GetInteger(GLenum parameter, GLint min = std::numeric_limits<GLint>::min(), GLint max = std::numeric_limits<GLint>::max())
 {
 	GLint result = 0;
-	glGetIntegerv(parameter, &result); //GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS ???
+	glGetIntegerv(parameter, &result); 
 
 	if (result < min || result > max)
 		throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
@@ -20,7 +20,7 @@ static int GetInteger(GLenum parameter, GLint min = std::numeric_limits<GLint>::
 
 unsigned int GlRendererCapabilities::GetMaxNumberOfTextureUnits() const
 {
-	return GetInteger(GL_MAX_TEXTURE_IMAGE_UNITS, 1);
+	return GetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, 1); //GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, GL_MAX_TEXTURE_IMAGE_UNITS ???
 }
 unsigned int GlRendererCapabilities::GetMaxNumberOfColorAttachements() const
 {
@@ -77,6 +77,11 @@ void GlRenderer::ClearDepth(float depth)
 
 void GlRenderer::Shutdown()
 {
+}
+
+void GlRenderer::DispatchCompute(glm::uvec3 threadGroupSize)
+{
+    glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
 }
 
 //sub-optimal but abstract :)

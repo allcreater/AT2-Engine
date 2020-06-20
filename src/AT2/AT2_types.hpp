@@ -121,6 +121,13 @@ namespace AT2
 		MirrorClampToEdge
 	};
 
+    enum class BufferUsage
+    {
+        ReadOnly,
+        ReadWrite,
+        WriteOnly
+    };
+
     namespace TextureFormats
     {
         constexpr auto RGBA8 = ExternalTextureFormat{ TextureLayout::RGBA, BufferDataType::UByte };

@@ -12,7 +12,7 @@ class GlFrameBuffer : public IFrameBuffer
 {
 public:
 	GlFrameBuffer(const IRendererCapabilities& rendererCapabilities);
-	~GlFrameBuffer();
+	~GlFrameBuffer() override;
 
 public:
 	void Bind() override;

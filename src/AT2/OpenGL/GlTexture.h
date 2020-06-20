@@ -13,6 +13,8 @@ namespace AT2
         ~GlTexture() override;
 
         void Bind(unsigned int module) override;
+        void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage = BufferUsage::ReadWrite) const;
+
         void Unbind() override;
         void BuildMipmaps() override;
         glm::uvec3 GetSize() const noexcept override { return m_size; }

@@ -40,12 +40,12 @@ struct SubMesh
 
 struct Mesh
 {
-    Mesh() = default;
-    Mesh(Mesh&&) = default;
-    Mesh& operator=(Mesh&&) = default;
+    //Mesh() = default;
+    //Mesh(Mesh&&) = default;
+    //Mesh& operator=(Mesh&&) = default;
 
-    Mesh(const Mesh&) = delete;
-    Mesh& operator=(const Mesh&) = delete;
+    //Mesh(const Mesh&) = delete;
+    //Mesh& operator=(const Mesh&) = delete;
 
     std::string Name;
     std::shared_ptr<IShaderProgram> Shader;

@@ -8,7 +8,7 @@
 #include <fstream>
 #include <optional>
 
-
+using namespace std::literals;
 using namespace AT2;
 
 constexpr std::optional<GLint> DetermineInternalFormat(ExternalTextureFormat format)
@@ -185,6 +185,8 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 					m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Geometry));
 				else if (filename.substr(filename.length() - 8) == ".fs.glsl")
 					m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Fragment));
+                else if (filename.substr(filename.length() - 8) == ".cs.glsl")
+                    m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Computational));
 				else
 					throw AT2Exception(AT2Exception::ErrorCase::Shader, "unrecognized shader type"s);
 			}

@@ -1,23 +1,15 @@
 #include "GlShaderProgram.h"
 #include "GlUniformContainer.h"
-#include <array>
+
 using namespace AT2;
 
-static const GLuint s_shaderGlType[] = { GL_VERTEX_SHADER, GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER, GL_GEOMETRY_SHADER, GL_FRAGMENT_SHADER };
+static const GLuint s_shaderGlType[] = { GL_VERTEX_SHADER, GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER, GL_GEOMETRY_SHADER, GL_FRAGMENT_SHADER, GL_COMPUTE_SHADER };
 
 static GLuint GetGlShaderType(GlShaderType _type)
 {
 	int typeIndex = (int)_type;
-	assert(typeIndex >= 0 && typeIndex <= 4);
+	assert(typeIndex >= 0 && typeIndex <= 5);
 	return s_shaderGlType[typeIndex];
-}
-
-static int GetShaderTypeIndex(GlShaderType _type)
-{
-	int typeIndex = (int)_type;
-	assert(typeIndex >= 0 && typeIndex <= 4);
-
-	return typeIndex;
 }
 
 GlShaderProgram::GlShaderProgram()
@@ -37,22 +29,20 @@ GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _te
 
 GlShaderProgram::~GlShaderProgram()
 {
+	CleanUp();
 	glDeleteProgram(m_programId);
 	
-	CleanUp();
 }
 
 void GlShaderProgram::AttachShader(const str& _code, GlShaderType _type)
 {
-	std::vector<GLuint>& shadersList = m_shaderId[GetShaderTypeIndex(_type)];
-	
 	if (_code.empty())
 		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: trying to attach empty shader");
 	
 	GLuint shaderId = LoadShader(GetGlShaderType(_type), _code);
 	glAttachShader(m_programId, shaderId);
 	
-	shadersList.push_back(shaderId);
+	m_shaderIds.push_back(shaderId);
 }
 
 bool GlShaderProgram::Compile()
@@ -123,15 +113,13 @@ GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
 
 void GlShaderProgram::CleanUp()
 {
-	for (auto& shaderList : m_shaderId)
+	for (const GLuint shaderId : m_shaderIds)
 	{
-		for (GLuint shaderId : shaderList)
-		{
-			glDetachShader(m_programId, shaderId);
-			glDeleteShader(shaderId);
-		}
-		shaderList.clear();
+		glDetachShader(m_programId, shaderId);
+		glDeleteShader(shaderId);
 	}
+
+	m_shaderIds.clear();
 }
 
 void GlShaderProgram::Bind()

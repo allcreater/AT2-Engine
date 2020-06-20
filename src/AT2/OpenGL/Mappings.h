@@ -72,9 +72,23 @@ inline GLenum TranslateBufferType(VertexBufferType bufferType)
     default:
         assert(false); //not supported yet :(
     }
+
+    return 0;
 }
 
+inline GLenum TranslateBufferUsage (BufferUsage bufferUsage)
+{
+    switch (bufferUsage)
+    {
+    case BufferUsage::ReadOnly: return GL_READ_ONLY;
+    case BufferUsage::ReadWrite: return GL_READ_WRITE;
+    case BufferUsage::WriteOnly: return GL_WRITE_ONLY;
+    default:
+        assert(false);
+    }
 
+    return 0;
+}
 
 inline GLenum TranslateTextureTarget(const Texture& texture)
 {

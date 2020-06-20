@@ -176,12 +176,12 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 	{
 		if (node->GetName() == "ButtonDatasetOne" && m_plotNode->GetOrCreateCurve(DataSet2).GetColor().a >= 0.95f)
 		{
-			m_animationsList.emplace_back(new PlotCurveSwitchingAnimation(1.0f, m_plotNode, DataSet2, DataSet1));
+			m_animationsList.push_back( std::make_unique<PlotCurveSwitchingAnimation>(1.0f, m_plotNode, DataSet2, DataSet1));
 			return true;
 		}
 		else if (node->GetName() == "ButtonDatasetTwo"  && m_plotNode->GetOrCreateCurve(DataSet1).GetColor().a >= 0.95f)
 		{
-			m_animationsList.emplace_back(new PlotCurveSwitchingAnimation(1.0f, m_plotNode, DataSet1, DataSet2));
+            m_animationsList.push_back(std::make_unique<PlotCurveSwitchingAnimation>(1.0f, m_plotNode, DataSet1, DataSet2));
 			return true;
 		}
 		return false;

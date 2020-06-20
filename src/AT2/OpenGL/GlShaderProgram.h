@@ -9,12 +9,12 @@ namespace AT2
 {
 	enum class GlShaderType
 	{
-		//Computational = GL_COMPUTE_SHADER,
 		Vertex = 0,
 		TesselationControl = 1,
 		TesselationEvaluation = 2,
 		Geometry = 3,
-		Fragment = 4
+		Fragment = 4,
+        Computational = 5
 	};
 
 	class GlShaderProgram : public IShaderProgram, public std::enable_shared_from_this<GlShaderProgram>
@@ -84,7 +84,7 @@ namespace AT2
 		
 	private:
 		GLuint m_programId {0};
-		std::vector<GLuint> m_shaderId[5];
+		std::vector<GLuint> m_shaderIds;
 		str m_name;
 	};
 }
