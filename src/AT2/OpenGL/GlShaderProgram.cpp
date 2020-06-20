@@ -15,23 +15,13 @@ static GLuint GetGlShaderType(GlShaderType _type)
 GlShaderProgram::GlShaderProgram()
 {
 	m_programId = glCreateProgram();
-}
-
-GlShaderProgram::GlShaderProgram(const str& _vs, const str& _tcs, const str& _tes, const str& _gs, const str& _fs) : GlShaderProgram()
-{
-	AttachShader(_vs, GlShaderType::Vertex);
-	AttachShader(_tcs, GlShaderType::TesselationControl);
-	AttachShader(_tes, GlShaderType::TesselationEvaluation);
-	AttachShader(_gs, GlShaderType::Geometry);
-	AttachShader(_fs, GlShaderType::Fragment);
-	Compile();
+	assert(m_programId);
 }
 
 GlShaderProgram::~GlShaderProgram()
 {
 	CleanUp();
 	glDeleteProgram(m_programId);
-	
 }
 
 void GlShaderProgram::AttachShader(const str& _code, GlShaderType _type)
@@ -39,7 +29,7 @@ void GlShaderProgram::AttachShader(const str& _code, GlShaderType _type)
 	if (_code.empty())
 		throw AT2Exception(AT2::AT2Exception::ErrorCase::Shader, "GlShaderProgram: trying to attach empty shader");
 	
-	GLuint shaderId = LoadShader(GetGlShaderType(_type), _code);
+	const GLuint shaderId = LoadShader(GetGlShaderType(_type), _code);
 	glAttachShader(m_programId, shaderId);
 	
 	m_shaderIds.push_back(shaderId);
@@ -73,7 +63,7 @@ std::shared_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStora
 
 GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
 {
-	GLuint shader = glCreateShader(_shaderType);
+	const GLuint shader = glCreateShader(_shaderType);
 
 	const GLchar* data = _text.c_str();
 	auto dataLength = static_cast<GLint>(_text.length());
@@ -129,19 +119,54 @@ void GlShaderProgram::Bind()
 
 bool GlShaderProgram::IsActive() const
 {
-	GLint activeProgramId;
-	glGetIntegerv(GL_CURRENT_PROGRAM, &activeProgramId);
+    GLint activeProgramId;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &activeProgramId);
 
-	return m_programId == activeProgramId;
+    return activeProgramId > 0 && m_programId == static_cast<GLuint>(activeProgramId);
 }
 
 void GlShaderProgram::SetUBO(const str& blockName, unsigned int index)
 {
-	GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
+	const GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
 	if (blockIndex != GL_INVALID_INDEX)
 		glUniformBlockBinding(m_programId, blockIndex, index);
 	else
 		Log::Warning() << "Uniform block " << blockName << "not found" << std::endl;
+}
+
+void GlShaderProgram::SetUniform(const str &name, Uniform value)
+{
+    using namespace glm;
+
+    const auto location = glGetUniformLocation(m_programId, name.c_str());
+
+    std::visit(Utils::overloaded {
+        [&](int x)           { glProgramUniform1i(m_programId, location, x); },
+        [&](const ivec2& x)  { glProgramUniform2iv(m_programId, location, 1, value_ptr(x)); },
+        [&](const ivec3& x)  { glProgramUniform3iv(m_programId, location, 1, value_ptr(x)); },
+        [&](const ivec4& x)  { glProgramUniform4iv(m_programId, location, 1, value_ptr(x)); },
+
+        [&](unsigned int x)  { glProgramUniform1ui(m_programId, location, x); },
+        [&](const uvec2& x)  { glProgramUniform2uiv(m_programId, location, 1, value_ptr(x)); },
+        [&](const uvec3& x)  { glProgramUniform3uiv(m_programId, location, 1, value_ptr(x)); },
+        [&](const uvec4& x)  { glProgramUniform4uiv(m_programId, location, 1, value_ptr(x)); },
+
+        [&](float x)         { glProgramUniform1f(m_programId, location, x); },
+        [&](const vec2& x)   { glProgramUniform2fv(m_programId, location, 1, value_ptr(x)); },
+        [&](const vec3& x)   { glProgramUniform3fv(m_programId, location, 1, value_ptr(x)); },
+        [&](const vec4& x)   { glProgramUniform4fv(m_programId, location, 1, value_ptr(x)); },
+        [&](const mat2& x)   { glProgramUniformMatrix2fv(m_programId, location, 1, false, value_ptr(x)); },
+        [&](const mat3& x)   { glProgramUniformMatrix3fv(m_programId, location, 1, false, value_ptr(x)); },
+        [&](const mat4& x)   { glProgramUniformMatrix4fv(m_programId, location, 1, false, value_ptr(x)); },
+
+        [&](double x)        { glProgramUniform1d(m_programId, location, x); },
+        [&](const dvec2& x)  { glProgramUniform2dv(m_programId, location, 1, value_ptr(x)); },
+        [&](const dvec3& x)  { glProgramUniform3dv(m_programId, location, 1, value_ptr(x)); },
+        [&](const dvec4& x)  { glProgramUniform4dv(m_programId, location, 1, value_ptr(x)); },
+        [&](const dmat2& x)  { glProgramUniformMatrix2dv(m_programId, location, 1, false, value_ptr(x)); },
+        [&](const dmat3& x)  { glProgramUniformMatrix3dv(m_programId, location, 1, false, value_ptr(x)); },
+        [&](const dmat4& x)  { glProgramUniformMatrix4dv(m_programId, location, 1, false, value_ptr(x)); }
+    }, value);
 }
 
 std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformBlockInfo(const str& blockName) const

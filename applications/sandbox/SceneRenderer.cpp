@@ -17,7 +17,7 @@ void RenderVisitor::Visit(Node& node)
 
     auto &stateManager = scene_renderer.renderer->GetStateManager();
 
-    if (const auto meshNode = dynamic_cast<MeshNode*>(&node))
+    if (const auto* meshNode = dynamic_cast<MeshNode*>(&node))
     {
         active_mesh = &meshNode->GetMesh(); //TODO: some kind of RenderContext?
 
@@ -27,17 +27,15 @@ void RenderVisitor::Visit(Node& node)
         if (active_mesh->UniformBuffer)
             active_mesh->UniformBuffer->Bind();
     }
-    else if (const auto submeshNode = dynamic_cast<DrawableNode*>(&node))
+    else if (const auto* submeshNode = dynamic_cast<DrawableNode*>(&node))
     {
         if (!active_mesh)
             return;
 
+        stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
+        stateManager.GetActiveShader()->SetUniform("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
+
         const auto& submesh = active_mesh->Submeshes[submeshNode->SubmeshIndex];
-        if (submesh.UniformBuffer)
-        {
-            submesh.UniformBuffer->SetUniform("u_matModel", transforms.getModelView());
-            submesh.UniformBuffer->SetUniform("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
-        }
         scene_renderer.DrawSubmesh(submesh);
     }
 
@@ -57,17 +55,25 @@ void LightRenderVisitor::Visit(Node& node)
 {
     transforms.pushModelView(node.GetTransform());
 
-    if (auto light = dynamic_cast<LightNode*>(&node))
+    if (const auto* lightNode = dynamic_cast<LightNode*>(&node))
     {
-        if (std::holds_alternative<SphereLight>(light->GetFlavor()))
+        if (std::holds_alternative<SphereLight>(lightNode->GetFlavor()))
         {
             collectedLights.push_back({
                 transforms.getModelView() * glm::vec4{0,0,0,1},
-                light->GetIntensity(),
-                light->GetEffectiveRadius()
+                lightNode->GetIntensity(),
+                lightNode->GetEffectiveRadius()
+            });
+        }
+        else if (const auto* directionalLight = std::get_if<DirectionalLight>(&lightNode->GetFlavor()))
+        {
+            collectedDirectionalLights.push_back({
+                lightNode->GetIntensity(),
+                glm::mat3(transforms.getModelView()) * directionalLight->Direction
             });
         }
     }
+
 }
 
 void LightRenderVisitor::UnVisit(Node& node)
@@ -390,7 +396,6 @@ std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<ISha
     mesh->VertexArray->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, indices.size() * sizeof(glm::uint), indices.data()));
 
     mesh->Shader = program;
-    mesh->UniformBuffer = program->CreateAssociatedUniformStorage();
 
     //don't know how to make it better
     SubMesh subMesh;

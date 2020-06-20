@@ -171,6 +171,10 @@ public:
 	virtual bool IsActive() const = 0;
 	virtual bool Compile() = 0;
 	virtual std::shared_ptr<IUniformContainer> CreateAssociatedUniformStorage() = 0;
+
+	//Warning: Shader reloading/relinking will invalidate that state
+	virtual void	SetUBO(const str& blockName, unsigned int index) = 0;
+	virtual void	SetUniform(const str& name, Uniform value) = 0;
 };
 
 class IDrawPrimitive
@@ -279,9 +283,9 @@ public:
 	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 
 	//virtual TextureSet& GetActiveTextures() const = 0;
-	virtual std::weak_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
-	virtual std::weak_ptr<IShaderProgram> GetActiveShader() const = 0;
-	virtual std::weak_ptr<IVertexArray> GetActiveVertexArray() const = 0;
+	virtual const std::shared_ptr<IFrameBuffer>& GetActiveFrameBuffer() const = 0;
+	virtual const std::shared_ptr<IShaderProgram>& GetActiveShader() const = 0;
+	virtual const std::shared_ptr<IVertexArray>& GetActiveVertexArray() const = 0;
 
 	virtual std::optional<BufferDataType> GetIndexDataType() const noexcept = 0;
 };

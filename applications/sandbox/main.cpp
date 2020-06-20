@@ -6,7 +6,6 @@
 #include <AT2/TextureLoader.h>
 #include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
-#include <AT2/OpenGL/GlUniformBuffer.h>
 #include <AT2/OpenGL/GLFW/glfw_application.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
 
@@ -41,9 +40,9 @@ public:
         );
 
         m_window->
-            setLabel("Some engine test").
-            setSize({1024, 768}).
-            setCursorMode(GlfwCursorMode::Disabled);
+            setLabel        ("Some engine test").
+            setSize         ({1024, 768}).
+            setCursorMode   (GlfwCursorMode::Disabled);
 
 
         SetupWindowCallbacks();
@@ -262,30 +261,26 @@ private:
     std::shared_ptr<GlfwWindow> m_window;
     std::shared_ptr<AT2::IRenderer> m_renderer;
 
-    AT2::Camera m_camera;
-
-
     std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader;
     std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
 
+    Camera m_camera;
     Scene Scene;
     SceneRenderer sr;
 
     bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true;
     double Time = 0.0;
     float acceleration = 0.0;
-
-    std::vector<std::shared_ptr<AT2::GlUniformBuffer>> LightsArray;
 };
 
-int main(int argc, char *argv[])
+int main(const int argc, const char *argv[])
 {
     try
     {
         App app;
         app.Run();
     }
-    catch (AT2::AT2Exception& exception)
+    catch (AT2Exception& exception)
     {
         std::cout << "Runtime exception:" << exception.what() << std::endl;
     }

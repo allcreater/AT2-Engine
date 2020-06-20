@@ -68,7 +68,7 @@ private:
 		m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Float, 0, 0));
 
 
-		m_uniforms = renderer.GetStateManager().GetActiveShader().lock()->CreateAssociatedUniformStorage();
+		m_uniforms = renderer.GetStateManager().GetActiveShader()->CreateAssociatedUniformStorage();
 	}
 
 private:

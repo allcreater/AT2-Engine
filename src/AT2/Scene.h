@@ -107,6 +107,7 @@ class MeshNode : public Node
 {
 public:
     void SetMesh(Mesh&& newMesh) { mesh = std::move(newMesh); }
+    const Mesh& GetMesh() const noexcept { return mesh; }
     Mesh& GetMesh() noexcept { return mesh; }
 
 private:

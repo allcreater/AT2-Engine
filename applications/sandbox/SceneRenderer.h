@@ -19,7 +19,7 @@ private:
     const Camera& camera;
 
     MatrixStack transforms;
-    Mesh* active_mesh = nullptr;
+    const Mesh* active_mesh = nullptr;
     SceneRenderer& scene_renderer;
 
 };
@@ -40,7 +40,12 @@ private:
 
     MatrixStack transforms;
 
-    
+    struct DirectionalLightAttribs
+    {
+        glm::vec3 intensity;
+        glm::vec3 direction;
+    };
+    std::vector<DirectionalLightAttribs> collectedDirectionalLights;
 
     struct LightAttribs
     {
@@ -48,7 +53,6 @@ private:
         glm::vec3 intensity;
         float effective_radius;
     };
-
     std::vector<LightAttribs> collectedLights;
 };
 

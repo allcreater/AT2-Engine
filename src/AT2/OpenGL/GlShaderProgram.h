@@ -58,8 +58,7 @@ namespace AT2
 
 	public:
 		GlShaderProgram();
-		GlShaderProgram(const str& vs, const str& tcs, const str& tes, const str& gs, const str& fs);
-		~GlShaderProgram();
+		~GlShaderProgram() override;
 
 	public:
 		void			Bind() override;
@@ -71,7 +70,8 @@ namespace AT2
 		virtual void	AttachShader(const str& code, GlShaderType type);
 
 		//Warning: Shader reloading/relinking will invalidate that state
-		virtual void	SetUBO(const str& blockName, unsigned int index);
+		void	SetUBO(const str& blockName, unsigned int index) override;
+		void	SetUniform(const str& name, Uniform value) override;
 
 		virtual const str& GetName() { return m_name; }
 		virtual void SetName(const str& name) { m_name = name; }

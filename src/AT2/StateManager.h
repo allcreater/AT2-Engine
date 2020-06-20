@@ -19,9 +19,9 @@ public:
 	//TODO: BindIndexArray?
 
 	//TextureSet& GetActiveTextures() const override;
-	std::weak_ptr<IFrameBuffer> GetActiveFrameBuffer() const override;
-	std::weak_ptr<IShaderProgram> GetActiveShader() const override;
-	std::weak_ptr<IVertexArray> GetActiveVertexArray() const override;
+	const std::shared_ptr<IFrameBuffer>& GetActiveFrameBuffer() const override;
+	const std::shared_ptr<IShaderProgram>& GetActiveShader() const override;
+	const std::shared_ptr<IVertexArray>& GetActiveVertexArray() const override;
 
 	std::optional<BufferDataType> GetIndexDataType() const noexcept override { return m_activeIndexBufferType; }
 
