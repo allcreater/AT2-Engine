@@ -9,6 +9,8 @@ namespace AT2
 class GlVertexBuffer : public IVertexBuffer
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(GlVertexBuffer)
+
 	GlVertexBuffer(VertexBufferType bufferType);
 	~GlVertexBuffer() override;
 

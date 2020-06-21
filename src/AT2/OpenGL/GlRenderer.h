@@ -46,8 +46,10 @@ private:
 class GlRenderer : public IRenderer
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(GlRenderer)
+
 	GlRenderer();
-	virtual ~GlRenderer();
+	~GlRenderer() override;
 
 public:
 	IResourceFactory& GetResourceFactory() const override				{ return *m_resourceFactory; }

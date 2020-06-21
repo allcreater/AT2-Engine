@@ -9,8 +9,10 @@ namespace AT2
 class GlVertexArray : public IVertexArray
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(GlVertexArray)
+
 	GlVertexArray(const IRendererCapabilities& rendererCapabilities);
-	~GlVertexArray();
+	~GlVertexArray() override;
 
 public:
 	void Bind() override;

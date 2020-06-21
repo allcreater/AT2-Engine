@@ -30,7 +30,7 @@ void SetUniformInternal(GLuint bufferId, GlShaderProgram::UniformBufferInfo* ubi
     if (!ui)
         return;
 
-    auto* const data = reinterpret_cast<GLbyte*>(glMapNamedBufferRangeEXT(bufferId, ui->Offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
+    auto* const data = static_cast<GLbyte*>(glMapNamedBufferRangeEXT(bufferId, ui->Offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
     const void* ptr = value_ptr(value);
     memcpy(data, ptr, sizeof(T));
     glUnmapNamedBufferEXT(bufferId);
@@ -46,7 +46,7 @@ void SetUniformInternal(GLuint bufferId, GlShaderProgram::UniformBufferInfo* ubi
     if (!ui)
         return;
 
-    auto* const data = reinterpret_cast<GLbyte*>(glMapNamedBufferRangeEXT(bufferId, ui->Offset, ui->MatrixStride * C, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
+    auto* const data = static_cast<GLbyte*>(glMapNamedBufferRangeEXT(bufferId, ui->Offset, ui->MatrixStride * C, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
     for (int i = 0; i < C; ++i)
         memcpy(data + ui->MatrixStride * i, &(value[i].x), sizeof(MatT::col_type));
 

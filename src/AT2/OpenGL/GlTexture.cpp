@@ -114,8 +114,10 @@ GlTexture::~GlTexture()
     glDeleteTextures(1, &m_id);
 }
 
-void GlTexture::Bind(unsigned int module)
+void GlTexture::Bind(unsigned int module) const
 {
+    assert(module < 10000); //
+
     glActiveTexture(GL_TEXTURE0 + module);
     glBindTexture(GetTarget(), m_id);
 

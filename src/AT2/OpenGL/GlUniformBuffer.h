@@ -10,6 +10,8 @@ namespace AT2
 class GlUniformBuffer : public GlVertexBuffer, public IUniformContainer
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(GlUniformBuffer)
+
 	GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi);
 	~GlUniformBuffer() override;
 

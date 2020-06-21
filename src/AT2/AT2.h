@@ -25,6 +25,12 @@ const double pi = std::acos(-1);
 #include "AT2_types.hpp"
 #include "AT2_textures.hpp"
 
+#define NON_COPYABLE_OR_MOVABLE(type) \
+    type(const type&) = delete; \
+    type(type&&) = delete; \
+    type& operator=(const type&) = delete; \
+    type& operator=(type&&) = delete; \
+
 namespace AT2
 {
 
@@ -67,9 +73,9 @@ class ITexture;
 class IFrameBuffer
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(IFrameBuffer)
+
 	IFrameBuffer() = default;
-	IFrameBuffer(const IFrameBuffer& other) = delete;
-	IFrameBuffer& operator= (const IFrameBuffer& other) = delete;
 	virtual ~IFrameBuffer() = default;
 
 public:
@@ -88,9 +94,9 @@ public:
 class IVertexBuffer : public IBuffer
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(IVertexBuffer)
+
 	IVertexBuffer() = default;
-	IVertexBuffer(const IVertexBuffer& other) = delete;
-	IVertexBuffer& operator= (const IVertexBuffer& other) = delete;
 	virtual ~IVertexBuffer() = default;
 
 public:
@@ -106,9 +112,9 @@ public:
 class IVertexArray
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(IVertexArray)
+
 	IVertexArray() = default;
-	IVertexArray(const IVertexArray& other) = delete;
-	IVertexArray& operator= (const IVertexArray& other) = delete;
 	virtual ~IVertexArray() = default;
 
 public:
@@ -118,6 +124,7 @@ public:
 	virtual void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer) = 0;
 	virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
 	//virtual std::shared_ptr<IVertexBuffer> GetOrSetIndexBuffer() const;
+	//TODO GetOrCreateVertexBuffer ?
 	virtual void SetVertexBuffer(unsigned int index, std::shared_ptr<IVertexBuffer> buffer) = 0;
 	virtual void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) = 0;
 	virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
@@ -126,13 +133,13 @@ public:
 class ITexture
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(ITexture)
+
 	ITexture() = default;
-	ITexture(const ITexture& other) = delete; //maybe temporary
-	ITexture& operator= (const ITexture& other) = delete; //maybe temporary
 	virtual ~ITexture() = default;
 
 public:
-	virtual void Bind(unsigned int module) = 0;
+	virtual void Bind(unsigned int module) const = 0;
 	//TODO: think about interface
 	virtual void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage = BufferUsage::ReadWrite) const = 0;
 	virtual void Unbind() = 0;
@@ -158,9 +165,9 @@ class IUniformContainer;
 class IShaderProgram
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(IShaderProgram)
+
 	IShaderProgram() = default;
-	IShaderProgram(const IShaderProgram& other) = delete;
-	IShaderProgram& operator= (const IShaderProgram& other) = delete;
 	virtual ~IShaderProgram() = default;
 
 public:
@@ -220,9 +227,8 @@ public:
 class IRendererCapabilities
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(IRendererCapabilities)
 	IRendererCapabilities() = default;
-	IRendererCapabilities(const IRendererCapabilities& other) = delete;
-	IRendererCapabilities& operator= (const IRendererCapabilities& other) = delete;
 	virtual ~IRendererCapabilities() = default;
 
 public:
@@ -238,9 +244,9 @@ typedef std::vector<IDrawPrimitive*> PrimitiveList;
 class IStateManager
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(IStateManager)
+
 	IStateManager() = default;
-	IStateManager(const IStateManager& other) = delete;
-	IStateManager& operator= (const IStateManager& other) = delete;
 	virtual ~IStateManager() = default;
 
 public:
@@ -260,10 +266,9 @@ public:
 class IResourceFactory
 {
 public:
-	IResourceFactory() = default;
-	IResourceFactory(const IResourceFactory& other) = delete;
-	IResourceFactory& operator= (const IResourceFactory& other) = delete;
+	NON_COPYABLE_OR_MOVABLE(IResourceFactory)
 
+	IResourceFactory() = default;
 	virtual ~IResourceFactory() = default;
 
 public:
@@ -280,6 +285,9 @@ public:
 class IRenderer
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(IRenderer)
+
+	IRenderer() = default;
 	virtual ~IRenderer() = default;
 
 public:

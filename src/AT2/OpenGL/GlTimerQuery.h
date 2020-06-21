@@ -9,6 +9,8 @@ namespace AT2
 	class GlTimerQuery
 	{
 	public:
+		NON_COPYABLE_OR_MOVABLE(GlTimerQuery)
+
 		GlTimerQuery();
 		~GlTimerQuery();
 

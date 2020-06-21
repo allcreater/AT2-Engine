@@ -9,11 +9,13 @@ namespace AT2
     class GlTexture : public ITexture
     {
     public:
+        NON_COPYABLE_OR_MOVABLE(GlTexture)
+
         GlTexture(Texture flavor, GLint desiredFormat);
         ~GlTexture() override;
 
-        void Bind(unsigned int module) override;
-        void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage = BufferUsage::ReadWrite) const;
+        void Bind(unsigned int module) const override;
+        void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage = BufferUsage::ReadWrite) const override;
 
         void Unbind() override;
         void BuildMipmaps() override;
@@ -43,7 +45,7 @@ namespace AT2
         TextureWrapMode m_wrapMode;
 
         GLuint m_id{ 0 };
-        int m_currentTextureModule{ -1 };
+        mutable int m_currentTextureModule{ -1 };
 
         GLint m_internalFormat{0};
         glm::uvec3 m_size;

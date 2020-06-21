@@ -57,6 +57,8 @@ namespace AT2
 		};
 
 	public:
+		NON_COPYABLE_OR_MOVABLE(GlShaderProgram)
+
 		GlShaderProgram();
 		~GlShaderProgram() override;
 

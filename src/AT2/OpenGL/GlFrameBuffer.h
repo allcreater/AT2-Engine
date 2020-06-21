@@ -11,6 +11,8 @@ namespace AT2
 class GlFrameBuffer : public IFrameBuffer
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(GlFrameBuffer)
+
 	GlFrameBuffer(const IRendererCapabilities& rendererCapabilities);
 	~GlFrameBuffer() override;
 
