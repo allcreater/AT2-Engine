@@ -22,7 +22,7 @@ unsigned int GlRendererCapabilities::GetMaxNumberOfTextureUnits() const
 {
 	return GetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, 1); //GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, GL_MAX_TEXTURE_IMAGE_UNITS ???
 }
-unsigned int GlRendererCapabilities::GetMaxNumberOfColorAttachements() const
+unsigned int GlRendererCapabilities::GetMaxNumberOfColorAttachments() const
 {
 	return GetInteger(GL_MAX_COLOR_ATTACHMENTS, 1);
 }

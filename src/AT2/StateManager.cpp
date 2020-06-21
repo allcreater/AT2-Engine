@@ -90,17 +90,17 @@ void StateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexA
 //	throw AT2::AT2Exception("Not implemented yet :(");
 //}
 
-const std::shared_ptr<IFrameBuffer>& StateManager::GetActiveFrameBuffer() const
+std::shared_ptr<IFrameBuffer> StateManager::GetActiveFrameBuffer() const
 {
 	return m_activeFramebuffer;
 }
 
-const std::shared_ptr<IShaderProgram>& StateManager::GetActiveShader() const
+std::shared_ptr<IShaderProgram> StateManager::GetActiveShader() const
 {
 	return m_activeShader;
 }
 
-const std::shared_ptr<IVertexArray>& StateManager::GetActiveVertexArray() const
+std::shared_ptr<IVertexArray> StateManager::GetActiveVertexArray() const
 {
 	return m_activeVertexArray;
 }

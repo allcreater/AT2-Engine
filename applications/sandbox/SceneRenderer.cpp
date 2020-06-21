@@ -83,7 +83,6 @@ void LightRenderVisitor::UnVisit(Node& node)
 
 void LightRenderVisitor::DrawLights()
 {
-
     //update our vertex buffer...
     auto &rf = scene_renderer.renderer->GetResourceFactory();
     auto &vao = scene_renderer.lightMesh->VertexArray;
@@ -114,10 +113,10 @@ void LightRenderVisitor::DrawLights()
 
 
     auto &stateManager = scene_renderer.renderer->GetStateManager();
+
+    //spherical lights
     stateManager.BindShader(scene_renderer.lightMesh->Shader);
     stateManager.BindVertexArray(scene_renderer.lightMesh->VertexArray);
-    //stateManager.BindTextures({}); //TODO
-
     scene_renderer.DrawSubmesh(scene_renderer.lightMesh->Submeshes.front(), collectedLights.size());
 
 }
@@ -161,48 +160,48 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
         auto& rf = renderer->GetResourceFactory();
 
         gBufferFBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
-        gBufferFBO->SetColorAttachement(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA8));
-        gBufferFBO->SetColorAttachement(1, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
-        gBufferFBO->SetColorAttachement(2, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA8));
-        gBufferFBO->SetDepthAttachement(rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::DEPTH32F));
+        gBufferFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA8));
+        gBufferFBO->SetColorAttachment(1, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
+        gBufferFBO->SetColorAttachment(2, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA8));
+        gBufferFBO->SetDepthAttachment(rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::DEPTH32F));
 
         postProcessFBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
-        postProcessFBO->SetColorAttachement(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
-        postProcessFBO->SetDepthAttachement(gBufferFBO->GetDepthAttachement()); //depth is common with previous stage
+        postProcessFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
+        postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()); //depth is common with previous stage
 
-        lightMesh->Submeshes[0].Textures = { gBufferFBO->GetColorAttachement(0), gBufferFBO->GetColorAttachement(1), gBufferFBO->GetColorAttachement(2), gBufferFBO->GetDepthAttachement()/*, Noise3Tex*/ };
+        lightMesh->Submeshes[0].Textures = { gBufferFBO->GetColorAttachment(0), gBufferFBO->GetColorAttachment(1), gBufferFBO->GetColorAttachment(2), gBufferFBO->GetDepthAttachment()/*, Noise3Tex*/ };
         {
             auto uniformStorage = resources.sphereLightsShader->CreateAssociatedUniformStorage();
             //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-            uniformStorage->SetUniform("u_colorMap", gBufferFBO->GetColorAttachement(0));
-            uniformStorage->SetUniform("u_normalMap", gBufferFBO->GetColorAttachement(1));
-            uniformStorage->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachement(2));
-            uniformStorage->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachement());
+            uniformStorage->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
+            uniformStorage->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
+            uniformStorage->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
+            uniformStorage->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
 
             lightMesh->Submeshes[0].UniformBuffer = uniformStorage;
         }
 
 
-        //SkylightDrawable->Textures = { gBufferFBO->GetColorAttachement(0), gBufferFBO->GetColorAttachement(1), gBufferFBO->GetColorAttachement(2), gBufferFBO->GetDepthAttachement()/*, Noise3Tex*/, EnvironmentMapTex };
+        //SkylightDrawable->Textures = { gBufferFBO->GetColorAttachment(0), gBufferFBO->GetColorAttachment(1), gBufferFBO->GetColorAttachment(2), gBufferFBO->GetDepthAttachment()/*, Noise3Tex*/, EnvironmentMapTex };
         //{
         //    auto uniformStorage = resources.directionalLightsShader->CreateAssociatedUniformStorage();
         //    //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-        //    uniformStorage->SetUniform("u_colorMap", gBufferFBO->GetColorAttachement(0));
-        //    uniformStorage->SetUniform("u_normalMap", gBufferFBO->GetColorAttachement(1));
-        //    uniformStorage->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachement(2));
-        //    uniformStorage->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachement());
+        //    uniformStorage->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
+        //    uniformStorage->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
+        //    uniformStorage->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
+        //    uniformStorage->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
         //    uniformStorage->SetUniform("u_environmentMap", EnvironmentMapTex);
         //    SkylightDrawable->UniformBuffer = uniformStorage;
         //}
 
         //TODO: remake
         //Postprocess quad
-        quadMesh->Submeshes[0].Textures = { postProcessFBO->GetColorAttachement(0), postProcessFBO->GetDepthAttachement()/*, Noise3Tex*/ };
+        quadMesh->Submeshes[0].Textures = { postProcessFBO->GetColorAttachment(0), postProcessFBO->GetDepthAttachment()/*, Noise3Tex*/ };
         {
             auto uniformStorage = resources.postprocessShader->CreateAssociatedUniformStorage();
             //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-            uniformStorage->SetUniform("u_colorMap", postProcessFBO->GetColorAttachement(0));
-            uniformStorage->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachement());
+            uniformStorage->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0));
+            uniformStorage->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment());
             quadMesh->Submeshes[0].UniformBuffer = uniformStorage;
         }
         

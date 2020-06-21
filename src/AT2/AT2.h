@@ -82,10 +82,10 @@ public:
 	virtual void Bind() = 0;
 	virtual unsigned int GetId() const = 0;
 
-	virtual void SetColorAttachement(unsigned int attachementNumber, const std::shared_ptr<ITexture>& texture) = 0;
-	virtual std::shared_ptr<ITexture> GetColorAttachement(unsigned int attachementNumber) const = 0;
-	virtual void SetDepthAttachement(const std::shared_ptr<ITexture>& texture) = 0;
-	virtual std::shared_ptr<ITexture> GetDepthAttachement() const = 0;
+	virtual void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) = 0;
+	virtual std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const = 0;
+	virtual void SetDepthAttachment(const std::shared_ptr<ITexture>& texture) = 0;
+	virtual std::shared_ptr<ITexture> GetDepthAttachment() const = 0;
 
 	virtual glm::ivec2 GetActualSize() const = 0;
 
@@ -235,7 +235,7 @@ public:
 	[[nodiscard]] virtual unsigned int GetMaxNumberOfTextureUnits() const = 0;
 	[[nodiscard]] virtual unsigned int GetMaxTextureSize() const = 0;
 	[[nodiscard]] virtual unsigned int GetMaxNumberOfVertexAttributes() const = 0;
-	[[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachements() const = 0;
+	[[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachments() const = 0;
 };
 
 typedef std::set<std::shared_ptr<ITexture>> TextureSet;
@@ -256,9 +256,9 @@ public:
 	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 
 	//virtual TextureSet& GetActiveTextures() const = 0;
-	virtual const std::shared_ptr<IFrameBuffer>& GetActiveFrameBuffer() const = 0;
-	virtual const std::shared_ptr<IShaderProgram>& GetActiveShader() const = 0;
-	virtual const std::shared_ptr<IVertexArray>& GetActiveVertexArray() const = 0;
+	virtual std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
+	virtual std::shared_ptr<IShaderProgram> GetActiveShader() const = 0;
+	virtual std::shared_ptr<IVertexArray> GetActiveVertexArray() const = 0;
 
 	virtual std::optional<BufferDataType> GetIndexDataType() const noexcept = 0;
 };

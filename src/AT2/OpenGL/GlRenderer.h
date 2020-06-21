@@ -15,7 +15,7 @@ class GlRendererCapabilities : public IRendererCapabilities
 {
 public:
 	unsigned int GetMaxNumberOfTextureUnits() const override;
-	unsigned int GetMaxNumberOfColorAttachements() const override;
+	unsigned int GetMaxNumberOfColorAttachments() const override;
 	unsigned int GetMaxTextureSize() const override;
 	unsigned int GetMaxNumberOfVertexAttributes() const override;
 };

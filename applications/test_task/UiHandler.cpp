@@ -93,8 +93,8 @@ UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_p
         auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
         //uniformStorage->SetUniform("u_phase", Phase);
         uniformStorage->SetUniform("u_BackgroundTexture", texture);
-        //uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachement(0));
-        //uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachement());
+        //uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachment(0));
+        //uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachment());
         m_quadDrawable->UniformBuffer = uniformStorage;
     }
 }
