@@ -12,7 +12,7 @@ GlfwApplication& GlfwApplication::get()
 
 std::shared_ptr<GlfwWindow> GlfwApplication::createWindow(GlfwContextParameters parameters)
 {
-    auto pWindow = new GlfwWindow(parameters);
+    auto *const pWindow = new GlfwWindow(parameters);
     std::shared_ptr<GlfwWindow> window { pWindow };
 
     std::lock_guard lock { windows_registry_mutex };

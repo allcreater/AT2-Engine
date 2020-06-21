@@ -6,13 +6,13 @@ using namespace AT2::UI;
 
 void StackPanel::Measure(const glm::ivec2& position, const glm::uvec2& possibleSize)
 {
-	Node::Measure(position, possibleSize);
+	Group::Measure(position, possibleSize);
 	//now actual position is GetCanvasData().Position and size is GetCanvasData().MeasuredSize
 
 	//TODO: it should take decision about auto size by Stretch align, not by minimal size
 	typedef const std::function<bool(std::shared_ptr<Node> nodePtr)> Func;
-	Func horizontalFunc = [](std::shared_ptr<Node> nodePtr) { return nodePtr->GetMinimalSize().x == 0; };
-	Func verticalFunc = [](std::shared_ptr<Node> nodePtr) { return nodePtr->GetMinimalSize().y == 0; };
+	Func horizontalFunc = [](const std::shared_ptr<Node> &nodePtr) { return nodePtr->GetMinimalSize().x == 0; };
+	Func verticalFunc = [](const std::shared_ptr<Node> &nodePtr) { return nodePtr->GetMinimalSize().y == 0; };
 	Func isAutoSizedFunc = (m_Orientation == Orientation::Horizontal) ? horizontalFunc : verticalFunc;
 
 	const auto numberOfAutoSizedChildren = std::count_if(m_Children.begin(), m_Children.end(), isAutoSizedFunc);
@@ -20,7 +20,7 @@ void StackPanel::Measure(const glm::ivec2& position, const glm::uvec2& possibleS
 	//numberOfAutoSizedChildren == 0 is special case when elementCharacteristicalSize don't using at all, so it could be random, just not division by zero :)
 	const auto elementCharacteristicalSize = (GetCanvasData().MeasuredSize - GetMinimalSize()) / std::max<unsigned int>(numberOfAutoSizedChildren, 1u);
 	glm::ivec2 currentPosition = GetCanvasData().Position;
-	for (auto child : m_Children)
+	for (const auto& child : m_Children)
 	{
 		glm::uvec2 measuringSize = isAutoSizedFunc(child) ? elementCharacteristicalSize : child->GetMinimalSize();
 		if (m_Orientation == Orientation::Horizontal)
@@ -30,7 +30,7 @@ void StackPanel::Measure(const glm::ivec2& position, const glm::uvec2& possibleS
 
 		child->Measure(currentPosition, measuringSize);
 
-		//TODO: remove this preety ugly code :(
+		//TODO: remove this pretty ugly code :(
 		if (m_Orientation == Orientation::Horizontal)
 			currentPosition.x += measuringSize.x;
 		else
@@ -51,7 +51,7 @@ glm::uvec2 StackPanel::ComputeMinimalSize()
 
 
 	glm::ivec2 minimalContentSize = {};
-	for (auto child : m_Children)
+	for (auto& child : m_Children)
 		minimalContentSize = aggregateFunc(minimalContentSize, child->ComputeMinimalSize());
 
 	assert(minimalContentSize.x >= 0 && minimalContentSize.y >= 0); //TODO: decide how to interpret negative values, or just forbid them :)

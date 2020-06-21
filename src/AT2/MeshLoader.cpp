@@ -7,6 +7,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <map>
+#include <utility>
 
 //#include <GL/glew.h>
 
@@ -22,13 +23,13 @@ class MeshBuilder
 {
 public:
 	MeshBuilder(std::shared_ptr<AT2::IRenderer> _renderer, const aiScene* scene) :
-        m_renderer(std::move(_renderer)),
-        m_scene(scene)
+        m_scene(scene),
+        m_renderer(std::move(_renderer))
 	{
 	}
 
 public:
-	std::shared_ptr <MeshNode> Build(std::shared_ptr<IShaderProgram> program)
+	std::shared_ptr <MeshNode> Build(const std::shared_ptr<IShaderProgram> &program)
 	{
 		assert(m_indicesVec.empty());
 
@@ -57,12 +58,12 @@ protected:
 	std::vector<glm::vec3> m_verticesVec;
 	std::vector<glm::vec3> m_texCoordVec;
 	std::vector<glm::vec3> m_normalsVec;
-	std::vector<GLuint> m_indicesVec;
+	std::vector<std::uint32_t> m_indicesVec;
 
 protected:
 	void AddMesh(const aiMesh* mesh)
 	{
-		const auto vertexOffset = static_cast<GLuint>(m_verticesVec.size());
+		const auto vertexOffset = static_cast<std::uint32_t>(m_verticesVec.size());
 		const auto previousIndexOffset = m_indicesVec.size();
 
 		m_verticesVec.insert(m_verticesVec.end(), reinterpret_cast<glm::vec3*>(mesh->mVertices), reinterpret_cast<glm::vec3*>(mesh->mVertices) + mesh->mNumVertices);
@@ -105,7 +106,7 @@ protected:
 		vao->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_verticesVec.size() * sizeof(glm::vec3), m_verticesVec.data()));
 		vao->SetVertexBuffer(2, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_texCoordVec.size() * sizeof(glm::vec3), m_texCoordVec.data()));
 		vao->SetVertexBuffer(3, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_normalsVec.size() * sizeof(glm::vec3), m_normalsVec.data()));
-		vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size() * sizeof(GLuint), m_indicesVec.data()));
+		vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size() * sizeof(std::uint32_t), m_indicesVec.data()));
 
 		m_buildedMesh.VertexArray = vao;
 	}
@@ -157,7 +158,7 @@ protected:
 		}
 	}
 
-	void TraverseNode(const aiNode* node, std::shared_ptr<Node> baseNode)
+	void TraverseNode(const aiNode* node, const std::shared_ptr<Node> &baseNode)
 	{
 		for (unsigned i = 0; i < node->mNumMeshes; i++)
 		{
@@ -181,7 +182,7 @@ protected:
 			subnode->SetName(children->mName.C_Str());
 			baseNode->AddChild(subnode);
 
-			TraverseNode(children, std::move(subnode));
+			TraverseNode(children, subnode);
 		}
 	}
 
@@ -214,11 +215,11 @@ constexpr uint32_t flags =
 	aiProcess_FlipUVs;
 
 
-NodeRef MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename, std::shared_ptr<IShaderProgram> program)
+NodeRef MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename, const std::shared_ptr<IShaderProgram> &program)
 {
     Assimp::Importer importer;
-    auto* scene = importer.ReadFile(filename, flags);
+    const auto *scene = importer.ReadFile(filename, flags);
 
-    MeshBuilder builder { renderer, scene };
-    return builder.Build(std::move(program));
+    MeshBuilder builder {std::move(renderer), scene };
+    return builder.Build(program);
 }

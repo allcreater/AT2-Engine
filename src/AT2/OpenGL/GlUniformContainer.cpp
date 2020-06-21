@@ -1,12 +1,14 @@
 #include "GlUniformContainer.h"
 
+#include <utility>
+
 using namespace AT2;
 using namespace glm;
 
 
 GlUniformContainer::GlUniformContainer(std::weak_ptr<GlShaderProgram> _program)
 {
-	SetProgram(_program);
+	SetProgram(std::move(_program));
 }
 
 void GlUniformContainer::SetUniform(const str &name, const Uniform &value)

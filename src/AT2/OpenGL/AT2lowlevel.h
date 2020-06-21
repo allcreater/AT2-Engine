@@ -1,7 +1,7 @@
 #ifndef AT2_OPENGL_LOWLEVEL_HEADER
 #define AT2_OPENGL_LOWLEVEL_HEADER
 
-#include <GL/glew.h>
+#include <gl/glew.h>
 
 #include <sstream>
 #include <vector>

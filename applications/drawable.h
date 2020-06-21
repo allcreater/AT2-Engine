@@ -22,7 +22,7 @@ public:
 		
 		UniformBuffer->Bind();
 
-		for(auto primitive: Primitives)
+		for(auto *primitive: Primitives)
 			primitive->Draw();
 	}
 
@@ -37,7 +37,7 @@ public:
 
 	static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(const IRenderer& renderer, int segX = 32, int segY = 16);
 	static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(const IRenderer& renderer);
-private:
+
 	
 };
 }

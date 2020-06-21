@@ -29,7 +29,7 @@ const AABB2d & Plot::CurveData::GetCurveBounds() const
 		if (m_data.size() >= 2)
 		{
 			//could be optimised with raw array access but it will be computed lazy[right as me :) ] and only after data has changed
-			auto iteratorsPair = std::minmax_element(m_data.begin(), m_data.end());
+            const auto iteratorsPair = std::minmax_element(m_data.begin(), m_data.end());
 			m_aabb.MinBound.y = *iteratorsPair.first;
 			m_aabb.MaxBound.y = *iteratorsPair.second;
 		}
@@ -56,7 +56,7 @@ void AT2::UI::Plot::CurveData::Dirty() noexcept
 }
 
 
-size_t Plot::EnumerateCurves(std::function<bool(const std::string_view, const CurveData&, bool)> fn)
+size_t Plot::EnumerateCurves(std::function<bool(std::string_view, const CurveData&, bool)> fn)
 {
 	size_t counter = 0;
 	std::for_each(m_curvesData.begin(), m_curvesData.end(), [&](decltype(m_curvesData)::value_type& x) 

@@ -11,10 +11,10 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const I
 
 	for (int j = 0; j < segY; ++j)
 	{
-		double angV = j * pi / (segY - 1);
+        const double angV = j * pi / (segY - 1);
 		for (int i = 0; i < segX; ++i)
 		{
-			double angH = i * pi * 2 / segX;
+            const double angH = i * pi * 2 / segX;
 
 			normals.push_back(glm::vec3(sin(angV)*cos(angH), sin(angV)*sin(angH), cos(angV)));
 		}

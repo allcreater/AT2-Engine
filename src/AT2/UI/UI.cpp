@@ -51,7 +51,7 @@ void Group::Initialize(std::initializer_list<std::shared_ptr<Node>> children)
 	assert(m_Children.empty());
 	m_Children = decltype(m_Children)(children.begin(), children.end());
 
-	for (auto child : children)
+	for (const auto& child : children)
 	{
 		assert(child->m_Parent.expired() == true);
 		child->m_Parent = weak_from_this();
@@ -66,13 +66,13 @@ void Group::AddChild(std::shared_ptr<Node> newChild)
 		oldParent->RemoveChild(newChild);
 
 	newChild->m_Parent = weak_from_this();
-	m_Children.push_back(newChild);
+	m_Children.push_back(std::move(newChild));
 }
 
 bool Group::RemoveChild(const std::shared_ptr<Node>& child)
 {
-	auto iterator = std::remove(m_Children.begin(), m_Children.end(), child);
-	auto numDeleted = std::distance(iterator, m_Children.end());
+    const auto iterator = std::remove(m_Children.begin(), m_Children.end(), child);
+    const auto numDeleted = std::distance(iterator, m_Children.end());
 	m_Children.erase(iterator, m_Children.end());
 
 	assert(numDeleted < 2); //means that there was duplicates but it don't supported
@@ -93,8 +93,8 @@ glm::uvec2 Group::ComputeMinimalSize()
 void Group::Measure(const glm::ivec2& position, const glm::uvec2& possibleSize)
 {
 	Node::Measure(position, possibleSize);
-	auto newPosition = GetCanvasData().Position;
-	auto newSize = GetCanvasData().MeasuredSize;
+    const auto newPosition = GetCanvasData().Position;
+    const auto newSize = GetCanvasData().MeasuredSize;
 
 	for (auto& child : m_Children)
 	{
@@ -102,13 +102,13 @@ void Group::Measure(const glm::ivec2& position, const glm::uvec2& possibleSize)
 	}
 }
 
-void Group::ForEachChild(std::function<void(Node&)> func)
+void Group::ForEachChild(const std::function<void(Node&)> &func)
 {
 	for (auto& child : m_Children)
 		func(*child);
 }
 
-void Group::TraverseDepthFirst(std::function<void(const std::shared_ptr<Node>&)> func)
+void Group::TraverseDepthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func)
 {
 	for (auto& child : m_Children)
 	{
@@ -119,7 +119,7 @@ void Group::TraverseDepthFirst(std::function<void(const std::shared_ptr<Node>&)>
 	if (AT2::Utils::is_uninitialized(m_Parent))
 		func(this->shared_from_this());
 }
-void Group::TraverseBreadthFirst(std::function<void(const std::shared_ptr<Node>&)> func)
+void Group::TraverseBreadthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func)
 {
 	if (AT2::Utils::is_uninitialized(m_Parent))
 		func(this->shared_from_this()); //yes, such a spike, but it seems there is no another way (except Node - ancestor from enable_shared_from_this() with another issues)

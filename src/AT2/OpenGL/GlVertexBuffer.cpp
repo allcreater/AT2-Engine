@@ -1,14 +1,11 @@
 #include "GlVertexBuffer.h"
 #include "Mappings.h"
 
-#include <unordered_map>
-#include <cassert>
-
 using namespace AT2;
 
 GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType) :
-    m_publicType(bufferType),
-    m_id(0)
+    m_id(0),
+    m_publicType(bufferType)
 {
     m_privateType = static_cast<GlBufferType>(Mappings::TranslateBufferType(bufferType));
 

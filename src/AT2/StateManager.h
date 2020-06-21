@@ -19,11 +19,11 @@ public:
 	//TODO: BindIndexArray?
 
 	//TextureSet& GetActiveTextures() const override;
-    std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const override;
-    std::shared_ptr<IShaderProgram> GetActiveShader() const override;
-    std::shared_ptr<IVertexArray> GetActiveVertexArray() const override;
+    [[nodiscard]] std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const override;
+    [[nodiscard]] std::shared_ptr<IShaderProgram> GetActiveShader() const override;
+    [[nodiscard]] std::shared_ptr<IVertexArray> GetActiveVertexArray() const override;
 
-	std::optional<BufferDataType> GetIndexDataType() const noexcept override { return m_activeIndexBufferType; }
+    [[nodiscard]] std::optional<BufferDataType> GetIndexDataType() const noexcept override { return m_activeIndexBufferType; }
 
 private:
 	std::vector<std::shared_ptr<ITexture>> m_bindedTextures;

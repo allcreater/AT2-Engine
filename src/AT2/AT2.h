@@ -47,7 +47,7 @@ class IReloadable
 {
 public:
 	//because we want to reload resources by their types, not all together
-	virtual ReloadableGroup getReloadableClass() const = 0;
+    [[nodiscard]] virtual ReloadableGroup getReloadableClass() const = 0;
 
 	virtual ~IReloadable() = default;
 
@@ -62,7 +62,7 @@ public:
 	virtual ~IBuffer() = default;
 
 public:
-    virtual size_t GetLength() const = 0;
+    [[nodiscard]] virtual size_t GetLength() const = 0;
 	virtual void SetData(size_t length, const void* data) = 0;
 	//virtual std::unique_ptr<void*> Lock() = 0; //TODO: think about more useful wrapper
 	//virtual void Unlock() = 0;
@@ -80,14 +80,14 @@ public:
 
 public:
 	virtual void Bind() = 0;
-	virtual unsigned int GetId() const = 0;
+    [[nodiscard]] virtual unsigned int GetId() const = 0;
 
 	virtual void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) = 0;
-	virtual std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const = 0;
 	virtual void SetDepthAttachment(const std::shared_ptr<ITexture>& texture) = 0;
-	virtual std::shared_ptr<ITexture> GetDepthAttachment() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ITexture> GetDepthAttachment() const = 0;
 
-	virtual glm::ivec2 GetActualSize() const = 0;
+    [[nodiscard]] virtual glm::ivec2 GetActualSize() const = 0;
 
 };
 
@@ -102,10 +102,10 @@ public:
 public:
 	virtual void Bind() = 0;
 
-	virtual unsigned int GetId() const = 0;
-	virtual VertexBufferType GetType() const = 0;
+    [[nodiscard]] virtual unsigned int GetId() const = 0;
+    [[nodiscard]] virtual VertexBufferType GetType() const = 0;
 
-	virtual const BufferTypeInfo& GetDataType() const = 0;
+    [[nodiscard]] virtual const BufferTypeInfo& GetDataType() const = 0;
 	virtual void SetDataType(const BufferTypeInfo& typeInfo) = 0;
 };
 
@@ -119,15 +119,15 @@ public:
 
 public:
 	virtual void Bind() = 0;
-	virtual unsigned int GetId() const = 0;
+    [[nodiscard]] virtual unsigned int GetId() const = 0;
 
 	virtual void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer) = 0;
-	virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
 	//virtual std::shared_ptr<IVertexBuffer> GetOrSetIndexBuffer() const;
 	//TODO GetOrCreateVertexBuffer ?
 	virtual void SetVertexBuffer(unsigned int index, std::shared_ptr<IVertexBuffer> buffer) = 0;
 	virtual void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) = 0;
-	virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
 };
 
 class ITexture
@@ -145,14 +145,14 @@ public:
 	virtual void Unbind() = 0;
 	virtual void BuildMipmaps() = 0;
 
-	virtual int GetCurrentModule() const noexcept = 0;
-	virtual unsigned int GetId() const noexcept = 0;
-	virtual glm::uvec3 GetSize() const noexcept = 0;
-    virtual size_t GetDataLength() const noexcept = 0;
+    [[nodiscard]] virtual int GetCurrentModule() const noexcept = 0;
+    [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
+    [[nodiscard]] virtual glm::uvec3 GetSize() const noexcept = 0;
+    [[nodiscard]] virtual size_t GetDataLength() const noexcept = 0;
 
-	virtual const Texture& GetType() const noexcept = 0;
+    [[nodiscard]] virtual const Texture& GetType() const noexcept = 0;
 	virtual void SetWrapMode(TextureWrapMode wrapMode) = 0;
-	virtual const TextureWrapMode& GetWrapMode() const = 0;
+    [[nodiscard]] virtual const TextureWrapMode& GetWrapMode() const = 0;
 
 	//TODO: think how to make better
 	virtual void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data) = 0;
@@ -172,8 +172,8 @@ public:
 
 public:
 	virtual void Bind() = 0;
-	virtual unsigned int GetId() const = 0;
-	virtual bool IsActive() const = 0;
+    [[nodiscard]] virtual unsigned int GetId() const = 0;
+    [[nodiscard]] virtual bool IsActive() const = 0;
 	virtual bool Compile() = 0;
 	virtual std::shared_ptr<IUniformContainer> CreateAssociatedUniformStorage() = 0;
 
@@ -194,6 +194,9 @@ public:
 class IUniformContainer
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(IUniformContainer)
+
+	IUniformContainer() = default;
 	virtual ~IUniformContainer() = default;
 
 	virtual void SetUniform(const str& name, const Uniform& value) = 0;
@@ -256,11 +259,11 @@ public:
 	virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 
 	//virtual TextureSet& GetActiveTextures() const = 0;
-	virtual std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
-	virtual std::shared_ptr<IShaderProgram> GetActiveShader() const = 0;
-	virtual std::shared_ptr<IVertexArray> GetActiveVertexArray() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IShaderProgram> GetActiveShader() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IVertexArray> GetActiveVertexArray() const = 0;
 
-	virtual std::optional<BufferDataType> GetIndexDataType() const noexcept = 0;
+    [[nodiscard]] virtual std::optional<BufferDataType> GetIndexDataType() const noexcept = 0;
 };
 
 class IResourceFactory
@@ -272,12 +275,12 @@ public:
 	virtual ~IResourceFactory() = default;
 
 public:
-	virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const = 0; 
-	virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const = 0;
-	virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
-	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const = 0;
 	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const = 0;
-	virtual std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
 
 	virtual void ReloadResources(ReloadableGroup group) = 0;
 };
@@ -291,9 +294,9 @@ public:
 	virtual ~IRenderer() = default;
 
 public:
-	virtual IResourceFactory& GetResourceFactory() const = 0;
-	virtual IStateManager& GetStateManager() const = 0;
-	virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
+    [[nodiscard]] virtual IResourceFactory& GetResourceFactory() const = 0;
+    [[nodiscard]] virtual IStateManager& GetStateManager() const = 0;
+    [[nodiscard]] virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
 	virtual void Shutdown() = 0;
 
@@ -306,7 +309,7 @@ public:
 	virtual void ClearDepth(float depth) = 0;
 	virtual void FinishFrame() = 0;
 
-	virtual IFrameBuffer& GetDefaultFramebuffer() const = 0;
+    [[nodiscard]] virtual IFrameBuffer& GetDefaultFramebuffer() const = 0;
 };
 
 

@@ -12,23 +12,20 @@ using namespace AT2::UI;
 static std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_t numHarmonics = 10)
 {
 	static std::mt19937 randGenerator;
-	std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.3f);
-	std::uniform_real_distribution<float> phaseDistribution(0.0f, float(pi * 2));
-	std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
+    const std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.3f);
+    const std::uniform_real_distribution<float> phaseDistribution(0.0f, float(pi * 2));
+    const std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
 
 	std::vector<std::tuple<float, float, float>> harmonics(numHarmonics);
-	for (size_t i = 0; i < harmonics.size(); ++i)
-		harmonics[i] = std::make_tuple(frequencyDistribution(randGenerator), phaseDistribution(randGenerator), amplitudeDistribution(randGenerator));
+	for (auto& harmonic : harmonics)
+		harmonic = { frequencyDistribution(randGenerator), phaseDistribution(randGenerator), amplitudeDistribution(randGenerator) };
 
 	std::vector<float> data(numPoints);
 	for (size_t i = 0; i < numPoints; ++i)
 	{
 		data[i] = 0.0f;
-		for (size_t j = 0; j < harmonics.size(); ++j)
-		{
-			const auto&[freq, phase, amplitude] = harmonics[j];
+		for (const auto& [freq, phase, amplitude] : harmonics)
 			data[i] += sin(i * freq + phase) * amplitude;
-		}
 	}
 
 
@@ -84,7 +81,7 @@ UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_p
             R"(resources/shaders/background.fs.glsl)"
         });
 
-    auto texture = AT2::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
+    const auto texture = AT2::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
 
     m_quadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(*renderer);
     m_quadDrawable->Shader = postprocessShader;
@@ -103,7 +100,7 @@ void UiRenderer::Draw()
 {
     if (auto renderer = m_renderer.lock())
     {
-        renderer->SetViewport(AABB2d({}, m_windowSize));
+		renderer->SetViewport(AABB2d{ {}, m_windowSize });
         m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4(1.0f));
         m_quadDrawable->Draw(*renderer);
 
@@ -117,7 +114,7 @@ void UiRenderer::RenderNode(const Node& node)
 {
     if (auto renderer = m_renderer.lock())
     {
-        auto aabb = node.GetScreenPosition();
+        const auto aabb = node.GetScreenPosition();
         renderer->SetViewport(aabb);
 
         //m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
@@ -130,8 +127,8 @@ void UiRenderer::RenderNode(const Node& node)
 
 glm::vec4 UiRenderer::DebugColor(const Node& node)
 {
-    std::hash<std::string> hash_fn;
-    auto h = hash_fn(std::string(node.GetName()));
+    const std::hash<std::string> hash_fn;
+    const auto h = hash_fn(std::string(node.GetName()));
     return glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0);
 }
 
@@ -166,8 +163,8 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 	button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, windowRendererSharedData, glm::vec2(4, 4), glm::vec4(2.0, 0.5, 0.5, 0.6)));
 	button2->SetNodeRenderer(std::make_shared<WindowRenderer>(button2, windowRendererSharedData, glm::vec2(4, 4), glm::vec4(0.5, 0.5, 2.0, 0.6)));
 
-	auto bounds = m_plotNode->GetAABB();
-	m_plotNode->SetObservingZone(AABB2d(glm::vec2(0.0, bounds.MinBound.y), glm::vec2(1000.0, bounds.MaxBound.y)));
+    const auto bounds = m_plotNode->GetAABB();
+	m_plotNode->SetObservingZone(AABB2d{ glm::vec2(0.0, bounds.MinBound.y), glm::vec2(1000.0, bounds.MaxBound.y) });
 
 	m_uiRenderer = std::make_unique<UiRenderer>(renderer, m_uiRoot);
 	m_uiInputHandler = std::make_unique<UiInputHandler>(m_uiRoot);
@@ -191,15 +188,15 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 	{
 		if (auto plot = std::dynamic_pointer_cast<Plot>(node); node->GetName() == "Plot")
 		{
-			auto plotBounds = plot->GetObservingZone();
-			float scale = 1.0f + scrollDir.y*0.1f;
+            const auto plotBounds = plot->GetObservingZone();
+            const float scale = 1.0f + scrollDir.y*0.1f;
 
 			//TODO: implement general way for UI coordinate system transitions
 			//dirty code :(
-			auto scrAABB = plot->GetScreenPosition();
-			glm::vec2 localMousePos = (static_cast<glm::vec2>(mousePos.getPos()) - scrAABB.MinBound) * plotBounds.GetSize() / scrAABB.GetSize() + plotBounds.MinBound;
+            const auto scrAABB = plot->GetScreenPosition();
+            const glm::vec2 localMousePos = (static_cast<glm::vec2>(mousePos.getPos()) - scrAABB.MinBound) * plotBounds.GetSize() / scrAABB.GetSize() + plotBounds.MinBound;
 
-			auto desiredAABB = AABB2d((plotBounds.MinBound - localMousePos)*scale + localMousePos, (plotBounds.MaxBound - localMousePos)*scale + localMousePos);
+			const auto desiredAABB = AABB2d{ (plotBounds.MinBound - localMousePos) * scale + localMousePos, (plotBounds.MaxBound - localMousePos) * scale + localMousePos };
 			if (desiredAABB.GetWidth() >= 200.0 && desiredAABB.GetWidth() <= 1000.0) //technical requirement :)
 				plot->SetObservingZone(desiredAABB);
 
@@ -212,11 +209,11 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
 	{
 		if (auto plot = std::dynamic_pointer_cast<Plot>(node); node->GetName() == "Plot")
 		{
-			auto plotBounds = plot->GetObservingZone();
-			auto scrAABB = plot->GetScreenPosition();
-			glm::vec2 localMouseDelta = static_cast<glm::vec2>(mousePos.getDeltaPos()) * plotBounds.GetSize() / scrAABB.GetSize();
+            const auto plotBounds = plot->GetObservingZone();
+            const auto scrAABB = plot->GetScreenPosition();
+            const glm::vec2 localMouseDelta = static_cast<glm::vec2>(mousePos.getDeltaPos()) * plotBounds.GetSize() / scrAABB.GetSize();
 
-			plot->SetObservingZone(AABB2d(plotBounds.MinBound - localMouseDelta, plotBounds.MaxBound - localMouseDelta));
+			plot->SetObservingZone(AABB2d{ plotBounds.MinBound - localMouseDelta, plotBounds.MaxBound - localMouseDelta });
 
 
 			return true;

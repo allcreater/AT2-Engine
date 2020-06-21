@@ -3,7 +3,7 @@
 
 #include "../Drawable.h"
 #include <memory>
-#include <set>
+#include <utility>
 #include <variant>
 #include <map>
 
@@ -56,30 +56,30 @@ namespace AT2::UI
 		Alignment HorizontalAlignment = Alignment::Stretch;
 
 	public:
-		std::weak_ptr<Group> GetParent() const						{ return m_Parent; }
-		std::string_view GetName() const							{ return m_Name; }
+        [[nodiscard]] std::weak_ptr<Group> GetParent() const						{ return m_Parent; }
+        [[nodiscard]] std::string_view GetName() const							{ return m_Name; }
 
 		void SetSize(const glm::uvec2& size)						{ m_Size = size; }
-		const glm::uvec2& GetSize() const							{ return m_Size; }
+        [[nodiscard]] const glm::uvec2& GetSize() const							{ return m_Size; }
 
 		//recursively calculates the actual sizes of all children
 		virtual void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize);
 		virtual glm::uvec2 ComputeMinimalSize()						{ return m_CanvasData.MinimalSize = m_Size; }
-		const glm::uvec2 GetMinimalSize() const						{ return m_CanvasData.MinimalSize; }
+        [[nodiscard]] glm::uvec2 GetMinimalSize() const						{ return m_CanvasData.MinimalSize; }
 
 		CanvasData& GetCanvasData()									{ return m_CanvasData; }
-		const CanvasData& GetCanvasData() const						{ return m_CanvasData; }
+        [[nodiscard]] const CanvasData& GetCanvasData() const						{ return m_CanvasData; }
 
-		AABB2d GetScreenPosition() const							{ return AABB2d(m_CanvasData.Position, m_CanvasData.Position + glm::ivec2(m_CanvasData.MeasuredSize)); }
+		[[nodiscard]] AABB2d GetScreenPosition() const { return { m_CanvasData.Position, m_CanvasData.Position + glm::ivec2(m_CanvasData.MeasuredSize) }; }
 
-		void SetNodeRenderer(std::shared_ptr<IDrawable> drawable)	{ m_Drawable = drawable; }
-		std::weak_ptr<IDrawable> GetNodeRenderer() const			{ return m_Drawable; }
+		void SetNodeRenderer(std::shared_ptr<IDrawable> drawable)	{ m_Drawable = std::move(drawable); }
+        [[nodiscard]] std::weak_ptr<IDrawable> GetNodeRenderer() const			{ return m_Drawable; }
 
 		//virtual void TraverseDepthFirst(std::function<void(Node&)> func) { func(*this); }
 		//virtual void TraverseBreadthFirst(std::function<void(Node&)> func) { func(*this); }
 
-		virtual void TraverseDepthFirst(std::function<void(const std::shared_ptr<Node>&)> func) { }
-		virtual void TraverseBreadthFirst(std::function<void(const std::shared_ptr<Node>&)> func) { }
+		virtual void TraverseDepthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func) { }
+		virtual void TraverseBreadthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func) { }
 
 	protected:
 		Node(std::string_view name, const glm::uvec2& size) : m_Name(name), m_Size(size) {};
@@ -105,13 +105,13 @@ namespace AT2::UI
 		void AddChild(std::shared_ptr<Node> newChild);
 		bool RemoveChild(const std::shared_ptr<Node>& child);
 
-		void ForEachChild(std::function<void(Node&)> func);
+		void ForEachChild(const std::function<void(Node&)> &func);
 
 		glm::uvec2 ComputeMinimalSize() override;
 		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
 
-		void TraverseDepthFirst(std::function<void(const std::shared_ptr<Node>&)> func) override;
-		void TraverseBreadthFirst(std::function<void(const std::shared_ptr<Node>&)> func) override;
+		void TraverseDepthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func) override;
+		void TraverseBreadthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func) override;
 
 	protected:
 		Group(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
@@ -168,7 +168,7 @@ namespace AT2::UI
 			friend class Plot;
 
 		public:
-			CurveData(std::weak_ptr<Plot> plot) : m_parent(plot) {}
+			CurveData(std::weak_ptr<Plot> plot) : m_parent(std::move(plot)) {}
 
 			CurveData(const CurveData&) = delete;
 			CurveData(CurveData&&) = default;
@@ -204,7 +204,7 @@ namespace AT2::UI
 		~Plot() { std::cout << "Plot" << std::endl; }
 
 	public:
-		size_t EnumerateCurves(std::function<bool(const std::string_view name, const CurveData& data, bool invalidated)>);
+		size_t EnumerateCurves(std::function<bool(std::string_view name, const CurveData& data, bool invalidated)>);
 		CurveData& GetOrCreateCurve (const std::string& curveName);
 
 		const AABB2d& GetAABB();

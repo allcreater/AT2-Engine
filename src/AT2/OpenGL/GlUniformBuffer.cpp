@@ -1,13 +1,15 @@
 #include "GlUniformBuffer.h"
 
+#include <utility>
+
 using namespace AT2;
 
 using namespace glm;
 
 GlUniformBuffer::GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi) : 
     GlVertexBuffer (VertexBufferType::UniformBuffer),
-    m_bindingPoint(0),
-    m_ubi(ubi)
+    m_ubi(std::move(ubi)),
+    m_bindingPoint(0)
 {
     m_length = m_ubi->GetBlockSize();
 

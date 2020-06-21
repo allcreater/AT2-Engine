@@ -27,8 +27,8 @@ namespace AT2
 			GLint ArrayStride, MatrixStride;
 			GLint Type;
 
-			UniformInfo(GLint index, GLint offset, GLint type, GLint arrayStride, GLint matrixStride) : Index(index), Offset(offset), Type(type), ArrayStride(arrayStride), MatrixStride(matrixStride) {}
-			UniformInfo() : Index(0), Offset(0), Type(0), ArrayStride(0), MatrixStride(0){}
+			UniformInfo(GLint index, GLint offset, GLint type, GLint arrayStride, GLint matrixStride) : Index(index), Offset(offset), ArrayStride(arrayStride), Type(type), MatrixStride(matrixStride) {}
+			UniformInfo() : Index(0), Offset(0), ArrayStride(0), Type(0), MatrixStride(0){}
 		};
 
 		class UniformBufferInfo
@@ -36,12 +36,12 @@ namespace AT2
 		friend class GlShaderProgram;
 
 		public:
-			GLuint	GetBlockIndex() const {return m_blockIndex;}
-			GLint	GetBlockSize() const {return m_blockSize; }
+        [[nodiscard]] GLuint	GetBlockIndex() const {return m_blockIndex;}
+        [[nodiscard]] GLint	GetBlockSize() const {return m_blockSize; }
 
-			const UniformInfo* GetUniformInfo(const str& name) const
+        [[nodiscard]] const UniformInfo* GetUniformInfo(const str& name) const
 			{
-				auto i = m_uniforms.find(name);
+                const auto i = m_uniforms.find(name);
 				if (i != m_uniforms.end())
 					return &(i->second);
 				

@@ -122,10 +122,6 @@ GlResourceFactory::GlResourceFactory(GlRenderer* renderer) : m_renderer(renderer
 {
 }
 
-GlResourceFactory::~GlResourceFactory()
-{
-}
-
 std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const
 {
     auto texture = std::make_shared<GlTexture>(Texture2D { size }, *DetermineInternalFormat(TextureFormats::RGBA8)); //TODO: choose formats?
@@ -176,17 +172,17 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 					SetName(filename);
 
 				if (filename.substr(filename.length() - 8) == ".vs.glsl")
-					m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Vertex));
+					m_filenames.emplace_back(filename, AT2::GlShaderType::Vertex);
 				else if (filename.substr(filename.length() - 9) == ".tcs.glsl")
-					m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationControl));
+					m_filenames.emplace_back(filename, AT2::GlShaderType::TesselationControl);
 				else if (filename.substr(filename.length() - 9) == ".tes.glsl")
-					m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::TesselationEvaluation));
+					m_filenames.emplace_back(filename, AT2::GlShaderType::TesselationEvaluation);
 				else if (filename.substr(filename.length() - 8) == ".gs.glsl")
-					m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Geometry));
+					m_filenames.emplace_back(filename, AT2::GlShaderType::Geometry);
 				else if (filename.substr(filename.length() - 8) == ".fs.glsl")
-					m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Fragment));
+					m_filenames.emplace_back(filename, AT2::GlShaderType::Fragment);
                 else if (filename.substr(filename.length() - 8) == ".cs.glsl")
-                    m_filenames.push_back(std::make_pair(filename, AT2::GlShaderType::Computational));
+                    m_filenames.emplace_back(filename, AT2::GlShaderType::Computational);
 				else
 					throw AT2Exception(AT2Exception::ErrorCase::Shader, "unrecognized shader type"s);
 			}
@@ -196,9 +192,9 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 
 		void Reload() override
 		{
-			GlShaderProgram::CleanUp();
+			CleanUp();
 
-			for (auto shader : m_filenames)
+			for (const auto& shader : m_filenames)
 			{
 				GlShaderProgram::AttachShader(LoadShader(shader.first), shader.second);
 			}

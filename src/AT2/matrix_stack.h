@@ -10,12 +10,12 @@ namespace AT2
 class MatrixStack
 {
 public:
-    const glm::mat4& getModelView() const noexcept { return mat_model_view; }
-    const glm::mat4& getProjection() const noexcept { return mat_projection; }
-    const glm::mat4& getModelViewInverse() const noexcept { return mat_model_view_inverse; }
-    const glm::mat4& getProjectionInverse() const noexcept { return mat_projection_inverse; }
+    [[nodiscard]] const glm::mat4& getModelView() const noexcept { return mat_model_view; }
+    [[nodiscard]] const glm::mat4& getProjection() const noexcept { return mat_projection; }
+    [[nodiscard]] const glm::mat4& getModelViewInverse() const noexcept { return mat_model_view_inverse; }
+    [[nodiscard]] const glm::mat4& getProjectionInverse() const noexcept { return mat_projection_inverse; }
 
-    bool empty() const noexcept { return model_view_matrices.empty() && projection_matrices.empty(); }
+    [[nodiscard]] bool empty() const noexcept { return model_view_matrices.empty() && projection_matrices.empty(); }
 
     void reset(glm::mat4 initialModelView, glm::mat4 initialProjection)
     {

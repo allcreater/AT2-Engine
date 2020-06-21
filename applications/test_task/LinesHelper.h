@@ -5,7 +5,7 @@
 class LinesHelper : public virtual AT2::IDrawable
 {
 public:
-	LinesHelper();
+	LinesHelper() = default;
 
 	void Draw(const AT2::IRenderer& renderer) override;
 

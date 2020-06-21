@@ -1,5 +1,7 @@
 #include "SceneRenderer.h"
 
+#include <utility>
+
 #include "AT2/OpenGL/GlFrameBuffer.h"
 #include "AT2/OpenGL/GlShaderProgram.h"
 #include "AT2/OpenGL/GlUniformBuffer.h"
@@ -46,8 +48,8 @@ void RenderVisitor::UnVisit(Node& node)
     transforms.popModelView();
 }
 
-LightRenderVisitor::LightRenderVisitor(SceneRenderer& sceneRenderer, const Camera& camera) :
-    camera(camera), scene_renderer(sceneRenderer)
+LightRenderVisitor::LightRenderVisitor(SceneRenderer& sceneRenderer) :
+    scene_renderer(sceneRenderer)
 {
 }
 
@@ -119,11 +121,25 @@ void LightRenderVisitor::DrawLights()
     stateManager.BindVertexArray(scene_renderer.lightMesh->VertexArray);
     scene_renderer.DrawSubmesh(scene_renderer.lightMesh->Submeshes.front(), collectedLights.size());
 
+    //directional lights
+    //usually it's number significally less than spherical, so that we will draw them as usually
+    //for (const auto& directionalLight : collectedDirectionalLights)
+    //{
+    //    auto program = scene_renderer.resources.directionalLightsShader;
+    //    program->SetUniform("u_lightDirection", directionalLight.direction);
+    //    program->SetUniform("u_lightIntensity", directionalLight.intensity);
+    //    program->SetUniform("u_colorMap", scene_renderer.gBufferFBO->GetColorAttachment(0)->GetCurrentModule());
+    //    program->SetUniform("u_normalMap", scene_renderer.gBufferFBO->GetColorAttachment(1)->GetCurrentModule());
+    //    program->SetUniform("u_roughnessMetallicMap", scene_renderer.gBufferFBO->GetColorAttachment(2)->GetCurrentModule());
+    //    program->SetUniform("u_depthMap", scene_renderer.gBufferFBO->GetDepthAttachment()->GetCurrentModule());
+    //    //program->SetUniform("u_environmentMap", scene_renderer.EnvironmentMapTex);
+    //    //program
+    //    scene_renderer.DrawQuad(program);
+    //}
 }
 
 void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
 {
-    this->renderer = renderer;
 
     resources.postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles({
     "resources/shaders/postprocess.vs.glsl",
@@ -142,6 +158,8 @@ void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
 
     lightMesh = MakeSphere(*renderer, resources.sphereLightsShader, 32, 16);
     quadMesh = MakeFullscreenQuadDrawable(*renderer);
+
+    this->renderer = std::move(renderer);
 }
 
 void SceneRenderer::ResizeFramebuffers(glm::ivec2 newSize)
@@ -210,7 +228,7 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
 
     SetupCamera(camera);
 
-    renderer->SetViewport(AABB2d({0, 0}, framebuffer_size));
+    renderer->SetViewport(AABB2d{ {0, 0}, framebuffer_size });
 
     gBufferFBO->Bind();
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
@@ -240,7 +258,7 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
     glCullFace(GL_BACK);
 
     //lights
-    LightRenderVisitor lrv{ *this, camera };
+    LightRenderVisitor lrv{ *this };
     scene.GetRoot().Accept(lrv);
     lrv.DrawLights();
 
@@ -306,14 +324,14 @@ void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program)
 
 
 
-std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY)
+std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, const std::shared_ptr<IShaderProgram> &program, int segX, int segY)
 {
     assert(segX < 1024 && segY < 1024);
 
     std::vector<glm::vec2> texCoords(segX * segY * 4);//TODO! GlVertexBuffer - take iterators!
 
-    for (size_t j = 0; j < segY; ++j)
-    for (size_t i = 0; i < segX; ++i)
+    for (int j = 0; j < segY; ++j)
+    for (int i = 0; i < segX; ++i)
     {
         const auto num = (i + j * segX) * 4;
         texCoords[num] = glm::vec2(float(i) / segX, float(j) / segY);
@@ -361,12 +379,12 @@ std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<ISha
 
     for (int j = 0; j < segY; ++j)
     {
-        double angV = j * pi / (segY - 1);
+        const double angV = j * pi / (segY - 1);
         for (int i = 0; i < segX; ++i)
         {
-            double angH = i * pi * 2 / segX;
+            const double angH = i * pi * 2 / segX;
 
-            normals.push_back(glm::vec3(sin(angV) * cos(angH), sin(angV) * sin(angH), cos(angV)));
+            normals.emplace_back(sin(angV) * cos(angH), sin(angV) * sin(angH), cos(angV));
         }
     }
 
@@ -394,7 +412,7 @@ std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<ISha
     mesh->VertexArray->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, normals.size() * sizeof(glm::vec3), normals.data()));
     mesh->VertexArray->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, indices.size() * sizeof(glm::uint), indices.data()));
 
-    mesh->Shader = program;
+    mesh->Shader = std::move(program);
 
     //don't know how to make it better
     SubMesh subMesh;

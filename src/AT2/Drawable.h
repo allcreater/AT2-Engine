@@ -10,9 +10,6 @@ namespace AT2
 	public:
 		virtual void Draw(const IRenderer& renderer) = 0;
 		virtual ~IDrawable() {}
-
-	private:
-
 	};
 
 }

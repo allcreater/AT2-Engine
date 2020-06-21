@@ -3,7 +3,6 @@
 using namespace AT2;
 
 GlFrameBuffer::GlFrameBuffer(const IRendererCapabilities& rendererCapabilities) :
-	m_size(0, 0),
 	m_colorAttachments(rendererCapabilities.GetMaxNumberOfColorAttachments())
 {
 	glGenFramebuffers(1, &m_id);

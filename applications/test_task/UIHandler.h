@@ -52,7 +52,7 @@ private:
 	const std::string DataSet2 = "DataSet #2";
 
 private:
-	glm::ivec2 m_windowSize;
+	glm::ivec2 m_windowSize = {};
 
 	std::shared_ptr<AT2::UI::Node> m_uiRoot;
 	std::shared_ptr<AT2::UI::Plot> m_plotNode;

@@ -48,11 +48,11 @@ public:
         return dynamic_cast<T&>(*child_nodes[index]);
     }
 
-    const glm::mat4& GetTransform() const noexcept { return transform; }
+    [[nodiscard]] const glm::mat4& GetTransform() const noexcept { return transform; }
     void SetTransform(const glm::mat4& mat) noexcept { transform = mat; }
 
     void SetName(std::string newName) { name = std::move(newName); }
-    const std::string& GetName() const noexcept { return name; }
+    [[nodiscard]] const std::string& GetName() const noexcept { return name; }
 
 
     virtual ~Node() = default;
@@ -84,16 +84,17 @@ struct LightNode : Node
 
         return *this;
     }
-    const glm::vec3& GetIntensity() const noexcept { return intensity; }
 
-    float GetEffectiveRadius() const noexcept { return m_effectiveRadius; }
+    [[nodiscard]] const glm::vec3& GetIntensity() const noexcept { return intensity; }
 
-    const LightFlavor& GetFlavor() const noexcept { return flavor; }
+    [[nodiscard]] float GetEffectiveRadius() const noexcept { return m_effectiveRadius; }
+
+    [[nodiscard]] const LightFlavor& GetFlavor() const noexcept { return flavor; }
 
 protected:
     void UpdateEffectiveRadius()
     {
-        m_effectiveRadius = glm::length(intensity) * 0.5; //TODO: think about it :)
+        m_effectiveRadius = length(intensity) * 0.5f; //TODO: think about it :)
     }
 
 private:
@@ -107,7 +108,7 @@ class MeshNode : public Node
 {
 public:
     void SetMesh(Mesh&& newMesh) { mesh = std::move(newMesh); }
-    const Mesh& GetMesh() const noexcept { return mesh; }
+    [[nodiscard]] const Mesh& GetMesh() const noexcept { return mesh; }
     Mesh& GetMesh() noexcept { return mesh; }
 
 private:

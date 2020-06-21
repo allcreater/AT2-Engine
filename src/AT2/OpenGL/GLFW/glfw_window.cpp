@@ -7,7 +7,7 @@
 
 GlfwWindow* GlfwWindow::FromNativeWindow(const GLFWwindow* window)
 {
-    const auto frontendPtr = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(const_cast<GLFWwindow*>(window)));
+    auto *const frontendPtr = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(const_cast<GLFWwindow*>(window)));
     assert(frontendPtr);
     return frontendPtr;
 }
@@ -157,7 +157,7 @@ void GlfwWindow::SetupCallbacks()
 {
 
     glfwSetKeyCallback(window_impl, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        auto wnd = GlfwWindow::FromNativeWindow(window);
+        auto *const wnd = GlfwWindow::FromNativeWindow(window);
 
         switch (action)
         {
@@ -174,7 +174,7 @@ void GlfwWindow::SetupCallbacks()
     });
 
     glfwSetMouseButtonCallback(window_impl, [](GLFWwindow* window, int button, int action, int mods) {
-        auto wnd = FromNativeWindow(window);
+        auto *const wnd = FromNativeWindow(window);
         if (action == GLFW_PRESS)
             wnd->OnMouseDown(button);
         else if (action == GLFW_RELEASE)
@@ -194,7 +194,7 @@ void GlfwWindow::SetupCallbacks()
     });
 
     glfwSetWindowRefreshCallback(window_impl, [](GLFWwindow *window) {
-        auto wnd = FromNativeWindow(window);
+        auto *const wnd = FromNativeWindow(window);
         wnd->OnWindowRefreshing();
         //wnd->UpdateAndRender();
     });

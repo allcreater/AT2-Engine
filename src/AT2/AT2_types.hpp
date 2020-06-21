@@ -1,7 +1,6 @@
 #ifndef AT2_TYPES_H
 #define AT2_TYPES_H
 
-#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include "AABB.h"
 

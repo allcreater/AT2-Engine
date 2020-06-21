@@ -4,11 +4,6 @@
 
 using namespace AT2;
 
-LinesHelper::LinesHelper()
-{
-
-}
-
 void LinesHelper::Draw(const IRenderer& renderer)
 {
 	if (m_vertexBufferNeedUpdate)

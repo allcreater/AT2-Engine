@@ -29,7 +29,7 @@ public:
         m_primitiveMode(mode)
     {}
 
-	GlDrawPrimitiveType GetPrimitiveMode() const {return m_primitiveMode;}
+    [[nodiscard]] GlDrawPrimitiveType GetPrimitiveMode() const {return m_primitiveMode;}
 
 private:
 	GlDrawPrimitiveType m_primitiveMode;

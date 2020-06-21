@@ -14,17 +14,19 @@ class GlFrameBuffer;
 class GlRendererCapabilities : public IRendererCapabilities
 {
 public:
-	unsigned int GetMaxNumberOfTextureUnits() const override;
-	unsigned int GetMaxNumberOfColorAttachments() const override;
-	unsigned int GetMaxTextureSize() const override;
-	unsigned int GetMaxNumberOfVertexAttributes() const override;
+    [[nodiscard]] unsigned int GetMaxNumberOfTextureUnits() const override;
+    [[nodiscard]] unsigned int GetMaxNumberOfColorAttachments() const override;
+    [[nodiscard]] unsigned int GetMaxTextureSize() const override;
+    [[nodiscard]] unsigned int GetMaxNumberOfVertexAttributes() const override;
 };
 
 class GlResourceFactory : public IResourceFactory
 {
 public:
+	NON_COPYABLE_OR_MOVABLE(GlResourceFactory)
+
 	GlResourceFactory(GlRenderer* renderer);
-	~GlResourceFactory();
+	~GlResourceFactory() = default;
 
 public:
 	std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const override;
@@ -34,9 +36,6 @@ public:
 	std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const override;
 	std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const override;
 	void ReloadResources(ReloadableGroup group) override;
-
-protected:
-	static GLint GetInternalFormat(GLuint externalFormat, GLuint externalType);
 
 private:
 	GlRenderer* m_renderer;
@@ -49,12 +48,12 @@ public:
 	NON_COPYABLE_OR_MOVABLE(GlRenderer)
 
 	GlRenderer();
-	~GlRenderer() override;
+	~GlRenderer() = default;
 
 public:
-	IResourceFactory& GetResourceFactory() const override				{ return *m_resourceFactory; }
-	IStateManager& GetStateManager() const override						{ return *m_stateManager; }
-	IRendererCapabilities& GetRendererCapabilities() const override		{ return *m_rendererCapabilities; }
+    [[nodiscard]] IResourceFactory& GetResourceFactory() const override				{ return *m_resourceFactory; }
+    [[nodiscard]] IStateManager& GetStateManager() const override						{ return *m_stateManager; }
+    [[nodiscard]] IRendererCapabilities& GetRendererCapabilities() const override		{ return *m_rendererCapabilities; }
 
 	void Shutdown() override;
 
@@ -66,7 +65,7 @@ public:
 	void ClearDepth(float depth) override;
 	void FinishFrame() override;
 
-	IFrameBuffer& GetDefaultFramebuffer() const override;
+    [[nodiscard]] IFrameBuffer& GetDefaultFramebuffer() const override;
 
 private:
 	static void GlErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar * message, const GLvoid * userParam);

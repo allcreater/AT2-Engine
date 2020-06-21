@@ -97,8 +97,8 @@ private:
 
         Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D{ {64, 64, 64}, 1 }, TextureFormats::RGBA8);
         {
-            const int l = Noise3Tex->GetDataLength();
-            auto arr = std::make_unique<GLubyte[]>(l);
+            const auto l = Noise3Tex->GetDataLength();
+            const auto arr = std::make_unique<GLubyte[]>(l);
             for (size_t i = 0; i < l; ++i)
                 arr[i] = (rand() & 0xFF);
             Noise3Tex->SubImage3D({ 0, 0, 0 }, { 64, 64, 64 }, 0, TextureFormats::RGBA8, arr.get());
@@ -111,8 +111,6 @@ private:
         HeightMapTex = ComputeHeightmap({4096, 4096});
         EnvironmentMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
-        //LightUB = std::make_shared<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(SphereLightShader)->GetUniformBlockInfo("LightingBlock"));
-
         auto lightsRoot = std::make_shared<Node>("lights"s);
         Scene.GetRoot().AddChild(lightsRoot);
 
@@ -124,10 +122,12 @@ private:
             )).SetTransform(glm::translate(glm::mat4{1.0}, { glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0) }));
         }
 
+        lightsRoot->AddChild(std::make_shared<LightNode>(
+            DirectionalLight{glm::vec3(0.0f, 0.707f, 0.707f) },
+            glm::vec3(500.0f)
+        ));
+
 //      LightsArray[0]->SetUniform("u_lightColor", glm::vec3(0.3f, 0.4f, 1.0f));
-
-
-
 
         //Init
         glEnable(GL_BLEND);

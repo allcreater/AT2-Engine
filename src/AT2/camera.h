@@ -83,7 +83,7 @@ private:
     
     //derived values
     glm::mat4 view, view_inverse;
-    glm::mat4 projection_inverse;
+    glm::mat4 projection_inverse { 1.0f};
     
 };
 

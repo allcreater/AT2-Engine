@@ -16,15 +16,15 @@ public:
 
 public:
 	void Bind() override;
-	unsigned int GetId() const override { return m_id; }
+    [[nodiscard]] unsigned int GetId() const override { return m_id; }
 
 	void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer) override;
-	std::shared_ptr<IVertexBuffer> GetIndexBuffer() const override;
+    [[nodiscard]] std::shared_ptr<IVertexBuffer> GetIndexBuffer() const override;
 	//virtual std::shared_ptr<GlVertexBuffer> GetOrSetIndexBuffer() const;
 
 	void SetVertexBuffer(unsigned int index, std::shared_ptr<IVertexBuffer> buffer) override;
 	void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) override;
-	std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const override;
+    [[nodiscard]] std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const override;
 	
 private:
 	GLuint m_id;

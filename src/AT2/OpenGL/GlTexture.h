@@ -11,7 +11,7 @@ namespace AT2
     public:
         NON_COPYABLE_OR_MOVABLE(GlTexture)
 
-        GlTexture(Texture flavor, GLint desiredFormat);
+        GlTexture(Texture flavor, GLint internalFormat);
         ~GlTexture() override;
 
         void Bind(unsigned int module) const override;
@@ -61,7 +61,7 @@ namespace AT2
             GLint stencil;
             GLint shared;
 
-            int InBytes() const noexcept { return (red + green + blue + alpha + depth + stencil + shared) / 8; }
+            [[nodiscard]] int InBytes() const noexcept { return (red + green + blue + alpha + depth + stencil + shared) / 8; }
         } m_channelSizes;
         size_t m_dataSize {0};
     };

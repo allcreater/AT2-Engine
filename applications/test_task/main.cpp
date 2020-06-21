@@ -78,15 +78,15 @@ private:
 
 			switch (key)
 			{
-			case GLFW_KEY_R:
-			{
-				m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
-			} break;
+			    case GLFW_KEY_R:
+			    {
+				    m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
+			    } break;
 
-			case GLFW_KEY_ESCAPE:
-			{
-				m_window->setCloseFlag(true);
-			} break;
+			    case GLFW_KEY_ESCAPE:
+			    {
+				    m_window->setCloseFlag(true);
+			    } break;
 
 			}
 

@@ -18,13 +18,13 @@ public:
 
 public:
 	void Bind() override;
-	unsigned int GetId() const override { return m_id; }
+    [[nodiscard]] unsigned int GetId() const override { return m_id; }
 
 	void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) override;
-    std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const override;
+    [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const override;
 	void SetDepthAttachment(const std::shared_ptr<ITexture>& texture) override;
-    std::shared_ptr<ITexture> GetDepthAttachment() const override;
-	glm::ivec2 GetActualSize() const noexcept override { return m_size; }
+    [[nodiscard]] std::shared_ptr<ITexture> GetDepthAttachment() const override;
+    [[nodiscard]] glm::ivec2 GetActualSize() const noexcept override { return m_size; }
 
 private:
 	GLuint m_id;
@@ -52,7 +52,8 @@ public:
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
-	unsigned int GetId() const override
+
+    [[nodiscard]] unsigned int GetId() const override
 	{
 		return 0;
 	}
@@ -62,7 +63,7 @@ public:
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}
 
-    std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachementNumber) const override
+    [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachementNumber) const override
 	{
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}
@@ -71,12 +72,12 @@ public:
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}
 
-    std::shared_ptr<ITexture> GetDepthAttachment() const override
+    [[nodiscard]] std::shared_ptr<ITexture> GetDepthAttachment() const override
 	{
 		throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "GlScreenFrameBuffer dont'support attachements");
 	}
 
-	glm::ivec2 GetActualSize() const
+    [[nodiscard]] glm::ivec2 GetActualSize() const override
 	{
 		GLint viewport[4];
 		glGetIntegerv(GL_VIEWPORT, viewport);

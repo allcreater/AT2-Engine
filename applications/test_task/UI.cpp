@@ -95,7 +95,7 @@ void PlotRenderer::Draw(const IRenderer& renderer)
 	stateManager.BindShader(m_curveShader);
 	PrepareData(renderer);
 
-	for (auto pair : m_curves)
+	for (const auto& pair : m_curves)
 		pair.second->Draw(renderer);
 
 }
@@ -104,7 +104,7 @@ void PlotRenderer::PrepareData(const IRenderer& renderer)
 {
 	if (auto controlPtr = m_Control.lock())
 	{
-		auto& observingRange = controlPtr->GetObservingZone();
+		const auto& observingRange = controlPtr->GetObservingZone();
 		m_projectionMatrix = glm::ortho(observingRange.MinBound.x, observingRange.MaxBound.x, observingRange.MinBound.y, observingRange.MaxBound.y);
 
 		controlPtr->EnumerateCurves([&](const std::string_view name, const Plot::CurveData& data, bool isInvalidated)
@@ -136,11 +136,11 @@ void PlotRenderer::UpdateCanvasGeometry(const AABB2d& observingRange)
 	AddLine(glm::vec2(0.0, observingRange.MinBound.y), glm::vec2(0.0, observingRange.MaxBound.y));
 	
 	//let's draw a coordinate grid here
-	glm::vec2 range = observingRange.MaxBound - observingRange.MinBound;
-	glm::vec2 exp = glm::floor(glm::log(range)/ glm::log(glm::vec2(10.0f)));
-	
-	glm::vec2 step = glm::pow(glm::vec2(10.0f), exp - glm::vec2(1));
-	glm::vec2 firstMark = glm::floor(observingRange.MinBound / step)*step;
+	const glm::vec2 range = observingRange.MaxBound - observingRange.MinBound;
+	const glm::vec2 exp = glm::floor(glm::log(range)/ glm::log(glm::vec2(10.0f)));
+
+    const glm::vec2 step = glm::pow(glm::vec2(10.0f), exp - glm::vec2(1));
+    const glm::vec2 firstMark = glm::floor(observingRange.MinBound / step)*step;
 
 	for (auto x = firstMark.x; x <= observingRange.MaxBound.x; x += step.x)
 		AddLine(glm::vec2(x, observingRange.MinBound.y), glm::vec2(x, observingRange.MaxBound.y), glm::vec4(1.0, 1.0, 1.0, 0.3));
@@ -190,12 +190,12 @@ void WindowRenderer::Draw(const IRenderer& renderer)
 		m_uniforms = m_SharedInfo->m_Shader->CreateAssociatedUniformStorage();
 
 
-	if (auto control = m_Control.lock())
+	if (const auto control = m_Control.lock())
 	{
-		auto screenAABB = control->GetScreenPosition();
+        const auto screenAABB = control->GetScreenPosition();
 
 		//it's preety costly and not so important, but looks nice. Until it's not bottleneck, let's continue
-		auto texture = renderer.GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
+        const auto texture = renderer.GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
 
 		auto& stateManager = renderer.GetStateManager();
 		stateManager.BindTextures({ texture });

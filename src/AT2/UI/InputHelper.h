@@ -1,6 +1,9 @@
 #ifndef UI_INPUT_VISITOR_HEADER
 #define UI_INPUT_VISITOR_HEADER
 
+#include <utility>
+
+
 #include "../OpenGL/GLFW/callback_types.h" //TODO: detach type MousePos from GLFW
 #include "UI.h"
 
@@ -11,7 +14,7 @@ namespace AT2::UI
 	class UiInputHandler
 	{
 	public:
-		UiInputHandler(std::shared_ptr<AT2::UI::Node> rootNode) : m_rootNode(rootNode)
+		UiInputHandler(std::shared_ptr<AT2::UI::Node> rootNode) : m_rootNode(std::move(rootNode))
 		{
 
 		}
@@ -32,7 +35,7 @@ namespace AT2::UI
 
 	private:
 		std::shared_ptr<Node> m_rootNode;
-		MousePos m_mousePos;
+		MousePos m_mousePos {};
 		std::map<int, std::vector<std::weak_ptr<Node>>> m_mouseDownOnControl; //yes, it's an overkill, but it's a simplest solution
 	};
 

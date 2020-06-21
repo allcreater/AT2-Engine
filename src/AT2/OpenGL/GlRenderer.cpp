@@ -46,11 +46,6 @@ GlRenderer::GlRenderer()
     m_stateManager = std::make_unique<StateManager>(*m_rendererCapabilities);
 }
 
-GlRenderer::~GlRenderer()
-{
-}
-
-
 void GlRenderer::FinishFrame()
 {
 	glFinish();
@@ -92,7 +87,7 @@ void GlRenderer::Draw(Primitives::Primitive type, long first, long count, int nu
 
     const auto platformPrimitiveMode = Mappings::TranslatePrimitiveType(type);
 
-    if (const auto patchParams = std::get_if<Primitives::Patches>(&type))
+    if (auto *const patchParams = std::get_if<Primitives::Patches>(&type))
         glPatchParameteri(GL_PATCH_VERTICES, patchParams->NumControlPoints);
 
     if ( const auto indexDataType = GetStateManager().GetIndexDataType())
@@ -135,7 +130,7 @@ void GlRenderer::SetViewport(const AABB2d& viewport)
 
 void GlRenderer::GlErrorCallback(GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length, const GLchar * _message, const GLvoid * _userParam)
 {
-	auto rendererInstance = reinterpret_cast<const GlRenderer*>(_userParam);
+    const auto *const rendererInstance = reinterpret_cast<const GlRenderer*>(_userParam);
 
 	assert(dynamic_cast<const GlRenderer*>(rendererInstance));
 

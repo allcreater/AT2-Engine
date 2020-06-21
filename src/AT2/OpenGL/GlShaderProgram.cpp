@@ -7,7 +7,7 @@ static const GLuint s_shaderGlType[] = { GL_VERTEX_SHADER, GL_TESS_CONTROL_SHADE
 
 static GLuint GetGlShaderType(GlShaderType _type)
 {
-	int typeIndex = (int)_type;
+    const auto typeIndex = static_cast<int>(_type);
 	assert(typeIndex >= 0 && typeIndex <= 5);
 	return s_shaderGlType[typeIndex];
 }
@@ -85,7 +85,7 @@ GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 	if (status != GL_TRUE)
 	{
-		std::string shaderType = (_shaderType == GL_VERTEX_SHADER)? std::string("vertex") : 
+        const std::string shaderType = (_shaderType == GL_VERTEX_SHADER)? std::string("vertex") : 
 			(_shaderType == GL_TESS_CONTROL_SHADER)? std::string("tesselation control") :
 			(_shaderType == GL_TESS_EVALUATION_SHADER)? std::string("tesselation evaluation") :
 			(_shaderType == GL_GEOMETRY_SHADER)? std::string("geometry") :
@@ -171,7 +171,7 @@ void GlShaderProgram::SetUniform(const str &name, Uniform value)
 
 std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformBlockInfo(const str& blockName) const
 {
-	GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
+    const GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
 
 	if (blockIndex == GL_INVALID_INDEX)
 		return std::shared_ptr<GlShaderProgram::UniformBufferInfo>();

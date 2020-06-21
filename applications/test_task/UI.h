@@ -2,6 +2,8 @@
 #define RENDERABLE_UI_HEADER
 
 #include <AT2/UI/InputHelper.h>
+
+#include <utility>
 #include "LinesHelper.h"
 
 namespace AT2::UI
@@ -12,7 +14,7 @@ namespace AT2::UI
 	class PlotRenderer : public virtual IDrawable, protected LinesHelper
 	{
 	public:
-		PlotRenderer(std::weak_ptr<Plot> plot) : m_Control(plot)
+		PlotRenderer(std::weak_ptr<Plot> plot) : m_Control(std::move(plot))
 		{
 		}
 
@@ -50,8 +52,8 @@ namespace AT2::UI
 	struct WindowRenderer : public IDrawable
 	{
 		WindowRenderer(std::weak_ptr<Node> node, std::shared_ptr<WindowRendererSharedInfo> sharedInfo,const glm::vec2& borderThickness = glm::vec2(3.0, 3.0), const glm::vec4& color = glm::vec4(0.5, 0.5, 0.5, 0.3)) :
-			m_Control(node),
-			m_SharedInfo(sharedInfo),
+			m_Control(std::move(node)),
+			m_SharedInfo(std::move(sharedInfo)),
 			m_borderThickness(borderThickness),
 			m_Color(color)
 		{

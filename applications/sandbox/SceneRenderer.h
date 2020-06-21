@@ -26,7 +26,7 @@ private:
 
 struct LightRenderVisitor : NodeVisitor
 {
-    LightRenderVisitor(SceneRenderer& sceneRenderer, const Camera& camera);
+    LightRenderVisitor(SceneRenderer& sceneRenderer);
 
     void Visit(Node& node) override;
 
@@ -35,7 +35,6 @@ struct LightRenderVisitor : NodeVisitor
     void DrawLights();
 
 private:
-    const Camera& camera;
     SceneRenderer &scene_renderer;
 
     MatrixStack transforms;
@@ -94,6 +93,6 @@ private:
 
 
 
-std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);
+std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, const std::shared_ptr<IShaderProgram> &program, int segX, int segY);
 std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);
 std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer);

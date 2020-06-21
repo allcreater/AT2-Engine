@@ -73,6 +73,7 @@ static ExternalTextureFormat GetExternalFormat(ILuint externalFormat, ILuint ext
 		case IL_HALF:			return BufferDataType::HalfFloat;
 		default:
 			assert(false);
+			return BufferDataType::Byte;
 		}
 	};
 
@@ -97,6 +98,7 @@ static ExternalTextureFormat GetExternalFormat(ILuint externalFormat, ILuint ext
 			return TextureLayout::RG;
 		default:
 			assert(false);
+			return TextureLayout::Red;
 		}
 	};
 
@@ -119,12 +121,12 @@ static std::shared_ptr<ITexture> Load(const std::shared_ptr<IRenderer>& renderer
 	ILinfo imageInfo;
 	iluGetImageInfo(&imageInfo);
 
-	auto size = glm::uvec3(imageInfo.Width, imageInfo.Height, imageInfo.Depth);
+    const auto size = glm::uvec3(imageInfo.Width, imageInfo.Height, imageInfo.Depth);
 
-	ILuint mipmapLevels = std::max(imageInfo.NumMips, 1u);
-	ILuint storageLevels = (imageInfo.NumMips || !enableAutomipmaps) ? imageInfo.NumMips : static_cast<ILuint>(log(std::max({ size.x, size.y, size.z })) / log(2));
+    const ILuint mipmapLevels = std::max(imageInfo.NumMips, 1u);
+    const ILuint storageLevels = (imageInfo.NumMips || !enableAutomipmaps) ? imageInfo.NumMips : static_cast<ILuint>(log(std::max({ size.x, size.y, size.z })) / log(2));
 
-	if (auto flags = ilGetInteger(IL_IMAGE_CUBEFLAGS))//TODO: and how to live with it? :)
+	if (const auto flags = ilGetInteger(IL_IMAGE_CUBEFLAGS))//TODO: and how to live with it? :)
 	{
 		for (size_t i = 0; i <= 5; ++i)
 		{
@@ -190,7 +192,7 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
 	if (size > std::numeric_limits<ILuint>::max())
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "DevIL does not support images more than 4GB");
 
-	ILenum type = ilDetermineTypeL(data, size);
+    const ILenum type = ilDetermineTypeL(data, size);
 	if (type == IL_TYPE_UNKNOWN)
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "Couldn't determine texture format while reading from memory");
 
