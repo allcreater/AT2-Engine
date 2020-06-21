@@ -5,121 +5,95 @@ using namespace AT2;
 using namespace glm;
 
 GlUniformBuffer::GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi) : 
-	GlVertexBuffer (VertexBufferType::UniformBuffer),
-	m_bindingPoint(0),
-	m_ubi(ubi)
+    GlVertexBuffer (VertexBufferType::UniformBuffer),
+    m_bindingPoint(0),
+    m_ubi(ubi)
 {
-	m_length = m_ubi->GetBlockSize();
+    m_length = m_ubi->GetBlockSize();
 
-	glNamedBufferDataEXT(m_id, m_length, 0, static_cast<GLenum>(m_usageHint));
+    glNamedBufferDataEXT(m_id, m_length, 0, static_cast<GLenum>(m_usageHint));
 }
 
 GlUniformBuffer::~GlUniformBuffer()
 {
-	glDeleteBuffers(1, &m_id);
-}
-
-void GlUniformBuffer::Bind()
-{
-	glBindBufferBase(GL_UNIFORM_BUFFER, m_bindingPoint, m_id);
+    glDeleteBuffers(1, &m_id);
 }
 
 template <typename T>
 const GLvoid* value_ptr(const T& value) { return reinterpret_cast<const GLvoid*>(&value); }
 
+
 template <typename T>
-void GlUniformBuffer::SetUniformInternal(const str& name, const T& value, size_t size)
+void SetUniformInternal(GLuint bufferId, GlShaderProgram::UniformBufferInfo* ubi, const str& name, const T& value)
 {
-	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
-	if (!ui)
-		return;
+    const auto* ui = ubi->GetUniformInfo(name);
+    if (!ui)
+        return;
 
-	auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
-	const void* ptr = value_ptr(value);
-	memcpy(data + ui->Offset, ptr, size);
-	glUnmapNamedBufferEXT(m_id);
+    //glMapNamedBufferRangeEXT(bufferId, ui->Offset, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+    auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(bufferId, GL_WRITE_ONLY));
+    const void* ptr = value_ptr(value);
+    memcpy(data + ui->Offset, ptr, sizeof(T));
+    glUnmapNamedBufferEXT(bufferId);
 }
 
 
-//mat2
-template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const mat2& value, size_t size)
+template <typename T, size_t C, size_t R>
+void SetUniformInternal(GLuint bufferId, GlShaderProgram::UniformBufferInfo* ubi, const str& name, const glm::mat<C, R, T>& value)
 {
-	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
-	if (!ui)
-		return;
+    using MatT = mat<C, R, T>;//decltype(value);
+    
+    const auto* ui = ubi->GetUniformInfo(name);
+    if (!ui)
+        return;
 
-	auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
-	memcpy(data + ui->Offset, &(value[0].x), sizeof(mat2::col_type));
-	memcpy(data + ui->Offset + ui->MatrixStride, &(value[1].x), sizeof(mat2::col_type));
-	glUnmapNamedBufferEXT(m_id);
-}
-template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const dmat2& value, size_t size)
-{
-	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
-	if (!ui)
-		return;
+    //glMapNamedBufferRangeEXT(bufferId, ui->Offset, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+    auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(bufferId, GL_WRITE_ONLY));
+    for (int i = 0; i < C; ++i)
+        memcpy(data + ui->Offset + ui->MatrixStride * i, &(value[i].x), sizeof(MatT::col_type));
 
-	auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
-	memcpy(data + ui->Offset, &(value[0].x), sizeof(dmat2::col_type));
-	memcpy(data + ui->Offset + ui->MatrixStride, &(value[1].x), sizeof(dmat2::col_type));
-	glUnmapNamedBufferEXT(m_id);
-}
-//mat3
-template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const mat3& value, size_t size)
-{
-	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
-	if (!ui)
-		return;
-
-	auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
-	memcpy(data + ui->Offset, &(value[0].x), sizeof(mat3::col_type));
-	memcpy(data + ui->Offset + ui->MatrixStride, &(value[1].x), sizeof(mat3::col_type));
-	memcpy(data + ui->Offset + ui->MatrixStride * 2, &(value[2].x), sizeof(mat3::col_type));
-	glUnmapNamedBufferEXT(m_id);
-}
-template <> void GlUniformBuffer::SetUniformInternal<>(const str& name, const dmat3& value, size_t size)
-{
-	const GlShaderProgram::UniformInfo* ui = m_ubi->GetUniformInfo(name);
-	if (!ui)
-		return;
-
-	auto data = reinterpret_cast<GLbyte*>(glMapNamedBufferEXT(m_id, GL_WRITE_ONLY));
-	memcpy(data + ui->Offset, &(value[0].x), sizeof(dmat3::col_type));
-	memcpy(data + ui->Offset + ui->MatrixStride, &(value[1].x), sizeof(dmat3::col_type));
-	memcpy(data + ui->Offset + ui->MatrixStride * 2, &(value[2].x), sizeof(dmat3::col_type));
-	glUnmapNamedBufferEXT(m_id);
+    glUnmapNamedBufferEXT(bufferId);
 }
 
-//doubles
-void GlUniformBuffer::SetUniform(const str& name, const GLdouble& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::dvec2& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::dvec3& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::dvec4& value) { SetUniformInternal(name, value); }
 
-void GlUniformBuffer::SetUniform(const str& name, const glm::dmat2& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::dmat3& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::dmat4& value) { SetUniformInternal(name, value); }
+void GlUniformBuffer::SetUniform(const str &name, const Uniform &value)
+{
+    using namespace glm;
 
-//floats
-void GlUniformBuffer::SetUniform(const str& name, const GLfloat& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::vec2& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::vec3& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::vec4& value) { SetUniformInternal(name, value); }
+    //could be reduced to just one generic lambda, but let it be
+    std::visit(Utils::overloaded{
+        [&](int x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const ivec2& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const ivec3& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const ivec4& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
 
-void GlUniformBuffer::SetUniform(const str& name, const glm::mat2& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::mat3& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::mat4& value) { SetUniformInternal(name, value); }
+        [&](unsigned int x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const uvec2& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const uvec3& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const uvec4& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
 
-//integers
-void GlUniformBuffer::SetUniform(const str& name, const GLint& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::ivec2& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::ivec3& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::ivec4& value) { SetUniformInternal(name, value); }
+        [&](float x)       { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const vec2& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const vec3& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const vec4& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const mat2& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const mat3& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const mat4& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
 
-//unsigned integers
-void GlUniformBuffer::SetUniform(const str& name, const GLuint& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::uvec2& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::uvec3& value) { SetUniformInternal(name, value); }
-void GlUniformBuffer::SetUniform(const str& name, const glm::uvec4& value) { SetUniformInternal(name, value); }
+        [&](double x)       { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const dvec2& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const dvec3& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const dvec4& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const dmat2& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const dmat3& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); },
+        [&](const dmat4& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); }
+        }, value);
+}
+
+void GlUniformBuffer::Bind()
+{
+    glBindBufferBase(GL_UNIFORM_BUFFER, m_bindingPoint, m_id);
+}
+
 
 void GlUniformBuffer::SetUniform(const str& name, std::weak_ptr<const ITexture> value) { throw std::logic_error("not implemented"); }

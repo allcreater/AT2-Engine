@@ -56,7 +56,8 @@ public:
 	virtual ~IBuffer() = default;
 
 public:
-	virtual void SetData(unsigned int length, const void* data) = 0;
+    virtual size_t GetLength() const = 0;
+	virtual void SetData(size_t length, const void* data) = 0;
 	//virtual std::unique_ptr<void*> Lock() = 0; //TODO: think about more useful wrapper
 	//virtual void Unlock() = 0;
 };
@@ -84,7 +85,7 @@ public:
 
 };
 
-class IVertexBuffer// : public IBuffer
+class IVertexBuffer : public IBuffer
 {
 public:
 	IVertexBuffer() = default;
@@ -96,13 +97,10 @@ public:
 	virtual void Bind() = 0;
 
 	virtual unsigned int GetId() const = 0;
-	virtual size_t GetLength() const = 0;
 	virtual VertexBufferType GetType() const = 0;
 
 	virtual const BufferTypeInfo& GetDataType() const = 0;
 	virtual void SetDataType(const BufferTypeInfo& typeInfo) = 0;
-
-	virtual void SetData(size_t length, const void* data) = 0;
 };
 
 class IVertexArray
@@ -191,38 +189,7 @@ class IUniformContainer
 public:
 	virtual ~IUniformContainer() = default;
 
-public:
-	//doubles
-	virtual void SetUniform(const str& name, const double& value) = 0;
-	virtual void SetUniform(const str& name, const glm::dvec2& value) = 0;
-	virtual void SetUniform(const str& name, const glm::dvec3& value) = 0;
-	virtual void SetUniform(const str& name, const glm::dvec4& value) = 0;
-
-	virtual void SetUniform(const str& name, const glm::dmat2& value) = 0;
-	virtual void SetUniform(const str& name, const glm::dmat3& value) = 0;
-	virtual void SetUniform(const str& name, const glm::dmat4& value) = 0;
-
-	//floats
-	virtual void SetUniform(const str& name, const float& value) = 0;
-	virtual void SetUniform(const str& name, const glm::vec2& value) = 0;
-	virtual void SetUniform(const str& name, const glm::vec3& value) = 0;
-	virtual void SetUniform(const str& name, const glm::vec4& value) = 0;
-
-	virtual void SetUniform(const str& name, const glm::mat2& value) = 0;
-	virtual void SetUniform(const str& name, const glm::mat3& value) = 0;
-	virtual void SetUniform(const str& name, const glm::mat4& value) = 0;
-
-	//integers
-	virtual void SetUniform(const str& name, const int& value) = 0;
-	virtual void SetUniform(const str& name, const glm::ivec2& value) = 0;
-	virtual void SetUniform(const str& name, const glm::ivec3& value) = 0;
-	virtual void SetUniform(const str& name, const glm::ivec4& value) = 0;
-
-	//unsigned integers
-	virtual void SetUniform(const str& name, const glm::uint& value) = 0;
-	virtual void SetUniform(const str& name, const glm::uvec2& value) = 0;
-	virtual void SetUniform(const str& name, const glm::uvec3& value) = 0;
-	virtual void SetUniform(const str& name, const glm::uvec4& value) = 0;
+	virtual void SetUniform(const str& name, const Uniform& value) = 0;
 
 	//texture
 	virtual void SetUniform(const str& name, std::weak_ptr<const ITexture> value) = 0;
