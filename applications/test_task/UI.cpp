@@ -27,7 +27,7 @@ public:
 		glLineWidth(1.5);
 		m_uniforms->SetUniform("u_matProjection", m_projectionMatrix);
 
-		m_uniforms->Bind();
+		m_uniforms->Bind(stateManager);
 		m_DrawPrimitive->Draw();
 	}
 
@@ -88,7 +88,7 @@ void PlotRenderer::Draw(const IRenderer& renderer)
 	auto& stateManager = renderer.GetStateManager();
 
 	stateManager.BindShader(m_uiShader);
-	m_uniformBuffer->Bind();
+	m_uniformBuffer->Bind(stateManager);
 	LinesHelper::Draw(renderer);
 
 
@@ -198,7 +198,7 @@ void WindowRenderer::Draw(const IRenderer& renderer)
         const auto texture = renderer.GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
 
 		auto& stateManager = renderer.GetStateManager();
-		stateManager.BindTextures({ texture });
+		//stateManager.BindTextures({ texture });
 		stateManager.BindShader(m_SharedInfo->m_Shader);
 		stateManager.BindVertexArray(m_SharedInfo->m_VAO);
 
@@ -209,7 +209,7 @@ void WindowRenderer::Draw(const IRenderer& renderer)
 		m_uniforms->SetUniform("u_BorderThickness", m_borderThickness);
 		m_uniforms->SetUniform("u_BlurDirection", m_blurDirection);
 		
-		m_uniforms->Bind();
+		m_uniforms->Bind(stateManager);
 
 		m_SharedInfo->m_DrawPrimitive->Draw();
 	}

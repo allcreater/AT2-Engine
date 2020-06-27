@@ -21,7 +21,7 @@ public:
 	//textures
 	void SetUniform(const str& name, std::weak_ptr<const ITexture> value) override;
 
-	void Bind() override;
+	void Bind(IStateManager &stateManager) const override;
 	void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
 
 private:

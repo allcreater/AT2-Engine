@@ -34,7 +34,6 @@ public:
 		assert(m_indicesVec.empty());
 
 		m_buildedMesh.Shader = program;
-		m_buildedMesh.UniformBuffer = program->CreateAssociatedUniformStorage();
 
 		BuildVAO();
 

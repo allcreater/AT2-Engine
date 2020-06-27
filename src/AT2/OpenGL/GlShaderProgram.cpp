@@ -1,5 +1,5 @@
 #include "GlShaderProgram.h"
-#include "GlUniformContainer.h"
+#include "../UniformContainer.h"
 
 using namespace AT2;
 
@@ -58,7 +58,7 @@ bool GlShaderProgram::Compile()
 
 std::shared_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStorage()
 {
-	return std::make_shared<AT2::GlUniformContainer>(shared_from_this());
+	return std::make_shared<AT2::UniformContainer>();
 }
 
 GLuint GlShaderProgram::LoadShader(GLenum _shaderType, const str& _text)

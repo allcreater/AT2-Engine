@@ -27,7 +27,7 @@ void RenderVisitor::Visit(Node& node)
         stateManager.BindVertexArray(active_mesh->VertexArray);
 
         if (active_mesh->UniformBuffer)
-            active_mesh->UniformBuffer->Bind();
+            active_mesh->UniformBuffer->Bind(stateManager);
     }
     else if (const auto* submeshNode = dynamic_cast<DrawableNode*>(&node))
     {
@@ -67,11 +67,12 @@ void LightRenderVisitor::Visit(Node& node)
                 lightNode->GetEffectiveRadius()
             });
         }
-        else if (const auto* directionalLight = std::get_if<DirectionalLight>(&lightNode->GetFlavor()))
+        else if (const auto* skyLight = std::get_if<SkyLight>(&lightNode->GetFlavor()))
         {
             collectedDirectionalLights.push_back({
                 lightNode->GetIntensity(),
-                glm::mat3(transforms.getModelView()) * directionalLight->Direction
+                glm::mat3(transforms.getModelView()) * skyLight->Direction,
+                skyLight->EnvironmentMap
             });
         }
     }
@@ -83,59 +84,60 @@ void LightRenderVisitor::UnVisit(Node& node)
     transforms.popModelView();
 }
 
-void LightRenderVisitor::DrawLights()
+void SceneRenderer::DrawPointLights(const LightRenderVisitor &lrv) const
 {
     //update our vertex buffer...
-    auto &rf = scene_renderer.renderer->GetResourceFactory();
-    auto &vao = scene_renderer.lightMesh->VertexArray;
+    auto &rf = renderer->GetResourceFactory();
+    auto &vao = lightMesh->VertexArray;
 
+
+    using LightAttribs = LightRenderVisitor::LightAttribs;
     vao->SetVertexBuffer(2,
         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
             BufferTypeInfo{ BufferDataType::Float, 4, sizeof(LightAttribs), offsetof(LightAttribs, position) },
-            collectedLights.size() * sizeof(LightAttribs),
-            collectedLights.data())
+            lrv.collectedLights.size() * sizeof(LightAttribs),
+            lrv.collectedLights.data())
     );
     vao->SetVertexBufferDivisor(2, 1);
 
     vao->SetVertexBuffer(3,
         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
             BufferTypeInfo{ BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, intensity) },
-            collectedLights.size() * sizeof(LightAttribs),
-            collectedLights.data())
+            lrv.collectedLights.size() * sizeof(LightAttribs),
+            lrv.collectedLights.data())
     );
     vao->SetVertexBufferDivisor(3, 1);
 
     vao->SetVertexBuffer(4,
         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
             BufferTypeInfo{ BufferDataType::Float, 1, sizeof(LightAttribs), offsetof(LightAttribs, effective_radius) },
-            collectedLights.size() * sizeof(LightAttribs),
-            collectedLights.data())
+            lrv.collectedLights.size() * sizeof(LightAttribs),
+            lrv.collectedLights.data())
     );
     vao->SetVertexBufferDivisor(4, 1);
 
 
-    auto &stateManager = scene_renderer.renderer->GetStateManager();
+    auto &stateManager = renderer->GetStateManager();
+    stateManager.BindShader(resources.sphereLightsShader);
+    stateManager.BindVertexArray(lightMesh->VertexArray);
+    sphereLightsUniforms->Bind(stateManager);
 
-    //spherical lights
-    stateManager.BindShader(scene_renderer.lightMesh->Shader);
-    stateManager.BindVertexArray(scene_renderer.lightMesh->VertexArray);
-    scene_renderer.DrawSubmesh(scene_renderer.lightMesh->Submeshes.front(), collectedLights.size());
+    DrawSubmesh(lightMesh->Submeshes.front(), lrv.collectedLights.size());
 
-    //directional lights
-    //usually it's number significally less than spherical, so that we will draw them as usually
-    //for (const auto& directionalLight : collectedDirectionalLights)
-    //{
-    //    auto program = scene_renderer.resources.directionalLightsShader;
-    //    program->SetUniform("u_lightDirection", directionalLight.direction);
-    //    program->SetUniform("u_lightIntensity", directionalLight.intensity);
-    //    program->SetUniform("u_colorMap", scene_renderer.gBufferFBO->GetColorAttachment(0)->GetCurrentModule());
-    //    program->SetUniform("u_normalMap", scene_renderer.gBufferFBO->GetColorAttachment(1)->GetCurrentModule());
-    //    program->SetUniform("u_roughnessMetallicMap", scene_renderer.gBufferFBO->GetColorAttachment(2)->GetCurrentModule());
-    //    program->SetUniform("u_depthMap", scene_renderer.gBufferFBO->GetDepthAttachment()->GetCurrentModule());
-    //    //program->SetUniform("u_environmentMap", scene_renderer.EnvironmentMapTex);
-    //    //program
-    //    scene_renderer.DrawQuad(program);
-    //}
+}
+
+void SceneRenderer::DrawSkyLight(const LightRenderVisitor& lrv) const
+{
+    auto& stateManager = renderer->GetStateManager();
+    //usually it's number significant less than spherical, so that we will draw them as usually
+    for (const auto& directionalLight : lrv.collectedDirectionalLights)
+    {
+        skyLightsUniforms->SetUniform("u_lightDirection", directionalLight.direction);
+        skyLightsUniforms->SetUniform("u_lightIntensity", directionalLight.intensity);
+        skyLightsUniforms->SetUniform("u_environmentMap", directionalLight.environment_map);
+
+        DrawQuad(resources.skyLightsShader, *skyLightsUniforms);
+    }
 }
 
 void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
@@ -150,13 +152,13 @@ void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
     "resources/shaders/pbr.fs.glsl",
     "resources/shaders/spherelight2.fs.glsl" });
 
-    resources.directionalLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles({
+    resources.skyLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles({
         "resources/shaders/skylight.vs.glsl",
         "resources/shaders/pbr.fs.glsl",
         "resources/shaders/skylight.fs.glsl" });
 
 
-    lightMesh = MakeSphere(*renderer, resources.sphereLightsShader, 32, 16);
+    lightMesh = MakeSphere(*renderer, 32, 16);
     quadMesh = MakeFullscreenQuadDrawable(*renderer);
 
     this->renderer = std::move(renderer);
@@ -187,40 +189,32 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
         postProcessFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
         postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()); //depth is common with previous stage
 
-        lightMesh->Submeshes[0].Textures = { gBufferFBO->GetColorAttachment(0), gBufferFBO->GetColorAttachment(1), gBufferFBO->GetColorAttachment(2), gBufferFBO->GetDepthAttachment()/*, Noise3Tex*/ };
         {
-            auto uniformStorage = resources.sphereLightsShader->CreateAssociatedUniformStorage();
-            //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-            uniformStorage->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
-            uniformStorage->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
-            uniformStorage->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
-            uniformStorage->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
+            sphereLightsUniforms = resources.sphereLightsShader->CreateAssociatedUniformStorage();
+            //sphereLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
+            sphereLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
+            sphereLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
+            sphereLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
+            sphereLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
 
-            lightMesh->Submeshes[0].UniformBuffer = uniformStorage;
         }
 
-
-        //SkylightDrawable->Textures = { gBufferFBO->GetColorAttachment(0), gBufferFBO->GetColorAttachment(1), gBufferFBO->GetColorAttachment(2), gBufferFBO->GetDepthAttachment()/*, Noise3Tex*/, EnvironmentMapTex };
-        //{
-        //    auto uniformStorage = resources.directionalLightsShader->CreateAssociatedUniformStorage();
-        //    //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-        //    uniformStorage->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
-        //    uniformStorage->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
-        //    uniformStorage->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
-        //    uniformStorage->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
-        //    uniformStorage->SetUniform("u_environmentMap", EnvironmentMapTex);
-        //    SkylightDrawable->UniformBuffer = uniformStorage;
-        //}
-
-        //TODO: remake
-        //Postprocess quad
-        quadMesh->Submeshes[0].Textures = { postProcessFBO->GetColorAttachment(0), postProcessFBO->GetDepthAttachment()/*, Noise3Tex*/ };
         {
-            auto uniformStorage = resources.postprocessShader->CreateAssociatedUniformStorage();
+            skyLightsUniforms = resources.skyLightsShader->CreateAssociatedUniformStorage();
+            //skyLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
+            skyLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
+            skyLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
+            skyLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
+            skyLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
+            //skyLightsUniforms->SetUniform("u_environmentMap", 0);
+        }
+
+        //Postprocess quad
+        {
+            postprocessUniforms = resources.postprocessShader->CreateAssociatedUniformStorage();
             //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-            uniformStorage->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0));
-            uniformStorage->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment());
-            quadMesh->Submeshes[0].UniformBuffer = uniformStorage;
+            postprocessUniforms->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0));
+            postprocessUniforms->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment());
         }
         
         dirtyFramebuffers = false;
@@ -260,7 +254,10 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
     //lights
     LightRenderVisitor lrv{ *this };
     scene.GetRoot().Accept(lrv);
-    lrv.DrawLights();
+
+    DrawPointLights(lrv);
+    glDisable(GL_DEPTH_TEST);
+    DrawSkyLight(lrv);
 
 
     targetFramebuffer.Bind();
@@ -270,7 +267,9 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
 
     glCullFace(GL_BACK);
     glDisable(GL_DEPTH_TEST);
-    DrawQuad(resources.postprocessShader);
+
+
+    DrawQuad(resources.postprocessShader, *postprocessUniforms);
 }
 
 void SceneRenderer::SetupCamera(const Camera& camera)
@@ -288,16 +287,16 @@ void SceneRenderer::SetupCamera(const Camera& camera)
     cameraUniformBuffer->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
     cameraUniformBuffer->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
     cameraUniformBuffer->SetUniform("u_time", time);
-    cameraUniformBuffer->Bind();
+    cameraUniformBuffer->Bind(renderer->GetStateManager());
 
 }
 
 void SceneRenderer::DrawSubmesh(const SubMesh & subMesh, int numInstances) const
 {
     auto &stateManager = renderer->GetStateManager();
-    stateManager.BindTextures(subMesh.Textures);
+    //stateManager.BindTextures(subMesh.Textures);
     if (subMesh.UniformBuffer)
-        subMesh.UniformBuffer->Bind();
+        subMesh.UniformBuffer->Bind(stateManager);
 
     for (const auto &primitive : subMesh.Primitives)
         renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, numInstances, primitive.BaseVertex);
@@ -316,15 +315,21 @@ void SceneRenderer::DrawMesh(const Mesh& mesh, const std::shared_ptr<IShaderProg
         DrawSubmesh(submesh);
 }
 
-void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program)
+void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program, const IUniformContainer& uniformBuffer) const noexcept
 {
-    //there could be more optimal code
-    DrawMesh(*quadMesh, program);
+    assert(program);
+
+    auto& stateManager = renderer->GetStateManager();
+    stateManager.BindShader(program);
+    uniformBuffer.Bind(stateManager);
+    stateManager.BindVertexArray(quadMesh->VertexArray);
+    const auto primitive = quadMesh->Submeshes.front().Primitives.front();
+    renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, 1, primitive.BaseVertex);
 }
 
 
 
-std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, const std::shared_ptr<IShaderProgram> &program, int segX, int segY)
+std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, int segX, int segY)
 {
     assert(segX < 1024 && segY < 1024);
 
@@ -349,12 +354,9 @@ std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, const std::shar
 
     Mesh& mesh = rootNode->GetMesh();
     mesh.Name = "Terrain";
-    mesh.Shader = program;
-    mesh.UniformBuffer = program->CreateAssociatedUniformStorage();
     mesh.VertexArray = vao;
 
     SubMesh subMesh;
-    subMesh.UniformBuffer = mesh.Shader->CreateAssociatedUniformStorage();
     subMesh.Primitives.emplace_back(Primitives::Patches{4}, 0, texCoords.size());
 
     mesh.Submeshes.push_back(std::move(subMesh));
@@ -363,14 +365,13 @@ std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, const std::shar
     auto drawable = std::make_shared<DrawableNode>();
     drawable->SetName("Terrain drawable");
     drawable->SubmeshIndex = 0;
-    
 
     rootNode->AddChild(std::move(drawable));
 
     return rootNode;
 }
 
-std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program,  int segX, int segY)
+std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer,  int segX, int segY)
 {
     assert(segX <= 1024 && segY <= 512);
 
@@ -412,7 +413,6 @@ std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<ISha
     mesh->VertexArray->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, normals.size() * sizeof(glm::vec3), normals.data()));
     mesh->VertexArray->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, indices.size() * sizeof(glm::uint), indices.data()));
 
-    mesh->Shader = std::move(program);
 
     //don't know how to make it better
     SubMesh subMesh;

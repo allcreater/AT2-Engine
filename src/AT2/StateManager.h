@@ -26,7 +26,7 @@ public:
     [[nodiscard]] std::optional<BufferDataType> GetIndexDataType() const noexcept override { return m_activeIndexBufferType; }
 
 private:
-	std::vector<std::shared_ptr<ITexture>> m_bindedTextures;
+	std::vector<std::shared_ptr<const ITexture>> m_bindedTextures;
 	std::shared_ptr<IShaderProgram> m_activeShader;
 	std::shared_ptr<IFrameBuffer> m_activeFramebuffer;
 	std::shared_ptr<IVertexArray> m_activeVertexArray;

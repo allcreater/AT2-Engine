@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AT2.h"
+#include "UniformContainer.h"
 
 namespace AT2 {
 
@@ -46,6 +47,14 @@ struct Mesh
 
     //Mesh(const Mesh&) = delete;
     //Mesh& operator=(const Mesh&) = delete;
+
+    std::shared_ptr<IUniformContainer> GetOrCreateUniformBuffer()
+    {
+        if (!UniformBuffer)
+            UniformBuffer = std::make_shared<UniformContainer>();
+
+        return UniformBuffer;
+    }
 
     std::string Name;
     std::shared_ptr<IShaderProgram> Shader;

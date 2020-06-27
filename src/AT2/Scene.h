@@ -65,14 +65,15 @@ protected:
 
 struct SphereLight {};
 
-struct DirectionalLight
+struct SkyLight
 {
     glm::vec3 Direction;
+    std::shared_ptr<ITexture> EnvironmentMap;
 };
 
 struct LightNode : Node
 {
-    using LightFlavor = std::variant<SphereLight, DirectionalLight>;
+    using LightFlavor = std::variant<SphereLight, SkyLight>;
 
     LightNode() = default;
     LightNode(LightFlavor flavor, glm::vec3 color) : flavor(flavor), intensity(color) { UpdateEffectiveRadius(); }

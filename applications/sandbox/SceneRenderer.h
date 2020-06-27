@@ -26,13 +26,13 @@ private:
 
 struct LightRenderVisitor : NodeVisitor
 {
+    friend class SceneRenderer;
+
     LightRenderVisitor(SceneRenderer& sceneRenderer);
 
     void Visit(Node& node) override;
 
     void UnVisit(Node& node) override;
-
-    void DrawLights();
 
 private:
     SceneRenderer &scene_renderer;
@@ -43,6 +43,7 @@ private:
     {
         glm::vec3 intensity;
         glm::vec3 direction;
+        std::shared_ptr<ITexture> environment_map;
     };
     std::vector<DirectionalLightAttribs> collectedDirectionalLights;
 
@@ -58,7 +59,6 @@ private:
 class SceneRenderer
 {
     friend struct RenderVisitor;
-    friend struct LightRenderVisitor;
 
 public:
     SceneRenderer() = default;
@@ -67,24 +67,27 @@ public:
     void ResizeFramebuffers(glm::ivec2 newSize);
     void RenderScene(Scene& scene, const Camera& camera, IFrameBuffer& targetFramebuffer, double time);
 
-
+    void DrawPointLights(const LightRenderVisitor &lrv) const;
+    void DrawSkyLight(const LightRenderVisitor& lrv) const;
 private:
     void SetupCamera(const Camera& camera);
     void DrawSubmesh(const SubMesh &, int numInstances = 1) const;
     void DrawMesh(const Mesh&, const std::shared_ptr<IShaderProgram>&);
-    void DrawQuad(const std::shared_ptr<IShaderProgram>&);
+    void DrawQuad(const std::shared_ptr<IShaderProgram>&, const IUniformContainer&) const noexcept;
 
 private:
     std::shared_ptr<IRenderer> renderer;
     
     struct Resources
     {
-        std::shared_ptr<IShaderProgram> sphereLightsShader, directionalLightsShader, postprocessShader;
+        std::shared_ptr<IShaderProgram> sphereLightsShader, skyLightsShader, postprocessShader;
     } resources;
 
     std::unique_ptr<Mesh> lightMesh, quadMesh;
     std::unique_ptr<IUniformContainer> cameraUniformBuffer;
     std::shared_ptr<AT2::IFrameBuffer> gBufferFBO, postProcessFBO;
+
+    std::shared_ptr<IUniformContainer> sphereLightsUniforms, skyLightsUniforms, postprocessUniforms;
 
     bool dirtyFramebuffers = false;
     glm::ivec2 framebuffer_size = {512, 512};
@@ -93,6 +96,6 @@ private:
 
 
 
-std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, const std::shared_ptr<IShaderProgram> &program, int segX, int segY);
-std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, std::shared_ptr<IShaderProgram> program, int segX, int segY);
+std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, int segX, int segY);
+std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, int segX, int segY);
 std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer);

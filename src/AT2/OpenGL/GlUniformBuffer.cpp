@@ -63,7 +63,7 @@ void GlUniformBuffer::SetUniform(const str &name, const Uniform &value)
     std::visit([&](const auto& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); }, value);
 }
 
-void GlUniformBuffer::Bind()
+void GlUniformBuffer::Bind(IStateManager &stateManager) const
 {
     glBindBufferBase(GL_UNIFORM_BUFFER, m_bindingPoint, m_id);
 }

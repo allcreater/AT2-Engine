@@ -18,9 +18,9 @@ public:
 
 		stateManager.BindShader(Shader);
 		stateManager.BindVertexArray(VertexArray);
-		stateManager.BindTextures(Textures);
+		//stateManager.BindTextures(Textures);
 		
-		UniformBuffer->Bind();
+		UniformBuffer->Bind(stateManager);
 
 		for(auto *primitive: Primitives)
 			primitive->Draw();

@@ -36,12 +36,26 @@ namespace AT2
 
 typedef std::string str;
 
+class IReloadable;
+class IBuffer;
+class IFrameBuffer;
+class IVertexBuffer;
+class IVertexArray;
+class ITexture;
+class IShaderProgram;
+class IUniformContainer;
+class IRendererCapabilities;
+class IStateManager;
+class IResourceFactory;
+class IRenderer;
+
 enum class ReloadableGroup
 {
 	Shaders = 1,
 	Textures = 2
 };
 
+//TODO: think about it's fate :)
 //Interface for all resources which can be dynamically reloaded from file
 class IReloadable
 {
@@ -67,8 +81,6 @@ public:
 	//virtual std::unique_ptr<void*> Lock() = 0; //TODO: think about more useful wrapper
 	//virtual void Unlock() = 0;
 };
-
-class ITexture;
 
 class IFrameBuffer
 {
@@ -142,7 +154,7 @@ public:
 	virtual void Bind(unsigned int module) const = 0;
 	//TODO: think about interface
 	virtual void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage = BufferUsage::ReadWrite) const = 0;
-	virtual void Unbind() = 0;
+	virtual void Unbind() const = 0;
 	virtual void BuildMipmaps() = 0;
 
     [[nodiscard]] virtual int GetCurrentModule() const noexcept = 0;
@@ -159,8 +171,6 @@ public:
 	virtual void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data, int cubeMapFace = 0) = 0;
 	virtual void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data) = 0;
 };
-
-class IUniformContainer;
 
 class IShaderProgram
 {
@@ -204,7 +214,7 @@ public:
 	//texture
 	virtual void SetUniform(const str& name, std::weak_ptr<const ITexture> value) = 0;
 
-	virtual void Bind() = 0;
+	virtual void Bind(IStateManager &stateManager) const = 0;
 };
 
 class AT2Exception : public std::runtime_error
@@ -241,7 +251,7 @@ public:
 	[[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachments() const = 0;
 };
 
-typedef std::set<std::shared_ptr<ITexture>> TextureSet;
+typedef std::set<std::shared_ptr<const ITexture>> TextureSet;
 typedef std::vector<IDrawPrimitive*> PrimitiveList;
 
 class IStateManager

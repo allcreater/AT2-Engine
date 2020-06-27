@@ -17,7 +17,7 @@ namespace AT2
         void Bind(unsigned int module) const override;
         void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage = BufferUsage::ReadWrite) const override;
 
-        void Unbind() override;
+        void Unbind() const override;
         void BuildMipmaps() override;
         glm::uvec3 GetSize() const noexcept override { return m_size; }
         size_t GetDataLength() const noexcept override { return m_dataSize; }

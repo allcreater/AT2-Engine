@@ -14,12 +14,6 @@ layout(binding = 1) uniform CameraBlock
 //uniform mat4 u_matModel;
 //uniform mat3 u_matNormal;
 
-layout(binding = 2) uniform LightingBlock
-{
-	vec4 u_lightPos; //in view space
-	float u_lightRadius;
-	vec3 u_lightColor;
-};
 
 uniform sampler3D u_texNoise;
 uniform sampler2D u_environmentMap;
@@ -29,7 +23,8 @@ uniform sampler2D u_normalMap;
 uniform sampler2D u_roughnessMetallicMap;
 uniform sampler2D u_depthMap;
 
-uniform vec3 u_sunDirection = vec3(0.0, 0.707, 0.707);
+uniform vec3 u_lightIntensity;
+uniform vec3 u_lightDirection = vec3(0.0, 0.707, 0.707);
 
 layout (location = 0) out vec4 FragColor;
 
@@ -75,14 +70,14 @@ void main()
 	vec3 F0 = vec3(0.05);
 	float roughness = roughnessMetallic.r;
 
-	vec3 lighting = computeLighting(mat3(u_matView) * u_sunDirection, 0.0, u_lightColor, normal, normalize(-fragPos), roughness, F0, color.rgb);
-	lighting += computeIBL(20, normal, normalize(-fragPos), roughness, F0);
-	lighting *= 5.0;
+	vec3 lighting = computeLighting(mat3(u_matView) * u_lightDirection, 0.0, u_lightIntensity*0.001, normal, normalize(-fragPos), roughness, F0, color.rgb);
+	lighting = lighting + computeIBL(20, normal, normalize(-fragPos), roughness, F0);
+
 	
 	if (color.a < 0.5)
 		FragColor = getReflection(-normalize(fragPos), 0)*2.0;
 	else
 		FragColor = vec4(lighting, 1.0);
 
-	//FragColor = vec4(normal.xyz, 1);
+	//FragColor = vec4(1.0);//vec4(normal.xyz, 1);
 }

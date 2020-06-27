@@ -54,19 +54,17 @@ public:
     }
 
 private:
-    std::shared_ptr<ITexture> ComputeHeightmap(glm::uvec2 resolution)
+    std::shared_ptr<ITexture> ComputeHeightmap(glm::uvec2 resolution) const
     {
         constexpr auto localGroupSize = glm::uvec3 {32, 32, 1};
 
         auto resultTex = m_renderer->GetResourceFactory().CreateTexture(Texture2D{resolution}, TextureFormats::RGBA16F);
         resultTex->SetWrapMode(TextureWrapMode::ClampToBorder);
         auto shader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
-        auto us = shader->CreateAssociatedUniformStorage();
 
         m_renderer->GetStateManager().BindShader(shader);
 
-        us->SetUniform("u_result", 0);
-        us->Bind();
+        shader->SetUniform("u_result", 0);
 
         resultTex->BindAsImage(0, 0, 0, false);
         m_renderer->DispatchCompute(glm::uvec3{ resolution, 1 } / localGroupSize);
@@ -123,7 +121,7 @@ private:
         }
 
         lightsRoot->AddChild(std::make_shared<LightNode>(
-            DirectionalLight{glm::vec3(0.0f, 0.707f, 0.707f) },
+            SkyLight{glm::vec3(0.0f, 0.707f, 0.707f),  EnvironmentMapTex },
             glm::vec3(500.0f)
         ));
 
@@ -142,12 +140,12 @@ private:
         mesh->SetTransform( glm::scale(glm::translate(mesh->GetTransform(), { 0, -140, 0 }), { 10, 10, 10 }));
         Scene.GetRoot().AddChild(std::move(mesh));
 
-
-        auto TerrainNode = MakeTerrain(*m_renderer, TerrainShader, 64, 64);
+        auto TerrainNode = MakeTerrain(*m_renderer, 64, 64);
         TerrainNode->SetTransform(glm::scale(glm::mat4{ 1.0 }, { 10000, 800, 10000}));
         TerrainNode->GetMesh().Submeshes[0].Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
+        TerrainNode->GetMesh().Shader = TerrainShader;
         {
-            auto uniformStorage = TerrainNode->GetMesh().Submeshes[0].UniformBuffer;
+            auto uniformStorage = TerrainNode->GetMesh().GetOrCreateUniformBuffer();
             uniformStorage->SetUniform("u_texHeight", HeightMapTex);
             uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
             uniformStorage->SetUniform("u_texGrass", GrassTex);
@@ -163,6 +161,7 @@ private:
     {
         if (NeedResourceReload)
         {
+            std::cout << "Reloading shaders... " << std::endl;
             m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
             NeedResourceReload = false;
         }
@@ -253,8 +252,8 @@ private:
                 m_window->setCloseFlag(true);
         };
 
-        m_window->RenderCallback = std::bind(&App::OnRender, this, std::placeholders::_1);
-        m_window->InitializeCallback = std::bind(&App::OnInitialize, this);
+        m_window->RenderCallback = [this](double dt) { OnRender(dt); };
+        m_window->InitializeCallback = [this] { OnInitialize(); };
     }
 
 private:
