@@ -54,6 +54,7 @@ vec3 getFragPos(in vec3 screenCoord)
 void main()
 {
 	const float waterLine = 0.003;
+	const float snowLine = 0.33;
 
 	const vec2 texCoord = input.texCoord*40.0;
 
@@ -75,13 +76,13 @@ void main()
 	if (input.elevation <= waterLine)
 		FragColor.rgb = vec3(0.2, 0.3, 1.0);
 
-	FragColor.rgb = mix(FragColor.rgb, vec3(1.0), smoothstep(0.31, 0.35, input.elevation * (-length(normalWS.xz)*0.4+0.95)));
+	const float snowK = smoothstep(snowLine, snowLine + 0.05, input.elevation * (-length(normalWS.xz)*0.4+0.95));
 
+	FragColor.rgb = mix(FragColor.rgb, vec3(1.0), snowK);
 	FragColor.a = 1.0;
 
-	
 	FragNormal = vec4(normal, 1.0);
 
-	RoughnessMetallic = vec4(0.01 + step(waterLine, input.elevation) * 0.7, 0.0, 1.0, 1.0);
+	RoughnessMetallic = vec4(mix(0.01 + step(waterLine, input.elevation) * 0.7, 0.3, snowK), 0.0, 1.0, 1.0);
 	
 }

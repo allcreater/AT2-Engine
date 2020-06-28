@@ -172,17 +172,17 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 					SetName(filename);
 
 				if (filename.substr(filename.length() - 8) == ".vs.glsl")
-					m_filenames.emplace_back(filename, AT2::GlShaderType::Vertex);
+					m_filenames.emplace_back(filename, AT2::ShaderType::Vertex);
 				else if (filename.substr(filename.length() - 9) == ".tcs.glsl")
-					m_filenames.emplace_back(filename, AT2::GlShaderType::TesselationControl);
+					m_filenames.emplace_back(filename, AT2::ShaderType::TesselationControl);
 				else if (filename.substr(filename.length() - 9) == ".tes.glsl")
-					m_filenames.emplace_back(filename, AT2::GlShaderType::TesselationEvaluation);
+					m_filenames.emplace_back(filename, AT2::ShaderType::TesselationEvaluation);
 				else if (filename.substr(filename.length() - 8) == ".gs.glsl")
-					m_filenames.emplace_back(filename, AT2::GlShaderType::Geometry);
+					m_filenames.emplace_back(filename, AT2::ShaderType::Geometry);
 				else if (filename.substr(filename.length() - 8) == ".fs.glsl")
-					m_filenames.emplace_back(filename, AT2::GlShaderType::Fragment);
+					m_filenames.emplace_back(filename, AT2::ShaderType::Fragment);
                 else if (filename.substr(filename.length() - 8) == ".cs.glsl")
-                    m_filenames.emplace_back(filename, AT2::GlShaderType::Computational);
+                    m_filenames.emplace_back(filename, AT2::ShaderType::Computational);
 				else
 					throw AT2Exception(AT2Exception::ErrorCase::Shader, "unrecognized shader type"s);
 			}
@@ -198,8 +198,6 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 			{
 				GlShaderProgram::AttachShader(LoadShader(shader.first), shader.second);
 			}
-
-			GlShaderProgram::Compile();
 		}
 
 		ReloadableGroup getReloadableClass() const override
@@ -222,7 +220,7 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 		}
 
 	private:
-		std::vector<std::pair<str, AT2::GlShaderType>> m_filenames;
+		std::vector<std::pair<str, AT2::ShaderType>> m_filenames;
 
 	};
 

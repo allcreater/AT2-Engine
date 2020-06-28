@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <random>
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/random.hpp>
@@ -95,10 +96,11 @@ private:
 
         Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D{ {64, 64, 64}, 1 }, TextureFormats::RGBA8);
         {
+            std::mt19937 rng {std::random_device{}()};
             const auto l = Noise3Tex->GetDataLength();
             const auto arr = std::make_unique<GLubyte[]>(l);
             for (size_t i = 0; i < l; ++i)
-                arr[i] = (rand() & 0xFF);
+                arr[i] = std::uniform_int_distribution{ 0, 255 }(rng);
             Noise3Tex->SubImage3D({ 0, 0, 0 }, { 64, 64, 64 }, 0, TextureFormats::RGBA8, arr.get());
         }
 
@@ -143,6 +145,7 @@ private:
         terrainNode->GetMesh().Shader = TerrainShader;
         {
             auto& uniformStorage = terrainNode->GetMesh().GetOrCreateDefaultMaterial();
+            uniformStorage.SetUniform("u_texNoise", Noise3Tex);
             uniformStorage.SetUniform("u_texHeight", HeightMapTex);
             uniformStorage.SetUniform("u_texNormalMap", NormalMapTex);
             uniformStorage.SetUniform("u_texGrass", GrassTex);

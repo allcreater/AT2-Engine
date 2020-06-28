@@ -7,16 +7,6 @@
 
 namespace AT2
 {
-	enum class GlShaderType
-	{
-		Vertex = 0,
-		TesselationControl = 1,
-		TesselationEvaluation = 2,
-		Geometry = 3,
-		Fragment = 4,
-        Computational = 5
-	};
-
 	class GlShaderProgram : public IShaderProgram, public std::enable_shared_from_this<GlShaderProgram>
 	{
 	public:
@@ -28,7 +18,7 @@ namespace AT2
 			GLint Type;
 
 			UniformInfo(GLint index, GLint offset, GLint type, GLint arrayStride, GLint matrixStride) : Index(index), Offset(offset), ArrayStride(arrayStride), Type(type), MatrixStride(matrixStride) {}
-			UniformInfo() : Index(0), Offset(0), ArrayStride(0), Type(0), MatrixStride(0){}
+			UniformInfo() : Index(0), Offset(0), ArrayStride(0), MatrixStride(0), Type(0){}
 		};
 
 		class UniformBufferInfo
@@ -36,8 +26,8 @@ namespace AT2
 		friend class GlShaderProgram;
 
 		public:
-        [[nodiscard]] GLuint	GetBlockIndex() const {return m_blockIndex;}
-        [[nodiscard]] GLint	GetBlockSize() const {return m_blockSize; }
+        [[nodiscard]] GLuint GetBlockIndex() const {return m_blockIndex;}
+        [[nodiscard]] GLint GetBlockSize() const {return m_blockSize; }
 
         [[nodiscard]] const UniformInfo* GetUniformInfo(const str& name) const
 			{
@@ -66,10 +56,9 @@ namespace AT2
 		void			Bind() override;
 		unsigned int	GetId() const override { return m_programId; }
 		bool			IsActive() const override;
-		bool			Compile()  override;
-		std::shared_ptr<IUniformContainer> CreateAssociatedUniformStorage() override;
+        std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(const str &blockName) override;
 
-		virtual void	AttachShader(const str& code, GlShaderType type);
+		void	AttachShader(const str& data, ShaderType type) override;
 
 		//Warning: Shader reloading/relinking will invalidate that state
 		void	SetUBO(const str& blockName, unsigned int index) override;
@@ -78,16 +67,23 @@ namespace AT2
 		virtual const str& GetName() { return m_name; }
 		virtual void SetName(const str& name) { m_name = name; }
 
-		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName) const;
-
 	protected:
-		GLuint LoadShader(GLenum _shaderType, const str& _text);
+		std::shared_ptr<UniformBufferInfo> GetUniformBlockInfo(const str& blockName);
+		bool TryCompile();
 		void CleanUp();
 		
 	private:
 		GLuint m_programId {0};
-		std::vector<GLuint> m_shaderIds;
+		std::vector<std::pair<ShaderType, GLuint>> m_shaderIds;
+		std::unordered_map<str, std::shared_ptr<UniformBufferInfo>> m_uniformBlocksCache;
 		str m_name;
+
+        enum class State
+        {
+            Dirty,
+            Ready,
+            Error
+        } m_currentState = State::Dirty;
 	};
 }
 

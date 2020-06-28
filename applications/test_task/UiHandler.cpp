@@ -92,7 +92,7 @@ UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_p
         uniformStorage->SetUniform("u_BackgroundTexture", texture);
         //uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachment(0));
         //uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachment());
-        m_quadDrawable->UniformBuffer = uniformStorage;
+        m_quadDrawable->UniformBuffer = std::move(uniformStorage);
     }
 }
 

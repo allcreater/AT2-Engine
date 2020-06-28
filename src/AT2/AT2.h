@@ -184,10 +184,12 @@ public:
 	virtual void Bind() = 0;
     [[nodiscard]] virtual unsigned int GetId() const = 0;
     [[nodiscard]] virtual bool IsActive() const = 0;
-	virtual bool Compile() = 0;
-	virtual std::shared_ptr<IUniformContainer> CreateAssociatedUniformStorage() = 0;
+
+	virtual std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(const str &blockName = "") = 0;
+    virtual void AttachShader(const str& code, ShaderType type) = 0;
 
 	//Warning: Shader reloading/relinking will invalidate that state
+	//TODO: make uniform buffers binding same as textures binding via StateManager
 	virtual void	SetUBO(const str& blockName, unsigned int index) = 0;
 	virtual void	SetUniform(const str& name, Uniform value) = 0;
 };

@@ -7,6 +7,16 @@
 namespace AT2
 {
 
+    enum class ShaderType
+    {
+        Vertex = 0,
+        TesselationControl = 1,
+        TesselationEvaluation = 2,
+        Geometry = 3,
+        Fragment = 4,
+        Computational = 5
+    };
+
 	enum class BufferDataType : unsigned char
 	{
 		Byte,

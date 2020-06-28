@@ -284,8 +284,7 @@ void SceneRenderer::SetupCamera(const Camera& camera)
 {
     if (!cameraUniformBuffer)
     {
-        auto buffer =  std::make_unique<AT2::GlUniformBuffer>(std::dynamic_pointer_cast<AT2::GlShaderProgram>(resources.sphereLightsShader)->GetUniformBlockInfo("CameraBlock"));
-        buffer->SetBindingPoint(1);
+        auto buffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
         cameraUniformBuffer = std::move(buffer);
     }
 
