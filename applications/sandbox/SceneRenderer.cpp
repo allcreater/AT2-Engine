@@ -1,5 +1,6 @@
 #include "SceneRenderer.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "AT2/OpenGL/GlFrameBuffer.h"
@@ -25,11 +26,8 @@ void RenderVisitor::Visit(Node& node)
 
         stateManager.BindShader(active_mesh->Shader);
         stateManager.BindVertexArray(active_mesh->VertexArray);
-
-        if (active_mesh->UniformBuffer)
-            active_mesh->UniformBuffer->Bind(stateManager);
     }
-    else if (const auto* submeshNode = dynamic_cast<DrawableNode*>(&node))
+    else if (const auto* subMeshNode = dynamic_cast<DrawableNode*>(&node))
     {
         if (!active_mesh)
             return;
@@ -37,8 +35,8 @@ void RenderVisitor::Visit(Node& node)
         stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
         stateManager.GetActiveShader()->SetUniform("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
 
-        const auto& submesh = active_mesh->Submeshes[submeshNode->SubmeshIndex];
-        scene_renderer.DrawSubmesh(submesh);
+        const auto& subMesh = active_mesh->SubMeshes[subMeshNode->SubmeshIndex];
+        scene_renderer.DrawSubmesh(*active_mesh, subMesh);
     }
 
 }
@@ -70,6 +68,7 @@ void LightRenderVisitor::Visit(Node& node)
         else if (const auto* skyLight = std::get_if<SkyLight>(&lightNode->GetFlavor()))
         {
             collectedDirectionalLights.push_back({
+                transforms.getModelView()* glm::vec4{0,0,0,1}, 
                 lightNode->GetIntensity(),
                 glm::mat3(transforms.getModelView()) * skyLight->Direction,
                 skyLight->EnvironmentMap
@@ -86,12 +85,13 @@ void LightRenderVisitor::UnVisit(Node& node)
 
 void SceneRenderer::DrawPointLights(const LightRenderVisitor &lrv) const
 {
+    using LightAttribs = LightRenderVisitor::LightAttribs;
+
     //update our vertex buffer...
     auto &rf = renderer->GetResourceFactory();
     auto &vao = lightMesh->VertexArray;
 
-
-    using LightAttribs = LightRenderVisitor::LightAttribs;
+    //TODO: map buffer instead of recreating it
     vao->SetVertexBuffer(2,
         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
             BufferTypeInfo{ BufferDataType::Float, 4, sizeof(LightAttribs), offsetof(LightAttribs, position) },
@@ -122,19 +122,26 @@ void SceneRenderer::DrawPointLights(const LightRenderVisitor &lrv) const
     stateManager.BindVertexArray(lightMesh->VertexArray);
     sphereLightsUniforms->Bind(stateManager);
 
-    DrawSubmesh(lightMesh->Submeshes.front(), lrv.collectedLights.size());
+    DrawSubmesh(*lightMesh, lightMesh->SubMeshes.front(), lrv.collectedLights.size());
 
 }
 
-void SceneRenderer::DrawSkyLight(const LightRenderVisitor& lrv) const
+void SceneRenderer::DrawSkyLight(const LightRenderVisitor& lrv, const Camera& camera) const
 {
-    auto& stateManager = renderer->GetStateManager();
-    //usually it's number significant less than spherical, so that we will draw them as usually
-    for (const auto& directionalLight : lrv.collectedDirectionalLights)
+    using LightAttribs = LightRenderVisitor::DirectionalLightAttribs;
+
+    const auto comparator = Utils::make_unary_less<LightAttribs>([&](const LightAttribs& lhv)
     {
-        skyLightsUniforms->SetUniform("u_lightDirection", directionalLight.direction);
-        skyLightsUniforms->SetUniform("u_lightIntensity", directionalLight.intensity);
-        skyLightsUniforms->SetUniform("u_environmentMap", directionalLight.environment_map);
+        return length(camera.getPosition() - lhv.position);
+    });
+
+    const auto nearestLightIt = std::min_element(lrv.collectedDirectionalLights.begin(), lrv.collectedDirectionalLights.end(), comparator);
+
+    if (nearestLightIt != lrv.collectedDirectionalLights.end())
+    {
+        skyLightsUniforms->SetUniform("u_lightDirection", nearestLightIt->direction);
+        skyLightsUniforms->SetUniform("u_lightIntensity", nearestLightIt->intensity);
+        skyLightsUniforms->SetUniform("u_environmentMap", nearestLightIt->environment_map);
 
         DrawQuad(resources.skyLightsShader, *skyLightsUniforms);
     }
@@ -257,7 +264,7 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
 
     DrawPointLights(lrv);
     glDisable(GL_DEPTH_TEST);
-    DrawSkyLight(lrv);
+    DrawSkyLight(lrv, camera);
 
 
     targetFramebuffer.Bind();
@@ -267,7 +274,6 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
 
     glCullFace(GL_BACK);
     glDisable(GL_DEPTH_TEST);
-
 
     DrawQuad(resources.postprocessShader, *postprocessUniforms);
 }
@@ -291,12 +297,12 @@ void SceneRenderer::SetupCamera(const Camera& camera)
 
 }
 
-void SceneRenderer::DrawSubmesh(const SubMesh & subMesh, int numInstances) const
+void SceneRenderer::DrawSubmesh(const Mesh& mesh, const SubMesh & subMesh, int numInstances) const
 {
     auto &stateManager = renderer->GetStateManager();
-    //stateManager.BindTextures(subMesh.Textures);
-    if (subMesh.UniformBuffer)
-        subMesh.UniformBuffer->Bind(stateManager);
+
+    if (!mesh.Materials.empty())
+        mesh.Materials.at(subMesh.MaterialIndex)->Bind(stateManager);
 
     for (const auto &primitive : subMesh.Primitives)
         renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, numInstances, primitive.BaseVertex);
@@ -311,8 +317,8 @@ void SceneRenderer::DrawMesh(const Mesh& mesh, const std::shared_ptr<IShaderProg
 
     stateManager.BindVertexArray(mesh.VertexArray);
 
-    for (const auto &submesh : mesh.Submeshes)
-        DrawSubmesh(submesh);
+    for (const auto &submesh : mesh.SubMeshes)
+        DrawSubmesh(mesh, submesh);
 }
 
 void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program, const IUniformContainer& uniformBuffer) const noexcept
@@ -323,7 +329,7 @@ void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program, con
     stateManager.BindShader(program);
     uniformBuffer.Bind(stateManager);
     stateManager.BindVertexArray(quadMesh->VertexArray);
-    const auto primitive = quadMesh->Submeshes.front().Primitives.front();
+    const auto primitive = quadMesh->SubMeshes.front().Primitives.front();
     renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, 1, primitive.BaseVertex);
 }
 
@@ -359,7 +365,7 @@ std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, int segX, int s
     SubMesh subMesh;
     subMesh.Primitives.emplace_back(Primitives::Patches{4}, 0, texCoords.size());
 
-    mesh.Submeshes.push_back(std::move(subMesh));
+    mesh.SubMeshes.push_back(std::move(subMesh));
 
 
     auto drawable = std::make_shared<DrawableNode>();
@@ -417,7 +423,7 @@ std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer,  int segX, int segY)
     //don't know how to make it better
     SubMesh subMesh;
     subMesh.Primitives.emplace_back(Primitives::Triangles{}, 0, indices.size());
-    mesh->Submeshes.push_back(std::move(subMesh));
+    mesh->SubMeshes.push_back(std::move(subMesh));
 
     return mesh;
 }
@@ -436,7 +442,7 @@ std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer)
 
     auto mesh = std::make_unique<Mesh>();
     mesh->VertexArray = vao;
-    mesh->Submeshes.push_back(std::move(subMesh));
+    mesh->SubMeshes.push_back(std::move(subMesh));
 
     return mesh;
 }

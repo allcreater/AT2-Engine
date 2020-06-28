@@ -119,7 +119,7 @@ private:
 class DrawableNode : public Node
 {
 public:
-    size_t SubmeshIndex;
+    size_t SubmeshIndex = 0;
 };
 
 class Scene

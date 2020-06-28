@@ -212,7 +212,7 @@ public:
 	virtual void SetUniform(const str& name, const Uniform& value) = 0;
 
 	//texture
-	virtual void SetUniform(const str& name, std::weak_ptr<const ITexture> value) = 0;
+	virtual void SetUniform(const str& name, const std::shared_ptr<ITexture> &value) = 0;
 
 	virtual void Bind(IStateManager &stateManager) const = 0;
 };

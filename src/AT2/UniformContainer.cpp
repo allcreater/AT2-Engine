@@ -11,9 +11,9 @@ void UniformContainer::SetUniform(const str &name, const Uniform &value)
 	m_uniformsMap[name] = value;
 }
 
-void UniformContainer::SetUniform(const str &name, std::weak_ptr<const ITexture> value)
+void UniformContainer::SetUniform(const str &name, const std::shared_ptr<ITexture> &value)
 {
-	m_texturesMap[name] = std::move(value);
+	m_texturesMap[name] = value;
 }
 
 void UniformContainer::Bind(IStateManager &stateManager) const
@@ -27,9 +27,9 @@ void UniformContainer::Bind(IStateManager &stateManager) const
 
 	TextureSet set; //TODO: just a crutch, make it correct!!!
 	for (const auto& [name, value] : m_texturesMap)
-		set.insert(value.lock());
+		set.insert(value);
 	stateManager.BindTextures(set);
 
 	for (const auto& [name, value] : m_texturesMap)
-		program->SetUniform(name, value.lock()->GetCurrentModule());
+		program->SetUniform(name, value->GetCurrentModule());
 }

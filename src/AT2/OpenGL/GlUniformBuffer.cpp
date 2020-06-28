@@ -69,4 +69,4 @@ void GlUniformBuffer::Bind(IStateManager &stateManager) const
 }
 
 
-void GlUniformBuffer::SetUniform(const str& name, std::weak_ptr<const ITexture> value) { throw std::logic_error("not implemented"); }
+void GlUniformBuffer::SetUniform(const str& name, const std::shared_ptr<ITexture> &value) { throw std::logic_error("not implemented"); }

@@ -41,6 +41,7 @@ private:
 
     struct DirectionalLightAttribs
     {
+        glm::vec3 position;
         glm::vec3 intensity;
         glm::vec3 direction;
         std::shared_ptr<ITexture> environment_map;
@@ -49,7 +50,7 @@ private:
 
     struct LightAttribs
     {
-        glm::vec4 position;
+        glm::vec3 position;
         glm::vec3 intensity;
         float effective_radius;
     };
@@ -68,10 +69,10 @@ public:
     void RenderScene(Scene& scene, const Camera& camera, IFrameBuffer& targetFramebuffer, double time);
 
     void DrawPointLights(const LightRenderVisitor &lrv) const;
-    void DrawSkyLight(const LightRenderVisitor& lrv) const;
+    void DrawSkyLight(const LightRenderVisitor& lrv, const Camera &camera) const;
 private:
     void SetupCamera(const Camera& camera);
-    void DrawSubmesh(const SubMesh &, int numInstances = 1) const;
+    void DrawSubmesh(const Mesh&, const SubMesh &, int numInstances = 1) const;
     void DrawMesh(const Mesh&, const std::shared_ptr<IShaderProgram>&);
     void DrawQuad(const std::shared_ptr<IShaderProgram>&, const IUniformContainer&) const noexcept;
 

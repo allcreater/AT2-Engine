@@ -15,6 +15,16 @@ bool is_uninitialized(std::weak_ptr<T> const& weak) {
 	return !weak.owner_before(wt{}) && !wt{}.owner_before(weak);
 }
 
+template <typename T, typename Fn>
+auto make_unary_less(Fn&& transform)
+{
+    return[transform = std::forward<Fn>(transform)](const T& a, const T& b)
+    {
+        return transform(a) < transform(b);
+    };
+}
+
+
 //overloaded trick
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...)->overloaded<Ts...>;

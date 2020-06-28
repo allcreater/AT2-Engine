@@ -9,8 +9,6 @@
 #include <map>
 #include <utility>
 
-//#include <GL/glew.h>
-
 #include "TextureLoader.h"
 
 
@@ -22,32 +20,33 @@ using namespace AT2;
 class MeshBuilder
 {
 public:
-	MeshBuilder(std::shared_ptr<AT2::IRenderer> _renderer, const aiScene* scene) :
+	MeshBuilder(std::shared_ptr<IRenderer> _renderer, const aiScene* scene) :
         m_scene(scene),
         m_renderer(std::move(_renderer))
 	{
 	}
 
 public:
-	std::shared_ptr <MeshNode> Build(const std::shared_ptr<IShaderProgram> &program)
+	std::unique_ptr<MeshNode> Build()
 	{
 		assert(m_indicesVec.empty());
-
-		m_buildedMesh.Shader = program;
-
 		BuildVAO();
 
-		auto meshNode = std::make_shared<MeshNode>();
-		meshNode->SetName("Root");
-		meshNode->SetMesh(std::move(m_buildedMesh));
+		m_buildingMesh.Materials.reserve(m_scene->mNumMaterials);
+		for (size_t i = 0; i < m_scene->mNumMaterials; ++i)
+			m_buildingMesh.Materials.push_back(TranslateMaterial(m_scene->mMaterials[i]));
 
-		TraverseNode(m_scene->mRootNode, meshNode);
+		auto meshNode = std::make_unique<MeshNode>();
+		meshNode->SetName("Root");
+		meshNode->SetMesh(std::move(m_buildingMesh));
+
+		TraverseNode(m_scene->mRootNode, *meshNode);
 
 		return meshNode;
 	}
 
 protected:
-	Mesh m_buildedMesh;
+	Mesh m_buildingMesh;
 	std::filesystem::path m_scenePath;
 	Assimp::Importer m_importer;
 	const aiScene* m_scene;
@@ -63,7 +62,7 @@ protected:
 	void AddMesh(const aiMesh* mesh)
 	{
 		const auto vertexOffset = static_cast<std::uint32_t>(m_verticesVec.size());
-		const auto previousIndexOffset = m_indicesVec.size();
+		const auto previousIndexOffset = static_cast<unsigned>(m_indicesVec.size());
 
 		m_verticesVec.insert(m_verticesVec.end(), reinterpret_cast<glm::vec3*>(mesh->mVertices), reinterpret_cast<glm::vec3*>(mesh->mVertices) + mesh->mNumVertices);
 		m_texCoordVec.insert(m_texCoordVec.end(), reinterpret_cast<glm::vec3*>(mesh->mTextureCoords[0]), reinterpret_cast<glm::vec3*>(mesh->mTextureCoords[0]) + mesh->mNumVertices);
@@ -79,23 +78,12 @@ protected:
 			m_indicesVec.push_back(face.mIndices[1] + vertexOffset);
 		}
 
-		SubMesh submesh;
-		submesh.UniformBuffer = m_buildedMesh.Shader->CreateAssociatedUniformStorage();
+        m_buildingMesh.SubMeshes.emplace_back(
+            std::vector<MeshChunk>{MeshChunk {Primitives::Triangles{}, previousIndexOffset, mesh->mNumFaces * 3}},
+            mesh->mMaterialIndex, mesh->mName.C_Str());
+    }
 
-        submesh.Primitives.emplace_back(Primitives::Triangles {}, previousIndexOffset, mesh->mNumFaces * 3);
-		//submesh.Primitives.push_back(std::make_unique<GlDrawElementsPrimitive>(
-		//	GlDrawPrimitiveType::Triangles,
-		//	mesh->mNumFaces * 3,
-		//	GlDrawElementsPrimitive::IndicesType::UnsignedInt,
-		//	reinterpret_cast<void*>(previousIndexOffset * sizeof(GLuint))
-		//	));
-
-		TranslateMaterial(m_scene->mMaterials[mesh->mMaterialIndex], submesh);
-
-		m_buildedMesh.Submeshes.push_back(std::move(submesh));
-	}
-
-	void BuildVAO()
+    void BuildVAO()
 	{
 		for (unsigned i = 0; i < m_scene->mNumMeshes; ++i)
 			AddMesh(m_scene->mMeshes[i]);
@@ -107,14 +95,14 @@ protected:
 		vao->SetVertexBuffer(3, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, m_normalsVec.size() * sizeof(glm::vec3), m_normalsVec.data()));
 		vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, m_indicesVec.size() * sizeof(std::uint32_t), m_indicesVec.data()));
 
-		m_buildedMesh.VertexArray = vao;
+		m_buildingMesh.VertexArray = vao;
 	}
 
-	//TODO: translate materials once
-	void TranslateMaterial(const aiMaterial* material, SubMesh& submesh)
+	std::unique_ptr<IUniformContainer> TranslateMaterial(const aiMaterial* material)
 	{
+		std::unique_ptr<IUniformContainer> container = std::make_unique<UniformContainer>();
 
-		const static std::tuple<aiTextureType, unsigned, std::string_view> knownTextureFlavours[] =
+		const static std::tuple<aiTextureType, unsigned, std::string_view> knownTextureFlavors[] =
 		{
 			{aiTextureType_DIFFUSE, 0, "u_texAlbedo"sv},
 			{AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, "u_texAlbedo"sv},
@@ -138,8 +126,7 @@ protected:
 		};
 
 		std::map<str, std::shared_ptr<ITexture>, std::less<>> textures;
-
-		for (auto [type, index, name] : knownTextureFlavours)
+		for (auto [type, index, name] : knownTextureFlavors)
 		{
 			if (textures.find(name) != textures.end())
 				continue;
@@ -149,15 +136,15 @@ protected:
 				if (auto texture = loadTexture(path.C_Str()))
 				{
 					textures.emplace(name, texture);
-
-					submesh.UniformBuffer->SetUniform(str{name}, texture);
-					submesh.Textures.emplace(std::move(texture));
+					container->SetUniform(str{name}, texture);
 				}
 			}
 		}
+
+		return container;
 	}
 
-	void TraverseNode(const aiNode* node, const std::shared_ptr<Node> &baseNode)
+	void TraverseNode(const aiNode* node, Node& baseNode)
 	{
 		for (unsigned i = 0; i < node->mNumMeshes; i++)
 		{
@@ -170,18 +157,18 @@ protected:
 			submesh->SetTransform(ConvertMatrix(node->mTransformation));
 			submesh->SubmeshIndex = meshIndex;
 
-			baseNode->AddChild(std::move(submesh));
+			baseNode.AddChild(std::move(submesh));
 		}
 
 		for (size_t i = 0; i < node->mNumChildren; i++)
 		{
 			auto* children = node->mChildren[i];
 
-			auto subnode = std::make_shared<Node>();
-			subnode->SetName(children->mName.C_Str());
-			baseNode->AddChild(subnode);
+			auto subNode = std::make_shared<Node>();
+			subNode->SetName(children->mName.C_Str());
+			baseNode.AddChild(subNode);
 
-			TraverseNode(children, subnode);
+			TraverseNode(children, *subNode);
 		}
 	}
 
@@ -214,11 +201,11 @@ constexpr uint32_t flags =
 	aiProcess_FlipUVs;
 
 
-NodeRef MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename, const std::shared_ptr<IShaderProgram> &program)
+std::unique_ptr<MeshNode> MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename)
 {
     Assimp::Importer importer;
     const auto *scene = importer.ReadFile(filename, flags);
 
     MeshBuilder builder {std::move(renderer), scene };
-    return builder.Build(program);
+    return builder.Build();
 }

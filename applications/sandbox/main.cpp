@@ -136,23 +136,22 @@ private:
 
 
         //Scene
-        auto mesh = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb", MeshShader);
-        mesh->SetTransform( glm::scale(glm::translate(mesh->GetTransform(), { 0, -140, 0 }), { 10, 10, 10 }));
-        Scene.GetRoot().AddChild(std::move(mesh));
+        auto matBallNode = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
+        matBallNode->GetMesh().Shader = MeshShader;
+        matBallNode->SetTransform( glm::scale(glm::translate(matBallNode->GetTransform(), { 0, -140, 0 }), { 10, 10, 10 }));
+        Scene.GetRoot().AddChild(std::move(matBallNode));
 
-        auto TerrainNode = MakeTerrain(*m_renderer, 64, 64);
-        TerrainNode->SetTransform(glm::scale(glm::mat4{ 1.0 }, { 10000, 800, 10000}));
-        TerrainNode->GetMesh().Submeshes[0].Textures = { Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex };
-        TerrainNode->GetMesh().Shader = TerrainShader;
+        auto terrainNode = MakeTerrain(*m_renderer, 64, 64);
+        terrainNode->SetTransform(glm::scale(glm::mat4{ 1.0 }, { 10000, 800, 10000}));
+        terrainNode->GetMesh().Shader = TerrainShader;
         {
-            auto uniformStorage = TerrainNode->GetMesh().GetOrCreateUniformBuffer();
-            uniformStorage->SetUniform("u_texHeight", HeightMapTex);
-            uniformStorage->SetUniform("u_texNormalMap", NormalMapTex);
-            uniformStorage->SetUniform("u_texGrass", GrassTex);
-            uniformStorage->SetUniform("u_texRock", RockTex);
+            auto& uniformStorage = terrainNode->GetMesh().GetOrCreateDefaultMaterial();
+            uniformStorage.SetUniform("u_texHeight", HeightMapTex);
+            uniformStorage.SetUniform("u_texNormalMap", NormalMapTex);
+            uniformStorage.SetUniform("u_texGrass", GrassTex);
+            uniformStorage.SetUniform("u_texRock", RockTex);
         }
-
-        Scene.GetRoot().AddChild(std::move(TerrainNode));
+        Scene.GetRoot().AddChild(std::move(terrainNode));
 
         sr.Initialize(m_renderer);
     }
