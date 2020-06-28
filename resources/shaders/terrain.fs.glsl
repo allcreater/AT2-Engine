@@ -68,7 +68,8 @@ void main()
 	const vec3 normalWS = normalize( inverse(u_matNormal) * normal);
 
 	
-	FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, smoothstep(0.1, 0.5, length(normalWS.xz)*0.4));
+	const float grassFactor = 1.0 - smoothstep(0.07, 0.1, normalWS.y);
+	FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, grassFactor);
 
 
 	if (input.elevation <= waterLine)

@@ -57,6 +57,16 @@ private:
     std::vector<LightAttribs> collectedLights;
 };
 
+struct RenderParameters
+{
+    Scene& Scene;
+    const Camera& Camera;
+    IFrameBuffer& TargetFramebuffer;
+
+    double Time = 0.0f;
+    bool Wireframe = false;
+};
+
 class SceneRenderer
 {
     friend struct RenderVisitor;
@@ -66,7 +76,7 @@ public:
 
     void Initialize(std::shared_ptr<IRenderer> renderer);
     void ResizeFramebuffers(glm::ivec2 newSize);
-    void RenderScene(Scene& scene, const Camera& camera, IFrameBuffer& targetFramebuffer, double time);
+    void RenderScene(const RenderParameters& params);
 
     void DrawPointLights(const LightRenderVisitor &lrv) const;
     void DrawSkyLight(const LightRenderVisitor& lrv, const Camera &camera) const;
@@ -97,6 +107,6 @@ private:
 
 
 
-std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, int segX, int segY);
+std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches);
 std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, int segX, int segY);
 std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer);

@@ -22,7 +22,7 @@ out	tcsResult {
 
 bool PointInFrustum(in vec4 point)
 {
-	vec4 pointProj = u_matViewProjection * point;
+	vec4 pointProj = u_matViewProjection * u_matModel * point;
 	float limit = pointProj.w + 50.0;
 
 	return !((pointProj.x < -limit) || (pointProj.x > limit));// || (pointProj.y < -limit) || (pointProj.y > limit));
@@ -33,7 +33,7 @@ void main()
 {
 	if (gl_InvocationID == 0)
 	{
-		float level = 64;//(PointInFrustum(gl_in[0].gl_Position) || PointInFrustum(gl_in[1].gl_Position) || PointInFrustum(gl_in[2].gl_Position) || PointInFrustum(gl_in[3].gl_Position)) ? unMaxTessLevel : 2.0;
+		float level = (PointInFrustum(gl_in[0].gl_Position) || PointInFrustum(gl_in[1].gl_Position) || PointInFrustum(gl_in[2].gl_Position) || PointInFrustum(gl_in[3].gl_Position)) ? unMaxTessLevel : 2.0;
 		gl_TessLevelInner[0] = level;
 		gl_TessLevelInner[1] = level;
 

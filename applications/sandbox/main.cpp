@@ -106,7 +106,7 @@ private:
         NormalMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
         RockTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
 
-        HeightMapTex = ComputeHeightmap({4096, 4096});
+        HeightMapTex = ComputeHeightmap(glm::uvec2{8192 });
         EnvironmentMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
         auto lightsRoot = std::make_shared<Node>("lights"s);
@@ -129,9 +129,6 @@ private:
 
         //Init
         glEnable(GL_BLEND);
-        //glDisable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
         glEnable(GL_CULL_FACE);
 
 
@@ -141,7 +138,7 @@ private:
         matBallNode->SetTransform( glm::scale(glm::translate(matBallNode->GetTransform(), { 0, -140, 0 }), { 10, 10, 10 }));
         Scene.GetRoot().AddChild(std::move(matBallNode));
 
-        auto terrainNode = MakeTerrain(*m_renderer, 64, 64);
+        auto terrainNode = MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
         terrainNode->SetTransform(glm::scale(glm::mat4{ 1.0 }, { 10000, 800, 10000}));
         terrainNode->GetMesh().Shader = TerrainShader;
         {
@@ -170,7 +167,7 @@ private:
 
         GlTimerQuery glTimer;
         glTimer.Begin();
-        sr.RenderScene(Scene, m_camera, m_renderer->GetDefaultFramebuffer(), Time);
+        sr.RenderScene({ Scene, m_camera, m_renderer->GetDefaultFramebuffer(), Time, WireframeMode});
         glTimer.End();
 
         const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms

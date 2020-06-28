@@ -20,12 +20,24 @@ float noise(vec2 p){
 
 float computeHeight(in vec2 pos)
 {
+    const int maxHarmonics = 12;
+    const int ridgedHarmonics = 2;
+    const mat2 m = mat2(0.8, -0.6, 0.6, 0.8);
+
     float height = 0.0;
     float amplitude = 0.5;
     float frequency = 10.0;
-    for (int i = 0; i < 10; ++i)
+
+    pos *= 3.0;
+    for (int i = 0; i < maxHarmonics; ++i)
     {
-        height += noise(pos*frequency + vec2(100 * i)) * amplitude;
+        //const vec2 pos = pos*frequency + vec2(100 * i);
+        pos = m * pos * 2.0;
+        if (i <= ridgedHarmonics)
+            height += (1.0 - abs(noise(pos) - 0.1)*2.0) * amplitude;
+        else
+            height += noise(pos) * amplitude;
+
         amplitude *= 0.45;
         frequency *= 2.0;
     }

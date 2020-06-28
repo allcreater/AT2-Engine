@@ -178,9 +178,9 @@ void SceneRenderer::ResizeFramebuffers(glm::ivec2 newSize)
 }
 
 //TODO: render context class
-void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer& targetFramebuffer, double time)
+void SceneRenderer::RenderScene(const RenderParameters& params)
 {
-    this->time = time;
+    time = params.Time;
 
     if (dirtyFramebuffers)
     {
@@ -227,7 +227,7 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
         dirtyFramebuffers = false;
     }
 
-    SetupCamera(camera);
+    SetupCamera(params.Camera);
 
     renderer->SetViewport(AABB2d{ {0, 0}, framebuffer_size });
 
@@ -236,7 +236,7 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
     renderer->ClearDepth(1.0);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glPolygonMode(GL_FRONT_AND_BACK, (WireframeMode) ? GL_LINE : GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, (params.Wireframe) ? GL_LINE : GL_FILL);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -245,8 +245,10 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
 
 
     //objects
-    RenderVisitor rv { *this, camera };
-    scene.GetRoot().Accept(rv);
+    RenderVisitor rv { *this, params.Camera };
+    params.Scene.GetRoot().Accept(rv);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
     postProcessFBO->Bind();
@@ -260,14 +262,14 @@ void SceneRenderer::RenderScene(Scene& scene, const Camera& camera, IFrameBuffer
 
     //lights
     LightRenderVisitor lrv{ *this };
-    scene.GetRoot().Accept(lrv);
+    params.Scene.GetRoot().Accept(lrv);
 
     DrawPointLights(lrv);
     glDisable(GL_DEPTH_TEST);
-    DrawSkyLight(lrv, camera);
+    DrawSkyLight(lrv, params.Camera);
 
 
-    targetFramebuffer.Bind();
+    params.TargetFramebuffer.Bind();
     glDepthMask(GL_TRUE);
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
     renderer->ClearDepth(0);
@@ -335,20 +337,20 @@ void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program, con
 
 
 
-std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, int segX, int segY)
+std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches)
 {
-    assert(segX < 1024 && segY < 1024);
+    assert(numPatches.x < 1024 && numPatches.y < 1024);
 
-    std::vector<glm::vec2> texCoords(segX * segY * 4);//TODO! GlVertexBuffer - take iterators!
+    std::vector<glm::vec2> texCoords(numPatches.x * numPatches.y * 4);//TODO! GlVertexBuffer - take iterators!
 
-    for (int j = 0; j < segY; ++j)
-    for (int i = 0; i < segX; ++i)
+    for (int j = 0; j < numPatches.y; ++j)
+    for (int i = 0; i < numPatches.x; ++i)
     {
-        const auto num = (i + j * segX) * 4;
-        texCoords[num] = glm::vec2(float(i) / segX, float(j) / segY);
-        texCoords[num + 1] = glm::vec2(float(i + 1) / segX, float(j) / segY);
-        texCoords[num + 2] = glm::vec2(float(i + 1) / segX, float(j + 1) / segY);
-        texCoords[num + 3] = glm::vec2(float(i) / segX, float(j + 1) / segY);
+        const auto num = (i + j * numPatches.x) * 4;
+        texCoords[num] = glm::vec2(float(i) / numPatches.x, float(j) / numPatches.y);
+        texCoords[num + 1] = glm::vec2(float(i + 1) / numPatches.x, float(j) / numPatches.y);
+        texCoords[num + 2] = glm::vec2(float(i + 1) / numPatches.x, float(j + 1) / numPatches.y);
+        texCoords[num + 3] = glm::vec2(float(i) / numPatches.x, float(j + 1) / numPatches.y);
     }
 
 
