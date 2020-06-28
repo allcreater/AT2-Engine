@@ -11,7 +11,7 @@ struct RenderVisitor : NodeVisitor
 {
     RenderVisitor(SceneRenderer&, const Camera& camera);
 
-    void Visit(Node& node) override;
+    bool Visit(Node& node) override;
 
     void UnVisit(Node& node) override;
 
@@ -30,7 +30,7 @@ struct LightRenderVisitor : NodeVisitor
 
     LightRenderVisitor(SceneRenderer& sceneRenderer);
 
-    void Visit(Node& node) override;
+    bool Visit(Node& node) override;
 
     void UnVisit(Node& node) override;
 

@@ -117,14 +117,16 @@ private:
         for (size_t i = 0; i < NumActiveLights; ++i)
         {
             lightsRoot->AddChild(std::make_shared<LightNode>(
-                SphereLight{ }, 
-                linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f
+                SphereLight{ },
+                linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
+                "PointLight[" + std::to_string(i) + "]"
             )).SetTransform(glm::translate(glm::mat4{1.0}, { glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0) }));
         }
 
         lightsRoot->AddChild(std::make_shared<LightNode>(
             SkyLight{glm::vec3(0.0f, 0.707f, 0.707f),  EnvironmentMapTex },
-            glm::vec3(500.0f)
+            glm::vec3(500.0f),
+            "SkyLight"
         ));
 
 //      LightsArray[0]->SetUniform("u_lightColor", glm::vec3(0.3f, 0.4f, 1.0f));
@@ -195,6 +197,11 @@ private:
                 MovingLightMode = !MovingLightMode;
             else if (key == GLFW_KEY_R)
                 NeedResourceReload = true;
+            else if (key == GLFW_KEY_L)
+            {
+                if (auto* skyLight = Scene.FindNode<LightNode>("SkyLight"sv))
+                    skyLight->SetEnabled(!skyLight->GetEnabled());
+            }
         };
 
         m_window->ResizeCallback = [&](const glm::ivec2& newSize)

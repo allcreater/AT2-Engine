@@ -14,7 +14,7 @@ RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera):
 {
 }
 
-void RenderVisitor::Visit(Node& node)
+bool RenderVisitor::Visit(Node& node)
 {
     transforms.pushModelView(node.GetTransform());
 
@@ -30,7 +30,7 @@ void RenderVisitor::Visit(Node& node)
     else if (const auto* subMeshNode = dynamic_cast<DrawableNode*>(&node))
     {
         if (!active_mesh)
-            return;
+            return true;
 
         stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
         stateManager.GetActiveShader()->SetUniform("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
@@ -39,6 +39,7 @@ void RenderVisitor::Visit(Node& node)
         scene_renderer.DrawSubmesh(*active_mesh, subMesh);
     }
 
+    return true;
 }
 
 void RenderVisitor::UnVisit(Node& node)
@@ -51,16 +52,21 @@ LightRenderVisitor::LightRenderVisitor(SceneRenderer& sceneRenderer) :
 {
 }
 
-void LightRenderVisitor::Visit(Node& node)
+bool LightRenderVisitor::Visit(Node& node)
 {
     transforms.pushModelView(node.GetTransform());
 
     if (const auto* lightNode = dynamic_cast<LightNode*>(&node))
     {
+        if (!lightNode->GetEnabled())
+            return true;
+
+        const auto lightPos = glm::vec3(transforms.getModelView()* glm::vec4{ 0,0,0,1 });
+
         if (std::holds_alternative<SphereLight>(lightNode->GetFlavor()))
         {
             collectedLights.push_back({
-                transforms.getModelView() * glm::vec4{0,0,0,1},
+                lightPos,
                 lightNode->GetIntensity(),
                 lightNode->GetEffectiveRadius()
             });
@@ -68,7 +74,7 @@ void LightRenderVisitor::Visit(Node& node)
         else if (const auto* skyLight = std::get_if<SkyLight>(&lightNode->GetFlavor()))
         {
             collectedDirectionalLights.push_back({
-                transforms.getModelView()* glm::vec4{0,0,0,1}, 
+                lightPos,
                 lightNode->GetIntensity(),
                 glm::mat3(transforms.getModelView()) * skyLight->Direction,
                 skyLight->EnvironmentMap
@@ -76,6 +82,7 @@ void LightRenderVisitor::Visit(Node& node)
         }
     }
 
+    return true;
 }
 
 void LightRenderVisitor::UnVisit(Node& node)
@@ -94,7 +101,7 @@ void SceneRenderer::DrawPointLights(const LightRenderVisitor &lrv) const
     //TODO: map buffer instead of recreating it
     vao->SetVertexBuffer(2,
         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-            BufferTypeInfo{ BufferDataType::Float, 4, sizeof(LightAttribs), offsetof(LightAttribs, position) },
+            BufferTypeInfo{ BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, position) },
             lrv.collectedLights.size() * sizeof(LightAttribs),
             lrv.collectedLights.data())
     );
@@ -265,6 +272,7 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
     params.Scene.GetRoot().Accept(lrv);
 
     DrawPointLights(lrv);
+
     glDisable(GL_DEPTH_TEST);
     DrawSkyLight(lrv, params.Camera);
 

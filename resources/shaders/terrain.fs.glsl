@@ -76,9 +76,9 @@ void main()
 	if (input.elevation <= waterLine)
 		FragColor.rgb = vec3(0.2, 0.3, 1.0);
 
-	const float snowK = smoothstep(snowLine, snowLine + 0.05, input.elevation * (-length(normalWS.xz)*0.4+0.95));
+	const float snowK = smoothstep(snowLine, snowLine + 0.05, input.elevation * smoothstep(0.001, 0.04, normalWS.y));
 
-	FragColor.rgb = mix(FragColor.rgb, vec3(1.0), snowK);
+	FragColor.rgb = mix(FragColor.rgb, vec3(0.9, 0.9, 1.0), snowK);
 	FragColor.a = 1.0;
 
 	FragNormal = vec4(normal, 1.0);

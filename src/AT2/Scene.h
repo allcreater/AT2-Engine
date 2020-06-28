@@ -15,7 +15,7 @@ using NodeRef = std::shared_ptr<Node>;
 struct NodeVisitor
 {
     //don't sure are we really need double dispatching so that we will use RTTI instead instead of using different versions of functions there
-    virtual void Visit(Node& node) {} 
+    virtual bool Visit(Node& node) { return false; }
     virtual void UnVisit(Node& node) {}
 
     virtual ~NodeVisitor() = default;
@@ -29,10 +29,11 @@ public:
 
     virtual void Accept(NodeVisitor& nv)
     {
-        nv.Visit(*this);
-
-        for (auto& node : child_nodes)
-            node->Accept(nv);
+        if (nv.Visit(*this))
+        {
+            for (auto& node : child_nodes)
+                node->Accept(nv);
+        }
 
         nv.UnVisit(*this);
     }
@@ -76,7 +77,7 @@ struct LightNode : Node
     using LightFlavor = std::variant<SphereLight, SkyLight>;
 
     LightNode() = default;
-    LightNode(LightFlavor flavor, glm::vec3 color) : flavor(flavor), intensity(color) { UpdateEffectiveRadius(); }
+    LightNode(LightFlavor flavor, glm::vec3 color, std::string name) : Node(std::move(name)), flavor(std::move(flavor)), intensity(color) { UpdateEffectiveRadius(); }
 
     LightNode& SetIntensity(glm::vec3 newIntensity)
     {
@@ -86,22 +87,24 @@ struct LightNode : Node
         return *this;
     }
 
+    void SetEnabled(bool enabled) { this->enabled = enabled; }
+
     [[nodiscard]] const glm::vec3& GetIntensity() const noexcept { return intensity; }
-
-    [[nodiscard]] float GetEffectiveRadius() const noexcept { return m_effectiveRadius; }
-
+    [[nodiscard]] float GetEffectiveRadius() const noexcept { return effectiveRadius; }
     [[nodiscard]] const LightFlavor& GetFlavor() const noexcept { return flavor; }
+    [[nodiscard]] bool GetEnabled() const noexcept { return enabled; }
 
 protected:
     void UpdateEffectiveRadius()
     {
-        m_effectiveRadius = length(intensity) * 0.5f; //TODO: think about it :)
+        effectiveRadius = length(intensity) * 0.5f; //TODO: think about it :)
     }
 
 private:
     LightFlavor flavor = SphereLight{};
     glm::vec3 intensity = { 100, 100, 100 };
-    float m_effectiveRadius = 10.0;
+    float effectiveRadius = 10.0;
+    bool enabled = true;
 };
 
 
@@ -125,7 +128,15 @@ public:
 class Scene
 {
 public:
-    Node& GetRoot() { return *root; }
+    Node& GetRoot() const noexcept { return *root; }
+
+    template <typename T, typename = std::enable_if_t<std::is_base_of_v<Node, T>>>
+    T* FindNode(std::string_view name) const
+    {
+        return static_cast<T*>(FindNode(name, &typeid(T)));
+    }
+
+    Node* FindNode(std::string_view name, const std::type_info* nodeType = nullptr) const;
 
 private:
     NodeRef root = std::make_shared<Node>();
