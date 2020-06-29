@@ -8,6 +8,8 @@
 #include <fstream>
 #include <optional>
 
+#include "GlFrameBuffer.h"
+
 using namespace std::literals;
 using namespace AT2;
 
@@ -136,6 +138,11 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declar
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "Unsupported texture format");
 
 	return std::make_shared<GlTexture> ( declaration, *internalFormat);
+}
+
+std::shared_ptr<IFrameBuffer> GlResourceFactory::CreateFrameBuffer() const
+{
+	return std::make_shared<GlFrameBuffer>(m_renderer->GetRendererCapabilities());
 }
 
 std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const

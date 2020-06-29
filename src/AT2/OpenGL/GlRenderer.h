@@ -31,6 +31,7 @@ public:
 public:
 	std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const override;
 	std::shared_ptr<ITexture> CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const override;
+	std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const override;
 	std::shared_ptr<IVertexArray> CreateVertexArray() const override;
 	std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const override;
 	std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const override;

@@ -281,20 +281,21 @@ public:
 class IResourceFactory
 {
 public:
-	NON_COPYABLE_OR_MOVABLE(IResourceFactory)
+    NON_COPYABLE_OR_MOVABLE(IResourceFactory)
 
-	IResourceFactory() = default;
-	virtual ~IResourceFactory() = default;
+    IResourceFactory() = default;
+    virtual ~IResourceFactory() = default;
 
 public:
     [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const = 0;
     [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const = 0;
     [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
     [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const = 0;
-	virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType, size_t dataLength, const void* data) const = 0;
     [[nodiscard]] virtual std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
 
-	virtual void ReloadResources(ReloadableGroup group) = 0;
+    virtual void ReloadResources(ReloadableGroup group) = 0;
 };
 
 class IRenderer

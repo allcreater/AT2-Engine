@@ -3,9 +3,8 @@
 #include <algorithm>
 #include <utility>
 
-#include "AT2/OpenGL/GlFrameBuffer.h"
-#include "AT2/OpenGL/GlShaderProgram.h"
-#include "AT2/OpenGL/GlUniformBuffer.h"
+//unfortunately we still need it
+#include <gl/glew.h>
 
 
 RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera):
@@ -193,13 +192,13 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
     {
         auto& rf = renderer->GetResourceFactory();
 
-        gBufferFBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+        gBufferFBO = renderer->GetResourceFactory().CreateFrameBuffer();
         gBufferFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA8));
         gBufferFBO->SetColorAttachment(1, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
         gBufferFBO->SetColorAttachment(2, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA8));
         gBufferFBO->SetDepthAttachment(rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::DEPTH32F));
 
-        postProcessFBO = std::make_shared<AT2::GlFrameBuffer>(renderer->GetRendererCapabilities());
+        postProcessFBO = renderer->GetResourceFactory().CreateFrameBuffer();
         postProcessFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
         postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()); //depth is common with previous stage
 
