@@ -129,8 +129,6 @@ private:
             "SkyLight"
         ));
 
-//      LightsArray[0]->SetUniform("u_lightColor", glm::vec3(0.3f, 0.4f, 1.0f));
-
         //Init
         glEnable(GL_BLEND);
         glEnable(GL_CULL_FACE);
@@ -139,7 +137,7 @@ private:
         //Scene
         auto matBallNode = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
         matBallNode->GetMesh().Shader = MeshShader;
-        matBallNode->SetTransform( glm::scale(glm::translate(matBallNode->GetTransform(), { 0, -140, 0 }), { 10, 10, 10 }));
+        matBallNode->SetTransform( glm::scale(glm::translate(matBallNode->GetTransform(), { 0, 0, 0 }), { 100, 100, 100 }));
         Scene.GetRoot().AddChild(std::move(matBallNode));
 
         auto terrainNode = MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
@@ -185,8 +183,6 @@ private:
 
     void SetupWindowCallbacks()
     {
-
-
         m_window->KeyDownCallback = [&](int key)
         {
             std::cout << "Key " << key << " down" << std::endl;
@@ -256,6 +252,12 @@ private:
 
             if (m_window->isKeyDown(GLFW_KEY_ESCAPE))
                 m_window->setCloseFlag(true);
+
+            if (MovingLightMode)
+            {
+                if (auto* light = Scene.FindNode<LightNode>("PointLight[0]"sv))
+                    light->SetTransform(m_camera.getViewInverse());
+            }
         };
 
         m_window->RenderCallback = [this](double dt) { OnRender(dt); };
