@@ -39,7 +39,7 @@ private:
 template <size_t N, typename = std::enable_if<N < 4> >
 struct BaseTextureArray : BaseTexture<N+1>
 {
-    BaseTextureArray(typename BaseTexture<N + 1>::size_vec size, unsigned int levels) : BaseTexture(size, levels) {}
+    BaseTextureArray(typename BaseTexture<N + 1>::size_vec size, unsigned int levels) : BaseTexture<N+1>(size, levels) {}
 };
 
 struct Texture1D : BaseTexture<1>

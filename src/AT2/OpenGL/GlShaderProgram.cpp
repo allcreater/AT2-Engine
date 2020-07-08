@@ -212,7 +212,7 @@ std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformB
     if (blockIndex == GL_INVALID_INDEX)
         return nullptr;
 
-	auto ubi = std::make_shared<UniformBufferInfo>();
+    auto ubi = std::make_shared<UniformBufferInfo>();
 	ubi->m_blockIndex = blockIndex;
 	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE,       &ubi->m_blockSize );
 	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &ubi->m_numActiveUniforms);

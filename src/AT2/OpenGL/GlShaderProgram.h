@@ -17,7 +17,7 @@ namespace AT2
 			GLint ArrayStride, MatrixStride;
 			GLint Type;
 
-			UniformInfo(GLint index, GLint offset, GLint type, GLint arrayStride, GLint matrixStride) : Index(index), Offset(offset), ArrayStride(arrayStride), Type(type), MatrixStride(matrixStride) {}
+			UniformInfo(GLint index, GLint offset, GLint type, GLint arrayStride, GLint matrixStride) : Index(index), Offset(offset), ArrayStride(arrayStride), MatrixStride(matrixStride), Type(type) {}
 			UniformInfo() : Index(0), Offset(0), ArrayStride(0), MatrixStride(0), Type(0){}
 		};
 
