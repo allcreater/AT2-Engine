@@ -44,7 +44,7 @@ void GlfwApplication::run()
             std::lock_guard lock{ windows_registry_mutex };
 
             windows_registry.erase(std::remove_if(std::begin(windows_registry), std::end(windows_registry), 
-           [](std::shared_ptr<GlfwWindow>& window)
+           [](const std::shared_ptr<GlfwWindow>& window)
                 {
                     if (window->getCloseFlag() || window.use_count() == 1)
                     {

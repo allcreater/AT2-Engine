@@ -5,7 +5,7 @@
 
 using namespace AT2::UI;
 
-void Plot::CurveData::SetData(std::vector<float>&& data, bool autoRange) 
+void Plot::CurveData::SetData(std::vector<float> data, bool autoRange) 
 {
 	m_data = std::move(data); 
 	Dirty();

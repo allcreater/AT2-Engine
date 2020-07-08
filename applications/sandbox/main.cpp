@@ -16,7 +16,6 @@
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/random.hpp>
-#include <glm/gtx/quaternion.hpp>
 
 #include "SceneRenderer.h"
 
@@ -231,14 +230,14 @@ private:
             m_renderer->Shutdown();
         };
 
-        m_window->UpdateCallback = [&](double dt)
+        m_window->UpdateCallback = [&](const double dt)
         {
             Time += dt;
 
             if (m_window->isKeyDown(GLFW_KEY_LEFT_SHIFT))
                 acceleration = std::min(acceleration + static_cast<float>(dt), 200.0f);
             else
-                acceleration *= 0.98;
+                acceleration *= 0.98f;
 
             const float moveSpeed = static_cast<float>(dt) * 50.0f + acceleration;
             if (m_window->isKeyDown(GLFW_KEY_W))

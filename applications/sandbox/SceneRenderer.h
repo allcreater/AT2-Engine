@@ -108,5 +108,5 @@ private:
 
 
 std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches);
-std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, int segX, int segY);
+std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatches);
 std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer);

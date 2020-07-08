@@ -13,10 +13,6 @@ using namespace AT2::UI;
 class AT2::UI::CurveDrawable : public IDrawable
 {
 public:
-	CurveDrawable()
-	{
-	}
-
 	void Draw(const IRenderer& renderer) override
 	{
 		if (m_VAO == nullptr)
@@ -75,7 +71,7 @@ private:
 	std::shared_ptr<IVertexArray> m_VAO;
 	std::unique_ptr<IDrawPrimitive> m_DrawPrimitive;
 	std::shared_ptr<IUniformContainer> m_uniforms;
-	glm::mat4 m_projectionMatrix;
+	glm::mat4 m_projectionMatrix {1.0};
 };
 
 

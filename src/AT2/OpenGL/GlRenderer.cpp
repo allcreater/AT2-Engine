@@ -80,7 +80,7 @@ void GlRenderer::DispatchCompute(glm::uvec3 threadGroupSize)
 }
 
 //sub-optimal but abstract :)
-void GlRenderer::Draw(Primitives::Primitive type, long first, long count, int numInstances, int baseVertex)
+void GlRenderer::Draw(Primitives::Primitive type, size_t first, long count, int numInstances, int baseVertex)
 {
     if (first < 0 || count < 0 || numInstances < 0 || baseVertex < 0)
         throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GlRenderer: Draw arguments should be positive!");

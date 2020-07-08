@@ -20,7 +20,7 @@ void GlTexture::ReadChannelSizes()
     glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_STENCIL_SIZE, 1, &m_channelSizes.stencil);
     glGetInternalformativ(target, m_internalFormat, GL_INTERNALFORMAT_SHARED_SIZE, 1, &m_channelSizes.shared);
 
-    m_dataSize = m_size.x * m_size.y * m_size.z * m_channelSizes.InBytes();
+    m_dataSize = static_cast<size_t>(m_size.x) * m_size.y * m_size.z * m_channelSizes.InBytes();
 }
 
 

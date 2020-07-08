@@ -47,8 +47,8 @@ public:
 
     Camera& setView(const glm::mat4& newView)
     {
-        glm::vec3 scale, skew;
-        glm::vec4 perspective;
+        glm::vec3 scale{}, skew{};
+        glm::vec4 perspective{};
         glm::decompose(glm::inverse(newView), scale, rotation, position, skew, perspective);
 
         //right now could be optimized by manual view and view_inverse assigning

@@ -175,7 +175,7 @@ namespace AT2::UI
 			CurveData& operator=(const CurveData&) const = delete;
 
 		public:
-			void SetData(std::vector<float>&& data, bool autoRange = true);
+			void SetData(std::vector<float> data, bool autoRange = true);
 			const std::vector<float>& GetData() const noexcept { return m_data; }
 
 			void SetXRange(float startX, float endX);
@@ -191,7 +191,7 @@ namespace AT2::UI
 
 			//the size recomputes lazily so could be treated as const
 			mutable bool m_rangeNeedsUpdate = true;
-			mutable AABB2d m_aabb; 
+			mutable AABB2d m_aabb = {};
 
 			glm::vec4 m_Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
@@ -200,8 +200,6 @@ namespace AT2::UI
 
 	public:
 		static std::shared_ptr<Plot> Make(std::string_view name, const glm::uvec2& size = glm::uvec2());
-
-		~Plot() { std::cout << "Plot" << std::endl; }
 
 	public:
 		size_t EnumerateCurves(std::function<bool(std::string_view name, const CurveData& data, bool invalidated)>);
@@ -221,8 +219,9 @@ namespace AT2::UI
 
 	protected:
 		std::map<std::string, CurveData> m_curvesData;
+		AABB2d m_allBounds{};
+	    AABB2d m_observingZone{};
 		bool m_boundsShouldBeRecalculated = true;
-		AABB2d m_allBounds, m_observingZone;
 	};
 
 }

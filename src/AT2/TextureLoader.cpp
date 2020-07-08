@@ -128,7 +128,7 @@ static std::shared_ptr<ITexture> Load(const std::shared_ptr<IRenderer>& renderer
 
 	if (const auto flags = ilGetInteger(IL_IMAGE_CUBEFLAGS))//TODO: and how to live with it? :)
 	{
-		for (size_t i = 0; i <= 5; ++i)
+		for (ILuint i = 0; i <= 5; ++i)
 		{
 			ilBindImage(image.getId());
 			ilActiveImage(i);
@@ -192,12 +192,12 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
 	if (size > std::numeric_limits<ILuint>::max())
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "DevIL does not support images more than 4GB");
 
-    const ILenum type = ilDetermineTypeL(data, size);
+    const ILenum type = ilDetermineTypeL(data, static_cast<ILuint>(size));
 	if (type == IL_TYPE_UNKNOWN)
 		throw AT2Exception(AT2Exception::ErrorCase::Texture, "Couldn't determine texture format while reading from memory");
 
 	return Load(renderer, [=]
 	{
-	    return ilLoadL(type, data, size) == IL_TRUE;
+	    return ilLoadL(type, data, static_cast<ILuint>(size)) == IL_TRUE;
 	});
 }

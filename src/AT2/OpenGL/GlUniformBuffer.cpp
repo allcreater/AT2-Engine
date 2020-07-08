@@ -26,31 +26,31 @@ const GLvoid* value_ptr(const T& value) { return reinterpret_cast<const GLvoid*>
 
 
 template <typename T>
-void SetUniformInternal(GLuint bufferId, GlShaderProgram::UniformBufferInfo* ubi, const str& name, const T& value)
+void SetUniformInternal(GLuint bufferId, const GlShaderProgram::UniformBufferInfo& ubi, const str& name, const T& value)
 {
-    const auto* ui = ubi->GetUniformInfo(name);
+    const auto* ui = ubi.GetUniformInfo(name);
     if (!ui)
         return;
 
-    auto* const data = static_cast<GLbyte*>(glMapNamedBufferRangeEXT(bufferId, ui->Offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
+    auto* const data = static_cast<std::byte*>(glMapNamedBufferRangeEXT(bufferId, ui->Offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
     const void* ptr = value_ptr(value);
     memcpy(data, ptr, sizeof(T));
     glUnmapNamedBufferEXT(bufferId);
 }
 
 
-template <typename T, size_t C, size_t R>
-void SetUniformInternal(GLuint bufferId, GlShaderProgram::UniformBufferInfo* ubi, const str& name, const glm::mat<C, R, T>& value)
+template <typename T, length_t C, length_t R, qualifier Q>
+void SetUniformInternal(GLuint bufferId, const GlShaderProgram::UniformBufferInfo& ubi, const str& name, const glm::mat<C, R, T, Q>& value)
 {
-    using MatT = mat<C, R, T>;//decltype(value);
+    using MatT = mat<C, R, T, Q>;
     
-    const auto* ui = ubi->GetUniformInfo(name);
+    const auto* ui = ubi.GetUniformInfo(name);
     if (!ui)
         return;
 
-    auto* const data = static_cast<GLbyte*>(glMapNamedBufferRangeEXT(bufferId, ui->Offset, ui->MatrixStride * C, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
-    for (int i = 0; i < C; ++i)
-        memcpy(data + ui->MatrixStride * i, &(value[i].x), sizeof(MatT::col_type));
+    auto* const data = static_cast<std::byte*>(glMapNamedBufferRangeEXT(bufferId, ui->Offset, static_cast<GLsizeiptr>(C) * ui->MatrixStride, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
+    for (decltype(C) i = 0; i < C; ++i)
+        memcpy(data + static_cast<size_t>(i) * ui->MatrixStride, value_ptr(value[i]), sizeof(typename MatT::col_type));
 
     glUnmapNamedBufferEXT(bufferId);
 }
@@ -60,7 +60,7 @@ void GlUniformBuffer::SetUniform(const str &name, const Uniform &value)
 {
     using namespace glm;
 
-    std::visit([&](const auto& x) { SetUniformInternal(m_id, m_ubi.get(), name, x); }, value);
+    std::visit([&](const auto& x) { SetUniformInternal(m_id, *m_ubi, name, x); }, value);
 }
 
 void GlUniformBuffer::Bind(IStateManager &stateManager) const

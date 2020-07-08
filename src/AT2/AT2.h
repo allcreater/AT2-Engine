@@ -315,7 +315,7 @@ public:
 
 	virtual void DispatchCompute(glm::uvec3 threadGroupSize) = 0;
 	//Draws count vertices connected by primitive type.
-	virtual void Draw(Primitives::Primitive type, long int first, long int count, int numInstances = 1, int baseVertex = 0) = 0;
+	virtual void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1, int baseVertex = 0) = 0;
 
 	virtual void SetViewport(const AABB2d& viewport) = 0;
 	virtual void ClearBuffer(const glm::vec4& color) = 0;

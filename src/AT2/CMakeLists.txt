@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.7.1 FATAL_ERROR)
 
 add_definitions(
-	-DUSE_ASSIMP
+    -DUSE_ASSIMP
     -DGLFW_INCLUDE_NONE
 )
 
@@ -25,4 +25,7 @@ add_library(${PROJECT_NAME} STATIC
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw assimp::assimp ${IL_LIBRARIES} ${ILU_LIBRARIES}
                          PUBLIC GLEW::glew glm) 
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+)

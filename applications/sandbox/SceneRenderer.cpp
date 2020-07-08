@@ -171,7 +171,7 @@ void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
         "resources/shaders/skylight.fs.glsl" });
 
 
-    lightMesh = MakeSphere(*renderer, 32, 16);
+    lightMesh = MakeSphere(*renderer, { 32, 16 });
     quadMesh = MakeFullscreenQuadDrawable(*renderer);
 
     this->renderer = std::move(renderer);
@@ -347,10 +347,10 @@ std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numP
 {
     assert(numPatches.x < 1024 && numPatches.y < 1024);
 
-    std::vector<glm::vec2> texCoords(numPatches.x * numPatches.y * 4);//TODO! GlVertexBuffer - take iterators!
+    std::vector<glm::vec2> texCoords(4 * numPatches.x * numPatches.y);//TODO! GlVertexBuffer - take iterators!
 
-    for (int j = 0; j < numPatches.y; ++j)
-    for (int i = 0; i < numPatches.x; ++i)
+    for (size_t j = 0; j < numPatches.y; ++j)
+    for (size_t i = 0; i < numPatches.x; ++i)
     {
         const auto num = (i + j * numPatches.x) * 4;
         texCoords[num] = glm::vec2(float(i) / numPatches.x, float(j) / numPatches.y);
@@ -371,7 +371,7 @@ std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numP
     mesh.VertexArray = vao;
 
     SubMesh subMesh;
-    subMesh.Primitives.emplace_back(Primitives::Patches{4}, 0, texCoords.size());
+    subMesh.Primitives.emplace_back(Primitives::Patches{4}, 0u, texCoords.size());
 
     mesh.SubMeshes.push_back(std::move(subMesh));
 
@@ -385,37 +385,37 @@ std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numP
     return rootNode;
 }
 
-std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer,  int segX, int segY)
+std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatches)
 {
-    assert(segX <= 1024 && segY <= 512);
+    assert(numPatches.x <= 1024 && numPatches.y <= 512);
 
-    std::vector<glm::vec3> normals; normals.reserve(segX * segY);
-    std::vector<glm::uint> indices; indices.reserve(segX * segY * 6);
+    std::vector<glm::vec3> normals; normals.reserve(static_cast<size_t>(numPatches.x) * numPatches.y);
+    std::vector<uint32_t> indices; indices.reserve(static_cast<size_t>(numPatches.x) * numPatches.y * 6);
 
-    for (int j = 0; j < segY; ++j)
+    for (uint32_t j = 0; j < numPatches.y; ++j)
     {
-        const double angV = j * pi / (segY - 1);
-        for (int i = 0; i < segX; ++i)
+        const double angV = j * pi / (numPatches.y - 1);
+        for (uint32_t i = 0; i < numPatches.x; ++i)
         {
-            const double angH = i * pi * 2 / segX;
+            const double angH = i * pi * 2 / numPatches.x;
 
             normals.emplace_back(sin(angV) * cos(angH), sin(angV) * sin(angH), cos(angV));
         }
     }
 
-    for (int j = 0; j < segY - 1; ++j)
+    for (uint32_t j = 0; j < numPatches.y - 1; ++j)
     {
-        const int nj = j + 1;
-        for (int i = 0; i < segX; ++i)
+        const auto nj = j + 1;
+        for (uint32_t i = 0; i < numPatches.x; ++i)
         {
-            const int ni = (i + 1) % segX;
+            const int ni = (i + 1) % numPatches.x;
 
-            indices.push_back(j * segX + i);
-            indices.push_back(j * segX + ni);
-            indices.push_back(nj * segX + ni);
-            indices.push_back(j * segX + i);
-            indices.push_back(nj * segX + ni);
-            indices.push_back(nj * segX + i);
+            indices.push_back(j * numPatches.x + i);
+            indices.push_back(j * numPatches.x + ni);
+            indices.push_back(nj * numPatches.x + ni);
+            indices.push_back(j * numPatches.x + i);
+            indices.push_back(nj * numPatches.x + ni);
+            indices.push_back(nj * numPatches.x + i);
         }
     }
 
