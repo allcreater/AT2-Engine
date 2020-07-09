@@ -12,10 +12,10 @@ GlfwApplication& GlfwApplication::get()
 
 std::shared_ptr<GlfwWindow> GlfwApplication::createWindow(GlfwContextParameters parameters)
 {
-    auto *const pWindow = new GlfwWindow(parameters);
-    std::shared_ptr<GlfwWindow> window { pWindow };
+    auto* const pWindow = new GlfwWindow(parameters);
+    std::shared_ptr<GlfwWindow> window {pWindow};
 
-    std::lock_guard lock { windows_registry_mutex };
+    std::lock_guard lock {windows_registry_mutex};
     windows_registry.push_back(window);
 
     return window;
@@ -24,7 +24,7 @@ std::shared_ptr<GlfwWindow> GlfwApplication::createWindow(GlfwContextParameters 
 void GlfwApplication::run()
 {
     if (runned)
-        throw GlfwException { "Already running!" };
+        throw GlfwException {"Already running!"};
 
     runned = true;
 
@@ -32,7 +32,7 @@ void GlfwApplication::run()
     {
         //Process all delayed actions at main thread
         {
-            std::lock_guard lock{ tasks_mutex };
+            std::lock_guard lock {tasks_mutex};
             while (!tasks.empty())
             {
                 tasks.front()();
@@ -41,29 +41,27 @@ void GlfwApplication::run()
         }
 
         {
-            std::lock_guard lock{ windows_registry_mutex };
+            std::lock_guard lock {windows_registry_mutex};
 
-            windows_registry.erase(std::remove_if(std::begin(windows_registry), std::end(windows_registry), 
-           [](const std::shared_ptr<GlfwWindow>& window)
-                {
-                    if (window->getCloseFlag() || window.use_count() == 1)
-                    {
-                        window->Close();
-                        return true; //
-                    }
+            windows_registry.erase(std::remove_if(std::begin(windows_registry), std::end(windows_registry),
+                                                  [](const std::shared_ptr<GlfwWindow>& window) {
+                                                      if (window->getCloseFlag() || window.use_count() == 1)
+                                                      {
+                                                          window->Close();
+                                                          return true; //
+                                                      }
 
-                    window->UpdateAndRender();
-                    return false;
-                }
-            ), std::end(windows_registry));
-
+                                                      window->UpdateAndRender();
+                                                      return false;
+                                                  }),
+                                   std::end(windows_registry));
         }
 
         glfwMakeContextCurrent(nullptr);
 
         if (windows_registry.empty() && OnNoActiveWindows)
             OnNoActiveWindows();
-        
+
         glfwPollEvents();
     }
 }
@@ -71,7 +69,7 @@ void GlfwApplication::run()
 void GlfwApplication::stop()
 {
     if (!runned.exchange(false))
-        throw GlfwException{ "Isn't running!" };
+        throw GlfwException {"Isn't running!"};
 }
 
 GlfwApplication::GlfwApplication()
@@ -79,10 +77,7 @@ GlfwApplication::GlfwApplication()
     if (!glfwInit())
         throw GlfwException("Initialization failed");
 
-    glfwSetErrorCallback([](int, const char* message)
-    {
-        throw GlfwException(message);
-    });
+    glfwSetErrorCallback([](int, const char* message) { throw GlfwException(message); });
 }
 
 GlfwApplication::~GlfwApplication()

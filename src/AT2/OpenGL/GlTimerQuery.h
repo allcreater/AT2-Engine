@@ -6,22 +6,22 @@
 namespace AT2
 {
 
-	class GlTimerQuery
-	{
-	public:
-		NON_COPYABLE_OR_MOVABLE(GlTimerQuery)
+    class GlTimerQuery
+    {
+    public:
+        NON_COPYABLE_OR_MOVABLE(GlTimerQuery)
 
-		GlTimerQuery();
-		~GlTimerQuery();
+        GlTimerQuery();
+        ~GlTimerQuery();
 
-		void Begin();
-		void End();
-		GLuint64 WaitForResult();
+        void Begin();
+        void End();
+        GLuint64 WaitForResult();
 
-	private:
-		GLuint m_id {0};
-		GLuint64 m_resultValue {0};
-	};
+    private:
+        GLuint m_id {0};
+        GLuint64 m_resultValue {0};
+    };
 
-}
+} // namespace AT2
 #endif

@@ -5,12 +5,12 @@
 
 namespace AT2
 {
-	class [[deprecated]] IDrawable
-	{
-	public:
-		virtual void Draw(const IRenderer& renderer) = 0;
-		virtual ~IDrawable() {}
-	};
+    class [[deprecated]] IDrawable
+    {
+    public:
+        virtual void Draw(const IRenderer& renderer) = 0;
+        virtual ~IDrawable() {}
+    };
 
-}
+} // namespace AT2
 #endif

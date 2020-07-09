@@ -1,6 +1,6 @@
 #include "GlVertexArray.h"
-#include "Mappings.h"
 #include <map>
+#include "Mappings.h"
 
 using namespace AT2;
 
@@ -57,9 +57,10 @@ void GlVertexArray::SetVertexBuffer(unsigned int _index, std::shared_ptr<IVertex
 
         const auto platformDataType = Mappings::TranslateExternalType(_buffer->GetDataType().Type);
 
-        glVertexArrayVertexAttribOffsetEXT(
-            m_id, _buffer->GetId(), _index, static_cast<GLint>(_buffer->GetDataType().Count), platformDataType,
-            _buffer->GetDataType().IsNormalized ? GL_TRUE : GL_FALSE, _buffer->GetDataType().Stride, _buffer->GetDataType().Offset);
+        glVertexArrayVertexAttribOffsetEXT(m_id, _buffer->GetId(), _index,
+                                           static_cast<GLint>(_buffer->GetDataType().Count), platformDataType,
+                                           _buffer->GetDataType().IsNormalized ? GL_TRUE : GL_FALSE,
+                                           _buffer->GetDataType().Stride, _buffer->GetDataType().Offset);
         glEnableVertexArrayAttribEXT(m_id, _index);
     }
     else

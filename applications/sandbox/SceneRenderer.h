@@ -21,7 +21,6 @@ private:
     MatrixStack transforms;
     const Mesh* active_mesh = nullptr;
     SceneRenderer& scene_renderer;
-
 };
 
 struct LightRenderVisitor : NodeVisitor
@@ -35,7 +34,7 @@ struct LightRenderVisitor : NodeVisitor
     void UnVisit(Node& node) override;
 
 private:
-    SceneRenderer &scene_renderer;
+    SceneRenderer& scene_renderer;
 
     MatrixStack transforms;
 
@@ -78,17 +77,18 @@ public:
     void ResizeFramebuffers(glm::ivec2 newSize);
     void RenderScene(const RenderParameters& params);
 
-    void DrawPointLights(const LightRenderVisitor &lrv) const;
-    void DrawSkyLight(const LightRenderVisitor& lrv, const Camera &camera) const;
+    void DrawPointLights(const LightRenderVisitor& lrv) const;
+    void DrawSkyLight(const LightRenderVisitor& lrv, const Camera& camera) const;
+
 private:
     void SetupCamera(const Camera& camera);
-    void DrawSubmesh(const Mesh&, const SubMesh &, int numInstances = 1) const;
+    void DrawSubmesh(const Mesh&, const SubMesh&, int numInstances = 1) const;
     void DrawMesh(const Mesh&, const std::shared_ptr<IShaderProgram>&);
     void DrawQuad(const std::shared_ptr<IShaderProgram>&, const IUniformContainer&) const noexcept;
 
 private:
     std::shared_ptr<IRenderer> renderer;
-    
+
     struct Resources
     {
         std::shared_ptr<IShaderProgram> sphereLightsShader, skyLightsShader, postprocessShader;
@@ -104,7 +104,6 @@ private:
     glm::ivec2 framebuffer_size = {512, 512};
     double time = 0.0;
 };
-
 
 
 std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches);

@@ -6,8 +6,7 @@ using namespace AT2;
 //TODO: make it generic
 struct NodeFindVisitor : NodeVisitor
 {
-    NodeFindVisitor(std::string_view name, const std::type_info* nodeType) :
-        name(name), nodeType(nodeType) {}
+    NodeFindVisitor(std::string_view name, const std::type_info* nodeType) : name(name), nodeType(nodeType) {}
 
     bool Visit(Node& node) override
     {
@@ -20,9 +19,7 @@ struct NodeFindVisitor : NodeVisitor
         return true;
     }
 
-    void UnVisit(Node& node) override
-    {
-    }
+    void UnVisit(Node& node) override {}
 
     Node* GetFoundNode() const noexcept { return found; }
 
@@ -34,7 +31,7 @@ private:
 
 Node* Scene::FindNode(std::string_view name, const std::type_info* nodeType) const
 {
-    NodeFindVisitor visitor{ std::move(name), nodeType};
+    NodeFindVisitor visitor {std::move(name), nodeType};
     GetRoot().Accept(visitor);
 
     return visitor.GetFoundNode();

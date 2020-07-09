@@ -3,9 +3,7 @@
 
 using namespace AT2;
 
-GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType) :
-    m_id(0),
-    m_publicType(bufferType)
+GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType) : m_id(0), m_publicType(bufferType)
 {
     m_privateType = static_cast<GlBufferType>(Mappings::TranslateBufferType(bufferType));
 
@@ -30,6 +28,4 @@ void GlVertexBuffer::SetData(size_t _size, const void* _data)
         throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlVertexBuffer: glNamedBufferData not available");
 
     m_length = _size;
-
-
 }

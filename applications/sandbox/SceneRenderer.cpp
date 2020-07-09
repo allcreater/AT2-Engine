@@ -7,9 +7,7 @@
 #include <gl/glew.h>
 
 
-RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera):
-    camera(camera),
-    scene_renderer(renderer)
+RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera) : camera(camera), scene_renderer(renderer)
 {
 }
 
@@ -17,7 +15,7 @@ bool RenderVisitor::Visit(Node& node)
 {
     transforms.pushModelView(node.GetTransform());
 
-    auto &stateManager = scene_renderer.renderer->GetStateManager();
+    auto& stateManager = scene_renderer.renderer->GetStateManager();
 
     if (const auto* meshNode = dynamic_cast<MeshNode*>(&node))
     {
@@ -32,7 +30,8 @@ bool RenderVisitor::Visit(Node& node)
             return true;
 
         stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
-        stateManager.GetActiveShader()->SetUniform("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
+        stateManager.GetActiveShader()->SetUniform(
+            "u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
 
         const auto& subMesh = active_mesh->SubMeshes[subMeshNode->SubmeshIndex];
         scene_renderer.DrawSubmesh(*active_mesh, subMesh);
@@ -46,10 +45,7 @@ void RenderVisitor::UnVisit(Node& node)
     transforms.popModelView();
 }
 
-LightRenderVisitor::LightRenderVisitor(SceneRenderer& sceneRenderer) :
-    scene_renderer(sceneRenderer)
-{
-}
+LightRenderVisitor::LightRenderVisitor(SceneRenderer& sceneRenderer) : scene_renderer(sceneRenderer) {}
 
 bool LightRenderVisitor::Visit(Node& node)
 {
@@ -60,24 +56,17 @@ bool LightRenderVisitor::Visit(Node& node)
         if (!lightNode->GetEnabled())
             return true;
 
-        const auto lightPos = glm::vec3(transforms.getModelView()* glm::vec4{ 0,0,0,1 });
+        const auto lightPos = glm::vec3(transforms.getModelView() * glm::vec4 {0, 0, 0, 1});
 
         if (std::holds_alternative<SphereLight>(lightNode->GetFlavor()))
         {
-            collectedLights.push_back({
-                lightPos,
-                lightNode->GetIntensity(),
-                lightNode->GetEffectiveRadius()
-            });
+            collectedLights.push_back({lightPos, lightNode->GetIntensity(), lightNode->GetEffectiveRadius()});
         }
         else if (const auto* skyLight = std::get_if<SkyLight>(&lightNode->GetFlavor()))
         {
-            collectedDirectionalLights.push_back({
-                lightPos,
-                lightNode->GetIntensity(),
-                glm::mat3(transforms.getModelView()) * skyLight->Direction,
-                skyLight->EnvironmentMap
-            });
+            collectedDirectionalLights.push_back({lightPos, lightNode->GetIntensity(),
+                                                  glm::mat3(transforms.getModelView()) * skyLight->Direction,
+                                                  skyLight->EnvironmentMap});
         }
     }
 
@@ -89,59 +78,57 @@ void LightRenderVisitor::UnVisit(Node& node)
     transforms.popModelView();
 }
 
-void SceneRenderer::DrawPointLights(const LightRenderVisitor &lrv) const
+void SceneRenderer::DrawPointLights(const LightRenderVisitor& lrv) const
 {
     using LightAttribs = LightRenderVisitor::LightAttribs;
 
     //update our vertex buffer...
-    auto &rf = renderer->GetResourceFactory();
-    auto &vao = lightMesh->VertexArray;
+    auto& rf = renderer->GetResourceFactory();
+    auto& vao = lightMesh->VertexArray;
 
     //TODO: map buffer instead of recreating it
     vao->SetVertexBuffer(2,
-        rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-            BufferTypeInfo{ BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, position) },
-            lrv.collectedLights.size() * sizeof(LightAttribs),
-            lrv.collectedLights.data())
-    );
+                         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
+                                               BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs),
+                                                               offsetof(LightAttribs, position)},
+                                               lrv.collectedLights.size() * sizeof(LightAttribs),
+                                               lrv.collectedLights.data()));
     vao->SetVertexBufferDivisor(2, 1);
 
     vao->SetVertexBuffer(3,
-        rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-            BufferTypeInfo{ BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, intensity) },
-            lrv.collectedLights.size() * sizeof(LightAttribs),
-            lrv.collectedLights.data())
-    );
+                         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
+                                               BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs),
+                                                               offsetof(LightAttribs, intensity)},
+                                               lrv.collectedLights.size() * sizeof(LightAttribs),
+                                               lrv.collectedLights.data()));
     vao->SetVertexBufferDivisor(3, 1);
 
     vao->SetVertexBuffer(4,
-        rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-            BufferTypeInfo{ BufferDataType::Float, 1, sizeof(LightAttribs), offsetof(LightAttribs, effective_radius) },
-            lrv.collectedLights.size() * sizeof(LightAttribs),
-            lrv.collectedLights.data())
-    );
+                         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
+                                               BufferTypeInfo {BufferDataType::Float, 1, sizeof(LightAttribs),
+                                                               offsetof(LightAttribs, effective_radius)},
+                                               lrv.collectedLights.size() * sizeof(LightAttribs),
+                                               lrv.collectedLights.data()));
     vao->SetVertexBufferDivisor(4, 1);
 
 
-    auto &stateManager = renderer->GetStateManager();
+    auto& stateManager = renderer->GetStateManager();
     stateManager.BindShader(resources.sphereLightsShader);
     stateManager.BindVertexArray(lightMesh->VertexArray);
     sphereLightsUniforms->Bind(stateManager);
 
     DrawSubmesh(*lightMesh, lightMesh->SubMeshes.front(), lrv.collectedLights.size());
-
 }
 
 void SceneRenderer::DrawSkyLight(const LightRenderVisitor& lrv, const Camera& camera) const
 {
     using LightAttribs = LightRenderVisitor::DirectionalLightAttribs;
 
-    const auto comparator = Utils::make_unary_less<LightAttribs>([&](const LightAttribs& lhv)
-    {
-        return length(camera.getPosition() - lhv.position);
-    });
+    const auto comparator = Utils::make_unary_less<LightAttribs>(
+        [&](const LightAttribs& lhv) { return length(camera.getPosition() - lhv.position); });
 
-    const auto nearestLightIt = std::min_element(lrv.collectedDirectionalLights.begin(), lrv.collectedDirectionalLights.end(), comparator);
+    const auto nearestLightIt =
+        std::min_element(lrv.collectedDirectionalLights.begin(), lrv.collectedDirectionalLights.end(), comparator);
 
     if (nearestLightIt != lrv.collectedDirectionalLights.end())
     {
@@ -156,22 +143,18 @@ void SceneRenderer::DrawSkyLight(const LightRenderVisitor& lrv, const Camera& ca
 void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
 {
 
-    resources.postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-    "resources/shaders/postprocess.vs.glsl",
-    "resources/shaders/postprocess.fs.glsl" });
+    resources.postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        {"resources/shaders/postprocess.vs.glsl", "resources/shaders/postprocess.fs.glsl"});
 
-    resources.sphereLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-    "resources/shaders/spherelight2.vs.glsl",
-    "resources/shaders/pbr.fs.glsl",
-    "resources/shaders/spherelight2.fs.glsl" });
+    resources.sphereLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        {"resources/shaders/spherelight2.vs.glsl", "resources/shaders/pbr.fs.glsl",
+         "resources/shaders/spherelight2.fs.glsl"});
 
-    resources.skyLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-        "resources/shaders/skylight.vs.glsl",
-        "resources/shaders/pbr.fs.glsl",
-        "resources/shaders/skylight.fs.glsl" });
+    resources.skyLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        {"resources/shaders/skylight.vs.glsl", "resources/shaders/pbr.fs.glsl", "resources/shaders/skylight.fs.glsl"});
 
 
-    lightMesh = MakeSphere(*renderer, { 32, 16 });
+    lightMesh = MakeSphere(*renderer, {32, 16});
     quadMesh = MakeFullscreenQuadDrawable(*renderer);
 
     this->renderer = std::move(renderer);
@@ -193,13 +176,13 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
         auto& rf = renderer->GetResourceFactory();
 
         gBufferFBO = renderer->GetResourceFactory().CreateFrameBuffer();
-        gBufferFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA8));
-        gBufferFBO->SetColorAttachment(1, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
-        gBufferFBO->SetColorAttachment(2, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA8));
-        gBufferFBO->SetDepthAttachment(rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::DEPTH32F));
+        gBufferFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8));
+        gBufferFBO->SetColorAttachment(1, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F));
+        gBufferFBO->SetColorAttachment(2, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8));
+        gBufferFBO->SetDepthAttachment(rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::DEPTH32F));
 
         postProcessFBO = renderer->GetResourceFactory().CreateFrameBuffer();
-        postProcessFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D{ framebuffer_size }, TextureFormats::RGBA32F));
+        postProcessFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F));
         postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()); //depth is common with previous stage
 
         {
@@ -209,7 +192,6 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
             sphereLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
             sphereLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
             sphereLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
-
         }
 
         {
@@ -229,13 +211,13 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
             postprocessUniforms->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0));
             postprocessUniforms->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment());
         }
-        
+
         dirtyFramebuffers = false;
     }
 
     SetupCamera(params.Camera);
 
-    renderer->SetViewport(AABB2d{ {0, 0}, framebuffer_size });
+    renderer->SetViewport(AABB2d {{0, 0}, framebuffer_size});
 
     gBufferFBO->Bind();
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
@@ -251,7 +233,7 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
 
 
     //objects
-    RenderVisitor rv { *this, params.Camera };
+    RenderVisitor rv {*this, params.Camera};
     params.Scene.GetRoot().Accept(rv);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -267,7 +249,7 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
     glCullFace(GL_BACK);
 
     //lights
-    LightRenderVisitor lrv{ *this };
+    LightRenderVisitor lrv {*this};
     params.Scene.GetRoot().Accept(lrv);
 
     DrawPointLights(lrv);
@@ -302,17 +284,16 @@ void SceneRenderer::SetupCamera(const Camera& camera)
     cameraUniformBuffer->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
     cameraUniformBuffer->SetUniform("u_time", time);
     cameraUniformBuffer->Bind(renderer->GetStateManager());
-
 }
 
-void SceneRenderer::DrawSubmesh(const Mesh& mesh, const SubMesh & subMesh, int numInstances) const
+void SceneRenderer::DrawSubmesh(const Mesh& mesh, const SubMesh& subMesh, int numInstances) const
 {
-    auto &stateManager = renderer->GetStateManager();
+    auto& stateManager = renderer->GetStateManager();
 
     if (!mesh.Materials.empty())
         mesh.Materials.at(subMesh.MaterialIndex)->Bind(stateManager);
 
-    for (const auto &primitive : subMesh.Primitives)
+    for (const auto& primitive : subMesh.Primitives)
         renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, numInstances, primitive.BaseVertex);
 }
 
@@ -325,11 +306,12 @@ void SceneRenderer::DrawMesh(const Mesh& mesh, const std::shared_ptr<IShaderProg
 
     stateManager.BindVertexArray(mesh.VertexArray);
 
-    for (const auto &submesh : mesh.SubMeshes)
+    for (const auto& submesh : mesh.SubMeshes)
         DrawSubmesh(mesh, submesh);
 }
 
-void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program, const IUniformContainer& uniformBuffer) const noexcept
+void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program,
+                             const IUniformContainer& uniformBuffer) const noexcept
 {
     assert(program);
 
@@ -342,27 +324,28 @@ void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program, con
 }
 
 
-
 std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches)
 {
     assert(numPatches.x < 1024 && numPatches.y < 1024);
 
-    std::vector<glm::vec2> texCoords(4 * numPatches.x * numPatches.y);//TODO! GlVertexBuffer - take iterators!
+    std::vector<glm::vec2> texCoords(4 * numPatches.x * numPatches.y); //TODO! GlVertexBuffer - take iterators!
 
     for (size_t j = 0; j < numPatches.y; ++j)
-    for (size_t i = 0; i < numPatches.x; ++i)
-    {
-        const auto num = (i + j * numPatches.x) * 4;
-        texCoords[num] = glm::vec2(float(i) / numPatches.x, float(j) / numPatches.y);
-        texCoords[num + 1] = glm::vec2(float(i + 1) / numPatches.x, float(j) / numPatches.y);
-        texCoords[num + 2] = glm::vec2(float(i + 1) / numPatches.x, float(j + 1) / numPatches.y);
-        texCoords[num + 3] = glm::vec2(float(i) / numPatches.x, float(j + 1) / numPatches.y);
-    }
+        for (size_t i = 0; i < numPatches.x; ++i)
+        {
+            const auto num = (i + j * numPatches.x) * 4;
+            texCoords[num] = glm::vec2(float(i) / numPatches.x, float(j) / numPatches.y);
+            texCoords[num + 1] = glm::vec2(float(i + 1) / numPatches.x, float(j) / numPatches.y);
+            texCoords[num + 2] = glm::vec2(float(i + 1) / numPatches.x, float(j + 1) / numPatches.y);
+            texCoords[num + 3] = glm::vec2(float(i) / numPatches.x, float(j + 1) / numPatches.y);
+        }
 
 
     auto& rf = renderer.GetResourceFactory();
     auto vao = rf.CreateVertexArray();
-    vao->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec2, texCoords.size() * sizeof(glm::vec2), texCoords.data()));
+    vao->SetVertexBuffer(1,
+                         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec2,
+                                               texCoords.size() * sizeof(glm::vec2), texCoords.data()));
 
     auto rootNode = std::make_shared<MeshNode>();
 
@@ -371,7 +354,7 @@ std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numP
     mesh.VertexArray = vao;
 
     SubMesh subMesh;
-    subMesh.Primitives.emplace_back(Primitives::Patches{4}, 0u, texCoords.size());
+    subMesh.Primitives.emplace_back(Primitives::Patches {4}, 0u, texCoords.size());
 
     mesh.SubMeshes.push_back(std::move(subMesh));
 
@@ -389,8 +372,10 @@ std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatche
 {
     assert(numPatches.x <= 1024 && numPatches.y <= 512);
 
-    std::vector<glm::vec3> normals; normals.reserve(static_cast<size_t>(numPatches.x) * numPatches.y);
-    std::vector<uint32_t> indices; indices.reserve(static_cast<size_t>(numPatches.x) * numPatches.y * 6);
+    std::vector<glm::vec3> normals;
+    normals.reserve(static_cast<size_t>(numPatches.x) * numPatches.y);
+    std::vector<uint32_t> indices;
+    indices.reserve(static_cast<size_t>(numPatches.x) * numPatches.y * 6);
 
     for (uint32_t j = 0; j < numPatches.y; ++j)
     {
@@ -424,13 +409,16 @@ std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatche
     auto mesh = std::make_unique<Mesh>();
 
     mesh->VertexArray = rf.CreateVertexArray();
-    mesh->VertexArray->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, normals.size() * sizeof(glm::vec3), normals.data()));
-    mesh->VertexArray->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt, indices.size() * sizeof(glm::uint), indices.data()));
+    mesh->VertexArray->SetVertexBuffer(1,
+                                       rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3,
+                                                             normals.size() * sizeof(glm::vec3), normals.data()));
+    mesh->VertexArray->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt,
+                                                            indices.size() * sizeof(glm::uint), indices.data()));
 
 
     //don't know how to make it better
     SubMesh subMesh;
-    subMesh.Primitives.emplace_back(Primitives::Triangles{}, 0, indices.size());
+    subMesh.Primitives.emplace_back(Primitives::Triangles {}, 0, indices.size());
     mesh->SubMeshes.push_back(std::move(subMesh));
 
     return mesh;
@@ -438,15 +426,18 @@ std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatche
 
 std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer)
 {
-    static glm::vec3 positions[] = { glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0) };
+    static glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0),
+                                    glm::vec3(-1.0, 1.0, -1.0)};
 
     auto& rf = renderer.GetResourceFactory();
     auto vao = rf.CreateVertexArray();
-    vao->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3, 4 * sizeof(glm::vec3), positions));
+    vao->SetVertexBuffer(1,
+                         rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3,
+                                               4 * sizeof(glm::vec3), positions));
 
 
     SubMesh subMesh;
-    subMesh.Primitives.emplace_back(Primitives::TriangleFan{}, 0, 4);
+    subMesh.Primitives.emplace_back(Primitives::TriangleFan {}, 0, 4);
 
     auto mesh = std::make_unique<Mesh>();
     mesh->VertexArray = vao;

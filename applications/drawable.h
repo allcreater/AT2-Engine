@@ -9,36 +9,34 @@ namespace AT2
 {
 
 
-class MeshDrawable : public IDrawable
-{
-public:
-	void Draw(const IRenderer& renderer) override
-	{
-		auto& stateManager = renderer.GetStateManager();
+    class MeshDrawable : public IDrawable
+    {
+    public:
+        void Draw(const IRenderer& renderer) override
+        {
+            auto& stateManager = renderer.GetStateManager();
 
-		stateManager.BindShader(Shader);
-		stateManager.BindVertexArray(VertexArray);
-		//stateManager.BindTextures(Textures);
-		
-		UniformBuffer->Bind(stateManager);
+            stateManager.BindShader(Shader);
+            stateManager.BindVertexArray(VertexArray);
+            //stateManager.BindTextures(Textures);
 
-		for(auto *primitive: Primitives)
-			primitive->Draw();
-	}
+            UniformBuffer->Bind(stateManager);
 
-	std::shared_ptr<IShaderProgram> Shader;
-	std::shared_ptr<IVertexArray> VertexArray;
-	std::shared_ptr<IUniformContainer> UniformBuffer;
-	TextureSet Textures;
-	PrimitiveList Primitives;
+            for (auto* primitive : Primitives)
+                primitive->Draw();
+        }
+
+        std::shared_ptr<IShaderProgram> Shader;
+        std::shared_ptr<IVertexArray> VertexArray;
+        std::shared_ptr<IUniformContainer> UniformBuffer;
+        TextureSet Textures;
+        PrimitiveList Primitives;
 
 
-public:
-
-	static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(const IRenderer& renderer, int segX = 32, int segY = 16);
-	static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(const IRenderer& renderer);
-
-	
-};
-}
+    public:
+        static std::shared_ptr<AT2::MeshDrawable> MakeSphereDrawable(const IRenderer& renderer, int segX = 32,
+                                                                     int segY = 16);
+        static std::shared_ptr<AT2::MeshDrawable> MakeFullscreenQuadDrawable(const IRenderer& renderer);
+    };
+} // namespace AT2
 #endif

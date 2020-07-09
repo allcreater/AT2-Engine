@@ -6,61 +6,61 @@
 #include <list>
 
 //TODO: move into library
-namespace AT2::UI 
+namespace AT2::UI
 {
-	class UiRenderer
-	{
-	public:
+    class UiRenderer
+    {
+    public:
         UiRenderer(const std::shared_ptr<AT2::IRenderer>& renderer, std::shared_ptr<AT2::UI::Node> node);
         void Draw();
-		void SetWindowSize(const glm::uvec2& windowSize) { m_windowSize = windowSize; }
+        void SetWindowSize(const glm::uvec2& windowSize) { m_windowSize = windowSize; }
 
-	private:
+    private:
         void RenderNode(const Node& node);
         glm::vec4 DebugColor(const Node& node);
 
-	private:
-		std::shared_ptr<AT2::MeshDrawable> m_quadDrawable;
-		std::weak_ptr<AT2::IRenderer> m_renderer;
-		std::shared_ptr<AT2::UI::Node> m_uiRoot;
-		glm::uvec2 m_windowSize;
-	};
+    private:
+        std::shared_ptr<AT2::MeshDrawable> m_quadDrawable;
+        std::weak_ptr<AT2::IRenderer> m_renderer;
+        std::shared_ptr<AT2::UI::Node> m_uiRoot;
+        glm::uvec2 m_windowSize;
+    };
 
-}
+} // namespace AT2::UI
 
 
 struct IAnimation
 {
-	virtual void Animate(double dt) = 0;
-	virtual bool IsFinished() = 0;
+    virtual void Animate(double dt) = 0;
+    virtual bool IsFinished() = 0;
 
-	virtual ~IAnimation() = default;
+    virtual ~IAnimation() = default;
 };
 
 struct UiHub
 {
-	UiHub() = default;
+    UiHub() = default;
 
-	AT2::UI::UiInputHandler& GetInputHandler() { return *m_uiInputHandler; }
+    AT2::UI::UiInputHandler& GetInputHandler() { return *m_uiInputHandler; }
 
-	void Init(std::shared_ptr<AT2::IRenderer>& renderer);
-	void Render(std::shared_ptr<AT2::IRenderer>& renderer, double dt);
-	void Resize(const glm::ivec2& newSize);
-
-private:
-	const std::string DataSet1 = "DataSet #1";
-	const std::string DataSet2 = "DataSet #2";
+    void Init(std::shared_ptr<AT2::IRenderer>& renderer);
+    void Render(std::shared_ptr<AT2::IRenderer>& renderer, double dt);
+    void Resize(const glm::ivec2& newSize);
 
 private:
-	glm::ivec2 m_windowSize = {};
+    const std::string DataSet1 = "DataSet #1";
+    const std::string DataSet2 = "DataSet #2";
 
-	std::shared_ptr<AT2::UI::Node> m_uiRoot;
-	std::shared_ptr<AT2::UI::Plot> m_plotNode;
+private:
+    glm::ivec2 m_windowSize = {};
 
-	std::unique_ptr<AT2::UI::UiRenderer> m_uiRenderer;
-	std::unique_ptr<AT2::UI::UiInputHandler> m_uiInputHandler;
+    std::shared_ptr<AT2::UI::Node> m_uiRoot;
+    std::shared_ptr<AT2::UI::Plot> m_plotNode;
 
-	std::list<std::unique_ptr<IAnimation>> m_animationsList;
+    std::unique_ptr<AT2::UI::UiRenderer> m_uiRenderer;
+    std::unique_ptr<AT2::UI::UiInputHandler> m_uiInputHandler;
+
+    std::list<std::unique_ptr<IAnimation>> m_animationsList;
 };
 
 #endif

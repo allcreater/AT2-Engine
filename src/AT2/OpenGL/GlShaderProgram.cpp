@@ -1,7 +1,7 @@
 #include "GlShaderProgram.h"
 
-#include "GlUniformBuffer.h"
 #include "../UniformContainer.h"
+#include "GlUniformBuffer.h"
 #include "Mappings.h"
 
 using namespace AT2;
@@ -30,34 +30,33 @@ constexpr std::string_view ShaderTypeName(ShaderType type)
     case ShaderType::Geometry: return "Geometry shader"sv;
     case ShaderType::Fragment: return "Fragmens shader"sv;
     case ShaderType::Computational: return "Compute shader"sv;
-    default:
-        return ""sv;
+    default: return ""sv;
     }
 }
 
 GlShaderProgram::GlShaderProgram()
 {
-	m_programId = glCreateProgram();
-	assert(m_programId);
+    m_programId = glCreateProgram();
+    assert(m_programId);
 }
 
 GlShaderProgram::~GlShaderProgram()
 {
-	CleanUp();
-	glDeleteProgram(m_programId);
+    CleanUp();
+    glDeleteProgram(m_programId);
 }
 
 void GlShaderProgram::AttachShader(const str& _code, ShaderType _type)
 {
-	if (_code.empty())
-		throw AT2Exception(AT2Exception::ErrorCase::Shader, "GlShaderProgram: trying to attach empty shader");
-	
-	const GLuint shaderId = LoadShader(Mappings::TranslateShaderType(_type), _code);
-	glAttachShader(m_programId, shaderId);
-	
-	m_shaderIds.emplace_back(_type, shaderId);
+    if (_code.empty())
+        throw AT2Exception(AT2Exception::ErrorCase::Shader, "GlShaderProgram: trying to attach empty shader");
 
-	m_currentState = State::Dirty;
+    const GLuint shaderId = LoadShader(Mappings::TranslateShaderType(_type), _code);
+    glAttachShader(m_programId, shaderId);
+
+    m_shaderIds.emplace_back(_type, shaderId);
+
+    m_currentState = State::Dirty;
 }
 
 bool GlShaderProgram::TryCompile()
@@ -80,7 +79,9 @@ bool GlShaderProgram::TryCompile()
             glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status);
             if (status != GL_TRUE)
             {
-                Log::Warning() << ShaderTypeName(shaderType) << " shader \"" << GetName() << "\" compilation failed!" << std::endl << infoLog;
+                Log::Warning() << ShaderTypeName(shaderType) << " shader \"" << GetName() << "\" compilation failed!"
+                               << std::endl
+                               << infoLog;
             }
         }
 
@@ -104,7 +105,7 @@ bool GlShaderProgram::TryCompile()
     return m_currentState == State::Ready;
 }
 
-std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStorage(const str &blockName)
+std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStorage(const str& blockName)
 {
     if (blockName.empty())
         return std::make_unique<AT2::UniformContainer>();
@@ -126,16 +127,16 @@ std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStora
 
 void GlShaderProgram::CleanUp()
 {
-	for (const auto [type, shaderId] : m_shaderIds)
-	{
-		glDetachShader(m_programId, shaderId);
-		glDeleteShader(shaderId);
-	}
+    for (const auto [type, shaderId] : m_shaderIds)
+    {
+        glDetachShader(m_programId, shaderId);
+        glDeleteShader(shaderId);
+    }
 
-	m_shaderIds.clear();
+    m_shaderIds.clear();
     m_uniformBlocksCache.clear();
 
-	m_currentState = State::Dirty;
+    m_currentState = State::Dirty;
 }
 
 void GlShaderProgram::Bind()
@@ -154,14 +155,14 @@ bool GlShaderProgram::IsActive() const
 
 void GlShaderProgram::SetUBO(const str& blockName, unsigned int index)
 {
-	const GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
-	if (blockIndex != GL_INVALID_INDEX)
-		glUniformBlockBinding(m_programId, blockIndex, index);
-	else
-		Log::Warning() << "Uniform block " << blockName << "not found" << std::endl;
+    const GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
+    if (blockIndex != GL_INVALID_INDEX)
+        glUniformBlockBinding(m_programId, blockIndex, index);
+    else
+        Log::Warning() << "Uniform block " << blockName << "not found" << std::endl;
 }
 
-void GlShaderProgram::SetUniform(const str &name, Uniform value)
+void GlShaderProgram::SetUniform(const str& name, Uniform value)
 {
     if (m_currentState != State::Ready)
         return;
@@ -171,32 +172,32 @@ void GlShaderProgram::SetUniform(const str &name, Uniform value)
     const auto location = glGetUniformLocation(m_programId, name.c_str());
 
     std::visit(Utils::overloaded {
-        [&](int x)           { glProgramUniform1i(m_programId, location, x); },
-        [&](const ivec2& x)  { glProgramUniform2iv(m_programId, location, 1, value_ptr(x)); },
-        [&](const ivec3& x)  { glProgramUniform3iv(m_programId, location, 1, value_ptr(x)); },
-        [&](const ivec4& x)  { glProgramUniform4iv(m_programId, location, 1, value_ptr(x)); },
+                   [&](int x) { glProgramUniform1i(m_programId, location, x); },
+                   [&](const ivec2& x) { glProgramUniform2iv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const ivec3& x) { glProgramUniform3iv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const ivec4& x) { glProgramUniform4iv(m_programId, location, 1, value_ptr(x)); },
 
-        [&](unsigned int x)  { glProgramUniform1ui(m_programId, location, x); },
-        [&](const uvec2& x)  { glProgramUniform2uiv(m_programId, location, 1, value_ptr(x)); },
-        [&](const uvec3& x)  { glProgramUniform3uiv(m_programId, location, 1, value_ptr(x)); },
-        [&](const uvec4& x)  { glProgramUniform4uiv(m_programId, location, 1, value_ptr(x)); },
+                   [&](unsigned int x) { glProgramUniform1ui(m_programId, location, x); },
+                   [&](const uvec2& x) { glProgramUniform2uiv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const uvec3& x) { glProgramUniform3uiv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const uvec4& x) { glProgramUniform4uiv(m_programId, location, 1, value_ptr(x)); },
 
-        [&](float x)         { glProgramUniform1f(m_programId, location, x); },
-        [&](const vec2& x)   { glProgramUniform2fv(m_programId, location, 1, value_ptr(x)); },
-        [&](const vec3& x)   { glProgramUniform3fv(m_programId, location, 1, value_ptr(x)); },
-        [&](const vec4& x)   { glProgramUniform4fv(m_programId, location, 1, value_ptr(x)); },
-        [&](const mat2& x)   { glProgramUniformMatrix2fv(m_programId, location, 1, false, value_ptr(x)); },
-        [&](const mat3& x)   { glProgramUniformMatrix3fv(m_programId, location, 1, false, value_ptr(x)); },
-        [&](const mat4& x)   { glProgramUniformMatrix4fv(m_programId, location, 1, false, value_ptr(x)); },
+                   [&](float x) { glProgramUniform1f(m_programId, location, x); },
+                   [&](const vec2& x) { glProgramUniform2fv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const vec3& x) { glProgramUniform3fv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const vec4& x) { glProgramUniform4fv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const mat2& x) { glProgramUniformMatrix2fv(m_programId, location, 1, false, value_ptr(x)); },
+                   [&](const mat3& x) { glProgramUniformMatrix3fv(m_programId, location, 1, false, value_ptr(x)); },
+                   [&](const mat4& x) { glProgramUniformMatrix4fv(m_programId, location, 1, false, value_ptr(x)); },
 
-        [&](double x)        { glProgramUniform1d(m_programId, location, x); },
-        [&](const dvec2& x)  { glProgramUniform2dv(m_programId, location, 1, value_ptr(x)); },
-        [&](const dvec3& x)  { glProgramUniform3dv(m_programId, location, 1, value_ptr(x)); },
-        [&](const dvec4& x)  { glProgramUniform4dv(m_programId, location, 1, value_ptr(x)); },
-        [&](const dmat2& x)  { glProgramUniformMatrix2dv(m_programId, location, 1, false, value_ptr(x)); },
-        [&](const dmat3& x)  { glProgramUniformMatrix3dv(m_programId, location, 1, false, value_ptr(x)); },
-        [&](const dmat4& x)  { glProgramUniformMatrix4dv(m_programId, location, 1, false, value_ptr(x)); }
-    }, value);
+                   [&](double x) { glProgramUniform1d(m_programId, location, x); },
+                   [&](const dvec2& x) { glProgramUniform2dv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const dvec3& x) { glProgramUniform3dv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const dvec4& x) { glProgramUniform4dv(m_programId, location, 1, value_ptr(x)); },
+                   [&](const dmat2& x) { glProgramUniformMatrix2dv(m_programId, location, 1, false, value_ptr(x)); },
+                   [&](const dmat3& x) { glProgramUniformMatrix3dv(m_programId, location, 1, false, value_ptr(x)); },
+                   [&](const dmat4& x) { glProgramUniformMatrix4dv(m_programId, location, 1, false, value_ptr(x)); }},
+               value);
 }
 
 std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformBlockInfo(const str& blockName)
@@ -213,52 +214,60 @@ std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformB
         return nullptr;
 
     auto ubi = std::make_shared<UniformBufferInfo>();
-	ubi->m_blockIndex = blockIndex;
-	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE,       &ubi->m_blockSize );
-	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &ubi->m_numActiveUniforms);
+    ubi->m_blockIndex = blockIndex;
+    glGetActiveUniformBlockiv(m_programId, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &ubi->m_blockSize);
+    glGetActiveUniformBlockiv(m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &ubi->m_numActiveUniforms);
 
-	//get active uniforms indices
-	std::vector<GLuint> activeUniformIndices;
-	activeUniformIndices.resize(ubi->m_numActiveUniforms);
-	glGetActiveUniformBlockiv (m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, reinterpret_cast<GLint*>(activeUniformIndices.data()));
+    //get active uniforms indices
+    std::vector<GLuint> activeUniformIndices;
+    activeUniformIndices.resize(ubi->m_numActiveUniforms);
+    glGetActiveUniformBlockiv(m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
+                              reinterpret_cast<GLint*>(activeUniformIndices.data()));
 
-	const auto uniformCount = static_cast<GLsizei>(activeUniformIndices.size());
+    const auto uniformCount = static_cast<GLsizei>(activeUniformIndices.size());
 
-	//read uniform offsets
-	std::vector<GLint> activeUniformOffsets;
-	activeUniformOffsets.resize(ubi->m_numActiveUniforms);
-	glGetActiveUniformsiv (m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_OFFSET, activeUniformOffsets.data());
+    //read uniform offsets
+    std::vector<GLint> activeUniformOffsets;
+    activeUniformOffsets.resize(ubi->m_numActiveUniforms);
+    glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_OFFSET,
+                          activeUniformOffsets.data());
 
-	//read uniform types
-	std::vector<GLint> activeUniformTypes;
-	activeUniformTypes.resize(ubi->m_numActiveUniforms);
-	glGetActiveUniformsiv (m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_TYPE, activeUniformTypes.data());
-	
-	//read array strides
-	std::vector<GLint> activeUniformArrayStrides;
-	activeUniformArrayStrides.resize(ubi->m_numActiveUniforms);
-	glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_ARRAY_STRIDE, activeUniformArrayStrides.data());
+    //read uniform types
+    std::vector<GLint> activeUniformTypes;
+    activeUniformTypes.resize(ubi->m_numActiveUniforms);
+    glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_TYPE,
+                          activeUniformTypes.data());
 
-	//read matrix strides
-	std::vector<GLint> activeUniformMatrixStrides;
-	activeUniformMatrixStrides.resize(ubi->m_numActiveUniforms);
-	glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_MATRIX_STRIDE, activeUniformMatrixStrides.data());
+    //read array strides
+    std::vector<GLint> activeUniformArrayStrides;
+    activeUniformArrayStrides.resize(ubi->m_numActiveUniforms);
+    glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_ARRAY_STRIDE,
+                          activeUniformArrayStrides.data());
 
-	//read uniform names and collect all data into map
-	GLint bufferLength = 0;
-	glGetProgramiv(m_programId, GL_ACTIVE_UNIFORM_MAX_LENGTH, &bufferLength);
-    std::string buffer (bufferLength, '\0');
-	for (int i = 0; i < ubi->m_numActiveUniforms; ++i)
-	{
-		GLsizei actualLength = 0;
-		glGetActiveUniformName(m_programId, activeUniformIndices[i], static_cast<GLsizei>(buffer.size()), &actualLength, buffer.data());
+    //read matrix strides
+    std::vector<GLint> activeUniformMatrixStrides;
+    activeUniformMatrixStrides.resize(ubi->m_numActiveUniforms);
+    glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_MATRIX_STRIDE,
+                          activeUniformMatrixStrides.data());
 
-		//TODO: investigate, WTF
-		//.data() call seems so peacful, safe, even redundant, but without it all brokes out by some strange reason
-		ubi->m_uniforms[buffer.data()] = UniformInfo(activeUniformIndices[i], activeUniformOffsets[i], activeUniformTypes[i], activeUniformArrayStrides[i], activeUniformMatrixStrides[i]);
-	}
+    //read uniform names and collect all data into map
+    GLint bufferLength = 0;
+    glGetProgramiv(m_programId, GL_ACTIVE_UNIFORM_MAX_LENGTH, &bufferLength);
+    std::string buffer(bufferLength, '\0');
+    for (int i = 0; i < ubi->m_numActiveUniforms; ++i)
+    {
+        GLsizei actualLength = 0;
+        glGetActiveUniformName(m_programId, activeUniformIndices[i], static_cast<GLsizei>(buffer.size()), &actualLength,
+                               buffer.data());
+
+        //TODO: investigate, WTF
+        //.data() call seems so peacful, safe, even redundant, but without it all brokes out by some strange reason
+        ubi->m_uniforms[buffer.data()] =
+            UniformInfo(activeUniformIndices[i], activeUniformOffsets[i], activeUniformTypes[i],
+                        activeUniformArrayStrides[i], activeUniformMatrixStrides[i]);
+    }
 
     m_uniformBlocksCache[blockName] = ubi;
 
-	return ubi;
+    return ubi;
 }

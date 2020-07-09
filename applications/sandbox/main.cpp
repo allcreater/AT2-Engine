@@ -1,13 +1,13 @@
 //This file is something like sandbox. It is just functionality test, not example.
 
-#include <AT2/camera.h>
 #include <AT2/MeshLoader.h>
-#include <AT2/Scene.h>
-#include <AT2/TextureLoader.h>
 #include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_application.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
+#include <AT2/Scene.h>
+#include <AT2/TextureLoader.h>
+#include <AT2/camera.h>
 
 #include <filesystem>
 #include <fstream>
@@ -28,46 +28,39 @@ class App
 public:
     App()
     {
-        GlfwApplication::get().OnNoActiveWindows = []
-        {
+        GlfwApplication::get().OnNoActiveWindows = [] {
             GlfwApplication::get().stop();
             //spdlog::info("Exit");
         };
 
 
-        m_window = GlfwApplication::get().createWindow(
-            { GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true }
-        );
+        m_window = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true});
 
-        m_window->
-            setLabel        ("Some engine test").
-            setSize         ({1024, 768}).
-            setCursorMode   (GlfwCursorMode::Disabled);
+        m_window->setLabel("Some engine test").setSize({1024, 768}).setCursorMode(GlfwCursorMode::Disabled);
 
 
         SetupWindowCallbacks();
     }
 
-    void Run()
-    {
-        GlfwApplication::get().run();
-    }
+    void Run() { GlfwApplication::get().run(); }
 
 private:
     std::shared_ptr<ITexture> ComputeHeightmap(glm::uvec2 resolution) const
     {
         constexpr auto localGroupSize = glm::uvec3 {32, 32, 1};
 
-        auto resultTex = m_renderer->GetResourceFactory().CreateTexture(Texture2D{resolution}, TextureFormats::RGBA16F);
+        auto resultTex =
+            m_renderer->GetResourceFactory().CreateTexture(Texture2D {resolution}, TextureFormats::RGBA16F);
         resultTex->SetWrapMode(TextureWrapMode::ClampToBorder);
-        auto shader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
+        auto shader =
+            m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 
         m_renderer->GetStateManager().BindShader(shader);
 
         shader->SetUniform("u_result", 0);
 
         resultTex->BindAsImage(0, 0, 0, false);
-        m_renderer->DispatchCompute(glm::uvec3{ resolution, 1 } / localGroupSize);
+        m_renderer->DispatchCompute(glm::uvec3 {resolution, 1} / localGroupSize);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
         return resultTex;
@@ -81,33 +74,31 @@ private:
 
         m_renderer = std::make_unique<AT2::GlRenderer>();
 
-        TerrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-            "resources/shaders/terrain.vs.glsl",
-            "resources/shaders/terrain.tcs.glsl",
-            "resources/shaders/terrain.tes.glsl",
-            "resources/shaders/terrain.fs.glsl" });
+        TerrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+            {"resources/shaders/terrain.vs.glsl", "resources/shaders/terrain.tcs.glsl",
+             "resources/shaders/terrain.tes.glsl", "resources/shaders/terrain.fs.glsl"});
 
 
-        MeshShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({
-            "resources/shaders/mesh.vs.glsl",
-            "resources/shaders/mesh.fs.glsl" });
+        MeshShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+            {"resources/shaders/mesh.vs.glsl", "resources/shaders/mesh.fs.glsl"});
 
 
-        Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D{ {64, 64, 64}, 1 }, TextureFormats::RGBA8);
+        Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, TextureFormats::RGBA8);
         {
-            std::mt19937 rng {std::random_device{}()};
+            std::mt19937 rng {std::random_device {}()};
             const auto l = Noise3Tex->GetDataLength();
             const auto arr = std::make_unique<GLubyte[]>(l);
             for (size_t i = 0; i < l; ++i)
-                arr[i] = std::uniform_int_distribution{ 0, 255 }(rng);
-            Noise3Tex->SubImage3D({ 0, 0, 0 }, { 64, 64, 64 }, 0, TextureFormats::RGBA8, arr.get());
+                arr[i] = std::uniform_int_distribution {0, 255}(rng);
+            Noise3Tex->SubImage3D({0, 0, 0}, {64, 64, 64}, 0, TextureFormats::RGBA8, arr.get());
         }
 
         GrassTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
-        NormalMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
+        NormalMapTex =
+            AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
         RockTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
 
-        HeightMapTex = ComputeHeightmap(glm::uvec2{8192 });
+        HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
         EnvironmentMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
         auto lightsRoot = std::make_shared<Node>("lights"s);
@@ -115,18 +106,17 @@ private:
 
         for (size_t i = 0; i < NumActiveLights; ++i)
         {
-            lightsRoot->AddChild(std::make_shared<LightNode>(
-                SphereLight{ },
-                linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
-                "PointLight[" + std::to_string(i) + "]"
-            )).SetTransform(glm::translate(glm::mat4{1.0}, { glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0), glm::linearRand(-5000.0, 5000.0) }));
+            lightsRoot
+                ->AddChild(std::make_shared<LightNode>(
+                    SphereLight {}, linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
+                    "PointLight[" + std::to_string(i) + "]"))
+                .SetTransform(glm::translate(glm::mat4 {1.0},
+                                             {glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0),
+                                              glm::linearRand(-5000.0, 5000.0)}));
         }
 
-        lightsRoot->AddChild(std::make_shared<LightNode>(
-            SkyLight{glm::vec3(0.0f, 0.707f, 0.707f),  EnvironmentMapTex },
-            glm::vec3(500.0f),
-            "SkyLight"
-        ));
+        lightsRoot->AddChild(std::make_shared<LightNode>(SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
+                                                         glm::vec3(500.0f), "SkyLight"));
 
         //Init
         glEnable(GL_BLEND);
@@ -136,11 +126,11 @@ private:
         //Scene
         auto matBallNode = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
         matBallNode->GetMesh().Shader = MeshShader;
-        matBallNode->SetTransform( glm::scale(glm::translate(matBallNode->GetTransform(), { 0, 0, 0 }), { 100, 100, 100 }));
+        matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform(), {0, 0, 0}), {100, 100, 100}));
         Scene.GetRoot().AddChild(std::move(matBallNode));
 
         auto terrainNode = MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
-        terrainNode->SetTransform(glm::scale(glm::mat4{ 1.0 }, { 10000, 800, 10000}));
+        terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
         terrainNode->GetMesh().Shader = TerrainShader;
         {
             auto& uniformStorage = terrainNode->GetMesh().GetOrCreateDefaultMaterial();
@@ -169,7 +159,7 @@ private:
 
         GlTimerQuery glTimer;
         glTimer.Begin();
-        sr.RenderScene({ Scene, m_camera, m_renderer->GetDefaultFramebuffer(), Time, WireframeMode});
+        sr.RenderScene({Scene, m_camera, m_renderer->GetDefaultFramebuffer(), Time, WireframeMode});
         glTimer.End();
 
         const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
@@ -182,8 +172,7 @@ private:
 
     void SetupWindowCallbacks()
     {
-        m_window->KeyDownCallback = [&](int key)
-        {
+        m_window->KeyDownCallback = [&](int key) {
             std::cout << "Key " << key << " down" << std::endl;
 
             if (key == GLFW_KEY_Z)
@@ -199,39 +188,28 @@ private:
             }
         };
 
-        m_window->ResizeCallback = [&](const glm::ivec2& newSize)
-        {
-            m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(m_window->getSize().x), static_cast<float>(m_window->getSize().y), 1.0f, 10000.0f));
+        m_window->ResizeCallback = [&](const glm::ivec2& newSize) {
+            m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(m_window->getSize().x),
+                                                       static_cast<float>(m_window->getSize().y), 1.0f, 10000.0f));
             sr.ResizeFramebuffers(newSize);
         };
 
-        m_window->MouseUpCallback = [](int key)
-        {
-            std::cout << "Mouse " << key << std::endl;
-        };
+        m_window->MouseUpCallback = [](int key) { std::cout << "Mouse " << key << std::endl; };
 
-        m_window->MouseMoveCallback = [&](const MousePos& pos)
-        {
+        m_window->MouseMoveCallback = [&](const MousePos& pos) {
             const auto relativePos = pos.getPos() / static_cast<glm::dvec2>(m_window->getSize());
 
-            m_camera.setRotation(
-                glm::angleAxis(glm::mix(-glm::pi<float>(), glm::pi<float>(), relativePos.x), glm::vec3{ 0.0, -1.0, 0.0 }) *
-                glm::angleAxis(glm::mix(-glm::pi<float>() / 2, glm::pi<float>() / 2, relativePos.y), glm::vec3{ 1.0, 0.0, 0.0 })
-            );
+            m_camera.setRotation(glm::angleAxis(glm::mix(-glm::pi<float>(), glm::pi<float>(), relativePos.x),
+                                                glm::vec3 {0.0, -1.0, 0.0}) *
+                                 glm::angleAxis(glm::mix(-glm::pi<float>() / 2, glm::pi<float>() / 2, relativePos.y),
+                                                glm::vec3 {1.0, 0.0, 0.0}));
         };
 
-        m_window->InitializeCallback = [&]()
-        {
-            m_window->setVSyncInterval(1);
-        };
+        m_window->InitializeCallback = [&]() { m_window->setVSyncInterval(1); };
 
-        m_window->ClosingCallback = [&]()
-        {
-            m_renderer->Shutdown();
-        };
+        m_window->ClosingCallback = [&]() { m_renderer->Shutdown(); };
 
-        m_window->UpdateCallback = [&](const double dt)
-        {
+        m_window->UpdateCallback = [&](const double dt) {
             Time += dt;
 
             if (m_window->isKeyDown(GLFW_KEY_LEFT_SHIFT))
@@ -279,7 +257,7 @@ private:
     float acceleration = 0.0;
 };
 
-int main(const int argc, const char *argv[])
+int main(const int argc, const char* argv[])
 {
     try
     {
@@ -290,6 +268,6 @@ int main(const int argc, const char *argv[])
     {
         std::cout << "Runtime exception:" << exception.what() << std::endl;
     }
-    
+
     return 0;
 }

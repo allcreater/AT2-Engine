@@ -1,11 +1,11 @@
 #ifndef UI_HEADER
 #define UI_HEADER
 
-#include "../Drawable.h"
+#include <map>
 #include <memory>
 #include <utility>
 #include <variant>
-#include <map>
+#include "../Drawable.h"
 
 #include <glm/glm.hpp>
 
@@ -16,213 +16,223 @@
 
 namespace AT2::UI
 {
-	struct CanvasData
-	{
-		//TODO: replace to AABB
-		glm::ivec2 Position {}; //top left point of the UI AABB
-		glm::uvec2 MinimalSize {}; //minimal measured size
-		glm::uvec2 MeasuredSize {};
-	};
+    struct CanvasData
+    {
+        //TODO: replace to AABB
+        glm::ivec2 Position {}; //top left point of the UI AABB
+        glm::uvec2 MinimalSize {}; //minimal measured size
+        glm::uvec2 MeasuredSize {};
+    };
 
-	class Node;
-	class Group;
-	class StackPanel;
-	class Button;
-	class Plot;
+    class Node;
+    class Group;
+    class StackPanel;
+    class Button;
+    class Plot;
 
-	enum class Alignment
-	{
-		Side1,
-		Center,
-		Stretch,
-		Side2
-	};
+    enum class Alignment
+    {
+        Side1,
+        Center,
+        Stretch,
+        Side2
+    };
 
-	enum class Orientation
-	{
-		Horizontal,
-		Vertical
-	};
+    enum class Orientation
+    {
+        Horizontal,
+        Vertical
+    };
 
-	class Node
-	{
-		friend class Group;
-		
-	public:
-		virtual ~Node() = default;
+    class Node
+    {
+        friend class Group;
 
-	public:
-		Alignment VerticalAlignment = Alignment::Stretch;
-		Alignment HorizontalAlignment = Alignment::Stretch;
+    public:
+        virtual ~Node() = default;
 
-	public:
-        [[nodiscard]] std::weak_ptr<Group> GetParent() const						{ return m_Parent; }
-        [[nodiscard]] std::string_view GetName() const							{ return m_Name; }
+    public:
+        Alignment VerticalAlignment = Alignment::Stretch;
+        Alignment HorizontalAlignment = Alignment::Stretch;
 
-		void SetSize(const glm::uvec2& size)						{ m_Size = size; }
-        [[nodiscard]] const glm::uvec2& GetSize() const							{ return m_Size; }
+    public:
+        [[nodiscard]] std::weak_ptr<Group> GetParent() const { return m_Parent; }
+        [[nodiscard]] std::string_view GetName() const { return m_Name; }
 
-		//recursively calculates the actual sizes of all children
-		virtual void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize);
-		virtual glm::uvec2 ComputeMinimalSize()						{ return m_CanvasData.MinimalSize = m_Size; }
-        [[nodiscard]] glm::uvec2 GetMinimalSize() const						{ return m_CanvasData.MinimalSize; }
+        void SetSize(const glm::uvec2& size) { m_Size = size; }
+        [[nodiscard]] const glm::uvec2& GetSize() const { return m_Size; }
 
-		CanvasData& GetCanvasData()									{ return m_CanvasData; }
-        [[nodiscard]] const CanvasData& GetCanvasData() const						{ return m_CanvasData; }
+        //recursively calculates the actual sizes of all children
+        virtual void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize);
+        virtual glm::uvec2 ComputeMinimalSize() { return m_CanvasData.MinimalSize = m_Size; }
+        [[nodiscard]] glm::uvec2 GetMinimalSize() const { return m_CanvasData.MinimalSize; }
 
-		[[nodiscard]] AABB2d GetScreenPosition() const { return { m_CanvasData.Position, m_CanvasData.Position + glm::ivec2(m_CanvasData.MeasuredSize) }; }
+        CanvasData& GetCanvasData() { return m_CanvasData; }
+        [[nodiscard]] const CanvasData& GetCanvasData() const { return m_CanvasData; }
 
-		void SetNodeRenderer(std::shared_ptr<IDrawable> drawable)	{ m_Drawable = std::move(drawable); }
-        [[nodiscard]] std::weak_ptr<IDrawable> GetNodeRenderer() const			{ return m_Drawable; }
+        [[nodiscard]] AABB2d GetScreenPosition() const
+        {
+            return {m_CanvasData.Position, m_CanvasData.Position + glm::ivec2(m_CanvasData.MeasuredSize)};
+        }
 
-		//virtual void TraverseDepthFirst(std::function<void(Node&)> func) { func(*this); }
-		//virtual void TraverseBreadthFirst(std::function<void(Node&)> func) { func(*this); }
+        void SetNodeRenderer(std::shared_ptr<IDrawable> drawable) { m_Drawable = std::move(drawable); }
+        [[nodiscard]] std::weak_ptr<IDrawable> GetNodeRenderer() const { return m_Drawable; }
 
-		virtual void TraverseDepthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func) { }
-		virtual void TraverseBreadthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func) { }
+        //virtual void TraverseDepthFirst(std::function<void(Node&)> func) { func(*this); }
+        //virtual void TraverseBreadthFirst(std::function<void(Node&)> func) { func(*this); }
 
-	protected:
-		Node(std::string_view name, const glm::uvec2& size) : m_Name(name), m_Size(size) {};
+        virtual void TraverseDepthFirst(const std::function<void(const std::shared_ptr<Node>&)>& func) {}
+        virtual void TraverseBreadthFirst(const std::function<void(const std::shared_ptr<Node>&)>& func) {}
 
-	protected:
-		std::weak_ptr<Group> m_Parent;
+    protected:
+        Node(std::string_view name, const glm::uvec2& size) : m_Name(name), m_Size(size) {};
 
-		std::string m_Name;
-		glm::uvec2 m_Size;
+    protected:
+        std::weak_ptr<Group> m_Parent;
 
-		CanvasData m_CanvasData;
+        std::string m_Name;
+        glm::uvec2 m_Size;
 
-		std::shared_ptr<IDrawable> m_Drawable;
-	};
+        CanvasData m_CanvasData;
 
-	//The grouping control that supports manual elements placing, sometimes named as Canvas
-	class Group : public Node, public std::enable_shared_from_this<Group>
-	{
-	public:
-		static std::shared_ptr<Group> Make(std::string_view name, std::initializer_list<std::shared_ptr<Node>> children, const glm::uvec2& size = glm::uvec2());
+        std::shared_ptr<IDrawable> m_Drawable;
+    };
 
-	public:
-		void AddChild(std::shared_ptr<Node> newChild);
-		bool RemoveChild(const std::shared_ptr<Node>& child);
+    //The grouping control that supports manual elements placing, sometimes named as Canvas
+    class Group : public Node, public std::enable_shared_from_this<Group>
+    {
+    public:
+        static std::shared_ptr<Group> Make(std::string_view name, std::initializer_list<std::shared_ptr<Node>> children,
+                                           const glm::uvec2& size = glm::uvec2());
 
-		void ForEachChild(const std::function<void(Node&)> &func);
+    public:
+        void AddChild(std::shared_ptr<Node> newChild);
+        bool RemoveChild(const std::shared_ptr<Node>& child);
 
-		glm::uvec2 ComputeMinimalSize() override;
-		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
+        void ForEachChild(const std::function<void(Node&)>& func);
 
-		void TraverseDepthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func) override;
-		void TraverseBreadthFirst(const std::function<void(const std::shared_ptr<Node> &)> &func) override;
+        glm::uvec2 ComputeMinimalSize() override;
+        void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
 
-	protected:
-		Group(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
-		void Initialize(std::initializer_list<std::shared_ptr<Node>> children);
+        void TraverseDepthFirst(const std::function<void(const std::shared_ptr<Node>&)>& func) override;
+        void TraverseBreadthFirst(const std::function<void(const std::shared_ptr<Node>&)>& func) override;
 
-	protected:
-		//probably std::set is best candidate with built-in duplicate protection etc, but it's not so convenient for element ordering
-		//std::set<std::shared_ptr<Node>> m_Children;
-		std::vector<std::shared_ptr<Node>> m_Children; 
-	};
+    protected:
+        Group(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
+        void Initialize(std::initializer_list<std::shared_ptr<Node>> children);
 
-
-	class StackPanel : public Group
-	{
-	public:
-		static std::shared_ptr<StackPanel> Make(std::string_view name, Orientation alignment, std::initializer_list<std::shared_ptr<Node>> children, const glm::uvec2& size = glm::uvec2(), Alignment vertical = Alignment::Stretch, Alignment horizontal = Alignment::Stretch);
-
-	public:
-		void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
-		glm::uvec2 ComputeMinimalSize() override;
-
-	protected:
-		StackPanel(std::string_view name, Orientation alignment, const glm::ivec2& size) : Group(name, size), m_Orientation(alignment) {}
-
-	protected:
-		Orientation m_Orientation;
-	};
+    protected:
+        //probably std::set is best candidate with built-in duplicate protection etc, but it's not so convenient for element ordering
+        //std::set<std::shared_ptr<Node>> m_Children;
+        std::vector<std::shared_ptr<Node>> m_Children;
+    };
 
 
-	class Button : public Node
-	{
+    class StackPanel : public Group
+    {
+    public:
+        static std::shared_ptr<StackPanel> Make(std::string_view name, Orientation alignment,
+                                                std::initializer_list<std::shared_ptr<Node>> children,
+                                                const glm::uvec2& size = glm::uvec2(),
+                                                Alignment vertical = Alignment::Stretch,
+                                                Alignment horizontal = Alignment::Stretch);
 
-	public:
-		static std::shared_ptr<Button> Make(std::string_view name, const glm::uvec2& size = glm::uvec2(), Alignment vertical = Alignment::Stretch, Alignment horizontal = Alignment::Stretch);
+    public:
+        void Measure(const glm::ivec2& position, const glm::uvec2& possibleSize) override;
+        glm::uvec2 ComputeMinimalSize() override;
 
-		~Button() { std::cout << "Button" << std::endl; }
+    protected:
+        StackPanel(std::string_view name, Orientation alignment, const glm::ivec2& size) :
+            Group(name, size), m_Orientation(alignment)
+        {
+        }
 
-	protected:
-		Button(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
+    protected:
+        Orientation m_Orientation;
+    };
 
 
-	protected:
+    class Button : public Node
+    {
+
+    public:
+        static std::shared_ptr<Button> Make(std::string_view name, const glm::uvec2& size = glm::uvec2(),
+                                            Alignment vertical = Alignment::Stretch,
+                                            Alignment horizontal = Alignment::Stretch);
+
+        ~Button() { std::cout << "Button" << std::endl; }
+
+    protected:
+        Button(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
 
 
-		
-	};
+    protected:
+    };
 
-	//TODO: is it possible to move enable_from_this to Node without spikes?
-	class Plot : public Node, public std::enable_shared_from_this<Plot> 
-	{
-	public:
-		class CurveData
-		{
-			friend class Plot;
+    //TODO: is it possible to move enable_from_this to Node without spikes?
+    class Plot : public Node, public std::enable_shared_from_this<Plot>
+    {
+    public:
+        class CurveData
+        {
+            friend class Plot;
 
-		public:
-			CurveData(std::weak_ptr<Plot> plot) : m_parent(std::move(plot)) {}
+        public:
+            CurveData(std::weak_ptr<Plot> plot) : m_parent(std::move(plot)) {}
 
-			CurveData(const CurveData&) = delete;
-			CurveData(CurveData&&) = default;
-			CurveData& operator=(const CurveData&) const = delete;
+            CurveData(const CurveData&) = delete;
+            CurveData(CurveData&&) = default;
+            CurveData& operator=(const CurveData&) const = delete;
 
-		public:
-			void SetData(std::vector<float> data, bool autoRange = true);
-			const std::vector<float>& GetData() const noexcept { return m_data; }
+        public:
+            void SetData(std::vector<float> data, bool autoRange = true);
+            const std::vector<float>& GetData() const noexcept { return m_data; }
 
-			void SetXRange(float startX, float endX);
-			const AABB2d& GetCurveBounds() const;
-			void Dirty() noexcept;
+            void SetXRange(float startX, float endX);
+            const AABB2d& GetCurveBounds() const;
+            void Dirty() noexcept;
 
-			void SetColor(const glm::vec4& color) { m_Color = color; }
-			const glm::vec4& GetColor() const { return m_Color; }
+            void SetColor(const glm::vec4& color) { m_Color = color; }
+            const glm::vec4& GetColor() const { return m_Color; }
 
-		private:
-			std::vector<float> m_data;
-			bool m_dataInvalidatedFlag = true;
+        private:
+            std::vector<float> m_data;
+            bool m_dataInvalidatedFlag = true;
 
-			//the size recomputes lazily so could be treated as const
-			mutable bool m_rangeNeedsUpdate = true;
-			mutable AABB2d m_aabb = {};
+            //the size recomputes lazily so could be treated as const
+            mutable bool m_rangeNeedsUpdate = true;
+            mutable AABB2d m_aabb = {};
 
-			glm::vec4 m_Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
+            glm::vec4 m_Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
-			std::weak_ptr<Plot> m_parent;
-		};
+            std::weak_ptr<Plot> m_parent;
+        };
 
-	public:
-		static std::shared_ptr<Plot> Make(std::string_view name, const glm::uvec2& size = glm::uvec2());
+    public:
+        static std::shared_ptr<Plot> Make(std::string_view name, const glm::uvec2& size = glm::uvec2());
 
-	public:
-		size_t EnumerateCurves(std::function<bool(std::string_view name, const CurveData& data, bool invalidated)>);
-		CurveData& GetOrCreateCurve (const std::string& curveName);
+    public:
+        size_t EnumerateCurves(std::function<bool(std::string_view name, const CurveData& data, bool invalidated)>);
+        CurveData& GetOrCreateCurve(const std::string& curveName);
 
-		const AABB2d& GetAABB();
+        const AABB2d& GetAABB();
 
-		void SetObservingZone(const AABB2d& zone);
-		const AABB2d& GetObservingZone() const { return m_observingZone; }
+        void SetObservingZone(const AABB2d& zone);
+        const AABB2d& GetObservingZone() const { return m_observingZone; }
 
-		void DirtyCurves() { m_boundsShouldBeRecalculated = true; }
+        void DirtyCurves() { m_boundsShouldBeRecalculated = true; }
 
-	protected:
-		Plot(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
+    protected:
+        Plot(std::string_view name, const glm::uvec2& size) : Node(name, size) {}
 
-		void ComputeAABB();
+        void ComputeAABB();
 
-	protected:
-		std::map<std::string, CurveData> m_curvesData;
-		AABB2d m_allBounds{};
-	    AABB2d m_observingZone{};
-		bool m_boundsShouldBeRecalculated = true;
-	};
+    protected:
+        std::map<std::string, CurveData> m_curvesData;
+        AABB2d m_allBounds {};
+        AABB2d m_observingZone {};
+        bool m_boundsShouldBeRecalculated = true;
+    };
 
-}
+} // namespace AT2::UI
 #endif

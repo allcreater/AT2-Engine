@@ -36,6 +36,16 @@ MaxEmptyLinesToKeep: 2
 NamespaceIndentation: All
 TabWidth: 4
 UseTab: Never
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortCaseLabelsOnASingleLine: true
+PointerAlignment: Left
+CompactNamespaces: true
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon : true
+SpaceBeforeCpp11BracedList: true
+CommentPragmas:  '^[^ ]'
+IndentWrappedFunctionNames: true
 ---
 Language: JavaScript
 BasedOnStyle: LLVM

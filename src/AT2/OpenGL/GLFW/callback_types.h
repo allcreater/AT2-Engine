@@ -7,7 +7,10 @@ class MousePos
 {
 public:
     constexpr MousePos() = default;
-    constexpr MousePos(const glm::vec2& pos, const glm::vec2& previousPos) : position(pos), previous_position(previousPos) {}
+    constexpr MousePos(const glm::vec2& pos, const glm::vec2& previousPos) :
+        position(pos), previous_position(previousPos)
+    {
+    }
     constexpr MousePos(const MousePos&) = default;
     constexpr MousePos(MousePos&&) = default;
     constexpr MousePos& operator=(const MousePos&) = default;

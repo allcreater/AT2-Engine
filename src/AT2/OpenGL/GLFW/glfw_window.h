@@ -1,7 +1,7 @@
 #pragma once
 
-#include <mutex>
 #include <functional>
+#include <mutex>
 
 #include <GLFW/glfw3.h>
 
@@ -38,7 +38,7 @@ struct GlfwContextParameters
 
 class GlfwWindow final
 {
-friend class GlfwApplication;
+    friend class GlfwApplication;
 
 public:
     ///@thread_safety main thread
@@ -88,37 +88,81 @@ public:
     std::function<void(glm::dvec2)> MouseScrollCallback {};
 
 protected:
-    void OnInitialize() const { if (InitializeCallback) InitializeCallback(); }
-    void OnUpdate(double deltaTime) const { if (UpdateCallback) UpdateCallback(deltaTime); }
-    void OnRender(double deltaTime) const { if (RenderCallback) RenderCallback (deltaTime); }
-    void OnWindowRefreshing() const { if (RefreshingCallback) RefreshingCallback(); }
+    void OnInitialize() const
+    {
+        if (InitializeCallback)
+            InitializeCallback();
+    }
+    void OnUpdate(double deltaTime) const
+    {
+        if (UpdateCallback)
+            UpdateCallback(deltaTime);
+    }
+    void OnRender(double deltaTime) const
+    {
+        if (RenderCallback)
+            RenderCallback(deltaTime);
+    }
+    void OnWindowRefreshing() const
+    {
+        if (RefreshingCallback)
+            RefreshingCallback();
+    }
 
-    void OnKeyDown(int key) const { if (KeyDownCallback) KeyDownCallback(key); }
+    void OnKeyDown(int key) const
+    {
+        if (KeyDownCallback)
+            KeyDownCallback(key);
+    }
 
-    void OnKeyUp(int key) const { if (KeyUpCallback) KeyUpCallback(key); }
-    void OnKeyRepeat(int key) const { if (KeyRepeatCallback) KeyRepeatCallback(key); }
-    
-    void OnResize(glm::ivec2 newSize) const 
-    { 
-        if (ResizeCallback) 
-            ResizeCallback(newSize); 
+    void OnKeyUp(int key) const
+    {
+        if (KeyUpCallback)
+            KeyUpCallback(key);
+    }
+    void OnKeyRepeat(int key) const
+    {
+        if (KeyRepeatCallback)
+            KeyRepeatCallback(key);
+    }
+
+    void OnResize(glm::ivec2 newSize) const
+    {
+        if (ResizeCallback)
+            ResizeCallback(newSize);
 
         window_size = newSize;
     }
-    void OnClosing() const { if (ClosingCallback) ClosingCallback(); }
-    
-    void OnMouseMove(glm::dvec2 mousePosition) const 
+    void OnClosing() const
+    {
+        if (ClosingCallback)
+            ClosingCallback();
+    }
+
+    void OnMouseMove(glm::dvec2 mousePosition) const
     {
         mousePosition.y = window_size.y - mousePosition.y; //WTF?
 
-        if (MouseMoveCallback != nullptr) 
-            MouseMoveCallback(MousePos{ mousePosition, previous_mouse_pos });
+        if (MouseMoveCallback != nullptr)
+            MouseMoveCallback(MousePos {mousePosition, previous_mouse_pos});
 
         previous_mouse_pos = mousePosition;
     }
-    void OnMouseDown(int button) const { if (MouseDownCallback) MouseDownCallback(button);}
-    void OnMouseUp(int button) const { if (MouseUpCallback) MouseUpCallback(button); }
-    void OnMouseScroll(const glm::dvec2& scrollDirection) const { if (MouseScrollCallback) MouseScrollCallback(scrollDirection); }
+    void OnMouseDown(int button) const
+    {
+        if (MouseDownCallback)
+            MouseDownCallback(button);
+    }
+    void OnMouseUp(int button) const
+    {
+        if (MouseUpCallback)
+            MouseUpCallback(button);
+    }
+    void OnMouseScroll(const glm::dvec2& scrollDirection) const
+    {
+        if (MouseScrollCallback)
+            MouseScrollCallback(scrollDirection);
+    }
 
 private:
     ///@thread_safety main thread
@@ -136,17 +180,17 @@ private:
 
 private:
     const GlfwContextParameters context_parameters;
-    GLFWwindow* window_impl { nullptr };
+    GLFWwindow* window_impl {nullptr};
 
-    std::string window_label{ "New window"};
+    std::string window_label {"New window"};
 
-    bool is_initialized { false };
-    bool swap_interval_need_update { true };
+    bool is_initialized {false};
+    bool swap_interval_need_update {true};
 
     //mutables is just for track some parameters in callbacks
-    mutable glm::ivec2 window_size { 800, 600 };
+    mutable glm::ivec2 window_size {800, 600};
     mutable glm::vec2 previous_mouse_pos {};
-    mutable int swap_interval{ 0 };
+    mutable int swap_interval {0};
 
     mutable std::mutex mutex;
 

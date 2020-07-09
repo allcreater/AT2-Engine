@@ -1,19 +1,18 @@
 #include "glfw_window.h"
-#include <mutex>
 #include <cassert>
+#include <mutex>
 
 #include "glfw_application.h"
 
 
 GlfwWindow* GlfwWindow::FromNativeWindow(const GLFWwindow* window)
 {
-    auto *const frontendPtr = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(const_cast<GLFWwindow*>(window)));
+    auto* const frontendPtr = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(const_cast<GLFWwindow*>(window)));
     assert(frontendPtr);
     return frontendPtr;
 }
 
-GlfwWindow::GlfwWindow(GlfwContextParameters contextParams) :
-    context_parameters(contextParams)
+GlfwWindow::GlfwWindow(GlfwContextParameters contextParams) : context_parameters(contextParams)
 {
     //std::lock_guard lock(GlfwApplication::Get().mutex);
 
@@ -53,7 +52,7 @@ GlfwWindow& GlfwWindow::setCursorMode(GlfwCursorMode cursorMode)
     GlfwApplication::get().postAction([=] {
         if (window_impl)
             glfwSetInputMode(window_impl, GLFW_CURSOR, static_cast<int>(cursorMode));
-        });
+    });
 
     return *this;
 }
@@ -83,31 +82,31 @@ void GlfwWindow::UpdateAndRender()
 GlfwWindow& GlfwWindow::setLabel(const std::string& label)
 {
     {
-        std::lock_guard lock{ mutex };
+        std::lock_guard lock {mutex};
         window_label = label;
     }
 
     GlfwApplication::get().postAction([=] {
         if (window_impl != nullptr)
             glfwSetWindowTitle(window_impl, label.c_str());
-        });
+    });
 
     return *this;
 }
 
 GlfwWindow& GlfwWindow::setVSyncInterval(int interval)
 {
-    std::lock_guard lock{ mutex };
+    std::lock_guard lock {mutex};
 
     swap_interval = interval;
     swap_interval_need_update = true;
-    
+
     return *this;
 }
 
 GlfwWindow& GlfwWindow::setCloseFlag(bool flag)
 {
-    std::lock_guard lock{ mutex };
+    std::lock_guard lock {mutex};
 
     if (window_impl)
     {
@@ -134,21 +133,20 @@ void GlfwWindow::requestAttention()
     GlfwApplication::get().postAction([=] {
         if (window_impl)
             glfwRequestWindowAttention(window_impl);
-        }
-    );
+    });
 }
 
 GlfwWindow& GlfwWindow::setSize(glm::ivec2 size)
 {
     {
-        std::lock_guard lock{ mutex };
+        std::lock_guard lock {mutex};
         window_size = size;
     }
 
     GlfwApplication::get().postAction([=] {
         if (window_impl != nullptr)
             glfwSetWindowSize(window_impl, window_size.x, window_size.y);
-        });
+    });
 
     return *this;
 }
@@ -157,24 +155,19 @@ void GlfwWindow::SetupCallbacks()
 {
 
     glfwSetKeyCallback(window_impl, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        auto *const wnd = GlfwWindow::FromNativeWindow(window);
+        auto* const wnd = GlfwWindow::FromNativeWindow(window);
 
         switch (action)
         {
-        case GLFW_RELEASE:
-            wnd->OnKeyUp(key); break;
-        case GLFW_PRESS:
-            wnd->OnKeyDown(key); break;
-        case GLFW_REPEAT:
-            wnd->OnKeyRepeat(key); break;
-        default:
-            throw GlfwException("Unknown key action");
+        case GLFW_RELEASE: wnd->OnKeyUp(key); break;
+        case GLFW_PRESS: wnd->OnKeyDown(key); break;
+        case GLFW_REPEAT: wnd->OnKeyRepeat(key); break;
+        default: throw GlfwException("Unknown key action");
         }
-        
     });
 
     glfwSetMouseButtonCallback(window_impl, [](GLFWwindow* window, int button, int action, int mods) {
-        auto *const wnd = FromNativeWindow(window);
+        auto* const wnd = FromNativeWindow(window);
         if (action == GLFW_PRESS)
             wnd->OnMouseDown(button);
         else if (action == GLFW_RELEASE)
@@ -182,27 +175,24 @@ void GlfwWindow::SetupCallbacks()
     });
 
     glfwSetCursorPosCallback(window_impl, [](GLFWwindow* window, double x, double y) {
-        FromNativeWindow(window)->OnMouseMove({ x, y });
-    });
-    
-    glfwSetFramebufferSizeCallback(window_impl, [](GLFWwindow *window, int w, int h) {
-        FromNativeWindow(window)->OnResize({ w, h });
+        FromNativeWindow(window)->OnMouseMove({x, y});
     });
 
-    glfwSetWindowCloseCallback(window_impl, [](GLFWwindow *window) {
-        FromNativeWindow(window)->OnClosing();
+    glfwSetFramebufferSizeCallback(window_impl, [](GLFWwindow* window, int w, int h) {
+        FromNativeWindow(window)->OnResize({w, h});
     });
 
-    glfwSetWindowRefreshCallback(window_impl, [](GLFWwindow *window) {
-        auto *const wnd = FromNativeWindow(window);
+    glfwSetWindowCloseCallback(window_impl, [](GLFWwindow* window) { FromNativeWindow(window)->OnClosing(); });
+
+    glfwSetWindowRefreshCallback(window_impl, [](GLFWwindow* window) {
+        auto* const wnd = FromNativeWindow(window);
         wnd->OnWindowRefreshing();
         //wnd->UpdateAndRender();
     });
 
     glfwSetScrollCallback(window_impl, [](GLFWwindow* window, double offsetX, double offsetY) {
-        FromNativeWindow(window)->OnMouseScroll({ offsetX, offsetY });
+        FromNativeWindow(window)->OnMouseScroll({offsetX, offsetY});
     });
-    
 }
 
 void GlfwWindow::MakeContextCurrent()
@@ -223,7 +213,7 @@ void GlfwWindow::MakeContextCurrent()
 
 void GlfwWindow::Close()
 {
-    std::lock_guard lock{ mutex };
+    std::lock_guard lock {mutex};
 
     assert(window_impl);
 
