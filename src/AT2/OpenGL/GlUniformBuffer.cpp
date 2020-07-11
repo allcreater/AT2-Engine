@@ -3,13 +3,13 @@
 #include <utility>
 
 using namespace AT2;
-
+using namespace AT2::OpenGl::Introspection;
 using namespace glm;
 
-GlUniformBuffer::GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi) :
-    GlVertexBuffer(VertexBufferType::UniformBuffer), m_ubi(std::move(ubi)), m_bindingPoint(0)
+GlUniformBuffer::GlUniformBuffer(std::shared_ptr<const UniformBlockInfo> ubi) :
+    GlVertexBuffer(VertexBufferType::UniformBuffer), m_uniformBlockInfo(std::move(ubi)), m_bindingPoint(0)
 {
-    m_length = m_ubi->GetBlockSize();
+    m_length = m_uniformBlockInfo->DataSize;
 
     glNamedBufferDataEXT(m_id, m_length, 0, static_cast<GLenum>(m_usageHint));
 }
@@ -27,9 +27,9 @@ const GLvoid* value_ptr(const T& value)
 
 
 template <typename T>
-void SetUniformInternal(GLuint bufferId, const GlShaderProgram::UniformBufferInfo& ubi, const str& name, const T& value)
+void SetUniformInternal(GLuint bufferId, const UniformBlockInfo& ubi, const str& name, const T& value)
 {
-    const auto* ui = ubi.GetUniformInfo(name);
+    const auto* ui = Utils::find(ubi.Uniforms, name);
     if (!ui)
         return;
 
@@ -42,12 +42,12 @@ void SetUniformInternal(GLuint bufferId, const GlShaderProgram::UniformBufferInf
 
 
 template <typename T, length_t C, length_t R, qualifier Q>
-void SetUniformInternal(GLuint bufferId, const GlShaderProgram::UniformBufferInfo& ubi, const str& name,
+void SetUniformInternal(GLuint bufferId, const UniformBlockInfo& ubi, const str& name,
                         const glm::mat<C, R, T, Q>& value)
 {
     using MatT = mat<C, R, T, Q>;
-
-    const auto* ui = ubi.GetUniformInfo(name);
+    
+    const auto* ui = Utils::find(ubi.Uniforms, name);
     if (!ui)
         return;
 
@@ -65,7 +65,7 @@ void GlUniformBuffer::SetUniform(const str& name, const Uniform& value)
 {
     using namespace glm;
 
-    std::visit([&](const auto& x) { SetUniformInternal(m_id, *m_ubi, name, x); }, value);
+    std::visit([&](const auto& x) { SetUniformInternal(m_id, *m_uniformBlockInfo, name, x); }, value);
 }
 
 void GlUniformBuffer::Bind(IStateManager& stateManager) const

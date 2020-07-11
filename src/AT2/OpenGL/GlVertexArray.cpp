@@ -71,7 +71,7 @@ void GlVertexArray::SetVertexBuffer(unsigned int _index, std::shared_ptr<IVertex
     m_buffers.at(_index) = std::move(_buffer);
 }
 
-void GlVertexArray::SetVertexBufferDivisor(unsigned index, unsigned divisor)
+void GlVertexArray::SetVertexBufferDivisor(unsigned int index, unsigned int divisor)
 {
     glVertexArrayVertexAttribDivisorEXT(m_id, index, divisor);
 }

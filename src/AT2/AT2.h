@@ -188,7 +188,7 @@ namespace AT2
         [[nodiscard]] virtual unsigned int GetId() const = 0;
         [[nodiscard]] virtual bool IsActive() const = 0;
 
-        virtual std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(const str& blockName = "") = 0;
+        virtual std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName = "") = 0;
         virtual void AttachShader(const str& code, ShaderType type) = 0;
 
         //Warning: Shader reloading/relinking will invalidate that state

@@ -15,6 +15,7 @@ bool is_uninitialized(std::weak_ptr<T> const& weak) {
 	return !weak.owner_before(wt{}) && !wt{}.owner_before(weak);
 }
 
+
 template <typename T, typename Fn>
 auto make_unary_less(Fn&& transform)
 {
@@ -24,6 +25,17 @@ auto make_unary_less(Fn&& transform)
     };
 }
 
+template <typename T, typename K = typename T::key_type, typename V = typename T::mapped_type>
+const std::remove_pointer_t<V>* find(const T& map, const K& key)
+{
+    if (const auto it = map.find(key); it != map.end())
+        if constexpr (std::is_pointer_v<V>)
+            return it->second;
+        else
+            return &it->second;
+
+    return nullptr;
+ }
 
 //overloaded trick
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };

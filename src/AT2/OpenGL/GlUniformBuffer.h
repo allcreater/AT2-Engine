@@ -12,7 +12,9 @@ namespace AT2
     public:
         NON_COPYABLE_OR_MOVABLE(GlUniformBuffer)
 
-        GlUniformBuffer(std::shared_ptr<GlShaderProgram::UniformBufferInfo> ubi);
+        //UniformBlockInfo does not linked with specific program, it's just template for buffer structuring
+        //TODO: Abstract interface to uniform buffer template definition. It should not be linked with program introspection directly.
+        explicit GlUniformBuffer(std::shared_ptr<const OpenGl::Introspection::UniformBlockInfo> ubi);
         ~GlUniformBuffer() override;
 
     public:
@@ -25,7 +27,8 @@ namespace AT2
         void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
 
     private:
-        std::shared_ptr<GlShaderProgram::UniformBufferInfo> m_ubi;
+        std::shared_ptr<const OpenGl::Introspection::UniformBlockInfo> m_uniformBlockInfo;
+        std::string m_blockName;
         GLuint m_bindingPoint;
     };
 

@@ -5,6 +5,7 @@
 #include "Mappings.h"
 
 using namespace AT2;
+using namespace AT2::OpenGl::Introspection;
 
 GLuint LoadShader(GLenum _shaderType, const str& _text)
 {
@@ -59,11 +60,28 @@ void GlShaderProgram::AttachShader(const str& _code, ShaderType _type)
     m_currentState = State::Dirty;
 }
 
+const std::shared_ptr<ProgramInfo>& GlShaderProgram::GetIntrospection()
+{
+    if (TryCompile())
+    {
+        if (!m_uniformsInfo)
+            m_uniformsInfo = ProgramInfo::Request(m_programId);
+    }
+    else
+    {
+        assert(!m_uniformsInfo);
+        m_uniformsInfo.reset();
+    }
+
+    return m_uniformsInfo;
+
+}
+
 bool GlShaderProgram::TryCompile()
 {
     if (m_currentState == State::Dirty)
     {
-        m_uniformBlocksCache.clear();
+        m_uniformsInfo.reset();
 
         for (auto& [shaderType, shaderId] : m_shaderIds)
         {
@@ -105,21 +123,24 @@ bool GlShaderProgram::TryCompile()
     return m_currentState == State::Ready;
 }
 
-std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStorage(const str& blockName)
+std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
 {
     if (blockName.empty())
         return std::make_unique<AT2::UniformContainer>();
 
-    if (auto ubi = GetUniformBlockInfo(blockName))
+    if (const auto& programInfo = GetIntrospection())
     {
-        GLint initialBinding = 0;
-        glGetActiveUniformBlockiv(m_programId, ubi->GetBlockIndex(), GL_UNIFORM_BLOCK_BINDING, &initialBinding);
+        const auto uniformBlockInfo = programInfo->getUniformBlock(blockName);
+        if (!uniformBlockInfo)
+            return nullptr;
 
-        auto uniformBlock = std::make_unique<GlUniformBuffer>(std::move(ubi));
+        auto uniformBuffer =
+            std::make_unique<GlUniformBuffer>(std::shared_ptr<const UniformBlockInfo>(programInfo, uniformBlockInfo));
+
         //just initial binding to make buffer usable "out of box". External code could rebind it or remap as user wants.
-        uniformBlock->SetBindingPoint(initialBinding);
+        uniformBuffer->SetBindingPoint(uniformBlockInfo->InitialBinding);
 
-        return uniformBlock;
+        return uniformBuffer;
     }
 
     return nullptr;
@@ -134,7 +155,7 @@ void GlShaderProgram::CleanUp()
     }
 
     m_shaderIds.clear();
-    m_uniformBlocksCache.clear();
+    m_uniformsInfo.reset();
 
     m_currentState = State::Dirty;
 }
@@ -200,74 +221,3 @@ void GlShaderProgram::SetUniform(const str& name, Uniform value)
                value);
 }
 
-std::shared_ptr<GlShaderProgram::UniformBufferInfo> GlShaderProgram::GetUniformBlockInfo(const str& blockName)
-{
-    if (!TryCompile())
-        return nullptr;
-
-    if (const auto found = m_uniformBlocksCache.find(blockName); found != m_uniformBlocksCache.end())
-        return found->second;
-
-    const GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
-
-    if (blockIndex == GL_INVALID_INDEX)
-        return nullptr;
-
-    auto ubi = std::make_shared<UniformBufferInfo>();
-    ubi->m_blockIndex = blockIndex;
-    glGetActiveUniformBlockiv(m_programId, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &ubi->m_blockSize);
-    glGetActiveUniformBlockiv(m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &ubi->m_numActiveUniforms);
-
-    //get active uniforms indices
-    std::vector<GLuint> activeUniformIndices;
-    activeUniformIndices.resize(ubi->m_numActiveUniforms);
-    glGetActiveUniformBlockiv(m_programId, blockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
-                              reinterpret_cast<GLint*>(activeUniformIndices.data()));
-
-    const auto uniformCount = static_cast<GLsizei>(activeUniformIndices.size());
-
-    //read uniform offsets
-    std::vector<GLint> activeUniformOffsets;
-    activeUniformOffsets.resize(ubi->m_numActiveUniforms);
-    glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_OFFSET,
-                          activeUniformOffsets.data());
-
-    //read uniform types
-    std::vector<GLint> activeUniformTypes;
-    activeUniformTypes.resize(ubi->m_numActiveUniforms);
-    glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_TYPE,
-                          activeUniformTypes.data());
-
-    //read array strides
-    std::vector<GLint> activeUniformArrayStrides;
-    activeUniformArrayStrides.resize(ubi->m_numActiveUniforms);
-    glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_ARRAY_STRIDE,
-                          activeUniformArrayStrides.data());
-
-    //read matrix strides
-    std::vector<GLint> activeUniformMatrixStrides;
-    activeUniformMatrixStrides.resize(ubi->m_numActiveUniforms);
-    glGetActiveUniformsiv(m_programId, uniformCount, activeUniformIndices.data(), GL_UNIFORM_MATRIX_STRIDE,
-                          activeUniformMatrixStrides.data());
-
-    //read uniform names and collect all data into map
-    GLint bufferLength = 0;
-    glGetProgramiv(m_programId, GL_ACTIVE_UNIFORM_MAX_LENGTH, &bufferLength);
-    std::string buffer(bufferLength, '\0');
-    for (int i = 0; i < ubi->m_numActiveUniforms; ++i)
-    {
-        GLsizei actualLength = 0;
-        glGetActiveUniformName(m_programId, activeUniformIndices[i], static_cast<GLsizei>(buffer.size()), &actualLength,
-                               buffer.data());
-
-        //TODO: investigate, WTF
-        //.data() call seems so peacful, safe, even redundant, but without it all brokes out by some strange reason
-        ubi->m_uniforms[buffer.data()] =
-            UniformInfo(activeUniformIndices[i], activeUniformOffsets[i], activeUniformTypes[i],
-                        activeUniformArrayStrides[i], activeUniformMatrixStrides[i]);
-    }
-
-    m_uniformBlocksCache[blockName] = ubi;
-
-    return ubi;
-}
