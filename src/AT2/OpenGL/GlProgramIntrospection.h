@@ -1,4 +1,6 @@
-#include <array>
+#ifndef AT2_GL_PROGRAM_INTROSPECTION_H
+#define AT2_GL_PROGRAM_INTROSPECTION_H
+
 #include "AT2lowlevel.h"
 
 namespace AT2::OpenGl::Introspection
@@ -54,3 +56,5 @@ namespace AT2::OpenGl::Introspection
     };
 
 } // namespace AT2::OpenGl::Introspection
+
+#endif

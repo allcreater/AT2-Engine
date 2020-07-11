@@ -1,4 +1,5 @@
 #include "GlProgramIntrospection.h"
+#include <array>
 
 namespace
 {
