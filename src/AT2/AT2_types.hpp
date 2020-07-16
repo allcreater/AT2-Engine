@@ -2,6 +2,7 @@
 #define AT2_TYPES_H
 
 #include <glm/glm.hpp>
+#include <type_traits>
 #include "AABB.h"
 
 namespace AT2
@@ -40,54 +41,74 @@ namespace AT2
 
 	struct BufferTypeInfo
 	{
-		//const char* Name;
 		BufferDataType Type;
 		unsigned char Count;
 		unsigned int Stride;
-		unsigned int Offset;
-		bool IsNormalized;
-
-		BufferTypeInfo() = default;
-		BufferTypeInfo(BufferDataType type, unsigned char count, unsigned int stride, unsigned int offset = 0, bool isNormalized = false) : Type(type), Count(count), Stride(stride), Offset(offset), IsNormalized(isNormalized) {}
+		unsigned int Offset = 0;
+		bool IsNormalized = false;
 	};
 
 
 	namespace BufferDataTypes
-	{
-		template<typename T> BufferTypeInfo MakeBufferTypeInfo(BufferDataType type, unsigned char count, bool isNormalized = false)
-		{
-			return BufferTypeInfo(type, count, sizeof(T), 0, isNormalized);
-		}
+    {
+        template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+        constexpr BufferDataType DeduceBufferDataType()
+        {
+            const bool isUnsigned = std::is_unsigned_v<T>;
+            if (std::is_same_v<T, float>)
+                return BufferDataType::Float;
+            if (std::is_same_v<T, double>)
+                return BufferDataType::Double;
 
-		//scalars
-		const BufferTypeInfo Byte = BufferTypeInfo(BufferDataType::Byte, 1, 1);
-		const BufferTypeInfo UByte = BufferTypeInfo(BufferDataType::UByte, 1, 1);
+            static_assert(std::is_arithmetic_v<T>);
 
-		const BufferTypeInfo Short = BufferTypeInfo(BufferDataType::Short, 1, 2);
-		const BufferTypeInfo UShort = BufferTypeInfo(BufferDataType::UShort, 1, 2);
+            switch (sizeof(T))
+            {
+            case 1: return isUnsigned ? BufferDataType::UByte : BufferDataType::Byte;
+            case 2: return isUnsigned ? BufferDataType::UShort : BufferDataType::Short;
+            case 4: return isUnsigned ? BufferDataType::UInt : BufferDataType::Int;
+            default: break;
+            }
 
-		const BufferTypeInfo Int = BufferTypeInfo(BufferDataType::Int, 1, 4);
-		const BufferTypeInfo UInt = BufferTypeInfo(BufferDataType::UInt, 1, 4);
+            return BufferDataType::Byte; //TODO: think what to do here :)
+        }
 
-		const BufferTypeInfo Float = BufferTypeInfo(BufferDataType::Float, 1, 4);
-		const BufferTypeInfo Double = BufferTypeInfo(BufferDataType::Double, 1, 8);
+        template <typename T, typename = void>
+        constexpr BufferTypeInfo BufferTypeOf = {DeduceBufferDataType<T>(), 1, sizeof(T)};
 
-		//vectors
-		const BufferTypeInfo BVec2 = MakeBufferTypeInfo<glm::bvec2>(BufferDataType::Byte, 2);
-		const BufferTypeInfo BVec3 = MakeBufferTypeInfo<glm::bvec3>(BufferDataType::Byte, 3);
-		const BufferTypeInfo BVec4 = MakeBufferTypeInfo<glm::bvec4>(BufferDataType::Byte, 4);
+	    template <typename T>
+        constexpr BufferTypeInfo BufferTypeOf<T, std::void_t<typename T::value_type, decltype(std::declval<T>().length())>> = {
+            DeduceBufferDataType<typename T::value_type>(), T::length(), sizeof(T)};
 
-		const BufferTypeInfo IVec2 = MakeBufferTypeInfo<glm::ivec2>(BufferDataType::Int, 2);
-		const BufferTypeInfo IVec3 = MakeBufferTypeInfo<glm::ivec3>(BufferDataType::Int, 3);
-		const BufferTypeInfo IVec4 = MakeBufferTypeInfo<glm::ivec4>(BufferDataType::Int, 4);
+        //scalars
+        constexpr BufferTypeInfo Byte = BufferTypeOf<std::int8_t>;
+        constexpr BufferTypeInfo UByte = BufferTypeOf<std::uint8_t>;
 
-		const BufferTypeInfo Vec2 = MakeBufferTypeInfo<glm::vec2>(BufferDataType::Float, 2);
-		const BufferTypeInfo Vec3 = MakeBufferTypeInfo<glm::vec3>(BufferDataType::Float, 3);
-		const BufferTypeInfo Vec4 = MakeBufferTypeInfo<glm::vec4>(BufferDataType::Float, 4);
+        constexpr BufferTypeInfo Short = BufferTypeOf<std::int16_t>;
+        constexpr BufferTypeInfo UShort = BufferTypeOf<std::uint16_t>;
 
-		const BufferTypeInfo DVec2 = MakeBufferTypeInfo<glm::dvec2>(BufferDataType::Double, 2);
-		const BufferTypeInfo DVec3 = MakeBufferTypeInfo<glm::dvec3>(BufferDataType::Double, 3);
-		const BufferTypeInfo DVec4 = MakeBufferTypeInfo<glm::dvec4>(BufferDataType::Double, 4);
+        constexpr BufferTypeInfo Int = BufferTypeOf<std::int32_t>;
+        constexpr BufferTypeInfo UInt = BufferTypeOf<std::uint32_t>;
+
+        constexpr BufferTypeInfo Float = BufferTypeOf<std::float_t>;
+        constexpr BufferTypeInfo Double = BufferTypeOf<std::double_t>;
+
+		////vectors
+        constexpr BufferTypeInfo BVec2 = BufferTypeOf<glm::bvec2>;
+        constexpr BufferTypeInfo BVec3 = BufferTypeOf<glm::bvec3>;
+        constexpr BufferTypeInfo BVec4 = BufferTypeOf<glm::bvec4>;
+
+		constexpr BufferTypeInfo IVec2 = BufferTypeOf<glm::ivec2>;
+        constexpr BufferTypeInfo IVec3 = BufferTypeOf<glm::ivec3>;
+        constexpr BufferTypeInfo IVec4 = BufferTypeOf<glm::ivec4>;
+
+		constexpr BufferTypeInfo Vec2 = BufferTypeOf<glm::vec2>;
+        constexpr BufferTypeInfo Vec3 = BufferTypeOf<glm::vec3>;
+        constexpr BufferTypeInfo Vec4 = BufferTypeOf<glm::vec4>;
+
+		constexpr BufferTypeInfo DVec2 = BufferTypeOf<glm::dvec2>;
+        constexpr BufferTypeInfo DVec3 = BufferTypeOf<glm::dvec3>;
+        constexpr BufferTypeInfo DVec4 = BufferTypeOf<glm::dvec4>;
 	}
 
 

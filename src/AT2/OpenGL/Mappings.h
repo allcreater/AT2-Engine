@@ -75,6 +75,7 @@ namespace AT2::Mappings
 
         return 0;
     }
+
     inline GLenum TranslateBufferType(VertexBufferType bufferType)
     {
         switch (bufferType)
