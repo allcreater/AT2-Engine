@@ -73,12 +73,11 @@ namespace AT2
             return BufferDataType::Byte; //TODO: think what to do here :)
         }
 
-        template <typename T, typename = void>
-        constexpr BufferTypeInfo BufferTypeOf = {DeduceBufferDataType<T>(), 1, sizeof(T)};
+        template <typename T, typename = std::enable_if<std::is_arithmetic_v<T>>>
+	    constexpr BufferTypeInfo BufferTypeOf = {DeduceBufferDataType<T>(), 1, sizeof(T)};
 
-	    template <typename T>
-        constexpr BufferTypeInfo BufferTypeOf<T, std::void_t<typename T::value_type, decltype(std::declval<T>().length())>> = {
-            DeduceBufferDataType<typename T::value_type>(), T::length(), sizeof(T)};
+        template <typename T, glm::length_t L, glm::qualifier Q>
+        constexpr BufferTypeInfo BufferTypeOf<glm::vec<L, T, Q>> = {DeduceBufferDataType<T>(), L, sizeof(glm::vec<L, T, Q>)};
 
         //scalars
         constexpr BufferTypeInfo Byte = BufferTypeOf<std::int8_t>;
