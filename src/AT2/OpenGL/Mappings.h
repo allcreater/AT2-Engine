@@ -2,6 +2,7 @@
 
 #include "../AT2_textures.hpp"
 #include "../AT2_types.hpp"
+#include "../AT2_states.hpp"
 #include "../utils.hpp"
 
 namespace AT2::Mappings
@@ -137,6 +138,48 @@ namespace AT2::Mappings
                               [](const Patches&) { return GL_PATCHES; },
                           },
                           primitive);
+    }
+
+    constexpr GLenum TranslateCompareFunction(CompareFunction function)
+    {
+        switch (function)
+        {
+        case CompareFunction::Always: return GL_ALWAYS;
+        case CompareFunction::Equal: return GL_EQUAL;
+        case CompareFunction::NotEqual: return GL_NOTEQUAL;
+        case CompareFunction::Greater: return GL_GREATER;
+        case CompareFunction::GreaterEqual: return GL_GEQUAL;
+        case CompareFunction::Less: return GL_LESS;
+        case CompareFunction::LessEqual: return GL_LEQUAL;
+        case CompareFunction::Never: return GL_NEVER;
+        default: assert(false);
+        }
+
+        return 0;
+    }
+
+    constexpr GLenum TranslateBlendFactor(BlendFactor factor)
+    {
+        switch (factor)
+        {
+        case BlendFactor::Zero: return GL_ZERO;
+        case BlendFactor::One: return GL_ONE;
+        case BlendFactor::SourceColor: return GL_SRC_COLOR;
+        case BlendFactor::OneMinusSourceColor: return GL_ONE_MINUS_SRC_COLOR;
+        case BlendFactor::DestinationColor: return GL_DST_COLOR;
+        case BlendFactor::OneMinusDestinationColor: return GL_ONE_MINUS_DST_COLOR;
+        case BlendFactor::SourceAlpha: return GL_SRC_ALPHA;
+        case BlendFactor::OneMinusSourceAlpha: return GL_ONE_MINUS_SRC_ALPHA;
+        case BlendFactor::DestinationAlpha: return GL_DST_ALPHA;
+        case BlendFactor::OneMinusDestinationAlpha: return GL_ONE_MINUS_DST_ALPHA;
+        case BlendFactor::ConstantColor: return GL_CONSTANT_COLOR;
+        case BlendFactor::OneMinusConstantColor: return GL_ONE_MINUS_CONSTANT_COLOR;
+        case BlendFactor::ConstantAlpha: return GL_CONSTANT_ALPHA;
+        case BlendFactor::OneMinusConstantAlpha: return GL_ONE_MINUS_CONSTANT_ALPHA;
+        default: assert(false);
+        }
+
+        return 0;
     }
 
 } // namespace AT2::Mappings

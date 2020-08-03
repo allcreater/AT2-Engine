@@ -216,19 +216,18 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
     }
 
     SetupCamera(params.Camera);
-
     renderer->SetViewport(AABB2d {{0, 0}, framebuffer_size});
+
+    auto& stateManager = renderer->GetStateManager();
 
     gBufferFBO->Bind();
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
     renderer->ClearDepth(1.0);
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    stateManager.ApplyState(BlendingState {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
     glPolygonMode(GL_FRONT_AND_BACK, (params.Wireframe) ? GL_LINE : GL_FILL);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glDepthMask(GL_TRUE);
+    stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
     glCullFace(GL_FRONT);
 
 
@@ -242,10 +241,8 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
     postProcessFBO->Bind();
 
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
-    //glDisable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    glDepthMask(GL_FALSE);
-    glDepthFunc(GL_GREATER);
+    stateManager.ApplyState(BlendingState {BlendFactor::SourceAlpha, BlendFactor::One});
+    stateManager.ApplyState(DepthState {CompareFunction::Greater, true, false});
     glCullFace(GL_BACK);
 
     //lights
@@ -254,17 +251,16 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
 
     DrawPointLights(lrv);
 
-    glDisable(GL_DEPTH_TEST);
+    stateManager.ApplyState(DepthState {CompareFunction::Greater, false, false});
     DrawSkyLight(lrv, params.Camera);
 
 
     params.TargetFramebuffer.Bind();
-    glDepthMask(GL_TRUE);
+    stateManager.ApplyState(DepthState {CompareFunction::Greater, false, true});
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
     renderer->ClearDepth(0);
 
     glCullFace(GL_BACK);
-    glDisable(GL_DEPTH_TEST);
 
     DrawQuad(resources.postprocessShader, *postprocessUniforms);
 }

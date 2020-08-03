@@ -24,6 +24,7 @@ const double pi = std::acos(-1);
 
 #include "AT2_textures.hpp"
 #include "AT2_types.hpp"
+#include "AT2_states.hpp"
 
 #define NON_COPYABLE_OR_MOVABLE(type)                                                                                  \
     type(const type&) = delete;                                                                                        \
@@ -273,6 +274,8 @@ namespace AT2
         virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
         virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
         virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
+
+        virtual void ApplyState(RenderState state) = 0;
 
         //virtual TextureSet& GetActiveTextures() const = 0;
         [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;

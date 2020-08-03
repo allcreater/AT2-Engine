@@ -9,9 +9,15 @@
 #include "../AT2.h"
 
 
-namespace AT2
+namespace AT2::OpenGL::Utils
 {
-
+    inline void SetGlState(GLenum state, bool enabled)
+    {
+        if (enabled)
+            glEnable(state);
+        else
+            glDisable(state);
+    }
 }
 
 #endif
