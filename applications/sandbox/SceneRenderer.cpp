@@ -3,9 +3,6 @@
 #include <algorithm>
 #include <utility>
 
-//unfortunately we still need it
-#include <gl/glew.h>
-
 
 RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera) : camera(camera), scene_renderer(renderer)
 {
@@ -224,26 +221,24 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
     renderer->ClearDepth(1.0);
 
-    stateManager.ApplyState(BlendingState {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
-    glPolygonMode(GL_FRONT_AND_BACK, (params.Wireframe) ? GL_LINE : GL_FILL);
-
+    stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
+    stateManager.ApplyState(params.Wireframe ? PolygonRasterizationMode::Lines : PolygonRasterizationMode::Fill);
     stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
-    glCullFace(GL_FRONT);
+    stateManager.ApplyState(FaceCullMode {true, false});
 
 
     //objects
     RenderVisitor rv {*this, params.Camera};
     params.Scene.GetRoot().Accept(rv);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+    stateManager.ApplyState(PolygonRasterizationMode::Fill);
 
     postProcessFBO->Bind();
 
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
-    stateManager.ApplyState(BlendingState {BlendFactor::SourceAlpha, BlendFactor::One});
+    stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::One});
     stateManager.ApplyState(DepthState {CompareFunction::Greater, true, false});
-    glCullFace(GL_BACK);
+    stateManager.ApplyState(FaceCullMode {false, true});
 
     //lights
     LightRenderVisitor lrv {*this};
@@ -259,8 +254,6 @@ void SceneRenderer::RenderScene(const RenderParameters& params)
     stateManager.ApplyState(DepthState {CompareFunction::Greater, false, true});
     renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
     renderer->ClearDepth(0);
-
-    glCullFace(GL_BACK);
 
     DrawQuad(resources.postprocessShader, *postprocessUniforms);
 }

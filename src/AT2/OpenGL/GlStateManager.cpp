@@ -14,11 +14,21 @@ void AT2::GlStateManager::ApplyState(RenderState state)
             glDepthMask(state.WriteEnabled);
             glDepthFunc(AT2::Mappings::TranslateCompareFunction(state.CompareFunction));
         },
-        [](const BlendingState& state)
+        [](const BlendMode& state)
         {
             glBlendFunc(Mappings::TranslateBlendFactor(state.SourceFactor),
                       Mappings::TranslateBlendFactor(state.DestinationFactor));
             glBlendColor(state.BlendColor.r, state.BlendColor.g, state.BlendColor.b, state.BlendColor.a);
+        },
+        [](const FaceCullMode& state)
+        {
+            const auto mode = Mappings::TranslateFaceCullMode(state);
+            SetGlState(GL_CULL_FACE, mode != 0);
+            glCullFace(mode);
+        },
+    [](const PolygonRasterizationMode& state)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, Mappings::TranslatePolygonRasterizationMode(state));
         }
     }, state);
 }

@@ -44,14 +44,27 @@ namespace AT2
     };
 
     //TODO: support separate blend functions, blend equations, per-buffer blending
-    struct BlendingState
+    struct BlendMode
     {
         BlendFactor SourceFactor;
         BlendFactor DestinationFactor;
         glm::vec4 BlendColor {0.0f};
     };
 
-    using RenderState = std::variant<DepthState, BlendingState>;
+    struct FaceCullMode
+    {
+        bool CullFront = false;
+        bool CullBack = true;
+    };
+
+    enum class PolygonRasterizationMode
+    {
+        Point,
+        Lines,
+        Fill
+    };
+
+    using RenderState = std::variant<DepthState, BlendMode, FaceCullMode, PolygonRasterizationMode>;
 
 
 } // namespace AT2

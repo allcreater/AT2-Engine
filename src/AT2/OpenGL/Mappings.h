@@ -182,4 +182,31 @@ namespace AT2::Mappings
         return 0;
     }
 
+    constexpr GLenum TranslateFaceCullMode(FaceCullMode mode)
+    {
+        switch ((mode.CullFront << 1) | mode.CullBack)
+        {
+        case 0b00: return 0;
+        case 0b01: return GL_BACK;
+        case 0b10: return GL_FRONT;
+        case 0b11: return GL_FRONT_AND_BACK;
+        default: assert(false);
+        }
+
+        return 0;
+    }
+
+    constexpr GLenum TranslatePolygonRasterizationMode(PolygonRasterizationMode mode)
+    {
+        switch (mode)
+        {
+            case PolygonRasterizationMode::Point: return GL_POINT;
+            case PolygonRasterizationMode::Lines: return GL_LINE;
+            case PolygonRasterizationMode::Fill: return GL_FILL;
+            default: assert(false);
+        }
+
+        return 0;
+    }
+
 } // namespace AT2::Mappings
