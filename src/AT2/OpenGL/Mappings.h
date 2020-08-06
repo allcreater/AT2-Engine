@@ -8,7 +8,7 @@
 namespace AT2::Mappings
 {
 
-    inline GLint TranslateShaderType(ShaderType shaderType)
+    constexpr GLint TranslateShaderType(ShaderType shaderType)
     {
         switch (shaderType)
         {
@@ -24,7 +24,7 @@ namespace AT2::Mappings
         return 0;
     }
 
-    inline GLint TranslateWrapMode(TextureWrapMode wrapMode)
+    constexpr GLint TranslateWrapMode(TextureWrapMode wrapMode)
     {
         switch (wrapMode)
         {
@@ -39,7 +39,7 @@ namespace AT2::Mappings
         return 0;
     }
 
-    inline GLenum TranslateExternalFormat(TextureLayout layout)
+    constexpr GLenum TranslateExternalFormat(TextureLayout layout)
     {
         switch (layout)
         {
@@ -57,7 +57,7 @@ namespace AT2::Mappings
         return 0;
     }
 
-    inline GLenum TranslateExternalType(BufferDataType type)
+    constexpr GLenum TranslateExternalType(BufferDataType type)
     {
         switch (type)
         {
@@ -77,7 +77,7 @@ namespace AT2::Mappings
         return 0;
     }
 
-    inline GLenum TranslateBufferType(VertexBufferType bufferType)
+    constexpr GLenum TranslateBufferType(VertexBufferType bufferType)
     {
         switch (bufferType)
         {
@@ -90,7 +90,7 @@ namespace AT2::Mappings
         return 0;
     }
 
-    inline GLenum TranslateBufferUsage(BufferUsage bufferUsage)
+    constexpr GLenum TranslateBufferUsage(BufferUsage bufferUsage)
     {
         switch (bufferUsage)
         {
@@ -103,7 +103,7 @@ namespace AT2::Mappings
         return 0;
     }
 
-    inline GLenum TranslateTextureTarget(const Texture& texture)
+    constexpr GLenum TranslateTextureTarget(const Texture& texture)
     {
         return std::visit(
             Utils::overloaded {[](const Texture1D&) { return GL_TEXTURE_1D; },
@@ -119,7 +119,7 @@ namespace AT2::Mappings
             texture);
     }
 
-    inline GLenum TranslatePrimitiveType(const Primitives::Primitive& primitive)
+    constexpr GLenum TranslatePrimitiveType(const Primitives::Primitive& primitive)
     {
         using namespace Primitives;
 
