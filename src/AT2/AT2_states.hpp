@@ -46,9 +46,10 @@ namespace AT2
     //TODO: support separate blend functions, blend equations, per-buffer blending
     struct BlendMode
     {
-        BlendFactor SourceFactor;
-        BlendFactor DestinationFactor;
+        BlendFactor SourceFactor = BlendFactor::One;
+        BlendFactor DestinationFactor = BlendFactor::Zero;
         glm::vec4 BlendColor {0.0f};
+        bool Enabled = true;
     };
 
     struct FaceCullMode

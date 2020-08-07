@@ -13,8 +13,8 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <execution>
 
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/random.hpp>
 
 #include "SceneRenderer.h"
@@ -33,11 +33,8 @@ public:
             //spdlog::info("Exit");
         };
 
-
         m_window = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true});
-
         m_window->setLabel("Some engine test").setSize({1024, 768}).setCursorMode(GlfwCursorMode::Disabled);
-
 
         SetupWindowCallbacks();
     }
@@ -45,13 +42,13 @@ public:
     void Run() { GlfwApplication::get().run(); }
 
 private:
-    std::shared_ptr<ITexture> ComputeHeightmap(glm::uvec2 resolution) const
+    std::shared_ptr<AT2::ITexture> ComputeHeightmap(glm::uvec2 resolution) const
     {
         constexpr auto localGroupSize = glm::uvec3 {32, 32, 1};
 
         auto resultTex =
-            m_renderer->GetResourceFactory().CreateTexture(Texture2D {resolution}, TextureFormats::RGBA16F);
-        resultTex->SetWrapMode(TextureWrapMode::ClampToBorder);
+            m_renderer->GetResourceFactory().CreateTexture(Texture2D {resolution}, AT2::TextureFormats::RGBA16F);
+        resultTex->SetWrapMode(AT2::TextureWrapMode::ClampToBorder);
         auto shader =
             m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 
@@ -83,14 +80,16 @@ private:
             {"resources/shaders/mesh.vs.glsl", "resources/shaders/mesh.fs.glsl"});
 
 
-        Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, TextureFormats::RGBA8);
+        Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, AT2::TextureFormats::RGBA8);
         {
-            std::mt19937 rng {std::random_device {}()};
-            const auto l = Noise3Tex->GetDataLength();
-            const auto arr = std::make_unique<GLubyte[]>(l);
-            for (size_t i = 0; i < l; ++i)
-                arr[i] = std::uniform_int_distribution {0, 255}(rng);
-            Noise3Tex->SubImage3D({0, 0, 0}, {64, 64, 64}, 0, TextureFormats::RGBA8, arr.get());
+            const auto arr = std::make_unique<GLubyte[]>(Noise3Tex->GetDataLength());
+
+            std::generate(std::execution::par_unseq, arr.get(), arr.get() + Noise3Tex->GetDataLength(),
+                          [rng = std::mt19937{std::random_device {}()}]() mutable {
+                              return std::uniform_int_distribution {0, 255}(rng);
+                          });
+            
+            Noise3Tex->SubImage3D({}, Noise3Tex->GetSize(), 0, AT2::TextureFormats::RGBA8, arr.get());
         }
 
         GrassTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
@@ -101,27 +100,22 @@ private:
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
         EnvironmentMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
-        auto lightsRoot = std::make_shared<Node>("lights"s);
+        auto lightsRoot = std::make_shared<AT2::Node>("lights"s);
         Scene.GetRoot().AddChild(lightsRoot);
 
         for (size_t i = 0; i < NumActiveLights; ++i)
         {
             lightsRoot
-                ->AddChild(std::make_shared<LightNode>(
-                    SphereLight {}, linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
+                ->AddChild(std::make_shared<AT2::LightNode>(
+                    AT2::SphereLight {}, linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
                     "PointLight[" + std::to_string(i) + "]"))
                 .SetTransform(glm::translate(glm::mat4 {1.0},
                                              {glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0),
                                               glm::linearRand(-5000.0, 5000.0)}));
         }
 
-        lightsRoot->AddChild(std::make_shared<LightNode>(SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
-                                                         glm::vec3(500.0f), "SkyLight"));
-
-        //Init
-        glEnable(GL_BLEND);
-        glEnable(GL_CULL_FACE);
-
+        lightsRoot->AddChild(std::make_shared<AT2::LightNode>(AT2::SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
+                                                              glm::vec3(500.0f), "SkyLight"));
 
         //Scene
         auto matBallNode = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
@@ -154,17 +148,14 @@ private:
             NeedResourceReload = false;
         }
 
-        //if (MovingLightMode)
-        //LightsArray[0]->SetUniform("u_lightPos", glm::vec4(m_camera.getPosition(), 1.0));
-
-        GlTimerQuery glTimer;
+        AT2::GlTimerQuery glTimer;
         glTimer.Begin();
         sr.RenderScene({Scene, m_camera, m_renderer->GetDefaultFramebuffer(), Time, WireframeMode});
         glTimer.End();
 
         const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
         if (floor(Time) < floor(Time + dt))
-            Log::Debug() << "Frame time: " << frameTime << std::endl;
+            AT2::Log::Debug() << "Frame time: " << frameTime << std::endl;
 
         m_renderer->FinishFrame();
     }
@@ -183,7 +174,7 @@ private:
                 NeedResourceReload = true;
             else if (key == GLFW_KEY_L)
             {
-                if (auto* skyLight = Scene.FindNode<LightNode>("SkyLight"sv))
+                if (auto* skyLight = Scene.FindNode<AT2::LightNode>("SkyLight"sv))
                     skyLight->SetEnabled(!skyLight->GetEnabled());
             }
         };
@@ -232,7 +223,7 @@ private:
 
             if (MovingLightMode)
             {
-                if (auto* light = Scene.FindNode<LightNode>("PointLight[0]"sv))
+                if (auto* light = Scene.FindNode<AT2::LightNode>("PointLight[0]"sv))
                     light->SetTransform(m_camera.getViewInverse());
             }
         };
@@ -248,9 +239,9 @@ private:
     std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader;
     std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
 
-    Camera m_camera;
-    Scene Scene;
-    SceneRenderer sr;
+    AT2::Camera m_camera;
+    AT2::Scene Scene;
+    AT2::SceneRenderer sr;
 
     bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true;
     double Time = 0.0;
@@ -264,7 +255,7 @@ int main(const int argc, const char* argv[])
         App app;
         app.Run();
     }
-    catch (AT2Exception& exception)
+    catch (AT2::AT2Exception& exception)
     {
         std::cout << "Runtime exception:" << exception.what() << std::endl;
     }

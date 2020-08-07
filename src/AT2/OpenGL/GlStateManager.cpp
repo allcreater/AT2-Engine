@@ -16,6 +16,10 @@ void AT2::GlStateManager::ApplyState(RenderState state)
         },
         [](const BlendMode& state)
         {
+            SetGlState(GL_BLEND, state.Enabled);
+            if (!state.Enabled)
+                return;
+
             glBlendFunc(Mappings::TranslateBlendFactor(state.SourceFactor),
                       Mappings::TranslateBlendFactor(state.DestinationFactor));
             glBlendColor(state.BlendColor.r, state.BlendColor.g, state.BlendColor.b, state.BlendColor.a);
