@@ -67,6 +67,7 @@ public:
     GlfwWindow& setCloseFlag(bool flag);
     bool getCloseFlag() const;
 
+    GLFWwindow* get() const noexcept { return window_impl; }
 
     //event callbacks
     //Render context available only at InitializeCallback and RenderCallback
