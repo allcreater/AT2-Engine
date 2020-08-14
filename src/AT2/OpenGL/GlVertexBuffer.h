@@ -18,9 +18,6 @@ namespace AT2
         [[nodiscard]] unsigned int GetId() const override { return m_id; }
         [[nodiscard]] VertexBufferType GetType() const override { return m_publicType; }
 
-        [[nodiscard]] const BufferTypeInfo& GetDataType() const override { return m_typeInfo; }
-        void SetDataType(const BufferTypeInfo& typeInfo) override { m_typeInfo = typeInfo; }
-
         [[nodiscard]] size_t GetLength() const override { return m_length; }
 
         void Bind() override;
@@ -66,7 +63,6 @@ namespace AT2
         VertexBufferType m_publicType;
         GlBufferType m_privateType;
         GlBufferUsageHint m_usageHint = GlBufferUsageHint::StaticDraw;
-        BufferTypeInfo m_typeInfo {};
     };
 
 } // namespace AT2

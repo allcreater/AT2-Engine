@@ -18,38 +18,38 @@ namespace AT2
         Computational = 5
     };
 
-	enum class BufferDataType : unsigned char
-	{
-		Byte,
-		UByte,
-		Short,
-		UShort,
-		Int,
-		UInt,
-		HalfFloat,
-		Float,
-		Double,
-		Fixed
-	};
+    enum class BufferDataType : unsigned char
+    {
+        Byte,
+        UByte,
+        Short,
+        UShort,
+        Int,
+        UInt,
+        HalfFloat,
+        Float,
+        Double,
+        Fixed
+    };
 
-	enum class VertexBufferType : unsigned char//TODO: Not full list of types!
-	{
-		ArrayBuffer,
-		IndexBuffer,
-		UniformBuffer
-	};
+    enum class VertexBufferType : unsigned char//TODO: Not full list of types!
+    {
+        ArrayBuffer,
+        IndexBuffer,
+        UniformBuffer
+    };
 
-	struct BufferTypeInfo
-	{
-		BufferDataType Type;
-		unsigned char Count;
-		unsigned int Stride;
-		unsigned int Offset = 0;
-		bool IsNormalized = false;
-	};
+    struct BufferTypeInfo
+    {
+        BufferDataType Type;
+        unsigned char Count;
+        unsigned int Stride;
+        unsigned int Offset = 0;
+        bool IsNormalized = false;
+    };
 
 
-	namespace BufferDataTypes
+    namespace BufferDataTypes
     {
         template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
         constexpr BufferDataType DeduceBufferDataType()
@@ -74,7 +74,7 @@ namespace AT2
         }
 
         template <typename T, typename = std::enable_if<std::is_arithmetic_v<T>>>
-	    constexpr BufferTypeInfo BufferTypeOf = {DeduceBufferDataType<T>(), 1, sizeof(T)};
+        constexpr BufferTypeInfo BufferTypeOf = {DeduceBufferDataType<T>(), 1, sizeof(T)};
 
         template <typename T, glm::length_t L, glm::qualifier Q>
         constexpr BufferTypeInfo BufferTypeOf<glm::vec<L, T, Q>> = {DeduceBufferDataType<T>(), L, sizeof(glm::vec<L, T, Q>)};
@@ -92,63 +92,63 @@ namespace AT2
         constexpr BufferTypeInfo Float = BufferTypeOf<std::float_t>;
         constexpr BufferTypeInfo Double = BufferTypeOf<std::double_t>;
 
-		////vectors
+        ////vectors
         constexpr BufferTypeInfo BVec2 = BufferTypeOf<glm::bvec2>;
         constexpr BufferTypeInfo BVec3 = BufferTypeOf<glm::bvec3>;
         constexpr BufferTypeInfo BVec4 = BufferTypeOf<glm::bvec4>;
 
-		constexpr BufferTypeInfo IVec2 = BufferTypeOf<glm::ivec2>;
+        constexpr BufferTypeInfo IVec2 = BufferTypeOf<glm::ivec2>;
         constexpr BufferTypeInfo IVec3 = BufferTypeOf<glm::ivec3>;
         constexpr BufferTypeInfo IVec4 = BufferTypeOf<glm::ivec4>;
 
-		constexpr BufferTypeInfo Vec2 = BufferTypeOf<glm::vec2>;
+        constexpr BufferTypeInfo Vec2 = BufferTypeOf<glm::vec2>;
         constexpr BufferTypeInfo Vec3 = BufferTypeOf<glm::vec3>;
         constexpr BufferTypeInfo Vec4 = BufferTypeOf<glm::vec4>;
 
-		constexpr BufferTypeInfo DVec2 = BufferTypeOf<glm::dvec2>;
+        constexpr BufferTypeInfo DVec2 = BufferTypeOf<glm::dvec2>;
         constexpr BufferTypeInfo DVec3 = BufferTypeOf<glm::dvec3>;
         constexpr BufferTypeInfo DVec4 = BufferTypeOf<glm::dvec4>;
-	}
+    }
 
 
-	/// <summary>
-	/// Texture input data layout
-	/// </summary>
+    /// <summary>
+    /// Texture input data layout
+    /// </summary>
 
-	//subset from https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml
-	enum class TextureLayout
-	{
-		//Index,
-		Red,
-		//Green,
-		//Blue,
-		//Alpha,
-		RG,
-		RGB,
-		BGR,
-		RGBA,
-		BGRA,
+    //subset from https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml
+    enum class TextureLayout
+    {
+        //Index,
+        Red,
+        //Green,
+        //Blue,
+        //Alpha,
+        RG,
+        RGB,
+        BGR,
+        RGBA,
+        BGRA,
 
-		//Luminance,
-		//LuminanceAlpha
-		DepthComponent,
-		StencilIndex
-	};
+        //Luminance,
+        //LuminanceAlpha
+        DepthComponent,
+        StencilIndex
+    };
 
-	struct ExternalTextureFormat
-	{
-		TextureLayout ChannelsLayout;
-		BufferDataType DataType;
-	};
+    struct ExternalTextureFormat
+    {
+        TextureLayout ChannelsLayout;
+        BufferDataType DataType;
+    };
 
-	enum class TextureWrapMode
-	{
-		ClampToEdge,
-		ClampToBorder,
-		MirroredRepeat,
-		Repeat,
-		MirrorClampToEdge
-	};
+    enum class TextureWrapMode
+    {
+        ClampToEdge,
+        ClampToBorder,
+        MirroredRepeat,
+        Repeat,
+        MirrorClampToEdge
+    };
 
     enum class BufferUsage
     {

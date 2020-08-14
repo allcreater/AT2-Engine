@@ -41,9 +41,9 @@ void LinesHelper::Init(const IRenderer& renderer)
     auto& rf = renderer.GetResourceFactory();
 
     m_VAO = rf.CreateVertexArray();
-    m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, BufferDataTypes::Vec2, 0, nullptr));
-    m_VAO->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, BufferDataTypes::Vec4, 0, nullptr));
-    //m_VAO->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, BufferDataTypes::UInt, 0, nullptr));
+    m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, 0, nullptr), BufferDataTypes::Vec2);
+    m_VAO->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, 0, nullptr), BufferDataTypes::Vec4);
+    //m_VAO->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, 0, nullptr), BufferDataTypes::UInt);
 }
 
 void LinesHelper::UpdateVAO(const IRenderer& renderer)

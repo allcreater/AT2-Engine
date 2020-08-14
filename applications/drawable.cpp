@@ -42,10 +42,10 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeSphereDrawable(const I
 
     auto vao = rf.CreateVertexArray();
     vao->SetVertexBuffer(1,
-                         rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3,
-                                               normals.size() * sizeof(glm::vec3), normals.data()));
-    vao->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, AT2::BufferDataTypes::UInt,
-                                              indices.size() * sizeof(glm::uint), indices.data()));
+                         rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, normals.size() * sizeof(glm::vec3), normals.data()),
+                         AT2::BufferDataTypes::Vec3);
+    vao->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, indices.size() * sizeof(glm::uint), indices.data()),
+                        AT2::BufferDataType::UInt);
 
     auto drawable = std::make_shared<AT2::MeshDrawable>();
     drawable->Primitives.push_back(
@@ -64,8 +64,8 @@ std::shared_ptr<AT2::MeshDrawable> AT2::MeshDrawable::MakeFullscreenQuadDrawable
     auto& rf = renderer.GetResourceFactory();
 
     auto vao = rf.CreateVertexArray();
-    vao->SetVertexBuffer(
-        1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, AT2::BufferDataTypes::Vec3, 4 * sizeof(glm::vec3), positions));
+    vao->SetVertexBuffer(1, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, 4 * sizeof(glm::vec3), positions),
+                         BufferDataTypes::Vec3);
 
     auto drawable = std::make_shared<AT2::MeshDrawable>();
     drawable->Primitives.push_back(new AT2::GlDrawArraysPrimitive(AT2::GlDrawPrimitiveType::TriangleFan, 0, 4));

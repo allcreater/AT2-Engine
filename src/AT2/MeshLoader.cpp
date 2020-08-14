@@ -91,18 +91,13 @@ protected:
             AddMesh(m_scene->mMeshes[i]);
 
         auto& rf = m_renderer->GetResourceFactory();
-        auto vao = rf.CreateVertexArray();
-        vao->SetVertexBuffer(1,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3,
-                                                   m_verticesVec.size() * sizeof(glm::vec3), m_verticesVec.data()));
-        vao->SetVertexBuffer(2,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3,
-                                                   m_texCoordVec.size() * sizeof(glm::vec3), m_texCoordVec.data()));
-        vao->SetVertexBuffer(3,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3,
-                                                   m_normalsVec.size() * sizeof(glm::vec3), m_normalsVec.data()));
-        vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, AT2::BufferDataTypes::UInt,
-                                                  m_indicesVec.size() * sizeof(std::uint32_t), m_indicesVec.data()));
+
+        auto vao = MakeVertexArray(rf, std::make_pair (1u, std::cref(m_verticesVec)),
+                                                            std::make_pair (2u, std::cref(m_texCoordVec)),
+                                                            std::make_pair (3u, std::cref(m_normalsVec))
+        );
+        vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, m_indicesVec.size() * sizeof(std::uint32_t),
+                                                  m_indicesVec.data()), BufferDataType::UInt);
 
         m_buildingMesh.VertexArray = vao;
     }
@@ -111,7 +106,7 @@ protected:
     {
         std::unique_ptr<IUniformContainer> container = std::make_unique<UniformContainer>();
 
-        const static std::tuple<aiTextureType, unsigned, std::string_view> knownTextureFlavors[] = {
+        constexpr std::tuple<aiTextureType, unsigned, std::string_view> knownTextureFlavors[] = {
             {aiTextureType_DIFFUSE, 0, "u_texAlbedo"sv},
             {AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, "u_texAlbedo"sv},
             {aiTextureType_NORMALS, 0, "u_texNormalMap"sv},

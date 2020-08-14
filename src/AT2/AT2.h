@@ -9,6 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
+#include <array>
 #include <memory>
 #include <set>
 #include <string>
@@ -22,9 +23,9 @@
 
 const double pi = std::acos(-1);
 
+#include "AT2_states.hpp"
 #include "AT2_textures.hpp"
 #include "AT2_types.hpp"
-#include "AT2_states.hpp"
 
 #define NON_COPYABLE_OR_MOVABLE(type)                                                                                  \
     type(const type&) = delete;                                                                                        \
@@ -116,9 +117,6 @@ namespace AT2
 
         [[nodiscard]] virtual unsigned int GetId() const = 0;
         [[nodiscard]] virtual VertexBufferType GetType() const = 0;
-
-        [[nodiscard]] virtual const BufferTypeInfo& GetDataType() const = 0;
-        virtual void SetDataType(const BufferTypeInfo& typeInfo) = 0;
     };
 
     class IVertexArray
@@ -133,13 +131,15 @@ namespace AT2
         virtual void Bind() = 0;
         [[nodiscard]] virtual unsigned int GetId() const = 0;
 
-        virtual void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer) = 0;
+        virtual void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer, BufferDataType type) = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
-        //virtual std::shared_ptr<IVertexBuffer> GetOrSetIndexBuffer() const;
+        [[nodiscard]] virtual std::optional<BufferDataType> GetIndexBufferType() const = 0;
+
         //TODO GetOrCreateVertexBuffer ?
-        virtual void SetVertexBuffer(unsigned int index, std::shared_ptr<IVertexBuffer> buffer) = 0;
+        virtual void SetVertexBuffer(unsigned int index, std::shared_ptr<IVertexBuffer> buffer, BufferTypeInfo) = 0;
         virtual void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
+        [[nodiscard]] virtual std::optional<BufferTypeInfo> GetVertexBufferBinding(unsigned int index) const = 0;
     };
 
     class ITexture
@@ -300,16 +300,16 @@ namespace AT2
                                                                       ExternalTextureFormat desiredFormat) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer>
-            CreateVertexBuffer(VertexBufferType type, const BufferTypeInfo& dataType) const = 0;
+
+        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type,
-                                                                                const BufferTypeInfo& dataType,
                                                                                 size_t dataLength,
                                                                                 const void* data) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IShaderProgram>
             CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
 
         virtual void ReloadResources(ReloadableGroup group) = 0;
+
     };
 
     class IRenderer
@@ -342,6 +342,24 @@ namespace AT2
 
 
     using TextureRef = std::shared_ptr<ITexture>;
+
+    //TODO: move from main header
+    //TODO: Container concept?
+    template <typename... Args>
+    [[nodiscard]] std::shared_ptr<IVertexArray> MakeVertexArray(IResourceFactory& factory,
+                                                                std::pair<unsigned, const std::vector<Args>&>... args)
+    {
+        auto vertexArray = factory.CreateVertexArray();
+        std::initializer_list<int> {
+            (vertexArray->SetVertexBuffer(args.first,
+                                          factory.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
+                                                                     args.second.size() * sizeof(Args),
+                                                                     args.second.data()),
+                                          BufferDataTypes::BufferTypeOf<Args>),
+             0)...};
+
+        return vertexArray;
+    }
 
 } // namespace AT2
 

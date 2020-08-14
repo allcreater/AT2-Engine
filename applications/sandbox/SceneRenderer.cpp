@@ -79,29 +79,22 @@ namespace AT2
         auto& rf = renderer->GetResourceFactory();
         auto& vao = lightMesh->VertexArray;
 
+
         //TODO: map buffer instead of recreating it
-        vao->SetVertexBuffer(2,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-                                                   BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs),
-                                                                   offsetof(LightAttribs, position)},
-                                                   lrv.collectedLights.size() * sizeof(LightAttribs),
-                                                   lrv.collectedLights.data()));
+        auto vertexBuffer =
+            rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, lrv.collectedLights.size() * sizeof(LightAttribs),
+                                  lrv.collectedLights.data());
+
+        vao->SetVertexBuffer(2, vertexBuffer,
+            BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, position)} );
         vao->SetVertexBufferDivisor(2, 1);
 
-        vao->SetVertexBuffer(3,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-                                                   BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs),
-                                                                   offsetof(LightAttribs, intensity)},
-                                                   lrv.collectedLights.size() * sizeof(LightAttribs),
-                                                   lrv.collectedLights.data()));
+        vao->SetVertexBuffer(3, vertexBuffer,
+            BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, intensity)});
         vao->SetVertexBufferDivisor(3, 1);
 
-        vao->SetVertexBuffer(4,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-                                                   BufferTypeInfo {BufferDataType::Float, 1, sizeof(LightAttribs),
-                                                                   offsetof(LightAttribs, effective_radius)},
-                                                   lrv.collectedLights.size() * sizeof(LightAttribs),
-                                                   lrv.collectedLights.data()));
+        vao->SetVertexBuffer(4, vertexBuffer,
+            BufferTypeInfo {BufferDataType::Float, 1, sizeof(LightAttribs), offsetof(LightAttribs, effective_radius)});
         vao->SetVertexBufferDivisor(4, 1);
 
 
@@ -331,8 +324,9 @@ namespace AT2
         auto& rf = renderer.GetResourceFactory();
         auto vao = rf.CreateVertexArray();
         vao->SetVertexBuffer(1,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec2,
-                                                   texCoords.size() * sizeof(glm::vec2), texCoords.data()));
+                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, texCoords.size() * sizeof(glm::vec2),
+                                                   texCoords.data()),
+                             BufferDataTypes::Vec2);
 
         auto rootNode = std::make_shared<MeshNode>();
 
@@ -395,14 +389,11 @@ namespace AT2
 
         auto mesh = std::make_unique<Mesh>();
 
-        mesh->VertexArray = rf.CreateVertexArray();
-        mesh->VertexArray->SetVertexBuffer(1,
-                                           rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-                                                                 AT2::BufferDataTypes::Vec3,
-                                                                 normals.size() * sizeof(glm::vec3), normals.data()));
+        mesh->VertexArray = MakeVertexArray(rf, std::make_pair(1u, std::cref(normals)));
         mesh->VertexArray->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer,
-                                                                AT2::BufferDataTypes::UInt,
-                                                                indices.size() * sizeof(glm::uint), indices.data()));
+                                                                indices.size() * sizeof(glm::uint), indices.data()), BufferDataType::UInt);
+
+        
 
 
         //don't know how to make it better
@@ -415,14 +406,11 @@ namespace AT2
 
     std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer)
     {
-        static glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0),
+        static std::vector positions = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0),
                                         glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
 
         auto& rf = renderer.GetResourceFactory();
-        auto vao = rf.CreateVertexArray();
-        vao->SetVertexBuffer(1,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, AT2::BufferDataTypes::Vec3,
-                                                   4 * sizeof(glm::vec3), positions));
+        auto vao = MakeVertexArray(rf, std::make_pair(1u, std::cref(positions)));
 
 
         SubMesh subMesh;

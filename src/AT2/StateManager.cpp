@@ -79,8 +79,7 @@ void StateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexA
     {
         _vertexArray->Bind();
 
-        m_activeIndexBufferType = _vertexArray->GetIndexBuffer() ? _vertexArray->GetIndexBuffer()->GetDataType().Type
-                                                                 : std::optional<BufferDataType> {};
+        m_activeIndexBufferType = _vertexArray->GetIndexBufferType();
     }
 
     m_activeVertexArray = _vertexArray;
