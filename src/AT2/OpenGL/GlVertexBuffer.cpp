@@ -36,6 +36,8 @@ std::byte* GlVertexBuffer::Map(BufferUsage usage)
         throw AT2Exception(AT2Exception::ErrorCase::Buffer,
                                "GlVertexBuffer: you must unmap buffer before you could map it again");
 
+    m_mapped = true;
+
     return static_cast<std::byte*>(glMapNamedBufferEXT(m_id, Mappings::TranslateBufferUsage(usage)));
 }
 
@@ -44,6 +46,8 @@ std::byte* GlVertexBuffer::MapRange(BufferUsage usage, size_t offset, size_t len
     if (m_mapped)
         throw AT2Exception(AT2Exception::ErrorCase::Buffer,
                                "GlVertexBuffer: you must unmap buffer before you could map it again");
+
+    m_mapped = true;
 
     const GLbitfield mapFlags = GL_MAP_INVALIDATE_RANGE_BIT
         | ((usage | BufferUsage::Read) == BufferUsage::Read ? GL_MAP_READ_BIT : 0)
@@ -56,6 +60,8 @@ void GlVertexBuffer::Unmap()
 {
     if (!m_mapped)
         return;
+
+    m_mapped = false;
 
     glUnmapNamedBufferEXT(m_id);
 }
