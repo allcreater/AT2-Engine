@@ -23,6 +23,10 @@ namespace AT2
         void Bind() override;
         void SetData(size_t length, const void* data) override;
 
+        std::byte* Map(BufferUsage usage) override;
+        std::byte* MapRange(BufferUsage usage, size_t offset, size_t length) override;
+        void Unmap() override;
+
     protected:
         enum class GlBufferType : GLenum //TODO: properly handle all of them :)
         {
@@ -63,6 +67,8 @@ namespace AT2
         VertexBufferType m_publicType;
         GlBufferType m_privateType;
         GlBufferUsageHint m_usageHint = GlBufferUsageHint::StaticDraw;
+
+        bool m_mapped = false;
     };
 
 } // namespace AT2

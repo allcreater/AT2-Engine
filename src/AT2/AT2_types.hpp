@@ -150,12 +150,17 @@ namespace AT2
         MirrorClampToEdge
     };
 
-    enum class BufferUsage
+    enum class BufferUsage : char
     {
-        ReadOnly,
-        ReadWrite,
-        WriteOnly
+        Read = 1 << 0,
+        Write = 1 << 1,
+        ReadWrite = Read | Write
     };
+
+    inline BufferUsage operator|(BufferUsage lhs, BufferUsage rhs)
+    {
+        return static_cast<BufferUsage>(static_cast<char>(lhs) | static_cast<char>(rhs));
+    }
 
     namespace TextureFormats
     {

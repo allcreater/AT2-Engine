@@ -80,8 +80,10 @@ namespace AT2
     public:
         [[nodiscard]] virtual size_t GetLength() const = 0;
         virtual void SetData(size_t length, const void* data) = 0;
-        //virtual std::unique_ptr<void*> Lock() = 0; //TODO: think about more useful wrapper
-        //virtual void Unlock() = 0;
+
+        virtual std::byte* Map(BufferUsage usage) = 0;
+        virtual std::byte* MapRange(BufferUsage usage, size_t offset, size_t length) = 0;
+        virtual void Unmap() = 0;
     };
 
     class IFrameBuffer

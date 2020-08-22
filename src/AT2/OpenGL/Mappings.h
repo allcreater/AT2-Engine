@@ -94,9 +94,9 @@ namespace AT2::Mappings
     {
         switch (bufferUsage)
         {
-        case BufferUsage::ReadOnly: return GL_READ_ONLY;
+        case BufferUsage::Read: return GL_READ_ONLY;
         case BufferUsage::ReadWrite: return GL_READ_WRITE;
-        case BufferUsage::WriteOnly: return GL_WRITE_ONLY;
+        case BufferUsage::Write: return GL_WRITE_ONLY;
         default: assert(false);
         }
 
@@ -119,11 +119,12 @@ namespace AT2::Mappings
             texture);
     }
 
-    constexpr GLenum TranslatePrimitiveType(const Primitives::Primitive& primitive)
+    inline GLenum TranslatePrimitiveType(const Primitives::Primitive& primitive)
     {
         using namespace Primitives;
 
-        return std::visit(Utils::overloaded {
+        return std::visit(
+            Utils::overloaded {
                               [](const Points&) { return GL_POINTS; },
                               [](const LineStrip&) { return GL_LINE_STRIP; },
                               [](const LineLoop&) { return GL_LINE_LOOP; },
@@ -135,9 +136,8 @@ namespace AT2::Mappings
                               [](const Triangles&) { return GL_TRIANGLES; },
                               [](const TriangleStripAdjacency&) { return GL_TRIANGLE_STRIP_ADJACENCY; },
                               [](const TrianglesAdjacency&) { return GL_TRIANGLES_ADJACENCY; },
-                              [](const Patches&) { return GL_PATCHES; },
-                          },
-                          primitive);
+                              [](const Patches&) { return GL_PATCHES; }},
+            primitive);
     }
 
     constexpr GLenum TranslateCompareFunction(CompareFunction function)
@@ -184,7 +184,7 @@ namespace AT2::Mappings
 
     constexpr GLenum TranslateFaceCullMode(FaceCullMode mode)
     {
-        switch ((mode.CullFront << 1) | mode.CullBack)
+        switch ((mode.CullFront ? 0b10 : 0) | (mode.CullBack ? 0b01 : 0))
         {
         case 0b00: return 0;
         case 0b01: return GL_BACK;
