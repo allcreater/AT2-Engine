@@ -1,0 +1,45 @@
+version: 0.5.{build}
+image: Visual Studio 2019
+environment:
+  platform: x64
+  matrix:
+  - {}
+install:
+- cmd: >-
+    cd C:\tools\vcpkg
+
+    git pull
+
+    .\bootstrap-vcpkg.bat
+
+
+    if "%platform%"=="x64"   set VCPKG_ARCH=x64-windows
+
+    if "%platform%"=="Win32" set VCPKG_ARCH=x86-windows
+
+    echo %VCPKG_ARCH%
+
+    vcpkg remove --outdated --recurse
+
+    vcpkg install --recurse --triplet %VCPKG_ARCH% glfw3 glew glm devil assimp gtest
+
+    vcpkg integrate install
+
+
+    cd "%APPVEYOR_BUILD_FOLDER%"
+cache: C:\tools\vcpkg\installed
+build_script:
+- cmd: >-
+    mkdir out && cd out
+
+
+    if "%platform%"=="Win32" set CMAKE_GENERATOR=-G"Visual Studio 16 2019" -A Win32
+
+    if "%platform%"=="x64"   set CMAKE_GENERATOR=-G"Visual Studio 16 2019" -A x64
+
+
+    mkdir bin && cd bin
+
+    cmake %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_TOOLCHAIN_FILE="C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" ../..
+
+    cmake --build . --target ALL_BUILD --config %Configuration% -- /maxcpucount:4

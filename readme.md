@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/rqwp0pju7ho1stkn?svg=true)](https://ci.appveyor.com/project/allcreater/at2-engine)
+
 ### What is
 Simple graphics engine created for educational purpose.
 
