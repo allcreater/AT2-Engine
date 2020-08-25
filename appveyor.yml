@@ -1,45 +1,60 @@
 version: 0.5.{build}
-image: Visual Studio 2019
+image: 
+  - Visual Studio 2019
+  - Ubuntu2004
+
 environment:
   platform: x64
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+
+for:
+-
+  # Windows
   matrix:
-  - {}
-install:
-- cmd: >-
-    cd C:\tools\vcpkg
+    only:
+    - image: Visual Studio 2019
 
-    git pull
+  install:
+  - cd C:\tools\vcpkg
+  - git pull
+  - .\bootstrap-vcpkg.bat
 
-    .\bootstrap-vcpkg.bat
+  - if "%platform%"=="x64"   set VCPKG_ARCH=x64-windows
+  - if "%platform%"=="Win32" set VCPKG_ARCH=x86-windows
 
+  - vcpkg remove --outdated --recurse
+  - vcpkg install --recurse --triplet %VCPKG_ARCH% glfw3 glew glm devil assimp gtest
+  - vcpkg integrate install
 
-    if "%platform%"=="x64"   set VCPKG_ARCH=x64-windows
+  - cd "%APPVEYOR_BUILD_FOLDER%"
 
-    if "%platform%"=="Win32" set VCPKG_ARCH=x86-windows
+  cache: 
+  - C:\tools\vcpkg\installed
 
-    echo %VCPKG_ARCH%
+  build_script:
+  - mkdir out && cd out
 
-    vcpkg remove --outdated --recurse
+  - if "%platform%"=="Win32" set CMAKE_GENERATOR=-G"Visual Studio 16 2019" -A Win32
+  - if "%platform%"=="x64"   set CMAKE_GENERATOR=-G"Visual Studio 16 2019" -A x64
 
-    vcpkg install --recurse --triplet %VCPKG_ARCH% glfw3 glew glm devil assimp gtest
+  - cmake %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_TOOLCHAIN_FILE="C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+  - cmake --build . --target ALL_BUILD --config %Configuration% -- /maxcpucount:4
 
-    vcpkg integrate install
+-
+  # Ubuntu
+  matrix:
+    only:
+    - image: Ubuntu1804
 
+  install:
+  - sudo apt-get update -qq && sudo apt-get install -qq
+  - sudo apt-get -y install build-essential git cmake
+  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libassimp-dev libglm-dev
 
-    cd "%APPVEYOR_BUILD_FOLDER%"
-cache: C:\tools\vcpkg\installed
-build_script:
-- cmd: >-
-    mkdir out && cd out
+  cache: 
+  - '/usr/lib/x86_64-linux-gnu/'
 
-
-    if "%platform%"=="Win32" set CMAKE_GENERATOR=-G"Visual Studio 16 2019" -A Win32
-
-    if "%platform%"=="x64"   set CMAKE_GENERATOR=-G"Visual Studio 16 2019" -A x64
-
-
-    mkdir bin && cd bin
-
-    cmake %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%Configuration% -DCMAKE_TOOLCHAIN_FILE="C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" ../..
-
-    cmake --build . --target ALL_BUILD --config %Configuration% -- /maxcpucount:4
+  build_script:
+  - mkdir out && cd out
+  - cmake -DCMAKE_BUILD_TYPE=%Configuration% ..
+  - make
