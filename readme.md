@@ -16,4 +16,4 @@ Simple graphics engine created for educational purpose.
 
 ### Dependencies:
 could be obtained via *vcpkg*:
-```vcpkg install glfw3 gli glm devil assimp gtest```
+```vcpkg install glfw3 glew glm devil assimp gtest```
