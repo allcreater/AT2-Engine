@@ -1,4 +1,5 @@
 #include "GlUniformBuffer.h"
+#include "../BufferMapperGuard.h"
 
 #include <utility>
 
@@ -27,22 +28,20 @@ const GLvoid* value_ptr(const T& value)
 
 
 template <typename T>
-void SetUniformInternal(GLuint bufferId, const UniformBlockInfo& ubi, const str& name, const T& value)
+void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name, const T& value)
 {
     const auto* ui = Utils::find(ubi.Uniforms, name);
     if (!ui)
         return;
 
-    auto* const data = static_cast<std::byte*>(
-        glMapNamedBufferRangeEXT(bufferId, ui->Offset, sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
-    const void* ptr = value_ptr(value);
-    memcpy(data, ptr, sizeof(T));
-    glUnmapNamedBufferEXT(bufferId);
+    //Unfortunately high-level methods are slowly than direct API calls :( But it could be inlined or something like that if we need it.
+    BufferMapperGuard mapping {buffer, static_cast<size_t>(ui->Offset), sizeof(T), BufferUsage::Write};
+    mapping.Set(value);
 }
 
 
 template <typename T, length_t C, length_t R, qualifier Q>
-void SetUniformInternal(GLuint bufferId, const UniformBlockInfo& ubi, const str& name,
+void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name,
                         const glm::mat<C, R, T, Q>& value)
 {
     using MatT = mat<C, R, T, Q>;
@@ -51,13 +50,10 @@ void SetUniformInternal(GLuint bufferId, const UniformBlockInfo& ubi, const str&
     if (!ui)
         return;
 
-    auto* const data = static_cast<std::byte*>(
-        glMapNamedBufferRangeEXT(bufferId, ui->Offset, static_cast<GLsizeiptr>(C) * ui->MatrixStride,
-                                 GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT));
+    BufferMapperGuard mapping {buffer, static_cast<size_t>(ui->Offset), static_cast<size_t>(C) * ui->MatrixStride,
+                               BufferUsage::Write};
     for (decltype(C) i = 0; i < C; ++i)
-        memcpy(data + static_cast<size_t>(i) * ui->MatrixStride, value_ptr(value[i]), sizeof(typename MatT::col_type));
-
-    glUnmapNamedBufferEXT(bufferId);
+        mapping.Set(value[i], static_cast<size_t>(i) * ui->MatrixStride);
 }
 
 
@@ -65,7 +61,7 @@ void GlUniformBuffer::SetUniform(const str& name, const Uniform& value)
 {
     using namespace glm;
 
-    std::visit([&](const auto& x) { SetUniformInternal(m_id, *m_uniformBlockInfo, name, x); }, value);
+    std::visit([&](const auto& x) { SetUniformInternal(*this, *m_uniformBlockInfo, name, x); }, value);
 }
 
 void GlUniformBuffer::Bind(IStateManager& stateManager) const

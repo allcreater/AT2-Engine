@@ -9,9 +9,9 @@ project (AT2_Engine)
 
 find_package (glfw3 CONFIG REQUIRED)
 find_package (glm CONFIG REQUIRED)
-find_package (glew REQUIRED)
+find_package (GLEW REQUIRED)
 find_package (DevIL REQUIRED)
-find_package (assimp CONFIG REQUIRED)
+find_package (assimp REQUIRED)
 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES
 "*.cpp"
@@ -23,7 +23,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw assimp::assimp ${IL_LIBRARIES} ${ILU_LIBRARIES}
-                         PUBLIC GLEW::glew glm) 
+                         PUBLIC GLEW::GLEW glm) 
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
             CXX_STANDARD 17
