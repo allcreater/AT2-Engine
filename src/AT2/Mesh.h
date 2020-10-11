@@ -49,4 +49,7 @@ namespace AT2
         std::vector<SubMesh> SubMeshes; //TODO: move Mesh and Submesh from scene so that nodes could be builded by Mesh
     };
 
+    using MeshRef = std::shared_ptr<Mesh>;
+    using ConstMeshRef = std::shared_ptr<Mesh>;
+
 } // namespace AT2

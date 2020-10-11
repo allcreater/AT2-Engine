@@ -2,9 +2,12 @@
 
 #include <AT2/TextureLoader.h>
 
-#include <glm/gtx/vec_swizzle.hpp>
 #include <random>
 #include <utility>
+#include <glm/gtx/vec_swizzle.hpp>
+
+#include "../mesh_renderer.h"
+#include "../procedural_meshes.h"
 
 using namespace AT2;
 using namespace AT2::UI;
@@ -74,18 +77,15 @@ UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_p
     auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
         {R"(resources/shaders/background.vs.glsl)", R"(resources/shaders/background.fs.glsl)"});
 
-    const auto texture = AT2::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
-
-    m_quadDrawable = AT2::MeshDrawable::MakeFullscreenQuadDrawable(*renderer);
+    const auto texture = TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
+    m_quadDrawable = Utils::MakeFullscreenQuadDrawable(*renderer);
     m_quadDrawable->Shader = postprocessShader;
-    m_quadDrawable->Textures = {texture};
     {
-        auto uniformStorage = postprocessShader->CreateAssociatedUniformStorage();
+        auto& uniformStorage = m_quadDrawable->GetOrCreateDefaultMaterial();
         //uniformStorage->SetUniform("u_phase", Phase);
-        uniformStorage->SetUniform("u_BackgroundTexture", texture);
+        uniformStorage.SetUniform("u_BackgroundTexture", texture);
         //uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachment(0));
         //uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachment());
-        m_quadDrawable->UniformBuffer = std::move(uniformStorage);
     }
 }
 
@@ -94,8 +94,8 @@ void UiRenderer::Draw()
     if (auto renderer = m_renderer.lock())
     {
         renderer->SetViewport(AABB2d {{}, m_windowSize});
-        m_quadDrawable->UniformBuffer->SetUniform("u_Color", glm::vec4(1.0f));
-        m_quadDrawable->Draw(*renderer);
+        m_quadDrawable->GetOrCreateDefaultMaterial().SetUniform("u_Color", glm::vec4(1.0f));
+        Utils::MeshRenderer::DrawMesh(*renderer, *m_quadDrawable, m_quadDrawable->Shader);
 
         m_uiRoot->TraverseBreadthFirst([this](const std::shared_ptr<Node>& node) { RenderNode(*node); });
     }

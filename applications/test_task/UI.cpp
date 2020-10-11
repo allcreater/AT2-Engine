@@ -61,7 +61,8 @@ private:
         auto& rf = renderer.GetResourceFactory();
 
         m_VAO = rf.CreateVertexArray();
-        m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, 0, nullptr), AT2::BufferDataTypes::Float);
+        m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, 0, nullptr),
+                               AT2::BufferDataTypes::Float);
 
 
         m_uniforms = renderer.GetStateManager().GetActiveShader()->CreateAssociatedUniformStorage();
@@ -165,7 +166,7 @@ WindowRendererSharedInfo::WindowRendererSharedInfo(const IRenderer& renderer)
     auto& rf = renderer.GetResourceFactory();
 
     m_VAO = rf.CreateVertexArray();
-    m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(AT2vbt::ArrayBuffer, 4 * sizeof(glm::vec3), positions),
+    m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, 4 * sizeof(glm::vec3), positions),
                            AT2::BufferDataTypes::Vec3);
     m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(AT2::GlDrawPrimitiveType::TriangleFan, 0, 4);
 

@@ -5,6 +5,8 @@
 
 #include <list>
 
+#include "AT2/Mesh.h"
+
 //TODO: move into library
 namespace AT2::UI
 {
@@ -20,7 +22,7 @@ namespace AT2::UI
         glm::vec4 DebugColor(const Node& node);
 
     private:
-        std::shared_ptr<AT2::MeshDrawable> m_quadDrawable;
+        std::shared_ptr<AT2::Mesh> m_quadDrawable;
         std::weak_ptr<AT2::IRenderer> m_renderer;
         std::shared_ptr<AT2::UI::Node> m_uiRoot;
         glm::uvec2 m_windowSize;
