@@ -16,7 +16,7 @@ namespace AT2
 
     public:
         void Bind() override;
-        [[nodiscard]] unsigned int GetId() const override { return m_id; }
+        [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
 
         void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer, BufferDataType type) override;
         [[nodiscard]] std::shared_ptr<IVertexBuffer> GetIndexBuffer() const override { return m_indexBuffer.first; }

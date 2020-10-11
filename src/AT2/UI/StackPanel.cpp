@@ -15,7 +15,7 @@ void StackPanel::Measure(const glm::ivec2& position, const glm::uvec2& possibleS
     Func verticalFunc = [](const std::shared_ptr<Node>& nodePtr) { return nodePtr->GetMinimalSize().y == 0; };
     Func isAutoSizedFunc = (m_Orientation == Orientation::Horizontal) ? horizontalFunc : verticalFunc;
 
-    const unsigned int numberOfAutoSizedChildren = std::count_if(m_Children.begin(), m_Children.end(), isAutoSizedFunc);
+    const unsigned int numberOfAutoSizedChildren = static_cast<unsigned int>(std::count_if(m_Children.begin(), m_Children.end(), isAutoSizedFunc));
 
     //numberOfAutoSizedChildren == 0 is special case when elementCharacteristicalSize don't using at all, so it could be random, just not division by zero :)
     const auto elementCharacteristicalSize =

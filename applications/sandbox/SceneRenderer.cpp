@@ -266,7 +266,7 @@ namespace AT2
         cameraUniformBuffer->Bind(renderer->GetStateManager());
     }
 
-    void SceneRenderer::DrawSubmesh(const Mesh& mesh, const SubMesh& subMesh, int numInstances) const
+    void SceneRenderer::DrawSubmesh(const Mesh& mesh, const SubMesh& subMesh, size_t numInstances) const
     {
         auto& stateManager = renderer->GetStateManager();
 
@@ -274,7 +274,7 @@ namespace AT2
             mesh.Materials.at(subMesh.MaterialIndex)->Bind(stateManager);
 
         for (const auto& primitive : subMesh.Primitives)
-            renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, numInstances, primitive.BaseVertex);
+            renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, static_cast<int>(numInstances), primitive.BaseVertex);
     }
 
     void SceneRenderer::DrawMesh(const Mesh& mesh, const std::shared_ptr<IShaderProgram>& program)
@@ -335,7 +335,7 @@ namespace AT2
         mesh.VertexArray = vao;
 
         SubMesh subMesh;
-        subMesh.Primitives.emplace_back(Primitives::Patches {4}, 0u, texCoords.size());
+        subMesh.Primitives.push_back({Primitives::Patches {4}, 0u, static_cast<unsigned int>(texCoords.size())});
 
         mesh.SubMeshes.push_back(std::move(subMesh));
 
@@ -398,7 +398,7 @@ namespace AT2
 
         //don't know how to make it better
         SubMesh subMesh;
-        subMesh.Primitives.emplace_back(Primitives::Triangles {}, 0, indices.size());
+        subMesh.Primitives.push_back({Primitives::Triangles {}, 0, static_cast<unsigned int>(indices.size())});
         mesh->SubMeshes.push_back(std::move(subMesh));
 
         return mesh;
@@ -414,7 +414,7 @@ namespace AT2
 
 
         SubMesh subMesh;
-        subMesh.Primitives.emplace_back(Primitives::TriangleFan {}, 0, 4);
+        subMesh.Primitives.push_back({Primitives::TriangleFan {}, 0, 4});
 
         auto mesh = std::make_unique<Mesh>();
         mesh->VertexArray = vao;

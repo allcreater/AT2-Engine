@@ -30,7 +30,7 @@ namespace AT2
         std::shared_ptr<IVertexArray> VertexArray;
         std::shared_ptr<IUniformContainer> UniformBuffer;
         TextureSet Textures;
-        PrimitiveList Primitives;
+        std::vector<IDrawPrimitive*> Primitives;
 
 
     public:

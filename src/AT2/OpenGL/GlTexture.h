@@ -28,7 +28,7 @@ namespace AT2
 
         const Texture& GetType() const noexcept override { return m_flavor; }
         void SetWrapMode(TextureWrapMode wrapMode) override;
-        const TextureWrapMode& GetWrapMode() const override { return m_wrapMode; }
+        const TextureWrapMode& GetWrapMode() const noexcept override { return m_wrapMode; }
 
         void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
                         void* data) override;

@@ -83,7 +83,7 @@ namespace AT2
 
     private:
         void SetupCamera(const Camera& camera);
-        void DrawSubmesh(const Mesh&, const SubMesh&, int numInstances = 1) const;
+        void DrawSubmesh(const Mesh&, const SubMesh&, size_t numInstances = 1) const;
         void DrawMesh(const Mesh&, const std::shared_ptr<IShaderProgram>&);
         void DrawQuad(const std::shared_ptr<IShaderProgram>&, const IUniformContainer&) const noexcept;
 
