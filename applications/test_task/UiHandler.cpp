@@ -40,8 +40,10 @@ struct PlotCurveSwitchingAnimation : public IAnimation
 {
     PlotCurveSwitchingAnimation(float duration, std::weak_ptr<Plot> plotNode, std::string_view hidingCurveName,
                                 std::string_view appearingCurveName) :
+        m_plotNode(std::move(plotNode)),
         m_Duration(duration),
-        m_plotNode(std::move(plotNode)), m_hidingCurveName(hidingCurveName), m_appearingCurveName(appearingCurveName)
+        m_hidingCurveName(hidingCurveName),
+        m_appearingCurveName(appearingCurveName)
     {
     }
 

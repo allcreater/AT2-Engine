@@ -29,10 +29,12 @@ template <typename T, typename K = typename T::key_type, typename V = typename T
 const std::remove_pointer_t<V>* find(const T& map, const K& key)
 {
     if (const auto it = map.find(key); it != map.end())
+    {
         if constexpr (std::is_pointer_v<V>)
             return it->second;
         else
             return &it->second;
+    }
 
     return nullptr;
  }

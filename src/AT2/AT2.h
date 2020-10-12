@@ -340,13 +340,13 @@ namespace AT2
                                                                 std::pair<unsigned, const std::vector<Args>&>... args)
     {
         auto vertexArray = factory.CreateVertexArray();
-        std::initializer_list<int> {
+        static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetVertexBuffer(args.first,
                                           factory.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
                                                                      args.second.size() * sizeof(Args),
                                                                      args.second.data()),
                                           BufferDataTypes::BufferTypeOf<Args>),
-             0)...};
+             0)...});
 
         return vertexArray;
     }

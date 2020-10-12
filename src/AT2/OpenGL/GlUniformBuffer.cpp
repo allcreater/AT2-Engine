@@ -44,8 +44,6 @@ template <typename T, length_t C, length_t R, qualifier Q>
 void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name,
                         const glm::mat<C, R, T, Q>& value)
 {
-    using MatT = mat<C, R, T, Q>;
-    
     const auto* ui = Utils::find(ubi.Uniforms, name);
     if (!ui)
         return;
