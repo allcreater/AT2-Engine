@@ -48,7 +48,7 @@ for:
 
   install:
   - sudo apt-get update -qq && sudo apt-get install -qq
-  - sudo apt-get -y install build-essential git cmake
+  - sudo apt-get -y install build-essential git cmake gcc
   - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libassimp-dev libglm-dev
   - sudo ln -s /usr/include/ /usr/lib/include
   cache: 
