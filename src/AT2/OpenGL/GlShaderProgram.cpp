@@ -83,7 +83,7 @@ bool GlShaderProgram::TryCompile()
     {
         m_uniformsInfo.reset();
 
-        for (auto& [shaderType, shaderId] : m_shaderIds)
+        for (const auto& [shaderType, shaderId] : m_shaderIds)
         {
             GLint infoLogLength = 0;
             glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
@@ -148,7 +148,7 @@ std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStora
 
 void GlShaderProgram::CleanUp()
 {
-    for (const auto [type, shaderId] : m_shaderIds)
+    for (const auto& [type, shaderId] : m_shaderIds)
     {
         glDetachShader(m_programId, shaderId);
         glDeleteShader(shaderId);
@@ -166,7 +166,7 @@ void GlShaderProgram::Bind()
         glUseProgram(m_programId);
 }
 
-bool GlShaderProgram::IsActive() const
+bool GlShaderProgram::IsActive() const noexcept
 {
     GLint activeProgramId = 0;
     glGetIntegerv(GL_CURRENT_PROGRAM, &activeProgramId);

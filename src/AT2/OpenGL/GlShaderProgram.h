@@ -57,8 +57,8 @@ namespace AT2
 
     public:
         void Bind() override;
-        unsigned int GetId() const override { return m_programId; }
-        bool IsActive() const override;
+        unsigned int GetId() const noexcept override { return m_programId; }
+        bool IsActive() const noexcept override;
         std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName) override;
 
         void AttachShader(const str& data, ShaderType type) override;

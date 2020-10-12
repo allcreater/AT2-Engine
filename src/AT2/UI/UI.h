@@ -2,12 +2,8 @@
 #define UI_HEADER
 
 #include <map>
-#include <memory>
-#include <utility>
-#include <variant>
-#include "../Drawable.h"
 
-#include <glm/glm.hpp>
+#include "../AT2.h"
 
 //This is an attempt to implement simple tree-structured extensible UI with automatic layout
 //Unfortunately elements aligning is not fully supported, it will be fixed later
@@ -44,6 +40,14 @@ namespace AT2::UI
         Vertical
     };
 
+    class /*[[deprecated]]*/ IUiRenderer
+    {
+    public:
+        virtual void Draw(IRenderer& renderer) = 0;
+        virtual ~IUiRenderer() = default;
+    };
+
+
     class Node
     {
         friend class Group;
@@ -75,8 +79,8 @@ namespace AT2::UI
             return {m_CanvasData.Position, m_CanvasData.Position + glm::ivec2(m_CanvasData.MeasuredSize)};
         }
 
-        void SetNodeRenderer(std::shared_ptr<IDrawable> drawable) { m_Drawable = std::move(drawable); }
-        [[nodiscard]] std::weak_ptr<IDrawable> GetNodeRenderer() const { return m_Drawable; }
+        void SetNodeRenderer(std::shared_ptr<IUiRenderer> drawable) { m_Drawable = std::move(drawable); }
+        [[nodiscard]] std::weak_ptr<IUiRenderer> GetNodeRenderer() const { return m_Drawable; }
 
         //virtual void TraverseDepthFirst(std::function<void(Node&)> func) { func(*this); }
         //virtual void TraverseBreadthFirst(std::function<void(Node&)> func) { func(*this); }
@@ -95,7 +99,7 @@ namespace AT2::UI
 
         CanvasData m_CanvasData;
 
-        std::shared_ptr<IDrawable> m_Drawable;
+        std::shared_ptr<IUiRenderer> m_Drawable;
     };
 
     //The grouping control that supports manual elements placing, sometimes named as Canvas

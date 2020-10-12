@@ -1,4 +1,6 @@
 #include "SceneRenderer.h"
+#include "../procedural_meshes.h"
+#include "../mesh_renderer.h"
 
 #include <algorithm>
 #include <utility>
@@ -18,22 +20,26 @@ namespace AT2
 
         if (const auto* meshNode = dynamic_cast<MeshNode*>(&node))
         {
-            active_mesh = &meshNode->GetMesh(); //TODO: some kind of RenderContext?
+            //TODO: some kind of RenderContext?
+            active_mesh = meshNode->GetMesh();
 
-            stateManager.BindShader(active_mesh->Shader);
-            stateManager.BindVertexArray(active_mesh->VertexArray);
+            if (const auto mesh = active_mesh.lock())
+            {
+                stateManager.BindShader(mesh->Shader);
+                stateManager.BindVertexArray(mesh->VertexArray);
+            }
         }
         else if (const auto* subMeshNode = dynamic_cast<DrawableNode*>(&node))
         {
-            if (!active_mesh)
-                return true;
+            if (const auto mesh = active_mesh.lock())
+            {
+                stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
+                stateManager.GetActiveShader()->SetUniform(
+                    "u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
 
-            stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
-            stateManager.GetActiveShader()->SetUniform(
-                "u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
-
-            const auto& subMesh = active_mesh->SubMeshes[subMeshNode->SubmeshIndex];
-            scene_renderer.DrawSubmesh(*active_mesh, subMesh);
+                const auto& subMesh = mesh->SubMeshes[subMeshNode->SubmeshIndex];
+                Utils::MeshRenderer::DrawSubmesh(*scene_renderer.renderer, *mesh, subMesh);
+            }
         }
 
         return true;
@@ -103,7 +109,7 @@ namespace AT2
         stateManager.BindVertexArray(lightMesh->VertexArray);
         sphereLightsUniforms->Bind(stateManager);
 
-        DrawSubmesh(*lightMesh, lightMesh->SubMeshes.front(), lrv.collectedLights.size());
+        Utils::MeshRenderer::DrawSubmesh(*renderer, *lightMesh, lightMesh->SubMeshes.front(), lrv.collectedLights.size());
     }
 
     void SceneRenderer::DrawSkyLight(const LightRenderVisitor& lrv, const Camera& camera) const
@@ -141,8 +147,8 @@ namespace AT2
              "resources/shaders/skylight.fs.glsl"});
 
 
-        lightMesh = MakeSphere(*renderer, {32, 16});
-        quadMesh = MakeFullscreenQuadDrawable(*renderer);
+        lightMesh = Utils::MakeSphere(*renderer, {32, 16});
+        quadMesh = Utils::MakeFullscreenQuadMesh(*renderer);
 
         this->renderer = std::move(renderer);
     }
@@ -266,30 +272,6 @@ namespace AT2
         cameraUniformBuffer->Bind(renderer->GetStateManager());
     }
 
-    void SceneRenderer::DrawSubmesh(const Mesh& mesh, const SubMesh& subMesh, int numInstances) const
-    {
-        auto& stateManager = renderer->GetStateManager();
-
-        if (!mesh.Materials.empty())
-            mesh.Materials.at(subMesh.MaterialIndex)->Bind(stateManager);
-
-        for (const auto& primitive : subMesh.Primitives)
-            renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, numInstances, primitive.BaseVertex);
-    }
-
-    void SceneRenderer::DrawMesh(const Mesh& mesh, const std::shared_ptr<IShaderProgram>& program)
-    {
-        auto& stateManager = renderer->GetStateManager();
-
-        if (program)
-            stateManager.BindShader(program);
-
-        stateManager.BindVertexArray(mesh.VertexArray);
-
-        for (const auto& submesh : mesh.SubMeshes)
-            DrawSubmesh(mesh, submesh);
-    }
-
     void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program,
                                  const IUniformContainer& uniformBuffer) const noexcept
     {
@@ -301,126 +283,6 @@ namespace AT2
         stateManager.BindVertexArray(quadMesh->VertexArray);
         const auto primitive = quadMesh->SubMeshes.front().Primitives.front();
         renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, 1, primitive.BaseVertex);
-    }
-
-
-    std::shared_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches)
-    {
-        assert(numPatches.x < 1024 && numPatches.y < 1024);
-
-        std::vector<glm::vec2> texCoords(4 * numPatches.x * numPatches.y); //TODO! GlVertexBuffer - take iterators!
-
-        for (size_t j = 0; j < numPatches.y; ++j)
-            for (size_t i = 0; i < numPatches.x; ++i)
-            {
-                const auto num = (i + j * numPatches.x) * 4;
-                texCoords[num] = glm::vec2(float(i) / numPatches.x, float(j) / numPatches.y);
-                texCoords[num + 1] = glm::vec2(float(i + 1) / numPatches.x, float(j) / numPatches.y);
-                texCoords[num + 2] = glm::vec2(float(i + 1) / numPatches.x, float(j + 1) / numPatches.y);
-                texCoords[num + 3] = glm::vec2(float(i) / numPatches.x, float(j + 1) / numPatches.y);
-            }
-
-
-        auto& rf = renderer.GetResourceFactory();
-        auto vao = rf.CreateVertexArray();
-        vao->SetVertexBuffer(1,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, texCoords.size() * sizeof(glm::vec2),
-                                                   texCoords.data()),
-                             BufferDataTypes::Vec2);
-
-        auto rootNode = std::make_shared<MeshNode>();
-
-        Mesh& mesh = rootNode->GetMesh();
-        mesh.Name = "Terrain";
-        mesh.VertexArray = vao;
-
-        SubMesh subMesh;
-        subMesh.Primitives.emplace_back(Primitives::Patches {4}, 0u, texCoords.size());
-
-        mesh.SubMeshes.push_back(std::move(subMesh));
-
-
-        auto drawable = std::make_shared<DrawableNode>();
-        drawable->SetName("Terrain drawable");
-        drawable->SubmeshIndex = 0;
-
-        rootNode->AddChild(std::move(drawable));
-
-        return rootNode;
-    }
-
-    std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatches)
-    {
-        assert(numPatches.x <= 1024 && numPatches.y <= 512);
-
-        std::vector<glm::vec3> normals;
-        normals.reserve(static_cast<size_t>(numPatches.x) * numPatches.y);
-        std::vector<uint32_t> indices;
-        indices.reserve(static_cast<size_t>(numPatches.x) * numPatches.y * 6);
-
-        for (uint32_t j = 0; j < numPatches.y; ++j)
-        {
-            const double angV = j * pi / (numPatches.y - 1);
-            for (uint32_t i = 0; i < numPatches.x; ++i)
-            {
-                const double angH = i * pi * 2 / numPatches.x;
-
-                normals.emplace_back(sin(angV) * cos(angH), sin(angV) * sin(angH), cos(angV));
-            }
-        }
-
-        for (uint32_t j = 0; j < numPatches.y - 1; ++j)
-        {
-            const auto nj = j + 1;
-            for (uint32_t i = 0; i < numPatches.x; ++i)
-            {
-                const int ni = (i + 1) % numPatches.x;
-
-                indices.push_back(j * numPatches.x + i);
-                indices.push_back(j * numPatches.x + ni);
-                indices.push_back(nj * numPatches.x + ni);
-                indices.push_back(j * numPatches.x + i);
-                indices.push_back(nj * numPatches.x + ni);
-                indices.push_back(nj * numPatches.x + i);
-            }
-        }
-
-        auto& rf = renderer.GetResourceFactory();
-
-        auto mesh = std::make_unique<Mesh>();
-
-        mesh->VertexArray = MakeVertexArray(rf, std::make_pair(1u, std::cref(normals)));
-        mesh->VertexArray->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer,
-                                                                indices.size() * sizeof(glm::uint), indices.data()), BufferDataType::UInt);
-
-        
-
-
-        //don't know how to make it better
-        SubMesh subMesh;
-        subMesh.Primitives.emplace_back(Primitives::Triangles {}, 0, indices.size());
-        mesh->SubMeshes.push_back(std::move(subMesh));
-
-        return mesh;
-    }
-
-    std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer)
-    {
-        static std::vector positions = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0),
-                                        glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
-
-        auto& rf = renderer.GetResourceFactory();
-        auto vao = MakeVertexArray(rf, std::make_pair(1u, std::cref(positions)));
-
-
-        SubMesh subMesh;
-        subMesh.Primitives.emplace_back(Primitives::TriangleFan {}, 0, 4);
-
-        auto mesh = std::make_unique<Mesh>();
-        mesh->VertexArray = vao;
-        mesh->SubMeshes.push_back(std::move(subMesh));
-
-        return mesh;
     }
 
 } // namespace AT2

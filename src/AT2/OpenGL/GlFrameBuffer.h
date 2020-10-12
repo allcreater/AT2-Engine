@@ -18,7 +18,7 @@ namespace AT2
 
     public:
         void Bind() override;
-        [[nodiscard]] unsigned int GetId() const override { return m_id; }
+        [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
 
         void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) override;
         [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const override;
@@ -50,7 +50,7 @@ namespace AT2
 
         void Bind() override { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 
-        [[nodiscard]] unsigned int GetId() const override { return 0; }
+        [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 
         void SetColorAttachment(unsigned int attachementNumber, const std::shared_ptr<ITexture>& texture) override
         {

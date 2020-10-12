@@ -18,6 +18,7 @@
 #include <glm/gtc/random.hpp>
 
 #include "SceneRenderer.h"
+#include "../procedural_meshes.h"
 
 using namespace std::literals;
 
@@ -119,15 +120,15 @@ private:
 
         //Scene
         auto matBallNode = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
-        matBallNode->GetMesh().Shader = MeshShader;
+        matBallNode->GetMesh()->Shader = MeshShader;
         matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform(), {0, 0, 0}), {100, 100, 100}));
         Scene.GetRoot().AddChild(std::move(matBallNode));
 
-        auto terrainNode = MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
+        auto terrainNode = AT2::Utils::MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
         terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
-        terrainNode->GetMesh().Shader = TerrainShader;
+        terrainNode->GetMesh()->Shader = TerrainShader;
         {
-            auto& uniformStorage = terrainNode->GetMesh().GetOrCreateDefaultMaterial();
+            auto& uniformStorage = terrainNode->GetMesh()->GetOrCreateDefaultMaterial();
             uniformStorage.SetUniform("u_texNoise", Noise3Tex);
             uniformStorage.SetUniform("u_texHeight", HeightMapTex);
             uniformStorage.SetUniform("u_texNormalMap", NormalMapTex);

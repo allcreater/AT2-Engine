@@ -23,6 +23,7 @@ namespace AT2
         //textures
         void SetUniform(const str& name, const std::shared_ptr<ITexture>& value) override;
 
+        //TODO:  there should not be VertexBuffer::Bind(), it restricts Liskov's substitution principle =(
         void Bind(IStateManager& stateManager) const override;
         void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
 

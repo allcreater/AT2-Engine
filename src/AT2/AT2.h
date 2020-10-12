@@ -78,7 +78,7 @@ namespace AT2
         virtual ~IBuffer() = default;
 
     public:
-        [[nodiscard]] virtual size_t GetLength() const = 0;
+        [[nodiscard]] virtual size_t GetLength() const noexcept = 0;
         virtual void SetData(size_t length, const void* data) = 0;
 
         virtual std::byte* Map(BufferUsage usage) = 0;
@@ -96,7 +96,7 @@ namespace AT2
 
     public:
         virtual void Bind() = 0;
-        [[nodiscard]] virtual unsigned int GetId() const = 0;
+        [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
 
         virtual void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) = 0;
         [[nodiscard]] virtual std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const = 0;
@@ -117,8 +117,8 @@ namespace AT2
     public:
         virtual void Bind() = 0;
 
-        [[nodiscard]] virtual unsigned int GetId() const = 0;
-        [[nodiscard]] virtual VertexBufferType GetType() const = 0;
+        [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
+        [[nodiscard]] virtual VertexBufferType GetType() const noexcept = 0;
     };
 
     class IVertexArray
@@ -131,7 +131,7 @@ namespace AT2
 
     public:
         virtual void Bind() = 0;
-        [[nodiscard]] virtual unsigned int GetId() const = 0;
+        [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
 
         virtual void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer, BufferDataType type) = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
@@ -167,7 +167,7 @@ namespace AT2
 
         [[nodiscard]] virtual const Texture& GetType() const noexcept = 0;
         virtual void SetWrapMode(TextureWrapMode wrapMode) = 0;
-        [[nodiscard]] virtual const TextureWrapMode& GetWrapMode() const = 0;
+        [[nodiscard]] virtual const TextureWrapMode& GetWrapMode() const noexcept = 0;
 
         //TODO: think how to make better
         virtual void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
@@ -188,8 +188,8 @@ namespace AT2
 
     public:
         virtual void Bind() = 0;
-        [[nodiscard]] virtual unsigned int GetId() const = 0;
-        [[nodiscard]] virtual bool IsActive() const = 0;
+        [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
+        [[nodiscard]] virtual bool IsActive() const noexcept = 0;
 
         virtual std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName = "") = 0;
         virtual void AttachShader(const str& code, ShaderType type) = 0;
@@ -198,15 +198,6 @@ namespace AT2
         //TODO: make uniform buffers binding same as textures binding via StateManager
         virtual void SetUBO(const str& blockName, unsigned int index) = 0;
         virtual void SetUniform(const str& name, Uniform value) = 0;
-    };
-
-    class IDrawPrimitive
-    {
-    public:
-        virtual ~IDrawPrimitive() = default;
-
-    public:
-        virtual void Draw() const = 0;
     };
 
     class IUniformContainer
@@ -218,8 +209,6 @@ namespace AT2
         virtual ~IUniformContainer() = default;
 
         virtual void SetUniform(const str& name, const Uniform& value) = 0;
-
-        //texture
         virtual void SetUniform(const str& name, const std::shared_ptr<ITexture>& value) = 0;
 
         virtual void Bind(IStateManager& stateManager) const = 0;
@@ -261,7 +250,6 @@ namespace AT2
     };
 
     typedef std::set<std::shared_ptr<const ITexture>> TextureSet;
-    typedef std::vector<IDrawPrimitive*> PrimitiveList;
 
     class IStateManager
     {
@@ -352,13 +340,13 @@ namespace AT2
                                                                 std::pair<unsigned, const std::vector<Args>&>... args)
     {
         auto vertexArray = factory.CreateVertexArray();
-        std::initializer_list<int> {
+        static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetVertexBuffer(args.first,
                                           factory.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
                                                                      args.second.size() * sizeof(Args),
                                                                      args.second.data()),
                                           BufferDataTypes::BufferTypeOf<Args>),
-             0)...};
+             0)...});
 
         return vertexArray;
     }

@@ -8,8 +8,8 @@ namespace
                                             const std::array<GLenum, N>& request)
     {
         auto result = std::array<GLint, N> {};
-        glGetProgramResourceiv(program, interface, index, request.size(), request.data(), result.size(), nullptr,
-                               result.data());
+        glGetProgramResourceiv(program, interface, index, static_cast<GLsizei>(request.size()), request.data(),
+                               static_cast<GLsizei>(result.size()), nullptr, result.data());
 
         return result;
     }
@@ -34,8 +34,8 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
             getProgramResource(program, GL_UNIFORM, uniformIndex, uniformAttributes);
 
         //ask a uniform's name
-        std::string uniformName(nameLength-1, '\0');  //because nameLength includes \0
-        glGetProgramResourceName(program, GL_UNIFORM, uniformIndex, uniformName.size()+1, nullptr, uniformName.data());
+        std::string uniformName(static_cast<size_t>(nameLength)-1, '\0');  //because nameLength includes \0
+        glGetProgramResourceName(program, GL_UNIFORM, uniformIndex, nameLength, nullptr, uniformName.data());
 
         if (blockIndex == static_cast<GLint>(GL_INVALID_INDEX)) //it's free uniforms
         {
@@ -48,11 +48,11 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
 
             if (firstTime)
             {
-                const auto [nameLength, dataSize, binding] = getProgramResource(program, GL_UNIFORM_BLOCK, blockIndex,
+                const auto [nameLength, dataSize, binding] = getProgramResource(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex),
                                        std::array<GLenum, 3> {GL_NAME_LENGTH, GL_BUFFER_DATA_SIZE, GL_BUFFER_BINDING});
 
-                std::string blockName(nameLength-1, '\0'); //because nameLength includes \0
-                glGetProgramResourceName(program, GL_UNIFORM_BLOCK, blockIndex, blockName.size()+1, nullptr,
+                std::string blockName(static_cast<size_t>(nameLength)-1, '\0'); //because nameLength includes \0
+                glGetProgramResourceName(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex), nameLength, nullptr,
                                          blockName.data());
 
                 block.Name = std::move(blockName);

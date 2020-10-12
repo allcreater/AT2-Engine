@@ -31,9 +31,9 @@ public:
         assert(m_indicesVec.empty());
         BuildVAO();
 
-        m_buildingMesh.Materials.reserve(m_scene->mNumMaterials);
+        m_buildingMesh->Materials.reserve(m_scene->mNumMaterials);
         for (size_t i = 0; i < m_scene->mNumMaterials; ++i)
-            m_buildingMesh.Materials.push_back(TranslateMaterial(m_scene->mMaterials[i]));
+            m_buildingMesh->Materials.push_back(TranslateMaterial(m_scene->mMaterials[i]));
 
         auto meshNode = std::make_unique<MeshNode>();
         meshNode->SetName("Root");
@@ -45,7 +45,7 @@ public:
     }
 
 protected:
-    Mesh m_buildingMesh;
+    std::unique_ptr<Mesh> m_buildingMesh = std::make_unique<Mesh>();
     std::filesystem::path m_scenePath;
     Assimp::Importer m_importer;
     const aiScene* m_scene;
@@ -80,7 +80,7 @@ protected:
             m_indicesVec.push_back(face.mIndices[1] + vertexOffset);
         }
 
-        m_buildingMesh.SubMeshes.emplace_back(
+        m_buildingMesh->SubMeshes.emplace_back(
             std::vector<MeshChunk> {MeshChunk {Primitives::Triangles {}, previousIndexOffset, mesh->mNumFaces * 3}},
             mesh->mMaterialIndex, mesh->mName.C_Str());
     }
@@ -99,7 +99,7 @@ protected:
         vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, m_indicesVec.size() * sizeof(std::uint32_t),
                                                   m_indicesVec.data()), BufferDataType::UInt);
 
-        m_buildingMesh.VertexArray = vao;
+        m_buildingMesh->VertexArray = vao;
     }
 
     std::unique_ptr<IUniformContainer> TranslateMaterial(const aiMaterial* material)

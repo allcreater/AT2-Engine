@@ -114,12 +114,12 @@ namespace AT2
     class MeshNode : public Node
     {
     public:
-        void SetMesh(Mesh&& newMesh) { mesh = std::move(newMesh); }
-        [[nodiscard]] const Mesh& GetMesh() const noexcept { return mesh; }
-        Mesh& GetMesh() noexcept { return mesh; }
+        void SetMesh(MeshRef newMesh) { mesh = std::move(newMesh); }
+        [[nodiscard]] ConstMeshRef GetMesh() const noexcept { return mesh; }
+        MeshRef GetMesh() noexcept { return mesh; }
 
     private:
-        Mesh mesh;
+        MeshRef mesh;
     };
 
     class DrawableNode : public Node

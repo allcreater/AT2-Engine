@@ -15,10 +15,10 @@ namespace AT2
         ~GlVertexBuffer() override;
 
     public:
-        [[nodiscard]] unsigned int GetId() const override { return m_id; }
-        [[nodiscard]] VertexBufferType GetType() const override { return m_publicType; }
+        [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
+        [[nodiscard]] VertexBufferType GetType() const noexcept override { return m_publicType; }
 
-        [[nodiscard]] size_t GetLength() const override { return m_length; }
+        [[nodiscard]] size_t GetLength() const noexcept override { return m_length; }
 
         void Bind() override;
         void SetData(size_t length, const void* data) override;
