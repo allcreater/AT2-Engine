@@ -1,10 +1,9 @@
 #include "LinesHelper.h"
 
-#include <AT2/OpenGL/GlDrawPrimitive.h>
 
 using namespace AT2;
 
-void LinesHelper::Draw(const IRenderer& renderer)
+void LinesHelper::Draw(IRenderer& renderer)
 {
     if (m_vertexBufferNeedUpdate)
     {
@@ -14,7 +13,8 @@ void LinesHelper::Draw(const IRenderer& renderer)
 
     auto& stateManager = renderer.GetStateManager();
     stateManager.BindVertexArray(m_VAO);
-    m_DrawPrimitive->Draw();
+
+    renderer.Draw(Primitives::Lines{}, 0, static_cast<long>(m_vertices.size()));
 }
 
 void LinesHelper::AddLine(const glm::vec2& begin, const glm::vec2& end, const glm::vec4& color)
@@ -53,6 +53,4 @@ void LinesHelper::UpdateVAO(const IRenderer& renderer)
 
     m_VAO->GetVertexBuffer(0)->SetData(m_vertices.size() * sizeof(glm::vec2), m_vertices.data());
     m_VAO->GetVertexBuffer(1)->SetData(m_colors.size() * sizeof(glm::vec4), m_colors.data());
-
-    m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(GlDrawPrimitiveType::Lines, 0, m_vertices.size());
 }

@@ -8,8 +8,8 @@ namespace
                                             const std::array<GLenum, N>& request)
     {
         auto result = std::array<GLint, N> {};
-        glGetProgramResourceiv(program, interface, index, static_cast<GLsizei>(request.size()), request.data(), result.size(), nullptr,
-                               result.data());
+        glGetProgramResourceiv(program, interface, index, static_cast<GLsizei>(request.size()), request.data(),
+                               static_cast<GLsizei>(result.size()), nullptr, result.data());
 
         return result;
     }

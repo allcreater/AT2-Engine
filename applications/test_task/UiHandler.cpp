@@ -78,14 +78,11 @@ UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_p
         {R"(resources/shaders/background.vs.glsl)", R"(resources/shaders/background.fs.glsl)"});
 
     const auto texture = TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
-    m_quadDrawable = Utils::MakeFullscreenQuadDrawable(*renderer);
+    m_quadDrawable = Utils::MakeFullscreenQuadMesh(*renderer);
     m_quadDrawable->Shader = postprocessShader;
     {
         auto& uniformStorage = m_quadDrawable->GetOrCreateDefaultMaterial();
-        //uniformStorage->SetUniform("u_phase", Phase);
         uniformStorage.SetUniform("u_BackgroundTexture", texture);
-        //uniformStorage->SetUniform("u_colorMap", Stage2FBO->GetColorAttachment(0));
-        //uniformStorage->SetUniform("u_depthMap", Stage2FBO->GetDepthAttachment());
     }
 }
 
@@ -146,15 +143,16 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
         curve.SetData(GenerateCurve(20000, 3.0, 40));
         curve.SetColor(glm::vec4(0.0, 0.0, 1.0, 1.0));
     }
+    auto mesh = MeshRef {Utils::MakeFullscreenQuadMesh(*renderer)};
+    mesh->Shader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        {R"(resources/shaders/window.vs.glsl)", R"(resources/shaders/window.fs.glsl)"});
 
-
-    auto windowRendererSharedData = std::make_shared<WindowRendererSharedInfo>(*renderer);
     m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
-    panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, windowRendererSharedData, glm::vec2(0, 0),
+    panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, mesh, glm::vec2(0, 0),
                                                             glm::vec4(0.5, 0.5, 0.5, 0.5)));
-    button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, windowRendererSharedData, glm::vec2(4, 4),
+    button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, mesh, glm::vec2(4, 4),
                                                               glm::vec4(2.0, 0.5, 0.5, 0.6)));
-    button2->SetNodeRenderer(std::make_shared<WindowRenderer>(button2, windowRendererSharedData, glm::vec2(4, 4),
+    button2->SetNodeRenderer(std::make_shared<WindowRenderer>(button2, mesh, glm::vec2(4, 4),
                                                               glm::vec4(0.5, 0.5, 2.0, 0.6)));
 
     const auto bounds = m_plotNode->GetAABB();

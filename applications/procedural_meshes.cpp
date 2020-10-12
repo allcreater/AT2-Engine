@@ -103,7 +103,7 @@ namespace AT2::Utils
         return mesh;
     }
 
-    std::unique_ptr<Mesh> MakeFullscreenQuadDrawable(const IRenderer& renderer)
+    std::unique_ptr<Mesh> MakeFullscreenQuadMesh(const IRenderer& renderer)
     {
         static std::vector positions = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0),
                                         glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};

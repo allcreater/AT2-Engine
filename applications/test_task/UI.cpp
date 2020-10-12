@@ -1,30 +1,33 @@
 #include "UI.h"
 
+#include "../mesh_renderer.h"
+
 using namespace AT2;
 using namespace AT2::UI;
 
 #include <algorithm>
 
 //TODO: hide from the interface!
-#include <AT2/OpenGL/GlDrawPrimitive.h>
+#include <AT2/OpenGL/GlRenderer.h>
 
 
 //it is possible to contain all data in one vertex buffer array and one vertex buffer, but it's more complex task and much unclear code, so let's just draw it separately
-class AT2::UI::CurveDrawable : public IDrawable
+class AT2::UI::CurveDrawable : public IUiRenderer
 {
 public:
-    void Draw(const IRenderer& renderer) override
+    void Draw(IRenderer& renderer) override
     {
         if (m_VAO == nullptr)
             Init(renderer);
 
         auto& stateManager = renderer.GetStateManager();
         stateManager.BindVertexArray(m_VAO);
+        glEnable(GL_LINE_SMOOTH);
         glLineWidth(1.5);
         m_uniforms->SetUniform("u_matProjection", m_projectionMatrix);
 
         m_uniforms->Bind(stateManager);
-        m_DrawPrimitive->Draw();
+        renderer.Draw(Primitives::LineStrip {}, 0, static_cast<long>(m_VAO->GetVertexBuffer(0)->GetLength()));
     }
 
     void RebuildFromData(const IRenderer& renderer, const Plot::CurveData& data)
@@ -34,8 +37,6 @@ public:
 
         const auto& vector = data.GetData();
         m_VAO->GetVertexBuffer(0)->SetData(vector.size() * sizeof(float), vector.data());
-
-        m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(GlDrawPrimitiveType::LineStrip, 0, vector.size());
 
         m_uniforms->SetUniform("u_BoundsX",
                                glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
@@ -70,13 +71,12 @@ private:
 
 private:
     std::shared_ptr<IVertexArray> m_VAO;
-    std::unique_ptr<IDrawPrimitive> m_DrawPrimitive;
     std::shared_ptr<IUniformContainer> m_uniforms;
     glm::mat4 m_projectionMatrix {1.0};
 };
 
 
-void PlotRenderer::Draw(const IRenderer& renderer)
+void PlotRenderer::Draw(IRenderer& renderer)
 {
     if (m_uiShader == nullptr)
         Init(renderer);
@@ -158,50 +158,24 @@ void PlotRenderer::Init(const IRenderer& renderer)
     m_uniformBuffer = m_uiShader->CreateAssociatedUniformStorage();
 }
 
-
-WindowRendererSharedInfo::WindowRendererSharedInfo(const IRenderer& renderer)
+void WindowRenderer::Draw(IRenderer& renderer)
 {
-    static glm::vec3 positions[] = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0), glm::vec3(1.0, 1.0, -1.0),
-                                    glm::vec3(-1.0, 1.0, -1.0)};
-    auto& rf = renderer.GetResourceFactory();
-
-    m_VAO = rf.CreateVertexArray();
-    m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, 4 * sizeof(glm::vec3), positions),
-                           AT2::BufferDataTypes::Vec3);
-    m_DrawPrimitive = std::make_unique<GlDrawArraysPrimitive>(AT2::GlDrawPrimitiveType::TriangleFan, 0, 4);
-
-    m_Shader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
-        {R"(resources/shaders/window.vs.glsl)", R"(resources/shaders/window.fs.glsl)"});
-}
-
-void WindowRenderer::Draw(const IRenderer& renderer)
-{
-    if (m_uniforms == nullptr)
-        m_uniforms = m_SharedInfo->m_Shader->CreateAssociatedUniformStorage();
-
-
     if (const auto control = m_Control.lock())
     {
         const auto screenAABB = control->GetScreenPosition();
 
-        //it's preety costly and not so important, but looks nice. Until it's not bottleneck, let's continue
+        //it's pretty costly and not so important, but looks nice. Until it's not bottleneck, let's continue
         const auto texture =
             renderer.GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
 
-        auto& stateManager = renderer.GetStateManager();
-        //stateManager.BindTextures({ texture });
-        stateManager.BindShader(m_SharedInfo->m_Shader);
-        stateManager.BindVertexArray(m_SharedInfo->m_VAO);
+        auto& material = m_Mesh->GetOrCreateDefaultMaterial();
+        material.SetUniform("u_BackgroundTexture", texture);
+        material.SetUniform("u_ScreenAABB", glm::vec4(screenAABB.MinBound, screenAABB.MaxBound));
 
-        m_uniforms->SetUniform("u_BackgroundTexture", texture);
-        m_uniforms->SetUniform("u_ScreenAABB", glm::vec4(screenAABB.MinBound, screenAABB.MaxBound));
+        material.SetUniform("u_Color", m_Color);
+        material.SetUniform("u_BorderThickness", m_borderThickness);
+        material.SetUniform("u_BlurDirection", m_blurDirection);
 
-        m_uniforms->SetUniform("u_Color", m_Color);
-        m_uniforms->SetUniform("u_BorderThickness", m_borderThickness);
-        m_uniforms->SetUniform("u_BlurDirection", m_blurDirection);
-
-        m_uniforms->Bind(stateManager);
-
-        m_SharedInfo->m_DrawPrimitive->Draw();
+        Utils::MeshRenderer::DrawMesh(renderer, *m_Mesh, m_Mesh->Shader);
     }
 }

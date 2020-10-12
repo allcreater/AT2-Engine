@@ -200,15 +200,6 @@ namespace AT2
         virtual void SetUniform(const str& name, Uniform value) = 0;
     };
 
-    class IDrawPrimitive
-    {
-    public:
-        virtual ~IDrawPrimitive() = default;
-
-    public:
-        virtual void Draw() const = 0;
-    };
-
     class IUniformContainer
     {
     public:

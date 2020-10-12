@@ -148,7 +148,7 @@ namespace AT2
 
 
         lightMesh = Utils::MakeSphere(*renderer, {32, 16});
-        quadMesh = Utils::MakeFullscreenQuadDrawable(*renderer);
+        quadMesh = Utils::MakeFullscreenQuadMesh(*renderer);
 
         this->renderer = std::move(renderer);
     }
