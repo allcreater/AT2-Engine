@@ -1,7 +1,7 @@
 version: 0.5.{build}
 image: 
-  - Visual Studio 2019
   - Ubuntu2004
+  - Visual Studio 2019
 
 environment:
   platform: x64
@@ -46,15 +46,27 @@ for:
     only:
     - image: Ubuntu2004
 
+  init:
+  - gcc -v
+  - clang++ -v
   install:
-  - sudo apt-get update -qq && sudo apt-get install -qq
-  - sudo apt-get -y install build-essential git cmake gcc
-  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libassimp-dev libglm-dev
-  - sudo ln -s /usr/include/ /usr/lib/include
+  - sudo apt-get -y update -qq && sudo apt-get -y install -qq
+  - sudo apt-get -y install build-essential git cmake make
+  - sudo apt-get -y install libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxrandr-dev libxxf86vm-dev
+  - sudo apt-get -y install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev
+  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libglm-dev #libassimp-dev 
+  
+  - cd ~/vcpkg
+  - git pull
+  - ./bootstrap-vcpkg.sh
+  - ./vcpkg install glfw3 gli glm devil assimp gtest --triplet x64-linux
+  - cd "$APPVEYOR_BUILD_FOLDER"
+
   cache: 
   - '/usr/lib/x86_64-linux-gnu/'
+  - '~/vcpkg/installed/'
 
   build_script:
   - mkdir out && cd out
-  - cmake -DCMAKE_BUILD_TYPE=%Configuration% ..
+  - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=$Configuration .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
   - make
