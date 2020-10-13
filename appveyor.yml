@@ -46,20 +46,20 @@ for:
     only:
     - image: Ubuntu2004
 
-  init:
-  - gcc -v
-  - clang++ -v
+#  init:
+#  - gcc -v
+#  - clang++ -v
   install:
   - sudo apt-get -y update -qq && sudo apt-get -y install -qq
-  - sudo apt-get -y install build-essential git cmake make
+  - sudo apt-get -y install build-essential git cmake libtbb-dev
   - sudo apt-get -y install libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxrandr-dev libxxf86vm-dev
   - sudo apt-get -y install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev
-  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libglm-dev #libassimp-dev 
+  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev #libglm-dev libassimp-dev 
   
   - cd ~/vcpkg
   - git pull
   - ./bootstrap-vcpkg.sh
-  - ./vcpkg install glfw3 gli glm devil assimp gtest --triplet x64-linux
+  - ./vcpkg install --triplet x64-linux assimp glm #gli devil gtest glfw3
   - cd "$APPVEYOR_BUILD_FOLDER"
 
   cache: 
@@ -68,5 +68,5 @@ for:
 
   build_script:
   - mkdir out && cd out
-  - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=$Configuration .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+  - cmake -E env CXXFLAGS="-stdlib=libc++" cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=$Configuration .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
   - make
