@@ -54,7 +54,7 @@ for:
   - sudo apt-get -y install build-essential git cmake libtbb-dev
   - sudo apt-get -y install libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxrandr-dev libxxf86vm-dev
   - sudo apt-get -y install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev
-  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev #libglm-dev libassimp-dev 
+  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libutfcpp-dev #libglm-dev libassimp-dev 
   
   - cd ~/vcpkg
   - git pull
@@ -64,9 +64,9 @@ for:
 
   cache: 
   - '/usr/lib/x86_64-linux-gnu/'
-  - '~/vcpkg/installed/'
+  - '~/vcpkg/'
 
   build_script:
   - mkdir out && cd out
-  - cmake -E env LDFLAGS="-ltbb" cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=$Configuration .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+  - cmake -E env LDFLAGS="-ltbb --verbose" cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=$Configuration .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
   - make
