@@ -19,7 +19,7 @@ namespace AT2
 
     struct DepthState
     {
-        CompareFunction CompareFunction {CompareFunction::Less};
+        CompareFunction CompareFunc {CompareFunction::Less};
         bool TestEnabled {false};
         bool WriteEnabled {true};
     };

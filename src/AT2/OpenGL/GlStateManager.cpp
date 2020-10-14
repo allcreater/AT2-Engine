@@ -12,7 +12,7 @@ void AT2::GlStateManager::ApplyState(RenderState state)
         {
             SetGlState(GL_DEPTH_TEST, state.TestEnabled);
             glDepthMask(state.WriteEnabled);
-            glDepthFunc(AT2::Mappings::TranslateCompareFunction(state.CompareFunction));
+            glDepthFunc(AT2::Mappings::TranslateCompareFunction(state.CompareFunc));
         },
         [](const BlendMode& state)
         {
