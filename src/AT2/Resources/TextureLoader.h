@@ -1,11 +1,9 @@
 #pragma once
 
-#include "AT2.h"
+#include "../AT2.h"
 
-namespace AT2
+namespace AT2::Resources
 {
-
-
     class TextureLoader
     {
     public:

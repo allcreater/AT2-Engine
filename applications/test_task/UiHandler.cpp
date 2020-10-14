@@ -1,6 +1,6 @@
 #include "UIHandler.h"
 
-#include <AT2/TextureLoader.h>
+#include <AT2/Resources/TextureLoader.h>
 
 #include <random>
 #include <utility>
@@ -79,7 +79,7 @@ UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_p
     auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
         {R"(resources/shaders/background.vs.glsl)", R"(resources/shaders/background.fs.glsl)"});
 
-    const auto texture = TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
+    const auto texture = Resources::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
     m_quadDrawable = Utils::MakeFullscreenQuadMesh(*renderer);
     m_quadDrawable->Shader = postprocessShader;
     {

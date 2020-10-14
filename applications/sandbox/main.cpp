@@ -1,19 +1,19 @@
 //This file is something like sandbox. It is just functionality test, not example.
 
-#include <AT2/MeshLoader.h>
+#include <AT2/camera.h>
+#include <AT2/Scene.h>
 #include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_application.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
-#include <AT2/Scene.h>
-#include <AT2/TextureLoader.h>
-#include <AT2/camera.h>
+#include <AT2/Resources/MeshLoader.h>
+#include <AT2/Resources/TextureLoader.h>
 
+#include <execution>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <random>
-#include <execution>
 
 #include <glm/gtc/random.hpp>
 
@@ -21,6 +21,9 @@
 #include "../procedural_meshes.h"
 
 using namespace std::literals;
+
+using TextureLoader = AT2::Resources::TextureLoader;
+using MeshLoader = AT2::Resources::MeshLoader;
 
 constexpr size_t NumActiveLights = 50;
 
@@ -93,13 +96,13 @@ private:
             Noise3Tex->SubImage3D({}, Noise3Tex->GetSize(), 0, AT2::TextureFormats::RGBA8, arr.get());
         }
 
-        GrassTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
+        GrassTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
         NormalMapTex =
-            AT2::TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        RockTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
+            TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
+        RockTex =TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
 
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
-        EnvironmentMapTex = AT2::TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
+        EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
         auto lightsRoot = std::make_shared<AT2::Node>("lights"s);
         Scene.GetRoot().AddChild(lightsRoot);
@@ -119,7 +122,7 @@ private:
                                                               glm::vec3(500.0f), "SkyLight"));
 
         //Scene
-        auto matBallNode = AT2::MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
+        auto matBallNode = MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
         matBallNode->GetMesh()->Shader = MeshShader;
         matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform(), {0, 0, 0}), {100, 100, 100}));
         Scene.GetRoot().AddChild(std::move(matBallNode));

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Scene.h"
+#include "../Scene.h"
 
-namespace AT2
+namespace AT2::Resources
 {
     class MeshLoader
     {
