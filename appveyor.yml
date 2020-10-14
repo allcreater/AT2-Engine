@@ -16,15 +16,15 @@ for:
 
   install:
   - cd C:\tools\vcpkg
-  - git pull
-  - .\bootstrap-vcpkg.bat
+#  - git pull
+#  - .\bootstrap-vcpkg.bat
 
   - if "%platform%"=="x64"   set VCPKG_ARCH=x64-windows
   - if "%platform%"=="Win32" set VCPKG_ARCH=x86-windows
 
-  - vcpkg remove --outdated --recurse
+#  - vcpkg remove --outdated --recurse
   - vcpkg install --recurse --triplet %VCPKG_ARCH% glfw3 glew glm devil assimp gtest
-  - vcpkg integrate install
+#  - vcpkg integrate install
 
   - cd "%APPVEYOR_BUILD_FOLDER%"
 
@@ -57,8 +57,8 @@ for:
   - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libutfcpp-dev #libglm-dev libassimp-dev 
   
   - cd ~/vcpkg
-  - git pull
-  - ./bootstrap-vcpkg.sh
+#  - git pull
+#  - ./bootstrap-vcpkg.sh
   - ./vcpkg install --triplet x64-linux assimp glm #gli devil gtest glfw3
   - cd "$APPVEYOR_BUILD_FOLDER"
 
