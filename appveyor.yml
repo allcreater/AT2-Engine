@@ -63,10 +63,10 @@ for:
   - cd "$APPVEYOR_BUILD_FOLDER"
 
   cache: 
-  - '/usr/lib/x86_64-linux-gnu/'
-  - '~/vcpkg/'
+  - /usr/lib/x86_64-linux-gnu/
+  - /home/appveyor/vcpkg/installed/
 
   build_script:
   - mkdir out && cd out
-  - cmake -E env LDFLAGS="-ltbb --verbose" cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=$Configuration .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
-  - make
+  - cmake -E env LDFLAGS="-ltbb --verbose" cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -G "Ninja" -DCMAKE_BUILD_TYPE=$Configuration .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+  - cmake --build .

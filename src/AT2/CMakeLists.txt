@@ -12,7 +12,7 @@ find_package (glfw3 CONFIG REQUIRED)
 find_package (glm CONFIG REQUIRED)
 find_package (GLEW REQUIRED)
 find_package (DevIL REQUIRED)
-find_package (Assimp REQUIRED)
+find_package (assimp REQUIRED)
 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES
 "*.cpp"
