@@ -1,7 +1,7 @@
 version: 0.5.{build}
 image: 
-  - Visual Studio 2019
   - Ubuntu2004
+  - Visual Studio 2019
 
 environment:
   platform: x64
@@ -16,15 +16,15 @@ for:
 
   install:
   - cd C:\tools\vcpkg
-  - git pull
-  - .\bootstrap-vcpkg.bat
+#  - git pull
+#  - .\bootstrap-vcpkg.bat
 
   - if "%platform%"=="x64"   set VCPKG_ARCH=x64-windows
   - if "%platform%"=="Win32" set VCPKG_ARCH=x86-windows
 
-  - vcpkg remove --outdated --recurse
+#  - vcpkg remove --outdated --recurse
   - vcpkg install --recurse --triplet %VCPKG_ARCH% glfw3 glew glm devil assimp gtest
-  - vcpkg integrate install
+#  - vcpkg integrate install
 
   - cd "%APPVEYOR_BUILD_FOLDER%"
 
@@ -44,17 +44,29 @@ for:
   # Ubuntu
   matrix:
     only:
-    - image: Ubuntu1804
+    - image: Ubuntu2004
 
+#  init:
+#  - gcc -v
+#  - clang++ -v
   install:
-  - sudo apt-get update -qq && sudo apt-get install -qq
-  - sudo apt-get -y install build-essential git cmake
-  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libassimp-dev libglm-dev
+  - sudo apt-get -y update -qq && sudo apt-get -y install -qq
+  - sudo apt-get -y install build-essential git cmake libtbb-dev
+  - sudo apt-get -y install libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev libxrandr-dev libxxf86vm-dev
+  - sudo apt-get -y install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev
+  - sudo apt-get -y install freeglut3-dev libglew-dev libglfw3-dev libdevil-dev libutfcpp-dev #libglm-dev libassimp-dev 
+  
+  - cd ~/vcpkg
+#  - git pull
+#  - ./bootstrap-vcpkg.sh
+  - ./vcpkg install --triplet x64-linux assimp glm #gli devil gtest glfw3
+  - cd "$APPVEYOR_BUILD_FOLDER"
 
   cache: 
-  - '/usr/lib/x86_64-linux-gnu/'
+  - /usr/lib/x86_64-linux-gnu/
+  - /home/appveyor/vcpkg/installed/
 
   build_script:
   - mkdir out && cd out
-  - cmake -DCMAKE_BUILD_TYPE=%Configuration% ..
-  - make
+  - cmake -E env LDFLAGS="-ltbb --verbose" cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -G "Ninja" -DCMAKE_BUILD_TYPE=$Configuration .. -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+  - cmake --build .
