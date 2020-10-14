@@ -1,5 +1,6 @@
 #include "MeshLoader.h"
 
+#if defined(USE_ASSIMP)
 
 #include <assimp/Importer.hpp>
 #include <assimp/pbrmaterial.h>
@@ -193,3 +194,9 @@ std::unique_ptr<MeshNode> MeshLoader::LoadNode(std::shared_ptr<IRenderer> render
     MeshBuilder builder {std::move(renderer), scene};
     return builder.Build();
 }
+#else
+std::unique_ptr<AT2::MeshNode> AT2::MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename)
+{
+    return nullptr;
+}
+#endif

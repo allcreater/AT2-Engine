@@ -15,9 +15,9 @@ using namespace AT2::UI;
 static std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_t numHarmonics = 10)
 {
     static std::mt19937 randGenerator;
-    const std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.3f);
-    const std::uniform_real_distribution<float> phaseDistribution(0.0f, float(pi * 2));
-    const std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
+    std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.3f);
+    std::uniform_real_distribution<float> phaseDistribution(0.0f, float(pi * 2));
+    std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
 
     std::vector<std::tuple<float, float, float>> harmonics(numHarmonics);
     for (auto& harmonic : harmonics)
