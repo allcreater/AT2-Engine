@@ -25,10 +25,12 @@ namespace AT2
     public:
         NON_COPYABLE_OR_MOVABLE(GlResourceFactory)
 
-        GlResourceFactory(GlRenderer* renderer);
-        ~GlResourceFactory() = default;
+        GlResourceFactory(GlRenderer& renderer);
+        ~GlResourceFactory() override = default;
 
     public:
+        [[nodiscard]] IRenderer& GetRenderer() noexcept override;
+
         std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                const glm::uvec2& size) const override;
         std::shared_ptr<ITexture> CreateTexture(const Texture& declaration,
@@ -37,12 +39,10 @@ namespace AT2
         std::shared_ptr<IVertexArray> CreateVertexArray() const override;
         std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const override;
         std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, size_t dataLength, const void* data) const override;
-        std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const override;
-        void ReloadResources(ReloadableGroup group) override;
+        std::shared_ptr<IShaderProgram> CreateShaderProgram() const override;
 
     private:
-        GlRenderer* m_renderer;
-        mutable std::vector<std::weak_ptr<IReloadable>> m_reloadableResourcesList;
+        GlRenderer& m_renderer;
     };
 
     class GlRenderer : public IRenderer
@@ -51,7 +51,7 @@ namespace AT2
         NON_COPYABLE_OR_MOVABLE(GlRenderer)
 
         GlRenderer();
-        ~GlRenderer() = default;
+        ~GlRenderer() override = default;
 
     public:
         [[nodiscard]] IResourceFactory& GetResourceFactory() const override { return *m_resourceFactory; }

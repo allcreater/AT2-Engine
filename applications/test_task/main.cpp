@@ -3,6 +3,9 @@
 
 #include "UIHandler.h"
 
+using namespace AT2::Resources::Literals;
+using namespace std::literals;
+
 class App
 {
 public:
@@ -31,10 +34,14 @@ private:
             throw GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
 
         m_renderer = std::make_unique<AT2::GlRenderer>();
+        m_resourceManager = std::make_unique<AT2::Resources::ResourceManager>(m_renderer);
+
+        LoadResources();
 
         m_uiHub = std::make_unique<UiHub>();
-        m_uiHub->Init(m_renderer);
+        m_uiHub->Init(m_resourceManager);
         m_uiHub->Resize(m_window->getSize());
+
 
         //Init
         glEnable(GL_BLEND);
@@ -42,6 +49,30 @@ private:
 
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
+    }
+
+    void LoadResources()
+    {
+        m_resourceManager->AddResource(
+            AT2::Resources::ShaderResourceBuilder {"shaders/background"s}
+            .addSource("resources/shaders/background.vs.glsl"_FDS)
+            .addSource("resources/shaders/background.fs.glsl"_FDS)
+            .build());
+
+        m_resourceManager->AddResource(AT2::Resources::ShaderResourceBuilder {"shaders/window"s}
+            .addSource("resources/shaders/window.vs.glsl"_FDS)
+            .addSource("resources/shaders/window.fs.glsl"_FDS)
+            .build());
+
+        m_resourceManager->AddResource(AT2::Resources::ShaderResourceBuilder {"shaders/curve"s}
+            .addSource("resources//shaders//curve.vs.glsl"_FDS)
+            .addSource("resources//shaders//curve.fs.glsl"_FDS)
+            .build());
+
+        m_resourceManager->AddResource(AT2::Resources::ShaderResourceBuilder {"shaders/simple"s}
+            .addSource("resources//shaders//simple.vs.glsl"_FDS)
+            .addSource("resources//shaders//simple.fs.glsl"_FDS)
+            .build());
     }
 
     void OnRender(double dt)
@@ -59,8 +90,6 @@ private:
 
     void SetupWindowCallbacks()
     {
-
-
         m_window->KeyDownCallback = [&](int key) {
             std::cout << "Key " << key << " down" << std::endl;
 
@@ -68,7 +97,7 @@ private:
             {
             case GLFW_KEY_R:
             {
-                m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
+                m_resourceManager->ReloadResources();
             }
             break;
 
@@ -116,6 +145,7 @@ private:
 private:
     std::shared_ptr<GlfwWindow> m_window;
     std::shared_ptr<AT2::IRenderer> m_renderer;
+    std::shared_ptr<AT2::Resources::ResourceManager> m_resourceManager;
 
     std::unique_ptr<UiHub> m_uiHub;
 };

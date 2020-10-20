@@ -91,7 +91,12 @@ constexpr std::optional<GLint> DetermineInternalFormat(ExternalTextureFormat for
 }
 
 
-GlResourceFactory::GlResourceFactory(GlRenderer* renderer) : m_renderer(renderer) {}
+GlResourceFactory::GlResourceFactory(GlRenderer& renderer) : m_renderer(renderer) {}
+
+IRenderer& GlResourceFactory::GetRenderer() noexcept
+{
+    return m_renderer;
+}
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                           const glm::uvec2& size) const
@@ -114,12 +119,12 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declar
 
 std::shared_ptr<IFrameBuffer> GlResourceFactory::CreateFrameBuffer() const
 {
-    return std::make_shared<GlFrameBuffer>(m_renderer->GetRendererCapabilities());
+    return std::make_shared<GlFrameBuffer>(m_renderer.GetRendererCapabilities());
 }
 
 std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const
 {
-    return std::make_shared<GlVertexArray>(m_renderer->GetRendererCapabilities());
+    return std::make_shared<GlVertexArray>(m_renderer.GetRendererCapabilities());
 }
 
 std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type) const
@@ -137,79 +142,7 @@ std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBuffe
 }
 
 //TODO: detach file as a shader source from specific implementation, remove inheritance
-std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(std::initializer_list<str> files) const
+std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgram() const
 {
-
-    class GlShaderProgramFromFileImpl : public GlShaderProgram, public virtual IReloadable
-    {
-    public:
-        GlShaderProgramFromFileImpl(std::initializer_list<str> _shaders) : GlShaderProgram()
-        {
-            for (const auto& filename : _shaders)
-            {
-                if (GetName().empty())
-                    SetName(filename);
-
-                if (filename.substr(filename.length() - 8) == ".vs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::Vertex);
-                else if (filename.substr(filename.length() - 9) == ".tcs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::TesselationControl);
-                else if (filename.substr(filename.length() - 9) == ".tes.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::TesselationEvaluation);
-                else if (filename.substr(filename.length() - 8) == ".gs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::Geometry);
-                else if (filename.substr(filename.length() - 8) == ".fs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::Fragment);
-                else if (filename.substr(filename.length() - 8) == ".cs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::Computational);
-                else
-                    throw AT2Exception(AT2Exception::ErrorCase::Shader, "unrecognized shader type"s);
-            }
-
-            Reload();
-        }
-
-        void Reload() override
-        {
-            CleanUp();
-
-            for (const auto& shader : m_filenames)
-            {
-                GlShaderProgram::AttachShader(LoadShader(shader.first), shader.second);
-            }
-        }
-
-        ReloadableGroup getReloadableClass() const override { return ReloadableGroup::Shaders; }
-
-    private:
-        std::string LoadShader(const str& _filename)
-        {
-            if (_filename.empty())
-                return "";
-
-            std::ifstream t(_filename);
-            if (!t.is_open())
-                throw AT2Exception(AT2Exception::ErrorCase::File, "file '"s + _filename + "' not found.");
-
-
-            return std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-        }
-
-    private:
-        std::vector<std::pair<str, AT2::ShaderType>> m_filenames;
-    };
-
-    auto resource = std::make_shared<GlShaderProgramFromFileImpl>(files);
-    m_reloadableResourcesList.push_back(std::weak_ptr<IReloadable>(resource));
-    return resource;
-}
-
-void GlResourceFactory::ReloadResources(ReloadableGroup group)
-{
-    for (const auto& resource : m_reloadableResourcesList)
-    {
-        if (auto reloadable = resource.lock())
-            if (reloadable->getReloadableClass() == group)
-                reloadable->Reload();
-    }
+    return std::make_shared<GlShaderProgram>();
 }

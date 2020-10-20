@@ -43,7 +43,7 @@ GlRenderer::GlRenderer()
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
     m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
-    m_resourceFactory = std::make_unique<GlResourceFactory>(this);
+    m_resourceFactory = std::make_unique<GlResourceFactory>(*this);
     m_stateManager = std::make_unique<GlStateManager>(*m_rendererCapabilities);
 }
 

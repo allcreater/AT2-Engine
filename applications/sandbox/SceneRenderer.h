@@ -3,6 +3,9 @@
 #include <AT2/Scene.h>
 #include <AT2/matrix_stack.h>
 
+#include <AT2/Resources/ResourceManager.h>
+#include <AT2/Resources/ShaderResource.h>
+
 namespace AT2
 {
 
@@ -74,7 +77,7 @@ namespace AT2
     public:
         SceneRenderer() = default;
 
-        void Initialize(std::shared_ptr<IRenderer> renderer);
+        void Initialize(std::shared_ptr<IRenderer> renderer, std::shared_ptr<Resources::ResourceManager> resourceManager);
         void ResizeFramebuffers(glm::ivec2 newSize);
         void RenderScene(const RenderParameters& params);
 
@@ -88,10 +91,7 @@ namespace AT2
     private:
         std::shared_ptr<IRenderer> renderer;
 
-        struct Resources
-        {
-            std::shared_ptr<IShaderProgram> sphereLightsShader, skyLightsShader, postprocessShader;
-        } resources;
+        std::shared_ptr<Resources::ResourceManager> m_resourceManager;
 
         std::unique_ptr<Mesh> lightMesh, quadMesh;
         std::unique_ptr<IUniformContainer> cameraUniformBuffer;

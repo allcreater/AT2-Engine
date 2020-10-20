@@ -35,10 +35,8 @@ const double pi = std::acos(-1);
 
 namespace AT2
 {
-
     typedef std::string str;
 
-    class IReloadable;
     class IBuffer;
     class IFrameBuffer;
     class IVertexBuffer;
@@ -51,27 +49,6 @@ namespace AT2
     class IResourceFactory;
     class IRenderer;
 
-    enum class ReloadableGroup
-    {
-        Shaders = 1,
-        Textures = 2
-    };
-
-    //TODO: think about it's fate :)
-    //Interface for all resources which can be dynamically reloaded from file
-    class IReloadable
-    {
-    public:
-        //because we want to reload resources by their types, not all together
-        [[nodiscard]] virtual ReloadableGroup getReloadableClass() const = 0;
-
-        virtual ~IReloadable() = default;
-
-    public:
-        virtual void Reload() = 0;
-    };
-
-    //TODO: make it usable for vertex buffers, textures etc
     class IBuffer
     {
     public:
@@ -233,6 +210,8 @@ namespace AT2
         AT2Exception(const std::string& _message) : std::runtime_error(_message.c_str()), Case(ErrorCase::Unknown) {};
         AT2Exception(ErrorCase _case, const std::string& _message) :
             std::runtime_error(_message.c_str()), Case(_case) {};
+
+        ~AT2Exception() = default;
     };
 
     class IRendererCapabilities
@@ -260,6 +239,8 @@ namespace AT2
         virtual ~IStateManager() = default;
 
     public:
+        //[[nodiscard]] virtual IRenderer& GetRenderer() const noexcept;
+
         virtual void BindTextures(const TextureSet& textures) = 0;
         virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
         virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
@@ -284,6 +265,8 @@ namespace AT2
         virtual ~IResourceFactory() = default;
 
     public:
+        [[nodiscard]] virtual IRenderer& GetRenderer() noexcept = 0;
+
         [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                                      const glm::uvec2& size) const = 0;
         [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration,
@@ -295,10 +278,7 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type,
                                                                                 size_t dataLength,
                                                                                 const void* data) const = 0;
-        [[nodiscard]] virtual std::shared_ptr<IShaderProgram>
-            CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
-
-        virtual void ReloadResources(ReloadableGroup group) = 0;
+        [[nodiscard]] virtual std::shared_ptr<IShaderProgram> CreateShaderProgram() const = 0;
 
     };
 

@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <utility>
 
+using namespace std::literals;
+using namespace AT2::Resources::Literals;
+
 namespace AT2
 {
     RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera) :
@@ -105,7 +108,7 @@ namespace AT2
 
 
         auto& stateManager = renderer->GetStateManager();
-        stateManager.BindShader(resources.sphereLightsShader);
+        stateManager.BindShader(m_resourceManager->Get<IShaderProgram>("shader/light_sphere"sv));
         stateManager.BindVertexArray(lightMesh->VertexArray);
         sphereLightsUniforms->Bind(stateManager);
 
@@ -128,23 +131,30 @@ namespace AT2
             skyLightsUniforms->SetUniform("u_lightIntensity", nearestLightIt->intensity);
             skyLightsUniforms->SetUniform("u_environmentMap", nearestLightIt->environment_map);
 
-            DrawQuad(resources.skyLightsShader, *skyLightsUniforms);
+            DrawQuad(m_resourceManager->Get<IShaderProgram>("shader/light_sky"sv), *skyLightsUniforms);
         }
     }
 
-    void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
+    void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer, std::shared_ptr<Resources::ResourceManager> resourceManager)
     {
+        m_resourceManager = std::move(resourceManager);
 
-        resources.postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-            {"resources/shaders/postprocess.vs.glsl", "resources/shaders/postprocess.fs.glsl"});
+        m_resourceManager->AddResource(AT2::Resources::ShaderResourceBuilder {"shader/postprocess"s}
+            .addSource("resources/shaders/postprocess.vs.glsl"_FDS)
+            .addSource("resources/shaders/postprocess.fs.glsl"_FDS)
+            .build());
 
-        resources.sphereLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-            {"resources/shaders/spherelight2.vs.glsl", "resources/shaders/pbr.fs.glsl",
-             "resources/shaders/spherelight2.fs.glsl"});
+        m_resourceManager->AddResource(AT2::Resources::ShaderResourceBuilder {"shader/light_sphere"s}
+           .addSource("resources/shaders/spherelight2.vs.glsl"_FDS)
+           .addSource("resources/shaders/pbr.fs.glsl"_FDS)
+           .addSource("resources/shaders/spherelight2.fs.glsl"_FDS)
+           .build());
 
-        resources.skyLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-            {"resources/shaders/skylight.vs.glsl", "resources/shaders/pbr.fs.glsl",
-             "resources/shaders/skylight.fs.glsl"});
+        m_resourceManager->AddResource(AT2::Resources::ShaderResourceBuilder {"shader/light_sky"s}
+           .addSource("resources/shaders/skylight.vs.glsl"_FDS)
+           .addSource("resources/shaders/pbr.fs.glsl"_FDS)
+           .addSource("resources/shaders/skylight.fs.glsl"_FDS)
+           .build());
 
 
         lightMesh = Utils::MakeSphere(*renderer, {32, 16});
@@ -180,7 +190,7 @@ namespace AT2
             postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()); //depth is common with previous stage
 
             {
-                sphereLightsUniforms = resources.sphereLightsShader->CreateAssociatedUniformStorage();
+                sphereLightsUniforms = m_resourceManager->Get<IShaderProgram>("shader/light_sphere"sv)->CreateAssociatedUniformStorage();
                 //sphereLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
                 sphereLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
                 sphereLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
@@ -189,7 +199,7 @@ namespace AT2
             }
 
             {
-                skyLightsUniforms = resources.skyLightsShader->CreateAssociatedUniformStorage();
+                skyLightsUniforms = m_resourceManager->Get<IShaderProgram>("shader/light_sky"sv)->CreateAssociatedUniformStorage();
                 //skyLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
                 skyLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
                 skyLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
@@ -200,7 +210,7 @@ namespace AT2
 
             //Postprocess quad
             {
-                postprocessUniforms = resources.postprocessShader->CreateAssociatedUniformStorage();
+                postprocessUniforms = m_resourceManager->Get<IShaderProgram>("shader/postprocess"sv)->CreateAssociatedUniformStorage();
                 //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
                 postprocessUniforms->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0));
                 postprocessUniforms->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment());
@@ -252,14 +262,14 @@ namespace AT2
         renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
         renderer->ClearDepth(0);
 
-        DrawQuad(resources.postprocessShader, *postprocessUniforms);
+        DrawQuad(m_resourceManager->Get<IShaderProgram>("shader/postprocess"sv), *postprocessUniforms);
     }
 
     void SceneRenderer::SetupCamera(const Camera& camera)
     {
         if (!cameraUniformBuffer)
         {
-            auto buffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
+            auto buffer = m_resourceManager->Get<IShaderProgram>("shader/light_sphere"sv)->CreateAssociatedUniformStorage("CameraBlock");
             cameraUniformBuffer = std::move(buffer);
         }
 

@@ -5,6 +5,8 @@
 using namespace AT2;
 using namespace AT2::UI;
 
+using namespace std::literals;
+
 #include <algorithm>
 
 //TODO: hide from the interface!
@@ -79,7 +81,7 @@ private:
 void PlotRenderer::Draw(IRenderer& renderer)
 {
     if (m_uiShader == nullptr)
-        Init(renderer);
+        Init();
 
     auto& stateManager = renderer.GetStateManager();
 
@@ -146,13 +148,10 @@ void PlotRenderer::UpdateCanvasGeometry(const AABB2d& observingRange)
                 glm::vec4(1.0, 1.0, 1.0, 0.3));
 }
 
-void PlotRenderer::Init(const IRenderer& renderer)
+void PlotRenderer::Init()
 {
-    m_uiShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
-        {"resources//shaders//simple.vs.glsl", "resources//shaders//simple.fs.glsl"});
-
-    m_curveShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
-        {"resources//shaders//curve.vs.glsl", "resources//shaders//curve.fs.glsl"});
+    m_uiShader = m_resourceManager->Get<IShaderProgram>("shaders/simple"sv);
+    m_curveShader = m_resourceManager->Get<IShaderProgram>("shaders/curve"sv);
 
 
     m_uniformBuffer = m_uiShader->CreateAssociatedUniformStorage();

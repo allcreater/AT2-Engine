@@ -22,6 +22,7 @@
 
 using namespace std::literals;
 
+using namespace AT2::Resources::Literals;
 using TextureLoader = AT2::Resources::TextureLoader;
 using MeshLoader = AT2::Resources::MeshLoader;
 
@@ -53,9 +54,8 @@ private:
         auto resultTex =
             m_renderer->GetResourceFactory().CreateTexture(Texture2D {resolution}, AT2::TextureFormats::RGBA16F);
         resultTex->SetWrapMode(AT2::TextureWrapMode::ClampToBorder);
-        auto shader =
-            m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 
+        auto shader = m_resourceManager->Get<AT2::IShaderProgram>("shaders/terrain_gen"sv);
         m_renderer->GetStateManager().BindShader(shader);
 
         shader->SetUniform("u_result", 0);
@@ -74,14 +74,27 @@ private:
             throw GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
 
         m_renderer = std::make_unique<AT2::GlRenderer>();
+        m_resourceManager = std::make_shared<AT2::Resources::ResourceManager>(m_renderer);
 
-        TerrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-            {"resources/shaders/terrain.vs.glsl", "resources/shaders/terrain.tcs.glsl",
-             "resources/shaders/terrain.tes.glsl", "resources/shaders/terrain.fs.glsl"});
+        m_resourceManager->AddResource(
+            AT2::Resources::ShaderResourceBuilder {"shaders/terrain_gen"s}.addSource(
+                                           "resources/shaders/generate.cs.glsl"_FDS).build());
 
+        m_resourceManager->AddResource(
+            AT2::Resources::ShaderResourceBuilder{"shaders/terrain"s}
+            .addSource("resources/shaders/terrain.vs.glsl"_FDS)
+            .addSource("resources/shaders/terrain.tcs.glsl"_FDS)
+            .addSource("resources/shaders/terrain.tes.glsl"_FDS)
+            .addSource("resources/shaders/terrain.fs.glsl"_FDS)
+            .build()
+        );
 
-        MeshShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-            {"resources/shaders/mesh.vs.glsl", "resources/shaders/mesh.fs.glsl"});
+        m_resourceManager->AddResource(
+            AT2::Resources::ShaderResourceBuilder {"shaders/mesh"s}
+            .addSource("resources/shaders/mesh.vs.glsl"_FDS)
+            .addSource("resources/shaders/mesh.fs.glsl"_FDS)
+            .build()
+        );
 
 
         Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, AT2::TextureFormats::RGBA8);
@@ -97,9 +110,8 @@ private:
         }
 
         GrassTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
-        NormalMapTex =
-            TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        RockTex =TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
+        NormalMapTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
+        RockTex = TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
 
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
         EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
@@ -123,13 +135,13 @@ private:
 
         //Scene
         auto matBallNode = MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
-        matBallNode->GetMesh()->Shader = MeshShader;
+        matBallNode->GetMesh()->Shader = m_resourceManager->Get<AT2::IShaderProgram>("shaders/mesh"sv);
         matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform(), {0, 0, 0}), {100, 100, 100}));
         Scene.GetRoot().AddChild(std::move(matBallNode));
 
         auto terrainNode = AT2::Utils::MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
         terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
-        terrainNode->GetMesh()->Shader = TerrainShader;
+        terrainNode->GetMesh()->Shader = m_resourceManager->Get<AT2::IShaderProgram>("shaders/terrain"sv);
         {
             auto& uniformStorage = terrainNode->GetMesh()->GetOrCreateDefaultMaterial();
             uniformStorage.SetUniform("u_texNoise", Noise3Tex);
@@ -140,7 +152,7 @@ private:
         }
         Scene.GetRoot().AddChild(std::move(terrainNode));
 
-        sr.Initialize(m_renderer);
+        sr.Initialize(m_renderer, m_resourceManager);
     }
 
     void OnRender(double dt)
@@ -148,7 +160,7 @@ private:
         if (NeedResourceReload)
         {
             std::cout << "Reloading shaders... " << std::endl;
-            m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
+            m_resourceManager->ReloadResources();
             NeedResourceReload = false;
         }
 
@@ -239,8 +251,8 @@ private:
 private:
     std::shared_ptr<GlfwWindow> m_window;
     std::shared_ptr<AT2::IRenderer> m_renderer;
+    std::shared_ptr<AT2::Resources::ResourceManager> m_resourceManager;
 
-    std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader;
     std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
 
     AT2::Camera m_camera;

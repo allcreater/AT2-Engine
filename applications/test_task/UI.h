@@ -2,32 +2,38 @@
 #define RENDERABLE_UI_HEADER
 
 #include <AT2/UI/InputHelper.h>
+#include <AT2/Mesh.h>
+#include <AT2/Resources/ShaderResource.h>
 
 #include <utility>
 #include "LinesHelper.h"
-#include "AT2/Mesh.h"
+
 
 namespace AT2::UI
 {
     class CurveDrawable;
 
-    //encapsulates all visualisation logics of Plot control
+    //encapsulates all visualization logics of Plot control
     class PlotRenderer : public virtual IUiRenderer, protected LinesHelper
     {
     public:
-        PlotRenderer(std::weak_ptr<Plot> plot) : m_Control(std::move(plot)) {}
-
+        PlotRenderer(std::weak_ptr<Plot> plot, std::shared_ptr<AT2::Resources::ResourceManager> resourceManager) :
+            m_Control(std::move(plot)),
+            m_resourceManager(std::move(resourceManager))
+        {
+        }
 
         void Draw(IRenderer& renderer) override;
 
     protected:
         void PrepareData(const IRenderer& renderer);
-        void Init(const IRenderer& renderer);
+        void Init();
         void UpdateCanvasGeometry(const AABB2d& observingRange);
 
     private:
         std::weak_ptr<Plot> m_Control;
 
+        std::shared_ptr<AT2::Resources::ResourceManager> m_resourceManager;
         std::shared_ptr<IShaderProgram> m_uiShader, m_curveShader;
         std::shared_ptr<IUniformContainer> m_uniformBuffer;
 

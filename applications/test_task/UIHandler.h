@@ -5,7 +5,7 @@
 
 #include <list>
 
-#include "AT2/Mesh.h"
+#include <AT2/Mesh.h>
 
 //TODO: move into library
 namespace AT2::UI
@@ -13,7 +13,7 @@ namespace AT2::UI
     class UiRenderer
     {
     public:
-        UiRenderer(const std::shared_ptr<AT2::IRenderer>& renderer, std::shared_ptr<AT2::UI::Node> node);
+        UiRenderer(std::shared_ptr<Resources::ResourceManager> resourceManager, std::shared_ptr<AT2::UI::Node> node);
         void Draw();
         void SetWindowSize(const glm::uvec2& windowSize) { m_windowSize = windowSize; }
 
@@ -23,6 +23,7 @@ namespace AT2::UI
 
     private:
         std::shared_ptr<AT2::Mesh> m_quadDrawable;
+        std::shared_ptr<Resources::ResourceManager> m_resourceManager;
         std::weak_ptr<AT2::IRenderer> m_renderer;
         std::shared_ptr<AT2::UI::Node> m_uiRoot;
         glm::uvec2 m_windowSize;
@@ -45,7 +46,7 @@ struct UiHub
 
     AT2::UI::UiInputHandler& GetInputHandler() { return *m_uiInputHandler; }
 
-    void Init(std::shared_ptr<AT2::IRenderer>& renderer);
+    void Init(std::shared_ptr<AT2::Resources::ResourceManager> resourceManager);
     void Render(std::shared_ptr<AT2::IRenderer>& renderer, double dt);
     void Resize(const glm::ivec2& newSize);
 

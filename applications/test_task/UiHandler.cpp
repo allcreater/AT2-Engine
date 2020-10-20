@@ -11,6 +11,10 @@
 
 using namespace AT2;
 using namespace AT2::UI;
+using namespace AT2::Resources;
+using namespace AT2::Resources::Literals;
+
+using namespace std::literals;
 
 static std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_t numHarmonics = 10)
 {
@@ -73,15 +77,18 @@ private:
     std::string m_hidingCurveName, m_appearingCurveName;
 };
 
-UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_ptr<Node> node) :
-    m_renderer(renderer), m_uiRoot(std::move(node))
+UiRenderer::UiRenderer(std::shared_ptr<Resources::ResourceManager> resourceManager, std::shared_ptr<Node> node) :
+    m_renderer(resourceManager->GetRenderer()),
+    m_resourceManager(resourceManager),
+    m_uiRoot(std::move(node))
 {
-    auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-        {R"(resources/shaders/background.vs.glsl)", R"(resources/shaders/background.fs.glsl)"});
+    auto renderer = m_renderer.lock();
+    if (!renderer)
+        throw std::runtime_error {"renderer is not present now"};
 
     const auto texture = Resources::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
     m_quadDrawable = Utils::MakeFullscreenQuadMesh(*renderer);
-    m_quadDrawable->Shader = postprocessShader;
+    m_quadDrawable->Shader = m_resourceManager->Get<IShaderProgram>("shaders/background"sv);
     {
         auto& uniformStorage = m_quadDrawable->GetOrCreateDefaultMaterial();
         uniformStorage.SetUniform("u_BackgroundTexture", texture);
@@ -122,8 +129,12 @@ glm::vec4 UiRenderer::DebugColor(const Node& node)
     return glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0);
 }
 
-void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
+void UiHub::Init(std::shared_ptr<AT2::Resources::ResourceManager> resourceManager)
 {
+    auto renderer = resourceManager->GetRenderer();
+    if (!renderer)
+        throw std::runtime_error {"renderer is not present now"};
+
     std::shared_ptr<Node> panel, button1, button2;
 
     m_uiRoot = Group::Make(
@@ -146,10 +157,9 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
         curve.SetColor(glm::vec4(0.0, 0.0, 1.0, 1.0));
     }
     auto mesh = MeshRef {Utils::MakeFullscreenQuadMesh(*renderer)};
-    mesh->Shader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
-        {R"(resources/shaders/window.vs.glsl)", R"(resources/shaders/window.fs.glsl)"});
+    mesh->Shader = resourceManager->Get<IShaderProgram>("shaders/window"sv);
 
-    m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
+    m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode, resourceManager));
     panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, mesh, glm::vec2(0, 0),
                                                             glm::vec4(0.5, 0.5, 0.5, 0.5)));
     button1->SetNodeRenderer(std::make_shared<WindowRenderer>(button1, mesh, glm::vec2(4, 4),
@@ -160,7 +170,7 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
     const auto bounds = m_plotNode->GetAABB();
     m_plotNode->SetObservingZone(AABB2d {glm::vec2(0.0, bounds.MinBound.y), glm::vec2(1000.0, bounds.MaxBound.y)});
 
-    m_uiRenderer = std::make_unique<UiRenderer>(renderer, m_uiRoot);
+    m_uiRenderer = std::make_unique<UiRenderer>(resourceManager, m_uiRoot);
     m_uiInputHandler = std::make_unique<UiInputHandler>(m_uiRoot);
 
     m_uiInputHandler->EventClicked = [&](const std::shared_ptr<Node>& node) {
