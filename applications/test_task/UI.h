@@ -3,7 +3,8 @@
 
 #include <AT2/UI/InputHelper.h>
 #include <AT2/Mesh.h>
-#include <AT2/Resources/ShaderResource.h>
+
+#include <AT2/Resources/ResourceManager.h>
 
 #include <utility>
 #include "LinesHelper.h"

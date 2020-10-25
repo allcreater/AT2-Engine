@@ -15,7 +15,7 @@ namespace AT2::Resources
 
     public:
         [[nodiscard]] virtual std::string_view GetName() const noexcept = 0;
-        virtual std::shared_ptr<void> Load(IResourceFactory& resourceFactory) = 0;
+        virtual std::shared_ptr<void> Load(const std::shared_ptr<IResourceFactory>& resourceFactory) = 0;
     };
 
 
@@ -43,47 +43,34 @@ namespace AT2::Resources
         }
 
 
-        void AddResource(std::unique_ptr<IResource> resource, bool preload = false)
-        {
-            const auto name = resource->GetName();
-            auto [it, isInserted] = m_resources.try_emplace(name, Entry {std::move(resource)});
-            if (!isInserted)
-                throw ResourceManagerException("resource with that name already exists");
-
-            if (preload)
-                it->second.GetOrLoad(m_renderer.lock()->GetResourceFactory());
-        }
+        void AddResource(std::unique_ptr<IResource> resource, bool preload = false);
 
         template<typename T>
         std::shared_ptr<T> Get(std::string_view name) noexcept
         {
             if (auto it = m_resources.find(name); it != m_resources.end())
-                return std::static_pointer_cast<T>(
-                    it->second.GetOrLoad(m_renderer.lock()->GetResourceFactory())); //TODO:
+                return std::static_pointer_cast<T>(it->second.GetOrLoad(LockResourceFactory())); //TODO:
 
             return nullptr;
         }
 
         //Should be asynchronous :/
-        void ReloadResources()
-        {
-            const auto renderer = m_renderer.lock();
-            if (!renderer)
-                return;
+        void ReloadResources();
 
-            for ( auto& [name, resource] : m_resources)
-                resource.object = nullptr;
-        }
+        void UnloadUnused();
 
-        void UnloadUnused()
-        {
-        }
     private:
         std::weak_ptr<IRenderer> m_renderer;
 
+        [[nodiscard]] std::shared_ptr<IResourceFactory> LockResourceFactory() const
+        {
+            const auto renderer = m_renderer.lock();
+            return std::shared_ptr<IResourceFactory> {renderer, &renderer->GetResourceFactory()};
+        }
+
         struct Entry
         {
-            std::shared_ptr<void> GetOrLoad(IResourceFactory& resourceFactory)
+            std::shared_ptr<void> GetOrLoad(const std::shared_ptr<IResourceFactory>& resourceFactory)
             {
                 if (!object)
                     object = resource->Load(resourceFactory);

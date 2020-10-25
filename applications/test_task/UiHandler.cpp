@@ -12,7 +12,6 @@
 using namespace AT2;
 using namespace AT2::UI;
 using namespace AT2::Resources;
-using namespace AT2::Resources::Literals;
 
 using namespace std::literals;
 
@@ -86,12 +85,11 @@ UiRenderer::UiRenderer(std::shared_ptr<Resources::ResourceManager> resourceManag
     if (!renderer)
         throw std::runtime_error {"renderer is not present now"};
 
-    const auto texture = Resources::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
     m_quadDrawable = Utils::MakeFullscreenQuadMesh(*renderer);
     m_quadDrawable->Shader = m_resourceManager->Get<IShaderProgram>("shaders/background"sv);
     {
         auto& uniformStorage = m_quadDrawable->GetOrCreateDefaultMaterial();
-        uniformStorage.SetUniform("u_BackgroundTexture", texture);
+        uniformStorage.SetUniform("u_BackgroundTexture", m_resourceManager->Get<ITexture>("textures/background"sv));
     }
 }
 

@@ -27,11 +27,17 @@ const double pi = std::acos(-1);
 #include "AT2_textures.hpp"
 #include "AT2_types.hpp"
 
-#define NON_COPYABLE_OR_MOVABLE(type)                                                                                  \
-    type(const type&) = delete;                                                                                        \
-    type(type&&) = delete;                                                                                             \
-    type& operator=(const type&) = delete;                                                                             \
+#define NON_COPYABLE(type)                  \
+    type(const type&) = delete;             \
+    type& operator=(const type&) = delete;  \
+
+#define NON_MOVABLE(type)                   \
+    type(type&&) = delete;                  \
     type& operator=(type&&) = delete;
+
+#define NON_COPYABLE_OR_MOVABLE(type)       \
+    NON_COPYABLE(type)                      \
+    NON_MOVABLE(type)
 
 namespace AT2
 {

@@ -49,13 +49,13 @@ namespace
 using namespace AT2;
 
 
-std::shared_ptr<void> AT2::Resources::ShaderResource::Load(IResourceFactory& resourceFactory)
+std::shared_ptr<void> AT2::Resources::ShaderResource::Load(const std::shared_ptr<IResourceFactory>& resourceFactory)
 {
     if (std::any_of(m_sources.begin(), m_sources.end(),
                     [](const std::unique_ptr<IDataSource>& source) { return !source->IsReloadable(); }))
         return nullptr;
 
-    auto newProgram = resourceFactory.CreateShaderProgram();
+    auto newProgram = resourceFactory->CreateShaderProgram();
     for (auto& source : m_sources)
     {
         auto stream = source->Load();

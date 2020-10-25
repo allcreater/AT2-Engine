@@ -98,7 +98,7 @@ namespace
     }
 
 
-    static std::shared_ptr<ITexture> Load(const std::shared_ptr<IRenderer>& renderer,
+    static std::shared_ptr<ITexture> Load(const std::shared_ptr<IResourceFactory>& resourceFactory,
                                           const std::function<bool()>& imageLoader)
     {
         const bool enableAutomipmaps = true;
@@ -137,7 +137,7 @@ namespace
 
         if (imageInfo.Depth > 1)
         {
-            auto texture = renderer->GetResourceFactory().CreateTexture(
+            auto texture = resourceFactory->CreateTexture(
                 Texture3D {size, storageLevels}, GetExternalFormat(imageInfo.Format, imageInfo.Type));
 
             for (unsigned int level = 0; level < mipmapLevels; ++level)
@@ -159,7 +159,7 @@ namespace
         }
 
         //Texture 2d
-        auto texture = renderer->GetResourceFactory().CreateTexture(
+        auto texture = resourceFactory->CreateTexture(
             Texture2D {glm::xy(size), storageLevels}, GetExternalFormat(imageInfo.Format, imageInfo.Type));
 
         for (unsigned int level = 0; level < mipmapLevels; ++level)
@@ -180,12 +180,12 @@ namespace
     }
 }; // namespace
 
-TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, const str& filename)
+TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IResourceFactory>& resourceFactory, const str& filename)
 {
-    return Load(renderer, [filename] { return ilLoadImage(filename.c_str()) == IL_TRUE; });
+    return Load(resourceFactory, [filename] { return ilLoadImage(filename.c_str()) == IL_TRUE; });
 }
 
-TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, void* data, size_t size)
+TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IResourceFactory>& resourceFactory, void* data, size_t size)
 {
     if (size > std::numeric_limits<ILuint>::max())
         throw AT2Exception(AT2Exception::ErrorCase::Texture, "DevIL does not support images more than 4GB");
@@ -195,5 +195,5 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
         throw AT2Exception(AT2Exception::ErrorCase::Texture,
                            "Couldn't determine texture format while reading from memory");
 
-    return Load(renderer, [=] { return ilLoadL(type, data, static_cast<ILuint>(size)) == IL_TRUE; });
+    return Load(resourceFactory, [=] { return ilLoadL(type, data, static_cast<ILuint>(size)) == IL_TRUE; });
 }

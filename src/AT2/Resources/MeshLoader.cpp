@@ -22,8 +22,8 @@ namespace
     class MeshBuilder
     {
     public:
-        MeshBuilder(std::shared_ptr<IRenderer> _renderer, const aiScene* scene) :
-            m_scene(scene), m_renderer(std::move(_renderer))
+        MeshBuilder(const std::shared_ptr<IResourceFactory>& resourceFactory, const aiScene* scene) :
+            m_scene(scene), m_resourceFactory(std::move(resourceFactory))
         {
         }
 
@@ -51,7 +51,7 @@ namespace
         std::filesystem::path m_scenePath;
         Assimp::Importer m_importer;
         const aiScene* m_scene;
-        std::shared_ptr<IRenderer> m_renderer;
+        const std::shared_ptr<IResourceFactory>& m_resourceFactory;
 
 
         std::vector<glm::vec3> m_verticesVec;
@@ -92,12 +92,10 @@ namespace
             for (unsigned i = 0; i < m_scene->mNumMeshes; ++i)
                 AddMesh(m_scene->mMeshes[i]);
 
-            auto& rf = m_renderer->GetResourceFactory();
-
-            auto vao = MakeVertexArray(rf, std::make_pair(1u, std::cref(m_verticesVec)),
+            auto vao = MakeVertexArray(*m_resourceFactory, std::make_pair(1u, std::cref(m_verticesVec)),
                                        std::make_pair(2u, std::cref(m_texCoordVec)),
                                        std::make_pair(3u, std::cref(m_normalsVec)));
-            vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer,
+            vao->SetIndexBuffer(m_resourceFactory->CreateVertexBuffer(VertexBufferType::IndexBuffer,
                                                       m_indicesVec.size() * sizeof(std::uint32_t), m_indicesVec.data()),
                                 BufferDataType::UInt);
 
@@ -122,11 +120,12 @@ namespace
                         throw AT2Exception(AT2Exception::ErrorCase::Texture,
                                            "reading raw texture from memory not implemented yet");
 
-                    return TextureLoader::LoadTexture(m_renderer, embeddedTexture->pcData, embeddedTexture->mWidth);
+                    return TextureLoader::LoadTexture(m_resourceFactory, embeddedTexture->pcData,
+                                                      embeddedTexture->mWidth);
                 }
 
                 //it's not embedded
-                return TextureLoader::LoadTexture(m_renderer, path);
+                return TextureLoader::LoadTexture(m_resourceFactory, path);
             };
 
             std::map<str, std::shared_ptr<ITexture>, std::less<>> textures;
@@ -189,11 +188,12 @@ namespace
 
 }; // namespace
 
-std::unique_ptr<MeshNode> MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename)
+std::unique_ptr<MeshNode> MeshLoader::LoadNode(const std::shared_ptr<IResourceFactory>& resourceFactory,
+                                               const str& filename)
 {
     Assimp::Importer importer;
     const auto* scene = importer.ReadFile(filename, flags);
 
-    MeshBuilder builder {std::move(renderer), scene};
+    MeshBuilder builder {std::move(resourceFactory), scene};
     return builder.Build();
 }

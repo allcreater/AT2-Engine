@@ -1,6 +1,9 @@
 #include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/OpenGL/GLFW/glfw_application.h>
 
+#include <AT2/Resources/ShaderResource.h>
+#include <AT2/Resources/TextureResource.h>
+
 #include "UIHandler.h"
 
 using namespace AT2::Resources::Literals;
@@ -73,6 +76,8 @@ private:
             .addSource("resources//shaders//simple.vs.glsl"_FDS)
             .addSource("resources//shaders//simple.fs.glsl"_FDS)
             .build());
+
+        m_resourceManager->AddResource(AT2::Resources::TextureResource::Make("resources/helix_nebula.jpg"_FDS, "textures/background"s));
     }
 
     void OnRender(double dt)

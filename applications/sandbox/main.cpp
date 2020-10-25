@@ -6,8 +6,9 @@
 #include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_application.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
-#include <AT2/Resources/MeshLoader.h>
-#include <AT2/Resources/TextureLoader.h>
+
+#include <AT2/Resources/TextureResource.h>
+#include <AT2/Resources/MeshResource.h>
 
 #include <execution>
 #include <filesystem>
@@ -21,10 +22,7 @@
 #include "../procedural_meshes.h"
 
 using namespace std::literals;
-
 using namespace AT2::Resources::Literals;
-using TextureLoader = AT2::Resources::TextureLoader;
-using MeshLoader = AT2::Resources::MeshLoader;
 
 constexpr size_t NumActiveLights = 50;
 
@@ -109,12 +107,15 @@ private:
             Noise3Tex->SubImage3D({}, Noise3Tex->GetSize(), 0, AT2::TextureFormats::RGBA8, arr.get());
         }
 
-        GrassTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
-        NormalMapTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        RockTex = TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
+        m_resourceManager->AddResource(AT2::Resources::TextureResource::Make("resources/Ground037_2K-JPG/Ground037_2K_Color.jpg"_FDS, "textures/terrain/grass"s));
+        m_resourceManager->AddResource(AT2::Resources::TextureResource::Make("resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg"_FDS, "textures/terrain/normal"s));
+        m_resourceManager->AddResource(AT2::Resources::TextureResource::Make("resources/rock04.dds"_FDS, "textures/terrain/rock"s));
+        m_resourceManager->AddResource(AT2::Resources::TextureResource::Make("resources/04-23_Day_D.hdr"_FDS, "textures/environment_map"s));
 
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
-        EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
+
+        m_resourceManager->AddResource(
+            AT2::Resources::MeshResource::Make("resources/matball.glb"_FDS, "meshes/matball"s));
 
         auto lightsRoot = std::make_shared<AT2::Node>("lights"s);
         Scene.GetRoot().AddChild(lightsRoot);
@@ -130,11 +131,12 @@ private:
                                               glm::linearRand(-5000.0, 5000.0)}));
         }
 
-        lightsRoot->AddChild(std::make_shared<AT2::LightNode>(AT2::SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
+        lightsRoot->AddChild(std::make_shared<AT2::LightNode>(
+            AT2::SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), m_resourceManager->Get<AT2::ITexture>("textures/environment_map")},
                                                               glm::vec3(500.0f), "SkyLight"));
 
         //Scene
-        auto matBallNode = MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
+        auto matBallNode = m_resourceManager->Get<AT2::MeshNode>("meshes/matball"sv);
         matBallNode->GetMesh()->Shader = m_resourceManager->Get<AT2::IShaderProgram>("shaders/mesh"sv);
         matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform(), {0, 0, 0}), {100, 100, 100}));
         Scene.GetRoot().AddChild(std::move(matBallNode));
@@ -146,9 +148,10 @@ private:
             auto& uniformStorage = terrainNode->GetMesh()->GetOrCreateDefaultMaterial();
             uniformStorage.SetUniform("u_texNoise", Noise3Tex);
             uniformStorage.SetUniform("u_texHeight", HeightMapTex);
-            uniformStorage.SetUniform("u_texNormalMap", NormalMapTex);
-            uniformStorage.SetUniform("u_texGrass", GrassTex);
-            uniformStorage.SetUniform("u_texRock", RockTex);
+            uniformStorage.SetUniform("u_texNormalMap",
+                                      m_resourceManager->Get<AT2::ITexture>("textures/terrain/normal"));
+            uniformStorage.SetUniform("u_texGrass", m_resourceManager->Get<AT2::ITexture>("textures/terrain/grass"));
+            uniformStorage.SetUniform("u_texRock", m_resourceManager->Get<AT2::ITexture>("textures/terrain/rock"));
         }
         Scene.GetRoot().AddChild(std::move(terrainNode));
 
@@ -253,7 +256,7 @@ private:
     std::shared_ptr<AT2::IRenderer> m_renderer;
     std::shared_ptr<AT2::Resources::ResourceManager> m_resourceManager;
 
-    std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
+    std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex;
 
     AT2::Camera m_camera;
     AT2::Scene Scene;

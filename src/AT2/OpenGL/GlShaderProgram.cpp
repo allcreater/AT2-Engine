@@ -38,13 +38,15 @@ constexpr std::string_view ShaderTypeName(ShaderType type)
 GlShaderProgram::GlShaderProgram()
 {
     m_programId = glCreateProgram();
-    assert(m_programId);
+    if (m_programId == invalid_index)
+        throw AT2Exception(AT2Exception::ErrorCase::Shader, "couldn't acquire program handle");
 }
 
 GlShaderProgram::~GlShaderProgram()
 {
     CleanUp();
-    glDeleteProgram(m_programId);
+    if (m_programId != invalid_index)
+        glDeleteProgram(m_programId);
 }
 
 void GlShaderProgram::AttachShader(const str& _code, ShaderType _type)

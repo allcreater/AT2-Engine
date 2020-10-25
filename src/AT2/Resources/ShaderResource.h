@@ -16,7 +16,7 @@ namespace AT2::Resources
         }
 
         [[nodiscard]] std::string_view GetName() const noexcept override { return m_name; }
-        std::shared_ptr<void> Load(IResourceFactory& resourceFactory) override;
+        std::shared_ptr<void> Load(const std::shared_ptr<IResourceFactory>& resourceFactory) override;
 
     private:
         std::vector<std::unique_ptr<IDataSource>> m_sources;
