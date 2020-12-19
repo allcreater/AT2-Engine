@@ -10,6 +10,7 @@
 
 
 #include <array>
+#include <span>
 #include <memory>
 #include <set>
 #include <string>
@@ -78,12 +79,20 @@ namespace AT2
         virtual ~IBuffer() = default;
 
     public:
-        [[nodiscard]] virtual size_t GetLength() const noexcept = 0;
-        virtual void SetData(size_t length, const void* data) = 0;
+        template <std::ranges::contiguous_range T>
+        void SetData(const T& data)
+        {
+            SetDataRaw(std::as_bytes(std::span {data}));
+        }
 
-        virtual std::byte* Map(BufferUsage usage) = 0;
-        virtual std::byte* MapRange(BufferUsage usage, size_t offset, size_t length) = 0;
+        [[nodiscard]] virtual size_t GetLength() const noexcept = 0;
+        virtual void SetDataRaw(std::span<const std::byte> data) = 0;
+
+        virtual std::span<std::byte> Map(BufferUsage usage) = 0;
+        virtual std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) = 0;
         virtual void Unmap() = 0;
+
+    protected:
     };
 
     class IFrameBuffer
@@ -284,6 +293,13 @@ namespace AT2
         virtual ~IResourceFactory() = default;
 
     public:
+        template <std::ranges::contiguous_range T>
+        std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const T& data)
+        {
+            return CreateVertexBufferInternal(type, std::as_bytes(std::span {data}));
+        }
+
+    public:
         [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                                      const glm::uvec2& size) const = 0;
         [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration,
@@ -292,13 +308,14 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 
         [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type,
-                                                                                size_t dataLength,
-                                                                                const void* data) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IShaderProgram>
             CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
 
         virtual void ReloadResources(ReloadableGroup group) = 0;
+
+    protected:
+        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBufferInternal(VertexBufferType type,
+                                                                                std::span<const std::byte> data) const = 0;
 
     };
 
@@ -342,9 +359,7 @@ namespace AT2
         auto vertexArray = factory.CreateVertexArray();
         static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetVertexBuffer(args.first,
-                                          factory.CreateVertexBuffer(VertexBufferType::ArrayBuffer,
-                                                                     args.second.size() * sizeof(Args),
-                                                                     args.second.data()),
+                                          factory.CreateVertexBuffer(VertexBufferType::ArrayBuffer, args.second),
                                           BufferDataTypes::BufferTypeOf<Args>),
              0)...});
 

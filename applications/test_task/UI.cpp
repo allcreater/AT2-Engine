@@ -36,7 +36,7 @@ public:
             Init(renderer);
 
         const auto& vector = data.GetData();
-        m_VAO->GetVertexBuffer(0)->SetData(vector.size() * sizeof(float), vector.data());
+        m_VAO->GetVertexBuffer(0)->SetData(vector);
 
         m_uniforms->SetUniform("u_BoundsX",
                                glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
@@ -62,8 +62,7 @@ private:
         auto& rf = renderer.GetResourceFactory();
 
         m_VAO = rf.CreateVertexArray();
-        m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, 0, nullptr),
-                               AT2::BufferDataTypes::Float);
+        m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer), AT2::BufferDataTypes::Float);
 
 
         m_uniforms = renderer.GetStateManager().GetActiveShader()->CreateAssociatedUniformStorage();

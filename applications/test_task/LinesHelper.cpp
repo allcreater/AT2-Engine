@@ -41,8 +41,8 @@ void LinesHelper::Init(const IRenderer& renderer)
     auto& rf = renderer.GetResourceFactory();
 
     m_VAO = rf.CreateVertexArray();
-    m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, 0, nullptr), BufferDataTypes::Vec2);
-    m_VAO->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, 0, nullptr), BufferDataTypes::Vec4);
+    m_VAO->SetVertexBuffer(0, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer), BufferDataTypes::Vec2);
+    m_VAO->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer), BufferDataTypes::Vec4);
     //m_VAO->SetIndexBuffer(rf.CreateVertexBuffer(AT2vbt::IndexBuffer, 0, nullptr), BufferDataTypes::UInt);
 }
 
@@ -51,6 +51,6 @@ void LinesHelper::UpdateVAO(const IRenderer& renderer)
     if (m_VAO == nullptr)
         Init(renderer);
 
-    m_VAO->GetVertexBuffer(0)->SetData(m_vertices.size() * sizeof(glm::vec2), m_vertices.data());
-    m_VAO->GetVertexBuffer(1)->SetData(m_colors.size() * sizeof(glm::vec4), m_colors.data());
+    m_VAO->GetVertexBuffer(0)->SetData(m_vertices);
+    m_VAO->GetVertexBuffer(1)->SetData(m_colors);
 }

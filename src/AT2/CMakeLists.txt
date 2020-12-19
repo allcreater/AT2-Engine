@@ -25,7 +25,6 @@ add_library(${PROJECT_NAME} STATIC
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw assimp::assimp ${IL_LIBRARIES} ${ILU_LIBRARIES}
                          PUBLIC GLEW::GLEW glm) 
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-            CXX_STANDARD 17
-            CXX_EXTENSIONS OFF
-)
+
+
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

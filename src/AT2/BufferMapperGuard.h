@@ -9,12 +9,12 @@ namespace AT2
     {
     public:
         BufferMapperGuard(IBuffer& buffer, BufferUsage accessRights) :
-            buffer(buffer), begin(buffer.Map(accessRights)), length(buffer.GetLength()), access(accessRights)
+            buffer(buffer), span(buffer.Map(accessRights)), access(accessRights)
         {
         }
 
         BufferMapperGuard(IBuffer& buffer, size_t offset, size_t length, BufferUsage accessRights) :
-            buffer(buffer), begin(buffer.MapRange(accessRights, offset, length)), length(length), access(accessRights)
+            buffer(buffer), span(buffer.MapRange(accessRights, offset, length)), access(accessRights)
         {
         }
 
@@ -28,39 +28,38 @@ namespace AT2
         const std::byte* data() const noexcept
         {
             assert(static_cast<int>(access) | static_cast<int>(BufferUsage::Read));
-            return begin;
+            return span.data();
         }
 
         std::byte* data() noexcept
         {
             assert(static_cast<int>(access) | static_cast<int>(BufferUsage::Write));
-            return begin;
+            return span.data();
         }
 
         template <typename T>
         T Get(size_t offset = 0) const
         {
-            assert(offset + sizeof(T) <= length);
+            assert(offset + sizeof(T) <= span.size());
             assert(static_cast<int>(access) | static_cast<int>(BufferUsage::Read));
 
             T value;
-            memcpy(&value, begin + offset, sizeof(T));
+            memcpy(&value, &span[offset], sizeof(T));
             return value;
         }
 
         template <typename T>
         void Set(const T& value, size_t offset = 0)
         {
-            assert(offset + sizeof(T) <= length);
+            assert(offset + sizeof(T) <= span.size());
             assert(static_cast<int>(access) | static_cast<int>(BufferUsage::Write));
 
-            memcpy(begin + offset, &value, sizeof(T));
+            memcpy(&span[offset], &value, sizeof(T));
         }
 
     private:
         IBuffer& buffer;
-        std::byte* const begin;
-        const size_t length;
+        std::span<std::byte> span;
         const BufferUsage access;
     };
 

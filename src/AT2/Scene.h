@@ -90,7 +90,7 @@ namespace AT2
             return *this;
         }
 
-        void SetEnabled(bool enabled) { this->enabled = enabled; }
+        void SetEnabled(bool _enabled) { enabled = _enabled; }
 
         [[nodiscard]] const glm::vec3& GetIntensity() const noexcept { return intensity; }
         [[nodiscard]] float GetEffectiveRadius() const noexcept { return effectiveRadius; }

@@ -22,10 +22,7 @@ namespace AT2::Utils
 
         auto& rf = renderer.GetResourceFactory();
         auto vao = rf.CreateVertexArray();
-        vao->SetVertexBuffer(1,
-                             rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, texCoords.size() * sizeof(glm::vec2),
-                                                   texCoords.data()),
-                             BufferDataTypes::Vec2);
+        vao->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, texCoords), BufferDataTypes::Vec2);
 
         auto rootNode = std::make_unique<MeshNode>();
 
@@ -90,9 +87,8 @@ namespace AT2::Utils
         auto mesh = std::make_unique<Mesh>();
 
         mesh->VertexArray = MakeVertexArray(rf, std::make_pair(1u, std::cref(normals)));
-        mesh->VertexArray->SetIndexBuffer(
-            rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, indices.size() * sizeof(glm::uint), indices.data()),
-            BufferDataType::UInt);
+        mesh->VertexArray->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, indices),
+                                          BufferDataType::UInt);
 
 
         //don't know how to make it better

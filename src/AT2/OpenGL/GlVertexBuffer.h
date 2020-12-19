@@ -2,6 +2,10 @@
 #define AT2_GL_VERTEXBUFFER_H
 
 #include "AT2lowlevel.h"
+#include "../AT2.h"
+#include "../AT2.h"
+#include "../AT2.h"
+#include "../AT2.h"
 
 namespace AT2
 {
@@ -21,10 +25,10 @@ namespace AT2
         [[nodiscard]] size_t GetLength() const noexcept override { return m_length; }
 
         void Bind() override;
-        void SetData(size_t length, const void* data) override;
+        void SetDataRaw(std::span<const std::byte> data) override;
 
-        std::byte* Map(BufferUsage usage) override;
-        std::byte* MapRange(BufferUsage usage, size_t offset, size_t length) override;
+        std::span<std::byte> Map(BufferUsage usage) override;
+        std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) override;
         void Unmap() override;
 
     protected:

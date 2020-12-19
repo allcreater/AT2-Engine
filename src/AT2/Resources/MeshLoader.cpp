@@ -97,8 +97,7 @@ namespace
             auto vao = MakeVertexArray(rf, std::make_pair(1u, std::cref(m_verticesVec)),
                                        std::make_pair(2u, std::cref(m_texCoordVec)),
                                        std::make_pair(3u, std::cref(m_normalsVec)));
-            vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer,
-                                                      m_indicesVec.size() * sizeof(std::uint32_t), m_indicesVec.data()),
+            vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, m_indicesVec),
                                 BufferDataType::UInt);
 
             m_buildingMesh->VertexArray = vao;

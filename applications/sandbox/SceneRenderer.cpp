@@ -87,9 +87,7 @@ namespace AT2
 
 
         //TODO: map buffer instead of recreating it
-        auto vertexBuffer =
-            rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, lrv.collectedLights.size() * sizeof(LightAttribs),
-                                  lrv.collectedLights.data());
+        auto vertexBuffer = rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, lrv.collectedLights);
 
         vao->SetVertexBuffer(2, vertexBuffer,
             BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, position)} );

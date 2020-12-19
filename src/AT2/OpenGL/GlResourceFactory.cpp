@@ -127,12 +127,11 @@ std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBuffe
     return std::make_shared<GlVertexBuffer>(type);
 }
 
-std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type,
-                                                                     size_t dataLength,
-                                                                     const void* data) const
+std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBufferInternal(VertexBufferType type,
+                                                                             std::span<const std::byte> data) const
 {
     auto buffer = CreateVertexBuffer(type);
-    buffer->SetData(dataLength, data);
+    buffer->SetDataRaw(data);
     return buffer;
 }
 

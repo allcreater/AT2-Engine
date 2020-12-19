@@ -36,9 +36,11 @@ namespace AT2
         std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const override;
         std::shared_ptr<IVertexArray> CreateVertexArray() const override;
         std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const override;
-        std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, size_t dataLength, const void* data) const override;
         std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const override;
         void ReloadResources(ReloadableGroup group) override;
+
+    protected:
+        std::shared_ptr<IVertexBuffer> CreateVertexBufferInternal(VertexBufferType type, std::span<const std::byte> data) const override;
 
     private:
         GlRenderer* m_renderer;
