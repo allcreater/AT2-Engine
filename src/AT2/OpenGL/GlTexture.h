@@ -14,8 +14,8 @@ namespace AT2
         GlTexture(Texture flavor, GLint internalFormat);
         ~GlTexture() override;
 
-        void Bind(unsigned int module) const override;
-        void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered,
+        void Bind(unsigned int unit) const override;
+        void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
                          BufferUsage usage = BufferUsage::ReadWrite) const override;
 
         void Unbind() const override;

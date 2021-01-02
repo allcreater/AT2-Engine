@@ -124,7 +124,7 @@ private:
         //Scene
         auto matBallNode = MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
         matBallNode->GetMesh()->Shader = MeshShader;
-        matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform(), {0, 0, 0}), {100, 100, 100}));
+        matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform(), {100, 50, 0}), {100, 100, 100}));
         Scene.GetRoot().AddChild(std::move(matBallNode));
 
         auto terrainNode = AT2::Utils::MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));

@@ -21,7 +21,7 @@ namespace AT2
         SubMesh() = default;
         SubMesh(std::vector<MeshChunk> primitives, int matIndex = 0, std::string name = "") :
             MaterialIndex(matIndex >= 0 ? static_cast<unsigned int>(matIndex)
-                                        : throw std::invalid_argument("matIndex must be great or equal to zero!")),
+                                        : throw std::invalid_argument("matIndex must be more or equal than zero!")),
             Name(std::move(name)), Primitives(std::move(primitives))
         {
         }

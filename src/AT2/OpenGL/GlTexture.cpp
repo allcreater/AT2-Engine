@@ -120,19 +120,19 @@ GlTexture::~GlTexture()
     glDeleteTextures(1, &m_id);
 }
 
-void GlTexture::Bind(unsigned int module) const
+void GlTexture::Bind(unsigned int unit) const
 {
-    assert(module < 10000); //
+    assert(unit < 10000); //
 
-    glActiveTexture(GL_TEXTURE0 + module);
+    glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GetTarget(), m_id);
 
-    m_currentTextureModule = module;
+    m_currentTextureModule = unit;
 }
 
-void GlTexture::BindAsImage(unsigned module, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
+void GlTexture::BindAsImage(unsigned unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
 {
-    glBindImageTexture(module, GetId(), level, isLayered, layer, Mappings::TranslateBufferUsage(usage),
+    glBindImageTexture(unit, GetId(), level, isLayered, layer, Mappings::TranslateBufferUsage(usage),
                        m_internalFormat);
 }
 

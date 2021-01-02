@@ -109,8 +109,8 @@ private:
 
         m_window->ClosingCallback = [&]() { m_renderer->Shutdown(); };
 
-        m_window->RenderCallback = std::bind(&App::OnRender, this, std::placeholders::_1);
-        m_window->InitializeCallback = std::bind(&App::OnInitialize, this);
+        m_window->RenderCallback = std::bind_front(&App::OnRender, this);
+        m_window->InitializeCallback = std::bind_front(&App::OnInitialize, this);
     }
 
 private:

@@ -162,9 +162,9 @@ namespace AT2
         virtual ~ITexture() = default;
 
     public:
-        virtual void Bind(unsigned int module) const = 0;
+        virtual void Bind(unsigned int unit) const = 0;
         //TODO: think about interface
-        virtual void BindAsImage(unsigned int module, glm::u32 level, glm::u32 layer, bool isLayered,
+        virtual void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
                                  BufferUsage usage = BufferUsage::ReadWrite) const = 0;
         virtual void Unbind() const = 0;
         virtual void BuildMipmaps() = 0;
@@ -314,8 +314,8 @@ namespace AT2
         virtual void ReloadResources(ReloadableGroup group) = 0;
 
     protected:
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBufferInternal(VertexBufferType type,
-                                                                                std::span<const std::byte> data) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer>
+            CreateVertexBufferInternal(VertexBufferType type, std::span<const std::byte> data) const = 0;
 
     };
 

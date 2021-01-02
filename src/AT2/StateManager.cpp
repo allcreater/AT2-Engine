@@ -20,9 +20,9 @@ void StateManager::BindTextures(const TextureSet& _textures)
     std::vector<bool> moduleLock(m_bindedTextures.size());
     for (const auto& texture : _textures)
     {
-        const int module = texture->GetCurrentModule();
-        if (module >= 0)
-            moduleLock[module] = true;
+        const int unit = texture->GetCurrentModule();
+        if (unit >= 0)
+            moduleLock[unit] = true;
     }
 
 
