@@ -18,9 +18,9 @@ namespace AT2::Mappings
         case ShaderType::Geometry: return GL_GEOMETRY_SHADER;
         case ShaderType::Fragment: return GL_FRAGMENT_SHADER;
         case ShaderType::Computational: return GL_COMPUTE_SHADER;
-        default: assert(false);
         }
 
+        assert(false);
         return 0;
     }
 
@@ -33,9 +33,9 @@ namespace AT2::Mappings
         case TextureWrapMode::MirroredRepeat: return GL_MIRRORED_REPEAT;
         case TextureWrapMode::Repeat: return GL_REPEAT;
         case TextureWrapMode::MirrorClampToEdge: return GL_MIRROR_CLAMP_TO_EDGE;
-        default: assert(false);
         }
 
+        assert(false);
         return 0;
     }
 
@@ -51,9 +51,9 @@ namespace AT2::Mappings
         case TextureLayout::RGBA: return GL_RGBA;
         case TextureLayout::DepthComponent: return GL_DEPTH_COMPONENT;
         case TextureLayout::StencilIndex: return GL_STENCIL_INDEX;
-        default: assert(false);
         }
 
+        assert(false);
         return 0;
     }
 
@@ -71,9 +71,9 @@ namespace AT2::Mappings
         case BufferDataType::Float: return GL_FLOAT;
         case BufferDataType::Double: return GL_DOUBLE;
         case BufferDataType::Fixed: return GL_FIXED;
-        default: assert(false);
         }
 
+        assert(false);
         return 0;
     }
 
@@ -84,9 +84,9 @@ namespace AT2::Mappings
         case VertexBufferType::ArrayBuffer: return GL_ARRAY_BUFFER;
         case VertexBufferType::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
         case VertexBufferType::UniformBuffer: return GL_UNIFORM_BUFFER;
-        default: assert(false); //not supported yet :(
         }
 
+        assert(false);
         return 0;
     }
 
@@ -97,9 +97,9 @@ namespace AT2::Mappings
         case BufferUsage::Read: return GL_READ_ONLY;
         case BufferUsage::ReadWrite: return GL_READ_WRITE;
         case BufferUsage::Write: return GL_WRITE_ONLY;
-        default: assert(false);
         }
 
+        assert(false);
         return 0;
     }
 
@@ -152,9 +152,9 @@ namespace AT2::Mappings
         case CompareFunction::Less: return GL_LESS;
         case CompareFunction::LessEqual: return GL_LEQUAL;
         case CompareFunction::Never: return GL_NEVER;
-        default: assert(false);
         }
 
+        assert(false);
         return 0;
     }
 
@@ -176,9 +176,9 @@ namespace AT2::Mappings
         case BlendFactor::OneMinusConstantColor: return GL_ONE_MINUS_CONSTANT_COLOR;
         case BlendFactor::ConstantAlpha: return GL_CONSTANT_ALPHA;
         case BlendFactor::OneMinusConstantAlpha: return GL_ONE_MINUS_CONSTANT_ALPHA;
-        default: assert(false);
         }
 
+        assert(false);
         return 0;
     }
 
@@ -190,9 +190,9 @@ namespace AT2::Mappings
         case 0b01: return GL_BACK;
         case 0b10: return GL_FRONT;
         case 0b11: return GL_FRONT_AND_BACK;
-        default: assert(false);
         }
 
+        assert(false);
         return 0;
     }
 
@@ -203,10 +203,15 @@ namespace AT2::Mappings
             case PolygonRasterizationMode::Point: return GL_POINT;
             case PolygonRasterizationMode::Lines: return GL_LINE;
             case PolygonRasterizationMode::Fill: return GL_FILL;
-            default: assert(false);
         }
 
+        assert(false);
         return 0;
+    }
+
+    constexpr GLboolean TranslateBool(bool value)
+    {
+        return value ? GL_TRUE : GL_FALSE;
     }
 
 } // namespace AT2::Mappings
