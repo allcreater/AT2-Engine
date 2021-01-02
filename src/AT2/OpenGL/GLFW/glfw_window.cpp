@@ -12,7 +12,9 @@ GlfwWindow* GlfwWindow::FromNativeWindow(const GLFWwindow* window)
     return frontendPtr;
 }
 
-GlfwWindow::GlfwWindow(GlfwContextParameters contextParams) : context_parameters(contextParams)
+GlfwWindow::GlfwWindow(GlfwContextParameters contextParams, glm::ivec2 initialSize, GLFWmonitor* monitor) :
+    context_parameters(contextParams),
+    window_size(initialSize)
 {
     //std::lock_guard lock(GlfwApplication::Get().mutex);
 
@@ -22,13 +24,17 @@ GlfwWindow::GlfwWindow(GlfwContextParameters contextParams) : context_parameters
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, context_parameters.context_minor_version);
     glfwWindowHint(GLFW_OPENGL_PROFILE, static_cast<int>(context_parameters.profile));
 
+    glfwWindowHint(GLFW_RED_BITS, context_parameters.framebuffer_bits_red);
+    glfwWindowHint(GLFW_GREEN_BITS, context_parameters.framebuffer_bits_green);
+    glfwWindowHint(GLFW_BLUE_BITS, context_parameters.framebuffer_bits_blue);
+
     glfwWindowHint(GLFW_SAMPLES, context_parameters.msaa_samples);
     glfwWindowHint(GLFW_REFRESH_RATE, context_parameters.refresh_rate);
     glfwWindowHint(GLFW_SRGB_CAPABLE, context_parameters.srgb_capable);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, context_parameters.debug_context);
 
     /* Create a windowed mode window and its OpenGL context */
-    window_impl = glfwCreateWindow(window_size.x, window_size.y, window_label.c_str(), nullptr, nullptr);
+    window_impl = glfwCreateWindow(window_size.x, window_size.y, window_label.c_str(), monitor, nullptr);
     if (!window_impl)
         throw GlfwException("Window creation failed");
 

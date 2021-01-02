@@ -10,9 +10,27 @@ GlfwApplication& GlfwApplication::get()
 }
 
 
-std::shared_ptr<GlfwWindow> GlfwApplication::createWindow(GlfwContextParameters parameters)
+std::shared_ptr<GlfwWindow> GlfwApplication::createWindow(GlfwContextParameters parameters, glm::ivec2 size)
 {
-    auto* const pWindow = new GlfwWindow(parameters);
+    return createWindowInternal(parameters, size, nullptr);
+}
+
+std::shared_ptr<GlfwWindow> GlfwApplication::createFullscreenWindow(GlfwContextParameters parameters)
+{
+    auto* monitor = glfwGetPrimaryMonitor();
+    const auto* defaultVideomode = glfwGetVideoMode(monitor);
+    
+    parameters.refresh_rate = defaultVideomode->refreshRate;
+    parameters.framebuffer_bits_red = defaultVideomode->redBits;
+    parameters.framebuffer_bits_green = defaultVideomode->greenBits;
+    parameters.framebuffer_bits_blue = defaultVideomode->blueBits;
+
+    return createWindowInternal(parameters, {defaultVideomode->width, defaultVideomode->height}, monitor);
+}
+
+std::shared_ptr<GlfwWindow> GlfwApplication::createWindowInternal(GlfwContextParameters parameters, glm::ivec2 size, GLFWmonitor* monitor)
+{
+    auto* const pWindow = new GlfwWindow(parameters, size, monitor);
     std::shared_ptr<GlfwWindow> window {pWindow};
 
     std::lock_guard lock {windows_registry_mutex};

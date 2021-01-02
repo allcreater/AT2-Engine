@@ -37,8 +37,8 @@ public:
             //spdlog::info("Exit");
         };
 
-        m_window = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true});
-        m_window->setLabel("Some engine test").setSize({1024, 768}).setCursorMode(GlfwCursorMode::Disabled);
+        m_window = GlfwApplication::get().createFullscreenWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true});
+        m_window->setLabel("Some engine test").setCursorMode(GlfwCursorMode::Disabled);
 
         SetupWindowCallbacks();
     }

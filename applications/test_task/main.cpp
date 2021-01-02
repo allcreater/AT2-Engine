@@ -14,9 +14,9 @@ public:
         };
 
 
-        m_window = GlfwApplication::get().createWindow();
+        m_window = GlfwApplication::get().createWindow({}, {1024, 768});
 
-        m_window->setLabel("Graph control demo").setSize({1024, 768}).setCursorMode(GlfwCursorMode::Normal);
+        m_window->setLabel("Graph control demo").setCursorMode(GlfwCursorMode::Normal);
 
         SetupWindowCallbacks();
     }

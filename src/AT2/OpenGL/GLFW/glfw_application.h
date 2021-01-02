@@ -31,7 +31,8 @@ public:
     std::function<void()> OnNoActiveWindows {};
 
     //thread-safe
-    std::shared_ptr<GlfwWindow> createWindow(GlfwContextParameters = {});
+    std::shared_ptr<GlfwWindow> createWindow(GlfwContextParameters, glm::ivec2 size);
+    std::shared_ptr<GlfwWindow> createFullscreenWindow(GlfwContextParameters);
 
     //thread-safe
     template <typename T>
@@ -49,6 +50,8 @@ public:
 private:
     GlfwApplication();
     ~GlfwApplication();
+
+    std::shared_ptr<GlfwWindow> createWindowInternal(GlfwContextParameters, glm::ivec2 size, GLFWmonitor* monitor);
 
 private:
     std::atomic<bool> runned {false};

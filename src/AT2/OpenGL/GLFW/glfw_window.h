@@ -26,13 +26,18 @@ struct GlfwContextParameters
 {
     GlfwOpenglProfile profile = GlfwOpenglProfile::Core;
     int context_major_version = 4;
-    int context_minor_version = 3;
+    int context_minor_version = 5;
 
     int msaa_samples = GLFW_DONT_CARE;
     int refresh_rate = GLFW_DONT_CARE;
 
     bool srgb_capable = true;
     bool debug_context = false;
+
+    int framebuffer_bits_red = 8;
+    int framebuffer_bits_green = 8;
+    int framebuffer_bits_blue = 8;
+    int framebuffer_bits_depth = 24;
 };
 
 
@@ -167,7 +172,7 @@ protected:
 
 private:
     ///@thread_safety main thread
-    GlfwWindow(GlfwContextParameters params);
+    GlfwWindow(GlfwContextParameters params, glm::ivec2 initialSize, GLFWmonitor* monitor = nullptr);
 
     void SetupCallbacks();
     void MakeContextCurrent();
