@@ -10,16 +10,6 @@ namespace AT2
     class GlTexture;
     class GlFrameBuffer;
 
-
-    class GlRendererCapabilities : public IRendererCapabilities
-    {
-    public:
-        [[nodiscard]] unsigned int GetMaxNumberOfTextureUnits() const override;
-        [[nodiscard]] unsigned int GetMaxNumberOfColorAttachments() const override;
-        [[nodiscard]] unsigned int GetMaxTextureSize() const override;
-        [[nodiscard]] unsigned int GetMaxNumberOfVertexAttributes() const override;
-    };
-
     class GlResourceFactory : public IResourceFactory
     {
     public:
@@ -83,7 +73,7 @@ namespace AT2
     private:
         std::unique_ptr<IStateManager> m_stateManager;
         std::unique_ptr<IResourceFactory> m_resourceFactory;
-        std::unique_ptr<GlRendererCapabilities> m_rendererCapabilities;
+        std::unique_ptr<IRendererCapabilities> m_rendererCapabilities;
     };
 
 } // namespace AT2

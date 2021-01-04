@@ -11,7 +11,9 @@ GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType) : m_id(0), m_publicT
 {
     m_privateType = static_cast<GlBufferType>(Mappings::TranslateBufferType(bufferType));
 
-    glGenBuffers(1, &m_id);
+    glCreateBuffers(1, &m_id);
+
+    //TODO: use glNamedBufferStorage ?
 }
 
 void GlVertexBuffer::Bind()
@@ -26,10 +28,9 @@ GlVertexBuffer::~GlVertexBuffer()
 
 void GlVertexBuffer::SetDataRaw(std::span<const std::byte> data)
 {
-    assert(__glewNamedBufferDataEXT);
     assert(!m_mapped);
 
-    glNamedBufferDataEXT(m_id, data.size(), data.data(), static_cast<GLenum>(m_usageHint));
+    glNamedBufferData(m_id, data.size(), data.data(), static_cast<GLenum>(m_usageHint));
 
     m_length = data.size();
 }
@@ -42,7 +43,7 @@ std::span<std::byte> GlVertexBuffer::Map(BufferUsage usage)
 
     m_mapped = true;
 
-    return {static_cast<std::byte*>(glMapNamedBufferEXT(m_id, Mappings::TranslateBufferUsage(usage))), m_length};
+    return {static_cast<std::byte*>(glMapNamedBuffer(m_id, Mappings::TranslateBufferUsage(usage))), m_length};
 }
 
 std::span<std::byte> GlVertexBuffer::MapRange(BufferUsage usage, size_t offset, size_t length)
@@ -59,7 +60,7 @@ std::span<std::byte> GlVertexBuffer::MapRange(BufferUsage usage, size_t offset, 
         | ((usage | BufferUsage::Read) == BufferUsage::Read ? GL_MAP_READ_BIT : 0)
         | ((usage | BufferUsage::Write) == BufferUsage::Write ? GL_MAP_WRITE_BIT : 0);
 
-    return {static_cast<std::byte*>(glMapNamedBufferRangeEXT(m_id, offset, length, mapFlags)), length};
+    return {static_cast<std::byte*>(glMapNamedBufferRange(m_id, offset, length, mapFlags)), length};
 }
 
 void GlVertexBuffer::Unmap()
@@ -69,5 +70,5 @@ void GlVertexBuffer::Unmap()
 
     m_mapped = false;
 
-    glUnmapNamedBufferEXT(m_id);
+    glUnmapNamedBuffer(m_id);
 }

@@ -12,7 +12,7 @@ GlUniformBuffer::GlUniformBuffer(std::shared_ptr<const UniformBlockInfo> ubi) :
 {
     m_length = m_uniformBlockInfo->DataSize;
 
-    glNamedBufferDataEXT(m_id, m_length, 0, static_cast<GLenum>(m_usageHint));
+    glNamedBufferData(m_id, m_length, 0, static_cast<GLenum>(m_usageHint));
 }
 
 GlUniformBuffer::~GlUniformBuffer()

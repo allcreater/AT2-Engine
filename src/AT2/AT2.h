@@ -115,7 +115,7 @@ namespace AT2
         [[nodiscard]] virtual glm::ivec2 GetActualSize() const = 0;
     };
 
-    class IVertexBuffer : public IBuffer
+    class IVertexBuffer : public virtual IBuffer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(IVertexBuffer)
@@ -147,10 +147,10 @@ namespace AT2
         [[nodiscard]] virtual std::optional<BufferDataType> GetIndexBufferType() const = 0;
 
         //TODO GetOrCreateVertexBuffer ?
-        virtual void SetVertexBuffer(unsigned int index, std::shared_ptr<IVertexBuffer> buffer, BufferTypeInfo) = 0;
-        virtual void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) = 0;
+        virtual void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IVertexBuffer> buffer,
+                                     const BufferBindingParams& bindingParams) = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
-        [[nodiscard]] virtual std::optional<BufferTypeInfo> GetVertexBufferBinding(unsigned int index) const = 0;
+        [[nodiscard]] virtual std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const = 0;
     };
 
     class ITexture
@@ -179,10 +179,13 @@ namespace AT2
         [[nodiscard]] virtual const TextureWrapMode& GetWrapMode() const noexcept = 0;
 
         //TODO: think how to make better
+        // Set data of a Texture1d
         virtual void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
                                 void* data) = 0;
+        // Set data of a Texture1DArray and Texture2D
         virtual void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                                void* data, int cubeMapFace = 0) = 0;
+                                void* data) = 0;
+        // Set data of a Texture2DArray, Texture3D, TextureCubeArray, TextureCube
         virtual void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
                                 void* data) = 0;
     };
@@ -358,7 +361,7 @@ namespace AT2
     {
         auto vertexArray = factory.CreateVertexArray();
         static_cast<void>(std::initializer_list<int> {
-            (vertexArray->SetVertexBuffer(args.first,
+            (vertexArray->SetAttributeBinding(args.first,
                                           factory.CreateVertexBuffer(VertexBufferType::ArrayBuffer, args.second),
                                           BufferDataTypes::BufferTypeOf<Args>),
              0)...});

@@ -22,17 +22,16 @@ namespace AT2
         [[nodiscard]] std::shared_ptr<IVertexBuffer> GetIndexBuffer() const override { return m_indexBuffer.first; }
         [[nodiscard]] std::optional<BufferDataType> GetIndexBufferType() const override { return m_indexBuffer.second; }
 
-        void SetVertexBuffer(unsigned int index, std::shared_ptr<IVertexBuffer> buffer,
-                             BufferTypeInfo binding) override;
-        void SetVertexBufferDivisor(unsigned int index, unsigned int divisor = 0) override;
+        void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IVertexBuffer> buffer,
+                             const BufferBindingParams& binding) override;
         [[nodiscard]] std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const override;
-        [[nodiscard]] std::optional<BufferTypeInfo> GetVertexBufferBinding(unsigned int index) const override;
+        [[nodiscard]] std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const override;
 
     private:
         GLuint m_id;
 
         //we are sure that all buffer will be at least GlVertexBuffer or derived types
-        std::vector<std::pair<std::shared_ptr<IVertexBuffer>, BufferTypeInfo>> m_buffers;
+        std::vector<std::pair<std::shared_ptr<IVertexBuffer>, BufferBindingParams>> m_buffers;
         std::pair<std::shared_ptr<IVertexBuffer>, std::optional<BufferDataType>> m_indexBuffer;
     };
 

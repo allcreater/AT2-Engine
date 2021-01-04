@@ -4,43 +4,55 @@
 #include "GlFrameBuffer.h"
 #include "Mappings.h"
 
+using namespace std::literals;
 using namespace AT2;
+using namespace OpenGL::Utils;
 
-static int GetInteger(GLenum parameter, GLint min = std::numeric_limits<GLint>::min(),
-                      GLint max = std::numeric_limits<GLint>::max())
+namespace
 {
-    GLint result = 0;
-    glGetIntegerv(parameter, &result);
+    class GlRendererCapabilities : public IRendererCapabilities
+    {
+    public:
+        [[nodiscard]] unsigned int GetMaxNumberOfTextureUnits() const override { return m_maxNumberOfTextureUnits; }
+        [[nodiscard]] unsigned int GetMaxNumberOfColorAttachments() const override { return m_maxNumberOfColorAttachments; }
+        [[nodiscard]] unsigned int GetMaxTextureSize() const override { return m_maxTextureSize; }
+        [[nodiscard]] unsigned int GetMaxNumberOfVertexAttributes() const override { return m_maxNumberOfVertexAttributes; }
 
-    if (result < min || result > max)
-        throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
+    private:
+        unsigned int m_maxNumberOfTextureUnits =        []{ return GetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, 1); }();
+        unsigned int m_maxNumberOfColorAttachments =    []{ return GetInteger(GL_MAX_COLOR_ATTACHMENTS, 1); } ();
+        unsigned int m_maxTextureSize =                 []{ return GetInteger(GL_MAX_TEXTURE_SIZE, 1); } ();
+        unsigned int m_maxNumberOfVertexAttributes =    []
+        {
+            const auto maxAttribs = GetInteger(GL_MAX_VERTEX_ATTRIBS, 1);
+            const auto maxBindings = GetInteger(GL_MAX_VERTEX_ATTRIB_BINDINGS, 1);
+            if (maxAttribs != maxBindings)
+            {
+                Log::Warning() << "OpenGL renderer:"sv
+                               << "GL_MAX_VERTEX_ATTRIBS and GL_MAX_VERTEX_ATTRIB_BINDINGS"sv
+                               << "are not same. AT2 supports lesser value" << std::endl;
+            }
 
-    return result;
-}
+            return std::min(maxAttribs, maxBindings);
+        }();
+    };
 
-unsigned int GlRendererCapabilities::GetMaxNumberOfTextureUnits() const
-{
-    return GetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-                      1); //GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, GL_MAX_TEXTURE_IMAGE_UNITS ???
-}
-unsigned int GlRendererCapabilities::GetMaxNumberOfColorAttachments() const
-{
-    return GetInteger(GL_MAX_COLOR_ATTACHMENTS, 1);
-}
-unsigned int GlRendererCapabilities::GetMaxTextureSize() const
-{
-    return GetInteger(GL_MAX_TEXTURE_SIZE, 1);
-}
-unsigned int GlRendererCapabilities::GetMaxNumberOfVertexAttributes() const
-{
-    return GetInteger(GL_MAX_VERTEX_ATTRIBS, 1);
-}
+    void PrintDiagnosticInfo()
+    {
+        Log::Info() << "OpenGL 4.5 renderer created. \n"sv
+                    << "Renderer: "sv << glGetString(GL_RENDERER) << " ("sv << glGetString(GL_VERSION) << ")\n"sv
+                    << "Vendor: "sv << glGetString(GL_VENDOR) << '\n'
+                    << "GLSL version: "sv << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    }
+} // namespace
 
 GlRenderer::GlRenderer()
 {
     glDebugMessageCallback(GlErrorCallback, this);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+    PrintDiagnosticInfo();
 
     m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
     m_resourceFactory = std::make_unique<GlResourceFactory>(this);
@@ -50,7 +62,6 @@ GlRenderer::GlRenderer()
 void GlRenderer::FinishFrame()
 {
     glFinish();
-    //SDL_GL_SwapWindow(m_window);
 }
 
 IFrameBuffer& GlRenderer::GetDefaultFramebuffer() const

@@ -39,15 +39,17 @@ namespace AT2
         UniformBuffer
     };
 
-    struct BufferTypeInfo
+    struct BufferBindingParams
     {
         BufferDataType Type;
         unsigned char Count;
+        // The distance between elements within the buffer
         unsigned int Stride;
+        // The offset of the first element of the buffer
         unsigned int Offset = 0;
         bool IsNormalized = false;
+        unsigned int Divisor = 0;
     };
-
 
     namespace BufferDataTypes
     {
@@ -74,40 +76,40 @@ namespace AT2
         }
 
         template <typename T, typename = std::enable_if<std::is_arithmetic_v<T>>>
-        constexpr BufferTypeInfo BufferTypeOf = {DeduceBufferDataType<T>(), 1, sizeof(T)};
+        constexpr BufferBindingParams BufferTypeOf = {DeduceBufferDataType<T>(), 1, sizeof(T)};
 
         template <typename T, glm::length_t L, glm::qualifier Q>
-        constexpr BufferTypeInfo BufferTypeOf<glm::vec<L, T, Q>> = {DeduceBufferDataType<T>(), L, sizeof(glm::vec<L, T, Q>)};
+        constexpr BufferBindingParams BufferTypeOf<glm::vec<L, T, Q>> = {DeduceBufferDataType<T>(), L, sizeof(glm::vec<L, T, Q>)};
 
         //scalars
-        constexpr BufferTypeInfo Byte = BufferTypeOf<std::int8_t>;
-        constexpr BufferTypeInfo UByte = BufferTypeOf<std::uint8_t>;
+        constexpr BufferBindingParams Byte = BufferTypeOf<std::int8_t>;
+        constexpr BufferBindingParams UByte = BufferTypeOf<std::uint8_t>;
 
-        constexpr BufferTypeInfo Short = BufferTypeOf<std::int16_t>;
-        constexpr BufferTypeInfo UShort = BufferTypeOf<std::uint16_t>;
+        constexpr BufferBindingParams Short = BufferTypeOf<std::int16_t>;
+        constexpr BufferBindingParams UShort = BufferTypeOf<std::uint16_t>;
 
-        constexpr BufferTypeInfo Int = BufferTypeOf<std::int32_t>;
-        constexpr BufferTypeInfo UInt = BufferTypeOf<std::uint32_t>;
+        constexpr BufferBindingParams Int = BufferTypeOf<std::int32_t>;
+        constexpr BufferBindingParams UInt = BufferTypeOf<std::uint32_t>;
 
-        constexpr BufferTypeInfo Float = BufferTypeOf<std::float_t>;
-        constexpr BufferTypeInfo Double = BufferTypeOf<std::double_t>;
+        constexpr BufferBindingParams Float = BufferTypeOf<std::float_t>;
+        constexpr BufferBindingParams Double = BufferTypeOf<std::double_t>;
 
         ////vectors
-        constexpr BufferTypeInfo BVec2 = BufferTypeOf<glm::bvec2>;
-        constexpr BufferTypeInfo BVec3 = BufferTypeOf<glm::bvec3>;
-        constexpr BufferTypeInfo BVec4 = BufferTypeOf<glm::bvec4>;
+        constexpr BufferBindingParams BVec2 = BufferTypeOf<glm::bvec2>;
+        constexpr BufferBindingParams BVec3 = BufferTypeOf<glm::bvec3>;
+        constexpr BufferBindingParams BVec4 = BufferTypeOf<glm::bvec4>;
 
-        constexpr BufferTypeInfo IVec2 = BufferTypeOf<glm::ivec2>;
-        constexpr BufferTypeInfo IVec3 = BufferTypeOf<glm::ivec3>;
-        constexpr BufferTypeInfo IVec4 = BufferTypeOf<glm::ivec4>;
+        constexpr BufferBindingParams IVec2 = BufferTypeOf<glm::ivec2>;
+        constexpr BufferBindingParams IVec3 = BufferTypeOf<glm::ivec3>;
+        constexpr BufferBindingParams IVec4 = BufferTypeOf<glm::ivec4>;
 
-        constexpr BufferTypeInfo Vec2 = BufferTypeOf<glm::vec2>;
-        constexpr BufferTypeInfo Vec3 = BufferTypeOf<glm::vec3>;
-        constexpr BufferTypeInfo Vec4 = BufferTypeOf<glm::vec4>;
+        constexpr BufferBindingParams Vec2 = BufferTypeOf<glm::vec2>;
+        constexpr BufferBindingParams Vec3 = BufferTypeOf<glm::vec3>;
+        constexpr BufferBindingParams Vec4 = BufferTypeOf<glm::vec4>;
 
-        constexpr BufferTypeInfo DVec2 = BufferTypeOf<glm::dvec2>;
-        constexpr BufferTypeInfo DVec3 = BufferTypeOf<glm::dvec3>;
-        constexpr BufferTypeInfo DVec4 = BufferTypeOf<glm::dvec4>;
+        constexpr BufferBindingParams DVec2 = BufferTypeOf<glm::dvec2>;
+        constexpr BufferBindingParams DVec3 = BufferTypeOf<glm::dvec3>;
+        constexpr BufferBindingParams DVec4 = BufferTypeOf<glm::dvec4>;
     }
 
 

@@ -7,7 +7,7 @@
 namespace AT2
 {
 
-    class GlUniformBuffer : public GlVertexBuffer, public IUniformContainer
+    class GlUniformBuffer : protected GlVertexBuffer, public virtual IBuffer, public IUniformContainer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(GlUniformBuffer)

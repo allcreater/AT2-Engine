@@ -5,7 +5,7 @@ using namespace AT2;
 GlFrameBuffer::GlFrameBuffer(const IRendererCapabilities& rendererCapabilities) :
     m_colorAttachments(rendererCapabilities.GetMaxNumberOfColorAttachments())
 {
-    glGenFramebuffers(1, &m_id);
+    glCreateFramebuffers(1, &m_id);
 }
 
 GlFrameBuffer::~GlFrameBuffer()
@@ -22,29 +22,21 @@ void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, const std:
 
     auto texture = std::dynamic_pointer_cast<GlTexture>(abstractTexture);
 
-    const auto attachement = GL_COLOR_ATTACHMENT0 + attachmentNumber;
+    const auto attachment = GL_COLOR_ATTACHMENT0 + attachmentNumber;
     if (texture)
     {
-        std::visit(Utils::overloaded {
-                       [=](const Texture1D& type) {
-                           glNamedFramebufferTexture1DEXT(m_id, attachement, texture->GetTarget(), texture->GetId(),
-                                                          0); //I don't know practical purpose of it, but let it be =)
-                       },
-                       [=](const Texture2D& type) {
-                           glNamedFramebufferTexture2DEXT(m_id, attachement, static_cast<GLenum>(texture->GetTarget()),
-                                                          texture->GetId(), 0);
-                       },
-                       [=](const Texture3D& type) {
-                           glNamedFramebufferTexture3DEXT(m_id, attachement, static_cast<GLenum>(texture->GetTarget()),
-                                                          texture->GetId(), 0, 0); //TODO: zoffset controlling
-                       },
-                       [=](auto&& type) //do nothing
-                       {}},
-                   texture->GetType());
+        std::visit(
+            [=](const auto& type) {
+                using T = std::decay_t<decltype(type)>;
+                if constexpr (std::is_same_v<T, Texture1D> || std::is_same_v<T, Texture2D> ||
+                              std::is_same_v<T, Texture3D>)
+                    glNamedFramebufferTexture(m_id, attachment, texture->GetId(), 0);
+            },
+            texture->GetType());
     }
     else
     {
-        glNamedFramebufferTextureEXT(m_id, attachement, 0, 0);
+        glNamedFramebufferTexture(m_id, attachment, 0, 0);
 
         if (abstractTexture)
         {
@@ -72,14 +64,13 @@ void GlFrameBuffer::SetDepthAttachment(const std::shared_ptr<ITexture>& abstract
     m_depthAttachment = std::dynamic_pointer_cast<GlTexture>(abstractTexture);
     if (!m_depthAttachment)
     {
-        glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+        glNamedFramebufferTexture(m_id, GL_DEPTH_ATTACHMENT, 0, 0);
         if (abstractTexture)
             throw AT2Exception(AT2Exception::ErrorCase::Buffer,
                                "GlFrameBuffer: attachment texture should be GlTexture");
     }
     else if (std::holds_alternative<Texture2D>(m_depthAttachment->GetType()))
-        glNamedFramebufferTexture2DEXT(m_id, GL_DEPTH_ATTACHMENT, static_cast<GLenum>(m_depthAttachment->GetTarget()),
-                                       m_depthAttachment->GetId(), 0);
+        glNamedFramebufferTexture(m_id, GL_DEPTH_ATTACHMENT, m_depthAttachment->GetId(), 0);
     else
         throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: depth attachment should be Texture2D");
 }

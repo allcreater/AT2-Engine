@@ -7,7 +7,7 @@ using namespace AT2;
 GlVertexArray::GlVertexArray(const IRendererCapabilities& _rendererCapabilities) :
     m_buffers(_rendererCapabilities.GetMaxNumberOfVertexAttributes())
 {
-    glGenVertexArrays(1, &m_id);
+    glCreateVertexArrays(1, &m_id);
 }
 
 //TODO: unlink vertex array from index buffer?
@@ -40,34 +40,54 @@ void GlVertexArray::SetIndexBuffer(std::shared_ptr<IVertexBuffer> _buffer, Buffe
     m_indexBuffer = {std::move(_buffer), buffer ? type : std::optional<BufferDataType>{}};
 }
 
-//TODO: one vertex buffer could be binded multiple times with different stride, offsets etc!
-void GlVertexArray::SetVertexBuffer(unsigned int _index, std::shared_ptr<IVertexBuffer> _buffer, BufferTypeInfo binding)
+
+void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IVertexBuffer> buffer,
+                                    const BufferBindingParams& binding)
 {
-    if (_buffer)
+    if (!buffer)
     {
-        assert(dynamic_cast<GlVertexBuffer*>(_buffer.get()));
+        glDisableVertexArrayAttrib(m_id, attributeIndex);
+        m_buffers.at(attributeIndex).first = nullptr;
 
-        if (_buffer->GetType() != VertexBufferType::ArrayBuffer)
-            throw AT2Exception("GlVertexBuffer: trying to attach incorrect type buffer");
-
-        const auto platformDataType = Mappings::TranslateExternalType(binding.Type);
-
-        glVertexArrayVertexAttribOffsetEXT(m_id, _buffer->GetId(), _index, static_cast<GLint>(binding.Count),
-                                           platformDataType, binding.IsNormalized ? GL_TRUE : GL_FALSE, binding.Stride,
-                                           binding.Offset);
-        glEnableVertexArrayAttribEXT(m_id, _index);
-    }
-    else
-    {
-        glDisableVertexArrayAttribEXT(m_id, _index);
+        return;
     }
 
-    m_buffers.at(_index) = {std::move(_buffer), binding};
-}
+    assert(dynamic_cast<GlVertexBuffer*>(buffer.get()));
 
-void GlVertexArray::SetVertexBufferDivisor(unsigned int index, unsigned int divisor)
-{
-    glVertexArrayVertexAttribDivisorEXT(m_id, index, divisor);
+    if (buffer->GetType() != VertexBufferType::ArrayBuffer)
+        throw AT2Exception("GlVertexBuffer: trying to attach incorrect type buffer");
+
+    const auto platformDataType = Mappings::TranslateExternalType(binding.Type);
+    const auto bindingIndex = attributeIndex;
+
+
+    glVertexArrayVertexBuffer(m_id, bindingIndex, buffer->GetId(), binding.Offset, binding.Stride);
+    glVertexArrayBindingDivisor(m_id, bindingIndex, binding.Divisor);
+
+    switch (binding.Type)
+    {
+        case BufferDataType::Double:
+            glVertexArrayAttribLFormat(m_id, attributeIndex, static_cast<GLint>(binding.Count), platformDataType, 0);
+            break;
+
+        case BufferDataType::Byte:
+        case BufferDataType::UByte:
+        case BufferDataType::Short:
+        case BufferDataType::UShort:
+        case BufferDataType::Int:
+        case BufferDataType::UInt:
+            glVertexArrayAttribIFormat(m_id, attributeIndex, static_cast<GLint>(binding.Count), platformDataType, 0);
+            break;
+
+        default:
+            glVertexArrayAttribFormat(m_id, attributeIndex, static_cast<GLint>(binding.Count), platformDataType,
+                                      Mappings::TranslateBool(binding.IsNormalized), 0);
+    }
+
+    glEnableVertexArrayAttrib(m_id, attributeIndex);
+
+
+    m_buffers.at(attributeIndex) = {std::move(buffer), binding};
 }
 
 std::shared_ptr<IVertexBuffer> GlVertexArray::GetVertexBuffer(unsigned int index) const
@@ -75,8 +95,8 @@ std::shared_ptr<IVertexBuffer> GlVertexArray::GetVertexBuffer(unsigned int index
     return m_buffers.at(index).first;
 }
 
-std::optional<BufferTypeInfo> GlVertexArray::GetVertexBufferBinding(unsigned index) const
+std::optional<BufferBindingParams> GlVertexArray::GetVertexBufferBinding(unsigned index) const
 {
     const auto& [buffer, binding] = m_buffers.at(index);
-    return buffer ? binding : std::optional<BufferTypeInfo> {};
+    return buffer ? binding : std::optional<BufferBindingParams> {};
 }

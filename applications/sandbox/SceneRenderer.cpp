@@ -89,17 +89,14 @@ namespace AT2
         //TODO: map buffer instead of recreating it
         auto vertexBuffer = rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, lrv.collectedLights);
 
-        vao->SetVertexBuffer(2, vertexBuffer,
-            BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, position)} );
-        vao->SetVertexBufferDivisor(2, 1);
+        vao->SetAttributeBinding(2, vertexBuffer,
+            BufferBindingParams {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, position), false, 1} );
 
-        vao->SetVertexBuffer(3, vertexBuffer,
-            BufferTypeInfo {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, intensity)});
-        vao->SetVertexBufferDivisor(3, 1);
+        vao->SetAttributeBinding(3, vertexBuffer,
+            BufferBindingParams {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, intensity), false, 1});
 
-        vao->SetVertexBuffer(4, vertexBuffer,
-            BufferTypeInfo {BufferDataType::Float, 1, sizeof(LightAttribs), offsetof(LightAttribs, effective_radius)});
-        vao->SetVertexBufferDivisor(4, 1);
+        vao->SetAttributeBinding(4, vertexBuffer,
+            BufferBindingParams {BufferDataType::Float, 1, sizeof(LightAttribs), offsetof(LightAttribs, effective_radius), false, 1});
 
 
         auto& stateManager = renderer->GetStateManager();

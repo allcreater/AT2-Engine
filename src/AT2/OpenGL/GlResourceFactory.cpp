@@ -98,7 +98,7 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const 
 {
     auto texture = std::make_shared<GlTexture>(Texture2D {size},
                                                *DetermineInternalFormat(TextureFormats::RGBA8)); //TODO: choose formats?
-    texture->CopyFromFramebuffer(0, pos, size);
+    texture->CopyFromFramebuffer(0, pos, size, {});
     return texture;
 }
 

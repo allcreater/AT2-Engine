@@ -22,7 +22,7 @@ namespace AT2::Utils
 
         auto& rf = renderer.GetResourceFactory();
         auto vao = rf.CreateVertexArray();
-        vao->SetVertexBuffer(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, texCoords), BufferDataTypes::Vec2);
+        vao->SetAttributeBinding(1, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, texCoords), BufferDataTypes::Vec2);
 
         auto rootNode = std::make_unique<MeshNode>();
 

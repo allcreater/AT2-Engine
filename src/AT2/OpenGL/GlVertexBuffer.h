@@ -2,10 +2,6 @@
 #define AT2_GL_VERTEXBUFFER_H
 
 #include "AT2lowlevel.h"
-#include "../AT2.h"
-#include "../AT2.h"
-#include "../AT2.h"
-#include "../AT2.h"
 
 namespace AT2
 {

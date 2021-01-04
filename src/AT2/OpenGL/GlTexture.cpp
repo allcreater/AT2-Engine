@@ -26,38 +26,35 @@ void GlTexture::ReadChannelSizes()
 
 GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m_internalFormat(internalFormat)
 {
-    glGenTextures(1, &m_id);
+    glCreateTextures(GetTarget(), 1, &m_id);
 
-    const auto target = GetTarget();
-
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_BASE_LEVEL, 0);
+    glTextureParameteri(m_id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(m_id, GL_TEXTURE_BASE_LEVEL, 0);
 
     //TODO: test all cases
-    //todo: remove EXT?
     std::visit(Utils::overloaded {
                    [=](const Texture1D& texture) {
                        m_size = {texture.getSize(), 1, 1};
-                       glTextureStorage1DEXT(m_id, GL_TEXTURE_1D, texture.getLevels(), m_internalFormat,
+                       glTextureStorage1D(m_id, texture.getLevels(), m_internalFormat,
                                              texture.getSize().x);
 
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER,
+                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
                                               (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
                    },
                    [=](const Texture1DArray& texture) {
                        m_size = {texture.getSize(), 1};
-                       glTextureStorage2DEXT(m_id, GL_TEXTURE_1D_ARRAY, texture.getLevels(), m_internalFormat,
+                       glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat,
                                              texture.getSize().x, texture.getSize().y);
                    },
                    [=](const Texture2D& texture) {
                        m_size = {texture.getSize(), 1};
-                       glTextureStorage2DEXT(m_id, GL_TEXTURE_2D, texture.getLevels(), m_internalFormat,
+                       glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat,
                                              texture.getSize().x, texture.getSize().y);
 
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER,
+                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
                                               (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
                    },
                    [=](const Texture2DMultisample& texture) {
                        m_size = {texture.getSize(), 1};
@@ -66,17 +63,17 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m
                    },
                    [=](const Texture2DRectangle& texture) {
                        m_size = {texture.getSize(), 1};
-                       glTextureStorage2DEXT(m_id, GL_TEXTURE_RECTANGLE, texture.getLevels(), m_internalFormat,
+                       glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat,
                                              texture.getSize().x, texture.getSize().y);
                    },
                    [=](const Texture2DArray& texture) {
                        m_size = texture.getSize();
-                       glTextureStorage3DEXT(m_id, GL_TEXTURE_2D_ARRAY, texture.getLevels(), m_internalFormat,
+                       glTextureStorage3D(m_id, texture.getLevels(), m_internalFormat,
                                              texture.getSize().x, texture.getSize().y, texture.getSize().z);
 
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER,
+                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
                                               (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
                    },
                    [=](const Texture2DMultisampleArray& texture) {
                        m_size = texture.getSize();
@@ -86,29 +83,29 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m
                    },
                    [=](const TextureCube& texture) {
                        m_size = {texture.getSize(), 1};
-                       glTextureStorage2DEXT(m_id, GL_TEXTURE_CUBE_MAP, texture.getLevels(), m_internalFormat,
+                       glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat,
                                              texture.getSize().x, texture.getSize().y);
 
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+                       glTextureParameteri(m_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                       glTextureParameteri(m_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                       glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER,
+                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
                                               (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
                    },
                    [=](const TextureCubeArray& texture) {
                        m_size = texture.getSize();
-                       glTextureStorage3DEXT(m_id, GL_TEXTURE_CUBE_MAP_ARRAY, texture.getLevels(), m_internalFormat,
+                       glTextureStorage3D(m_id, texture.getLevels(), m_internalFormat,
                                              texture.getSize().x, texture.getSize().y, texture.getSize().z);
                    },
                    [=](const Texture3D& texture) {
                        m_size = texture.getSize();
-                       glTextureStorage3DEXT(m_id, GL_TEXTURE_3D, texture.getLevels(), m_internalFormat,
+                       glTextureStorage3D(m_id, texture.getLevels(), m_internalFormat,
                                              texture.getSize().x, texture.getSize().y, texture.getSize().z);
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MIN_FILTER,
+                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
                                               (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteriEXT(m_id, target, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
+                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
                    }},
                flavor);
 
@@ -124,8 +121,7 @@ void GlTexture::Bind(unsigned int unit) const
 {
     assert(unit < 10000); //
 
-    glActiveTexture(GL_TEXTURE0 + unit);
-    glBindTexture(GetTarget(), m_id);
+    glBindTextureUnit(unit, m_id);
 
     m_currentTextureModule = unit;
 }
@@ -143,7 +139,7 @@ void GlTexture::Unbind() const
 
 void GlTexture::BuildMipmaps()
 {
-    glGenerateTextureMipmapEXT(m_id, GetTarget());
+    glGenerateTextureMipmap(m_id);
 }
 
 void GlTexture::SetWrapMode(TextureWrapMode wrapMode)
@@ -151,12 +147,11 @@ void GlTexture::SetWrapMode(TextureWrapMode wrapMode)
     //TODO: use dirty flag and set it on bind
     m_wrapMode = wrapMode;
 
-    const auto target = GetTarget();
     const auto mode = Mappings::TranslateWrapMode(wrapMode);
 
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_S, mode);
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_T, mode);
-    glTextureParameteriEXT(m_id, target, GL_TEXTURE_WRAP_R, mode);
+    glTextureParameteri(m_id, GL_TEXTURE_WRAP_S, mode);
+    glTextureParameteri(m_id, GL_TEXTURE_WRAP_T, mode);
+    glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, mode);
 }
 
 void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data)
@@ -172,7 +167,7 @@ void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, Exter
         if (size >= tex1D->getSize().x)
             throw AT2Exception(AT2Exception::ErrorCase::Texture, "SubImage size more than texture actual size");
 
-        glTextureSubImage1DEXT(m_id, GL_TEXTURE_1D, level, m_internalFormat, size, externalFormat, externalType, data);
+        glTextureSubImage1D(m_id, level, m_internalFormat, size, externalFormat, externalType, data);
     }
     else
         throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
@@ -180,13 +175,10 @@ void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, Exter
 }
 
 void GlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                           void* data, int cubeMapFace)
+                           void* data)
 {
     const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
     const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
-
-    if (cubeMapFace < 0 || cubeMapFace > 5)
-        throw AT2Exception("GlTexture:SubImage2D cube map face must be in range [0-5]");
 
     if (const auto maxCoord = size + offset; maxCoord.x > GetSize().x || maxCoord.y > GetSize().y)
         throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
@@ -197,11 +189,8 @@ void GlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, E
         [=](const auto& type) {
             using T = std::decay_t<decltype(type)>;
             if constexpr (is_same_v<T, Texture1DArray> || is_same_v<T, Texture2D>)
-                glTextureSubImage2DEXT(m_id, GetTarget(), level, offset.x, offset.y, size.x, size.y, externalFormat,
+                glTextureSubImage2D(m_id, level, offset.x, offset.y, size.x, size.y, externalFormat,
                                        externalType, data);
-            else if constexpr (is_same_v<T, TextureCube>)
-                glTextureSubImage2DEXT(m_id, GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubeMapFace, level, offset.x, offset.y,
-                                       size.x, size.y, externalFormat, externalType, data);
             else
                 throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
                                    "SubImage2D supports only Texture1DArray, Texture2D, TextureCube");
@@ -223,9 +212,18 @@ void GlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, E
     visit(
         [=](const auto& type) {
             using T = std::decay_t<decltype(type)>;
-            if constexpr (is_same_v<T, Texture2DArray> || is_same_v<T, Texture3D>)
-                glTextureSubImage3DEXT(m_id, GetTarget(), level, offset.x, offset.y, offset.z, size.x, size.y, size.z,
-                                       externalFormat, externalType, data);
+            if constexpr (is_same_v<T, Texture2DArray> || is_same_v<T, Texture3D> || is_same_v<T, TextureCubeArray> ||
+                          is_same_v<T, TextureCube>)
+            {
+                if constexpr (is_same_v<T, TextureCube>)
+                {
+                    if (size.z < 0 || size.z > 5)
+                        throw AT2Exception("GlTexture:SubImage3D cube map face must be in range [0-5]");
+                }
+
+                glTextureSubImage3D(m_id, level, offset.x, offset.y, offset.z, size.x, size.y, size.z, externalFormat,
+                                    externalType, data);
+            }
             else
                 throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
                                    "SubImage3D supports only Texture2DArray, Texture3D");
@@ -233,13 +231,11 @@ void GlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, E
         GetType());
 }
 
-void GlTexture::CopyFromFramebuffer(GLuint level, glm::ivec2 pos, glm::uvec2 size, int cubeMapFace)
+void GlTexture::CopyFromFramebuffer(GLuint level, glm::ivec2 pos, glm::uvec2 size, glm::uvec3 textureOffset)
 {
-    if (const auto maxCoord = size; maxCoord.x > GetSize().x || maxCoord.y > GetSize().y)
-        throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
-
-    if (cubeMapFace < 0 || cubeMapFace > 5)
-        throw AT2Exception("GlTexture:CopyFromFramebuffer cube map face must be in range [0-5]");
+    if (const auto maxCoord = textureOffset + glm::uvec3(size, 1);
+        maxCoord.x > GetSize().x || maxCoord.y > GetSize().y || maxCoord.z > GetSize().z)
+        throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some CopyFromFramebuffer texels out of texture bounds");
 
     using namespace std;
 
@@ -247,10 +243,10 @@ void GlTexture::CopyFromFramebuffer(GLuint level, glm::ivec2 pos, glm::uvec2 siz
         [=](const auto& type) {
             using T = std::decay_t<decltype(type)>;
             if constexpr (is_same_v<T, Texture1DArray> || is_same_v<T, Texture2D> || is_same_v<T, Texture2DRectangle>)
-                glCopyTextureSubImage2DEXT(m_id, GetTarget(), level, 0, 0, pos.x, pos.y, size.x, size.y);
-            else if constexpr (is_same_v<T, TextureCube>)
-                glCopyTextureSubImage2DEXT(m_id, GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubeMapFace, level, 0, 0, pos.x,
-                                           pos.y, size.x, size.y);
+                glCopyTextureSubImage2D(m_id, level, textureOffset.x, textureOffset.y, pos.x, pos.y, size.x, size.y);
+            else if constexpr (is_same_v<T, Texture3D> || is_same_v<T, Texture2DArray> ||
+                               is_same_v<T, TextureCubeArray> || is_same_v<T, TextureCube>)
+                glCopyTextureSubImage3D(m_id, level, textureOffset.x, textureOffset.y, textureOffset.z, pos.x, pos.y, size.x, size.y);
             else
                 throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Probably not implemented");
         },
