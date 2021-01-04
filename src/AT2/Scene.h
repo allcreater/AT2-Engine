@@ -15,8 +15,8 @@ namespace AT2
     struct NodeVisitor
     {
         //don't sure are we really need double dispatching so that we will use RTTI instead instead of using different versions of functions there
-        virtual bool Visit(Node& node) { return false; }
-        virtual void UnVisit(Node& node) {}
+        virtual bool Visit(Node& ) { return false; }
+        virtual void UnVisit(Node& ) {}
 
         virtual ~NodeVisitor() = default;
     };

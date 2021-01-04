@@ -62,13 +62,13 @@ void GlUniformBuffer::SetUniform(const str& name, const Uniform& value)
     std::visit([&](const auto& x) { SetUniformInternal(*this, *m_uniformBlockInfo, name, x); }, value);
 }
 
-void GlUniformBuffer::Bind(IStateManager& stateManager) const
+void GlUniformBuffer::Bind(IStateManager&) const
 {
     glBindBufferBase(GL_UNIFORM_BUFFER, m_bindingPoint, m_id);
 }
 
 
-void GlUniformBuffer::SetUniform(const str& name, const std::shared_ptr<ITexture>& value)
+void GlUniformBuffer::SetUniform(const str& name, const std::shared_ptr<ITexture>&)
 {
     throw std::logic_error("not implemented");
 }

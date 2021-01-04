@@ -29,85 +29,74 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m
     glCreateTextures(GetTarget(), 1, &m_id);
 
     glTextureParameteri(m_id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTextureParameteri(m_id, GL_TEXTURE_BASE_LEVEL, 0);
+
+    const auto setupMipmapFilters = [id = m_id](glm::u32 levels) {
+        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, (levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+        glTextureParameteri(id, GL_TEXTURE_MAX_LEVEL, static_cast<GLint>(levels));
+    };
 
     //TODO: test all cases
-    std::visit(Utils::overloaded {
-                   [=](const Texture1D& texture) {
-                       m_size = {texture.getSize(), 1, 1};
-                       glTextureStorage1D(m_id, texture.getLevels(), m_internalFormat,
-                                             texture.getSize().x);
+    std::visit(
+        Utils::overloaded {
+            [&](const Texture1D& texture) {
+                m_size = glm::ivec3 {texture.getSize(), 1, 1};
+                glTextureStorage1D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x);
 
-                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
-                                              (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
-                   },
-                   [=](const Texture1DArray& texture) {
-                       m_size = {texture.getSize(), 1};
-                       glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat,
-                                             texture.getSize().x, texture.getSize().y);
-                   },
-                   [=](const Texture2D& texture) {
-                       m_size = {texture.getSize(), 1};
-                       glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat,
-                                             texture.getSize().x, texture.getSize().y);
+                setupMipmapFilters(texture.getLevels());
+            },
+            [&](const Texture1DArray& texture) {
+                m_size = glm::ivec3 {texture.getSize(), 1};
+                glTextureStorage2D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y);
+            },
+            [&](const Texture2D& texture) {
+                m_size = glm::ivec3 {texture.getSize(), 1};
+                glTextureStorage2D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y);
 
-                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
-                                              (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
-                   },
-                   [=](const Texture2DMultisample& texture) {
-                       m_size = {texture.getSize(), 1};
-                       glTextureStorage2DMultisample(m_id, texture.getSamples(), m_internalFormat, texture.getSize().x,
-                                                     texture.getSize().y, texture.getFixedSampleLocations());
-                   },
-                   [=](const Texture2DRectangle& texture) {
-                       m_size = {texture.getSize(), 1};
-                       glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat,
-                                             texture.getSize().x, texture.getSize().y);
-                   },
-                   [=](const Texture2DArray& texture) {
-                       m_size = texture.getSize();
-                       glTextureStorage3D(m_id, texture.getLevels(), m_internalFormat,
-                                             texture.getSize().x, texture.getSize().y, texture.getSize().z);
+                setupMipmapFilters(texture.getLevels());
+            },
+            [&](const Texture2DMultisample& texture) {
+                m_size = glm::ivec3 {texture.getSize(), 1};
+                glTextureStorage2DMultisample(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x,
+                                              m_size.y, texture.getFixedSampleLocations());
+            },
+            [=](const Texture2DRectangle& texture) {
+                m_size = glm::ivec3 {texture.getSize(), 1};
+                glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat, m_size.x, m_size.y);
+            },
+            [&](const Texture2DArray& texture) {
+                m_size = glm::ivec3 {texture.getSize()};
+                glTextureStorage3D(m_id, texture.getLevels(), m_internalFormat, m_size.x, m_size.y, m_size.z);
 
-                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
-                                              (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
-                   },
-                   [=](const Texture2DMultisampleArray& texture) {
-                       m_size = texture.getSize();
-                       glTextureStorage3DMultisample(m_id, texture.getSamples(), m_internalFormat, texture.getSize().x,
-                                                     texture.getSize().y, texture.getSize().z,
-                                                     texture.getFixedSampleLocations());
-                   },
-                   [=](const TextureCube& texture) {
-                       m_size = {texture.getSize(), 1};
-                       glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat,
-                                             texture.getSize().x, texture.getSize().y);
+                setupMipmapFilters(texture.getLevels());
+            },
+            [&](const Texture2DMultisampleArray& texture) {
+                m_size = glm::ivec3 {texture.getSize()};
+                glTextureStorage3DMultisample(m_id, static_cast<GLint>(texture.getSamples()), m_internalFormat,
+                                              m_size.x, m_size.y, m_size.z, texture.getFixedSampleLocations());
+            },
+            [&](const TextureCube& texture) {
+                m_size = glm::ivec3 {texture.getSize(), 1};
+                glTextureStorage2D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y);
 
-                       glTextureParameteri(m_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                       glTextureParameteri(m_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                       glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+                glTextureParameteri(m_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTextureParameteri(m_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
-                                              (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
-                   },
-                   [=](const TextureCubeArray& texture) {
-                       m_size = texture.getSize();
-                       glTextureStorage3D(m_id, texture.getLevels(), m_internalFormat,
-                                             texture.getSize().x, texture.getSize().y, texture.getSize().z);
-                   },
-                   [=](const Texture3D& texture) {
-                       m_size = texture.getSize();
-                       glTextureStorage3D(m_id, texture.getLevels(), m_internalFormat,
-                                             texture.getSize().x, texture.getSize().y, texture.getSize().z);
-                       glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER,
-                                              (texture.getLevels() > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                       glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, texture.getLevels());
-                   }},
-               flavor);
+                setupMipmapFilters(texture.getLevels());
+            },
+            [&](const TextureCubeArray& texture) {
+                m_size = glm::ivec3 {texture.getSize()};
+                glTextureStorage3D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y,
+                                   m_size.z);
+            },
+            [&](const Texture3D& texture) {
+                m_size = glm::ivec3 {texture.getSize()};
+                glTextureStorage3D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y,
+                                   m_size.z);
+
+                setupMipmapFilters(texture.getLevels());
+            }},
+        flavor);
 
     ReadChannelSizes();
 }
@@ -119,8 +108,6 @@ GlTexture::~GlTexture()
 
 void GlTexture::Bind(unsigned int unit) const
 {
-    assert(unit < 10000); //
-
     glBindTextureUnit(unit, m_id);
 
     m_currentTextureModule = unit;
@@ -128,7 +115,7 @@ void GlTexture::Bind(unsigned int unit) const
 
 void GlTexture::BindAsImage(unsigned unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
 {
-    glBindImageTexture(unit, GetId(), level, isLayered, layer, Mappings::TranslateBufferUsage(usage),
+    glBindImageTexture(unit, GetId(), static_cast<GLint>(level), isLayered, static_cast<GLint>(layer), Mappings::TranslateBufferUsage(usage),
                        m_internalFormat);
 }
 
@@ -154,17 +141,21 @@ void GlTexture::SetWrapMode(TextureWrapMode wrapMode)
     glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, mode);
 }
 
-void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, void* data)
+void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, ExternalTextureFormat dataFormat, void* data)
 {
     const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
     const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
 
-    if (size + offset > GetSize().x)
+    const auto offset = static_cast<GLint> (_offset);
+    const auto size = static_cast<GLint> (_size);
+    const auto level = static_cast<GLint>(_level);
+
+    if (size + offset > m_size.x)
         throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
 
     if (const auto* tex1D = std::get_if<Texture1D>(&GetType()))
     {
-        if (size >= tex1D->getSize().x)
+        if (size >= static_cast<int>(tex1D->getSize().x))
             throw AT2Exception(AT2Exception::ErrorCase::Texture, "SubImage size more than texture actual size");
 
         glTextureSubImage1D(m_id, level, m_internalFormat, size, externalFormat, externalType, data);
@@ -174,22 +165,25 @@ void GlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, Exter
                            "SubImage1D operation could be performed only at Texture1D target");
 }
 
-void GlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
+void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level, ExternalTextureFormat dataFormat,
                            void* data)
 {
     const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
     const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
 
-    if (const auto maxCoord = size + offset; maxCoord.x > GetSize().x || maxCoord.y > GetSize().y)
+    const auto offset = glm::ivec2 {_offset};
+    const auto size = glm::ivec2 {_size};
+    const auto level = static_cast<GLint>(_level);
+
+    if (const auto maxCoord = size + offset; maxCoord.x > m_size.x || maxCoord.y > m_size.y)
         throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
 
     using namespace std;
 
     visit(
-        [=](const auto& type) {
-            using T = std::decay_t<decltype(type)>;
+        [=, id=m_id]<typename T>(T) {
             if constexpr (is_same_v<T, Texture1DArray> || is_same_v<T, Texture2D>)
-                glTextureSubImage2D(m_id, level, offset.x, offset.y, size.x, size.y, externalFormat,
+                glTextureSubImage2D(id, level, offset.x, offset.y, size.x, size.y, externalFormat,
                                        externalType, data);
             else
                 throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
@@ -198,30 +192,33 @@ void GlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, E
         GetType());
 }
 
-void GlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
+void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level, ExternalTextureFormat dataFormat,
                            void* data)
 {
     const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
     const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
 
+    const auto offset = glm::ivec3{_offset};
+    const auto size = glm::ivec3{_size};
+    const auto level = static_cast<GLint>(_level);
+
     if (const auto maxCoord = size + offset;
-        maxCoord.x > GetSize().x || maxCoord.y > GetSize().y || maxCoord.z > GetSize().z)
+        maxCoord.x > m_size.x || maxCoord.y > m_size.y || maxCoord.z > m_size.z)
         throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
 
     using namespace std;
     visit(
-        [=](const auto& type) {
-            using T = std::decay_t<decltype(type)>;
+        [=, id=m_id]<typename T>(T) {
             if constexpr (is_same_v<T, Texture2DArray> || is_same_v<T, Texture3D> || is_same_v<T, TextureCubeArray> ||
                           is_same_v<T, TextureCube>)
             {
                 if constexpr (is_same_v<T, TextureCube>)
                 {
-                    if (size.z < 0 || size.z > 5)
+                    if (size.z > 5)
                         throw AT2Exception("GlTexture:SubImage3D cube map face must be in range [0-5]");
                 }
 
-                glTextureSubImage3D(m_id, level, offset.x, offset.y, offset.z, size.x, size.y, size.z, externalFormat,
+                glTextureSubImage3D(id, level, offset.x, offset.y, offset.z, size.x, size.y, size.z, externalFormat,
                                     externalType, data);
             }
             else
@@ -231,22 +228,21 @@ void GlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, E
         GetType());
 }
 
-void GlTexture::CopyFromFramebuffer(GLuint level, glm::ivec2 pos, glm::uvec2 size, glm::uvec3 textureOffset)
+void GlTexture::CopyFromFramebuffer(GLint level, glm::ivec2 pos, glm::ivec2 size, glm::ivec3 textureOffset)
 {
-    if (const auto maxCoord = textureOffset + glm::uvec3(size, 1);
-        maxCoord.x > GetSize().x || maxCoord.y > GetSize().y || maxCoord.z > GetSize().z)
+    if (const auto maxCoord = textureOffset + glm::ivec3(size, 1);
+        maxCoord.x > m_size.x || maxCoord.y > m_size.y || maxCoord.z > m_size.z)
         throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some CopyFromFramebuffer texels out of texture bounds");
 
     using namespace std;
 
     visit(
-        [=](const auto& type) {
-            using T = std::decay_t<decltype(type)>;
+        [=, id = m_id]<typename T>(T) {
             if constexpr (is_same_v<T, Texture1DArray> || is_same_v<T, Texture2D> || is_same_v<T, Texture2DRectangle>)
-                glCopyTextureSubImage2D(m_id, level, textureOffset.x, textureOffset.y, pos.x, pos.y, size.x, size.y);
+                glCopyTextureSubImage2D(id, level, textureOffset.x, textureOffset.y, pos.x, pos.y, size.x, size.y);
             else if constexpr (is_same_v<T, Texture3D> || is_same_v<T, Texture2DArray> ||
                                is_same_v<T, TextureCubeArray> || is_same_v<T, TextureCube>)
-                glCopyTextureSubImage3D(m_id, level, textureOffset.x, textureOffset.y, textureOffset.z, pos.x, pos.y, size.x, size.y);
+                glCopyTextureSubImage3D(id, level, textureOffset.x, textureOffset.y, textureOffset.z, pos.x, pos.y, size.x, size.y);
             else
                 throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Probably not implemented");
         },

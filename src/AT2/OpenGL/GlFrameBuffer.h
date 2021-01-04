@@ -52,18 +52,18 @@ namespace AT2
 
         [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 
-        void SetColorAttachment(unsigned int attachementNumber, const std::shared_ptr<ITexture>& texture) override
+        void SetColorAttachment(unsigned int, const std::shared_ptr<ITexture>&) override
         {
             throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
                                "GlScreenFrameBuffer dont'support attachements");
         }
 
-        [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachementNumber) const override
+        [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int) const override
         {
             throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
                                "GlScreenFrameBuffer dont'support attachements");
         }
-        void SetDepthAttachment(const std::shared_ptr<ITexture>& texture) override
+        void SetDepthAttachment(const std::shared_ptr<ITexture>&) override
         {
             throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
                                "GlScreenFrameBuffer dont'support attachements");

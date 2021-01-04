@@ -45,7 +45,7 @@ namespace AT2
         return true;
     }
 
-    void RenderVisitor::UnVisit(Node& node) { transforms.popModelView(); }
+    void RenderVisitor::UnVisit(Node&) { transforms.popModelView(); }
 
     LightRenderVisitor::LightRenderVisitor(SceneRenderer& sceneRenderer) : scene_renderer(sceneRenderer) {}
 
@@ -75,7 +75,7 @@ namespace AT2
         return true;
     }
 
-    void LightRenderVisitor::UnVisit(Node& node) { transforms.popModelView(); }
+    void LightRenderVisitor::UnVisit(Node&) { transforms.popModelView(); }
 
     void SceneRenderer::DrawPointLights(const LightRenderVisitor& lrv) const
     {

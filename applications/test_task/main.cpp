@@ -55,7 +55,7 @@ private:
         m_renderer->FinishFrame();
     }
 
-    void OnKeyPress(int key) {}
+    void OnKeyPress(int) {}
 
     void SetupWindowCallbacks()
     {

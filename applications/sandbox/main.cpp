@@ -185,7 +185,7 @@ private:
 
         m_window->ResizeCallback = [&](const glm::ivec2& newSize) {
             m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(m_window->getSize().x),
-                                                       static_cast<float>(m_window->getSize().y), 1.0f, 10000.0f));
+                                                       static_cast<float>(m_window->getSize().y), 1.0f, 20000.0f));
             sr.ResizeFramebuffers(newSize);
         };
 

@@ -33,7 +33,7 @@ protected:
     //
 private:
     size_vec size;
-    std::enable_if_t<SupportsMipmapping, glm::u8> levels = 1;
+    std::enable_if_t<SupportsMipmapping, glm::u32> levels = 1;
 };
 
 template <size_t N, typename = std::enable_if<N < 4> >

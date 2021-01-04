@@ -178,13 +178,14 @@ namespace
         static glm::mat4 ConvertMatrix(const aiMatrix4x4& _t) { return glm::transpose(glm::make_mat4(&_t.a1)); }
     };
 
-    constexpr uint32_t flags = aiProcess_GenSmoothNormals | //can't be specified with aiProcess_GenNormals
+    constexpr auto flags = static_cast<unsigned>(
+        aiProcess_GenSmoothNormals | //can't be specified with aiProcess_GenNormals
         aiProcess_FindInstances | aiProcess_FindDegenerates | aiProcess_FindInvalidData | aiProcess_CalcTangentSpace |
         aiProcess_ValidateDataStructure | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph |
         aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality | aiProcess_LimitBoneWeights |
         aiProcess_RemoveRedundantMaterials | aiProcess_SplitLargeMeshes | aiProcess_Triangulate |
         aiProcess_GenUVCoords | aiProcess_GenBoundingBoxes | aiProcess_SplitByBoneCount | aiProcess_SortByPType |
-        aiProcess_FlipUVs;
+        aiProcess_FlipUVs);
 
 }; // namespace
 

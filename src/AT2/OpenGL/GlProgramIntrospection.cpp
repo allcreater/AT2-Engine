@@ -48,11 +48,11 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
 
             if (firstTime)
             {
-                const auto [nameLength, dataSize, binding] = getProgramResource(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex),
+                const auto [blockNameLength, dataSize, binding] = getProgramResource(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex),
                                        std::array<GLenum, 3> {GL_NAME_LENGTH, GL_BUFFER_DATA_SIZE, GL_BUFFER_BINDING});
 
-                std::string blockName(static_cast<size_t>(nameLength)-1, '\0'); //because nameLength includes \0
-                glGetProgramResourceName(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex), nameLength, nullptr,
+                std::string blockName(static_cast<size_t>(blockNameLength)-1, '\0'); //because nameLength includes \0
+                glGetProgramResourceName(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex), blockNameLength, nullptr,
                                          blockName.data());
 
                 block.Name = std::move(blockName);

@@ -3,18 +3,6 @@
 
 #include "../AT2_textures.hpp"
 #include "AT2lowlevel.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
-#include "../AABB.h"
 
 namespace AT2
 {
@@ -32,7 +20,7 @@ namespace AT2
 
         void Unbind() const override;
         void BuildMipmaps() override;
-        glm::uvec3 GetSize() const noexcept override { return m_size; }
+        glm::uvec3 GetSize() const noexcept override { return glm::uvec3(m_size); }
         size_t GetDataLength() const noexcept override { return m_dataSize; }
 
         int GetCurrentModule() const noexcept override { return m_currentTextureModule; }
@@ -49,7 +37,7 @@ namespace AT2
         void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
                         void* data) override;
 
-        void CopyFromFramebuffer(GLuint _level, glm::ivec2 pos, glm::uvec2 size, glm::uvec3 textureOffset = {});
+        void CopyFromFramebuffer(int _level, glm::ivec2 pos, glm::ivec2 size, glm::ivec3 textureOffset = {});
 
         GLenum GetTarget() const;
 
@@ -63,8 +51,9 @@ namespace AT2
         GLuint m_id {0};
         mutable int m_currentTextureModule {-1};
 
-        GLint m_internalFormat {0};
-        glm::uvec3 m_size;
+        GLenum m_internalFormat {0};
+        //internal size representation is int instead of uint, so that we need to do casting on request :(
+        glm::ivec3 m_size;
 
         //Not so needed to be persistent, but let it stay for info
         struct ChannelSize
