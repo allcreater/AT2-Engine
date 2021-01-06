@@ -147,9 +147,10 @@ namespace
                 root->AddChild(childNode);
                 PopulateSubmeshes(*childNode, meshIndex);
             }
-
-
         }
+
+    private:
+        // Scene graph
 
         void PopulateSubmeshes(AT2::Node& node, size_t meshIndex)
         {
@@ -187,32 +188,7 @@ namespace
             }
         }
 
-    private:
-        struct BufferDataInfo
-        {
-            BufferBindingParams bindingParams;
-            uint32_t count;
-            std::span<const std::byte> data;
-        };
-
-        BufferDataInfo GetData(unsigned attribIndex)
-        {
-            const auto& accessor = m_document.accessors[attribIndex];
-            const auto& bufferView = m_document.bufferViews[accessor.bufferView];
-            const auto& buffer = m_document.buffers[bufferView.buffer];
-
-
-            const auto dataType = TranslateDataType(accessor);
-            if (!dataType.has_value())
-                throw std::logic_error("unsupported data format");
-
-            return {*dataType, accessor.count,
-                    std::as_bytes(std::span {buffer.data})
-                        .subspan(static_cast<uint64_t>(bufferView.byteOffset) + accessor.byteOffset,
-                                 accessor.count * dataType->Stride)};
-
-
-        }
+        // Materials and textures
 
         void LoadResources()
         {
@@ -285,12 +261,37 @@ namespace
             return container;
         }
 
+        // Geometry
+
+        struct BufferDataInfo
+        {
+            BufferBindingParams bindingParams;
+            uint32_t count;
+            std::span<const std::byte> data;
+        };
+
+        BufferDataInfo GetData(unsigned attribIndex)
+        {
+            const auto& accessor = m_document.accessors[attribIndex];
+            const auto& bufferView = m_document.bufferViews[accessor.bufferView];
+            const auto& buffer = m_document.buffers[bufferView.buffer];
+
+
+            const auto dataType = TranslateDataType(accessor);
+            if (!dataType.has_value())
+                throw std::logic_error("unsupported data format");
+
+            return {*dataType, accessor.count,
+                    std::as_bytes(std::span {buffer.data})
+                        .subspan(static_cast<uint64_t>(bufferView.byteOffset) + accessor.byteOffset,
+                                 accessor.count * dataType->Stride)};
+        }
+
         SubmeshGroup LoadMesh(const fx::gltf::Mesh& gltfMesh)
         {
             const static std::pair<uint32_t, std::string> requiredAttributes[] = {
                  {1u, "POSITION"s},  {2u, "TEXCOORD_0"s},  {3u, "NORMAL"s}
             }; //"TANGENT"
-
 
 
             SubmeshGroup result {gltfMesh.primitives.size()};
