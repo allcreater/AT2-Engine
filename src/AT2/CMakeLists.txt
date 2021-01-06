@@ -32,7 +32,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp stb::stb
 
 
 if(USE_DEVIL)
+    find_package (DevIL REQUIRED)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USE_DEVIL)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${IL_LIBRARIES} ${ILU_LIBRARIES}) 
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}/fx-gltf/include/")
