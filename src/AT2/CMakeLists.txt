@@ -15,6 +15,8 @@ find_package (DevIL REQUIRED)
 find_package (assimp REQUIRED)
 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES
+"*.h"
+"*.hpp"
 "*.cpp"
 )
 
