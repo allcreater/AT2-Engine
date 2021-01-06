@@ -26,6 +26,6 @@ add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw::glfw assimp::assimp stb::stb
-                         PUBLIC glad::glad glm::glm) 
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp stb::stb
+                         PUBLIC glfw::glfw glad::glad glm::glm) 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

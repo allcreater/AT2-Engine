@@ -26,9 +26,8 @@ public:
 private:
     void OnInitialize()
     {
-        glewExperimental = GL_TRUE;
-        if (glewInit() != GLEW_OK)
-            throw GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+            throw GlfwException("Failed to initialize GLAD"); //yes, it's strange to throw a GLAD exception :3
 
         m_renderer = std::make_unique<AT2::GlRenderer>();
 
