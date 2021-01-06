@@ -1,4 +1,6 @@
 from conans import ConanFile, CMake
+import conans.tools as tools
+import shutil, os
 
 class AT2(ConanFile):
    settings = "os", "compiler", "build_type", "arch"
@@ -10,6 +12,11 @@ class AT2(ConanFile):
    def imports(self):
       self.copy("*.dll", dst="bin", src="bin")
       self.copy("*.dylib*", dst="bin", src="lib")
+
+   def configure(self):
+      if not os.path.isdir("fx-gltf"):
+         git = tools.Git(folder="fx-gltf")
+         git.clone("https://github.com/jessey-git/fx-gltf")
 
    def build(self):
       cmake = CMake(self)

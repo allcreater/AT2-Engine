@@ -29,4 +29,5 @@ add_library(${PROJECT_NAME} STATIC
 
 target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp stb::stb
                          PUBLIC glfw::glfw glad::glad glm::glm nlohmann_json::nlohmann_json) 
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}/fx-gltf/include/")
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
