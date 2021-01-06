@@ -31,11 +31,11 @@ namespace AT2
         const TextureWrapMode& GetWrapMode() const noexcept override { return m_wrapMode; }
 
         void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        void* data) override;
+                        const void* data) override;
         void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        void* data) override;
+                        const void* data) override;
         void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        void* data) override;
+                        const void* data) override;
 
         void CopyFromFramebuffer(int _level, glm::ivec2 pos, glm::ivec2 size, glm::ivec3 textureOffset = {});
 

@@ -141,7 +141,7 @@ void GlTexture::SetWrapMode(TextureWrapMode wrapMode)
     glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, mode);
 }
 
-void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, ExternalTextureFormat dataFormat, void* data)
+void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, ExternalTextureFormat dataFormat, const void* data)
 {
     const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
     const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
@@ -166,7 +166,7 @@ void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, Ex
 }
 
 void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level, ExternalTextureFormat dataFormat,
-                           void* data)
+                           const void* data)
 {
     const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
     const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
@@ -193,7 +193,7 @@ void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level
 }
 
 void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level, ExternalTextureFormat dataFormat,
-                           void* data)
+                           const void* data)
 {
     const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
     const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);

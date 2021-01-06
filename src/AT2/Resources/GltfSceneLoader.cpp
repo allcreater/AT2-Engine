@@ -15,7 +15,7 @@ using namespace std::literals;
 #include <bit>
 #include <fx/gltf.h>
 #include <ranges>
-
+#include <glm/packing.hpp>
 namespace
 {
     //from gltf viewer example
@@ -93,6 +93,35 @@ namespace
         return TextureWrapMode::ClampToBorder;
     }
 
+    class PlaceholderTextureCash
+    {
+        std::shared_ptr<IRenderer> m_renderer;
+        std::unordered_map<glm::u32, std::shared_ptr<ITexture>> m_textures;
+
+    public:
+        explicit PlaceholderTextureCash(std::shared_ptr<IRenderer> renderer) : m_renderer(std::move(renderer)) {}
+
+        //TODO: move to resource managing system and generalize for different texture formats
+        std::shared_ptr<ITexture> GetTextureRGBA8(const glm::vec4& color)
+        {
+            const auto packedColor = glm::packUnorm4x8(color);
+
+            if (auto it = m_textures.find(packedColor); it != m_textures.end())
+                return it->second;
+
+            auto texture =
+                m_renderer->GetResourceFactory().CreateTexture(Texture2D {{1, 1}}, AT2::TextureFormats::RGBA8);
+
+            texture->SubImage2D({}, {1, 1}, 0, TextureFormats::RGBA8, &packedColor);
+
+            m_textures.emplace(packedColor, texture);
+
+            
+
+            return texture;
+        }
+    };
+
     class Loader
     {
         std::shared_ptr<IRenderer> m_renderer;
@@ -103,18 +132,15 @@ namespace
         std::vector<std::shared_ptr<ITexture>> m_textures;
         std::filesystem::path m_currentPath;
 
-        std::shared_ptr<ITexture> m_normalMapPlaceholder;
-
+        PlaceholderTextureCash m_placeholderTextureCash;
     public:
-        Loader(std::shared_ptr<IRenderer> renderer, const str& sv) :
-            m_renderer(std::move(renderer)), m_document(fx::gltf::LoadFromText(sv)), m_currentPath(sv)
+        Loader(std::shared_ptr<IRenderer> renderer, const str& sv)
+        : m_renderer(std::move(renderer))
+        , m_document(fx::gltf::LoadFromText(sv))
+        , m_currentPath(sv)
+        , m_placeholderTextureCash(m_renderer)
         {
             m_currentPath.remove_filename();
-
-            m_normalMapPlaceholder =
-                m_renderer->GetResourceFactory().CreateTexture(Texture2D {{1, 1}}, AT2::TextureFormats::RGBA8);
-            std::array<glm::u8, 4> color = {127, 127, 255, 255};
-            m_normalMapPlaceholder->SubImage2D({}, {1, 1}, 0, TextureFormats::RGBA8, color.data());
         }
 
         std::shared_ptr<Node> BuildScene()
@@ -245,17 +271,30 @@ namespace
         {
             auto container = std::make_unique<UniformContainer>();
 
-            auto trySetTexture = [&](const std::string& paramName, const fx::gltf::Material::Texture& texture,
-                                     std::shared_ptr<ITexture> defaultValue = nullptr) {
+            const auto trySetTexture = [&](const std::string& paramName, const fx::gltf::Material::Texture& texture, auto&& defaultValueGetter) {
+                //Utils::lazy defaultValue {std::forward<decltyle(defaultValueGetter)>(defaultValueGetter)};
                 if (!texture.empty())
                     container->SetUniform(paramName, m_textures[texture.index]);
-                else if (defaultValue)
-                    container->SetUniform(paramName, defaultValue);
+                else
+                    container->SetUniform(paramName, defaultValueGetter());
             };
 
-            trySetTexture("u_texAlbedo"s, material.pbrMetallicRoughness.baseColorTexture);
-            trySetTexture("u_texAoRoughnessMetallic"s, material.pbrMetallicRoughness.metallicRoughnessTexture);
-            trySetTexture("u_texNormalMap"s, material.normalTexture, m_normalMapPlaceholder);
+            //functions to lazily getting default textures
+            const auto defaultColor = [&] {
+                
+                return m_placeholderTextureCash.GetTextureRGBA8(std::bit_cast<glm::vec4>(material.pbrMetallicRoughness.baseColorFactor));
+            };
+            const auto defaultMetallicRoughness = [&] {
+                return m_placeholderTextureCash.GetTextureRGBA8({1.0, material.pbrMetallicRoughness.roughnessFactor,
+                                                                 material.pbrMetallicRoughness.metallicFactor, 1.0});
+            };
+            const auto defaultNormalMap = [this] {
+                return m_placeholderTextureCash.GetTextureRGBA8({0.5, 0.5, 1.0, 1.0});
+            };
+
+            trySetTexture("u_texAlbedo"s, material.pbrMetallicRoughness.baseColorTexture, defaultColor);
+            trySetTexture("u_texAoRoughnessMetallic"s, material.pbrMetallicRoughness.metallicRoughnessTexture, defaultMetallicRoughness);
+            trySetTexture("u_texNormalMap"s, material.normalTexture, defaultNormalMap);
 
             return container;
         }
@@ -289,7 +328,7 @@ namespace
         SubmeshGroup LoadMesh(const fx::gltf::Mesh& gltfMesh)
         {
             const static std::pair<uint32_t, std::string> requiredAttributes[] = {
-                {1u, "POSITION"s}, {2u, "TEXCOORD_0"s}, {3u, "NORMAL"s}}; //"TANGENT"
+                {1u, "POSITION"s}, {2u, "TEXCOORD_0"s}, {3u, "NORMAL"s}, {4u, "JOINTS_0"}, {5u, "WEIGHTS_0"}}; //"TANGENT"
 
 
             SubmeshGroup result {gltfMesh.primitives.size()};

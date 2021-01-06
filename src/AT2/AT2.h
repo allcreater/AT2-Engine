@@ -182,13 +182,13 @@ namespace AT2
         //TODO: think how to make better
         // Set data of a Texture1d
         virtual void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                                void* data) = 0;
+                                const void* data) = 0;
         // Set data of a Texture1DArray and Texture2D
         virtual void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                                void* data) = 0;
+                                const void* data) = 0;
         // Set data of a Texture2DArray, Texture3D, TextureCubeArray, TextureCube
         virtual void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                                void* data) = 0;
+                                const void* data) = 0;
     };
 
     class IShaderProgram
