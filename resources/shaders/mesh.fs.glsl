@@ -64,17 +64,19 @@ void main()
 	vec2 texCoord = input.texCoord.st;
 
     vec4 albedo = texture(u_texAlbedo, texCoord);
-    albedo.a = 1.0;
     albedo.rgb = to_linear(albedo.rgb);
 
     vec4 aorm_sample = texture(u_texAoRoughnessMetallic, texCoord);
 
     float ao = aorm_sample.r;
-    float roughness = aorm_sample.g;
+    float roughness = aorm_sample.g + 0.01;
     float metallic = aorm_sample.b;
 
-    vec4 final_color = albedo;
-    final_color.rgb *= ao;
+    if (albedo.a < 0.5)
+        discard;
+        
+    vec4 final_color = vec4(albedo.rgb, 1.0);
+    //final_color.rgb *= ao;
 
 	FragColor.rgba = final_color;
 

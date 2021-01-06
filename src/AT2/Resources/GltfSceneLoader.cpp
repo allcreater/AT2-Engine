@@ -326,23 +326,23 @@ namespace
                     startPos += currentDataLength;
                 }
 
-                if (primitive.indices < 0)
-                    throw std::logic_error("index buffer is required");
+                unsigned int primitivesCount = buffersData.front().second.count;
+                if (primitive.indices >= 0)
+                {
+                    const auto indexBufferInfo = GetData(primitive.indices);
 
-                const auto indexBufferInfo = GetData(primitive.indices);
+                    auto ib = rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, indexBufferInfo.data);
+                    vao->SetIndexBuffer(ib, indexBufferInfo.bindingParams.Type);
 
-                auto ib = rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, indexBufferInfo.data);
-                vao->SetIndexBuffer(ib, indexBufferInfo.bindingParams.Type);
-     
+                    primitivesCount = indexBufferInfo.count;
+                }
 
                 auto mesh = std::make_unique<Mesh>("Primitive submesh #"s + std::to_string(index));
                 mesh->VertexArray = std::move(vao);
-                mesh->SubMeshes.emplace_back(std::vector{MeshChunk {Primitives::Triangles {}, 0, indexBufferInfo.count, 0}});
+                mesh->SubMeshes.emplace_back(std::vector {MeshChunk {Primitives::Triangles {}, 0, primitivesCount, 0}});
                 if (primitive.material >= 0)
                     mesh->Materials.emplace_back(TranslateMaterial(m_document.materials[primitive.material]));
 
-                
-                //GetAttributeData()
 
                 result[index++] = std::move(mesh);
             }
