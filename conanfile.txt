@@ -1,5 +1,0 @@
-[requires]
-assimp/5.0.1
-
-[generators]
-cmake_paths
