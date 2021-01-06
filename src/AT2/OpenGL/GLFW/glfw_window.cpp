@@ -78,7 +78,9 @@ void GlfwWindow::UpdateAndRender()
 
         const double currentTime = glfwGetTime();
         OnUpdate(currentTime - previous_render_time);
-        OnRender(currentTime - previous_render_time);
+        if (getSize().x > 0 && getSize().y > 0)
+            OnRender(currentTime - previous_render_time);
+
         previous_render_time = currentTime;
     }
 

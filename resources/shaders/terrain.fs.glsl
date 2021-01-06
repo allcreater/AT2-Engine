@@ -78,11 +78,11 @@ void main()
 
 	const float snowK = smoothstep(snowLine, snowLine + 0.05, input.elevation * smoothstep(0.001, 0.04, normalWS.y));
 
-	FragColor.rgb = mix(FragColor.rgb, vec3(0.9, 0.9, 1.0), snowK);
+	FragColor.rgb = mix(FragColor.rgb, vec3(0.97, 0.97, 1.0), snowK);
 	FragColor.a = 1.0;
 
 	FragNormal = vec4(normal, 1.0);
 
-	RoughnessMetallic = vec4(mix(0.01 + step(waterLine, input.elevation) * 0.7, 0.3, snowK), 0.0, 1.0, 1.0);
+	RoughnessMetallic = vec4(mix(0.01 + step(waterLine, input.elevation) * 0.9, 0.5, snowK), 0.0, 1.0, 1.0);
 	
 }

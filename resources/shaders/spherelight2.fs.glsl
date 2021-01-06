@@ -64,9 +64,9 @@ void main()
 
 
 
-	vec3 F0 = vec3(0.05);
-	float roughness = roughnessMetallic.r;
 	vec4 color = texture(u_colorMap, texCoord);
+	vec3 F0 = mix(vec3(0.05), color.rgb, roughnessMetallic.g);
+	float roughness = roughnessMetallic.r;
 
 	vec3 lighting = computeLighting(lightVector, fsIn.lightRadius, fsIn.lightIntensity, normal, normalize(-fragPos), roughness, F0, color.rgb);
 	

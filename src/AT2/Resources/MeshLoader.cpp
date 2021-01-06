@@ -78,8 +78,8 @@ namespace
                 assert(face.mNumIndices == 3);
 
                 m_indicesVec.push_back(face.mIndices[0] + vertexOffset);
-                m_indicesVec.push_back(face.mIndices[2] + vertexOffset);
                 m_indicesVec.push_back(face.mIndices[1] + vertexOffset);
+                m_indicesVec.push_back(face.mIndices[2] + vertexOffset);
             }
 
             m_buildingMesh->SubMeshes.emplace_back(
@@ -97,7 +97,7 @@ namespace
             auto vao = MakeVertexArray(rf, std::make_pair(1u, std::cref(m_verticesVec)),
                                        std::make_pair(2u, std::cref(m_texCoordVec)),
                                        std::make_pair(3u, std::cref(m_normalsVec)));
-            vao->SetIndexBuffer(rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, m_indicesVec),
+            vao->SetIndexBuffer(rf.MakeVertexBufferFrom(VertexBufferType::IndexBuffer, m_indicesVec),
                                 BufferDataType::UInt);
 
             m_buildingMesh->VertexArray = vao;
@@ -121,7 +121,8 @@ namespace
                         throw AT2Exception(AT2Exception::ErrorCase::Texture,
                                            "reading raw texture from memory not implemented yet");
 
-                    return TextureLoader::LoadTexture(m_renderer, embeddedTexture->pcData, embeddedTexture->mWidth);
+                    return TextureLoader::LoadTexture(m_renderer,
+                                                      std::span {reinterpret_cast<const std::byte*>(embeddedTexture->pcData), embeddedTexture->mWidth});
                 }
 
                 //it's not embedded

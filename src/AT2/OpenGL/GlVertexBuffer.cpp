@@ -1,9 +1,6 @@
 #include "GlVertexBuffer.h"
 #include "Mappings.h"
 #include "../AT2.h"
-#include "../AT2.h"
-#include "../AT2.h"
-#include "../AT2.h"
 
 using namespace AT2;
 
@@ -12,7 +9,6 @@ GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType) : m_id(0), m_publicT
     m_privateType = static_cast<GlBufferType>(Mappings::TranslateBufferType(bufferType));
 
     glCreateBuffers(1, &m_id);
-
     //TODO: use glNamedBufferStorage ?
 }
 

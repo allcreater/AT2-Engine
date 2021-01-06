@@ -21,6 +21,16 @@ namespace AT2
         virtual ~NodeVisitor() = default;
     };
 
+    template <typename Func>
+    class FuncNodeVisitor : public NodeVisitor
+    {
+        Func visitFunc;
+    public:
+        FuncNodeVisitor(Func&& func) : visitFunc(std::forward<Func>(func)) {}
+
+        bool Visit(Node& node) override { return visitFunc(node); }
+    };
+
     class Node
     {
     public:
@@ -114,17 +124,30 @@ namespace AT2
     class MeshNode : public Node
     {
     public:
-        void SetMesh(MeshRef newMesh) { mesh = std::move(newMesh); }
-        [[nodiscard]] ConstMeshRef GetMesh() const noexcept { return mesh; }
-        MeshRef GetMesh() noexcept { return mesh; }
+        MeshNode() = default;
+        MeshNode(MeshRef mesh, std::string name)
+            : m_mesh(std::move(mesh))
+            , Node(std::move(name))
+        {}
+
+        void SetMesh(MeshRef newMesh) { m_mesh = std::move(newMesh); }
+        [[nodiscard]] ConstMeshRef GetMesh() const noexcept { return m_mesh; }
+        MeshRef GetMesh() noexcept { return m_mesh; }
 
     private:
-        MeshRef mesh;
+        MeshRef m_mesh;
     };
 
+    //TODO: unite with MeshNode
     class DrawableNode : public Node
     {
     public:
+        DrawableNode() = default;
+        DrawableNode(size_t submeshIndex, std::string name = {})
+            : SubmeshIndex(submeshIndex)
+            , Node(std::move(name))
+        {}
+
         size_t SubmeshIndex = 0;
     };
 

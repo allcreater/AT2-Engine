@@ -175,6 +175,7 @@ namespace AT2
         [[nodiscard]] virtual size_t GetDataLength() const noexcept = 0;
 
         [[nodiscard]] virtual const Texture& GetType() const noexcept = 0;
+        //TODO: different for S,T,V
         virtual void SetWrapMode(TextureWrapMode wrapMode) = 0;
         [[nodiscard]] virtual const TextureWrapMode& GetWrapMode() const noexcept = 0;
 
@@ -297,9 +298,9 @@ namespace AT2
 
     public:
         template <std::ranges::contiguous_range T>
-        std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, const T& data)
+        std::shared_ptr<IVertexBuffer> MakeVertexBufferFrom(VertexBufferType type, const T& data)
         {
-            return CreateVertexBufferInternal(type, std::as_bytes(std::span {data}));
+            return CreateVertexBuffer(type, std::as_bytes(std::span {data}));
         }
 
     public:
@@ -311,15 +312,11 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 
         [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, std::span<const std::byte> data) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IShaderProgram>
             CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
 
         virtual void ReloadResources(ReloadableGroup group) = 0;
-
-    protected:
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer>
-            CreateVertexBufferInternal(VertexBufferType type, std::span<const std::byte> data) const = 0;
-
     };
 
     class IRenderer
@@ -362,7 +359,7 @@ namespace AT2
         auto vertexArray = factory.CreateVertexArray();
         static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetAttributeBinding(args.first,
-                                          factory.CreateVertexBuffer(VertexBufferType::ArrayBuffer, args.second),
+                                          factory.MakeVertexBufferFrom(VertexBufferType::ArrayBuffer, args.second),
                                           BufferDataTypes::BufferTypeOf<Args>),
              0)...});
 

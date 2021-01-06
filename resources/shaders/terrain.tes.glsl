@@ -1,6 +1,6 @@
 #version 420 core
 
-layout(quads, equal_spacing, ccw) in;
+layout(quads, equal_spacing, cw) in;
 
 layout(binding = 1) uniform CameraBlock
 {

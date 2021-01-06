@@ -67,11 +67,11 @@ void main()
 
 
 	vec2 roughnessMetallic = texture (u_roughnessMetallicMap, texCoord).rg;
-	vec3 F0 = vec3(0.05);
+	vec3 F0 = mix(vec3(0.05), color.rgb, roughnessMetallic.g);
 	float roughness = roughnessMetallic.r;
 
 	vec3 lighting = computeLighting(mat3(u_matView) * u_lightDirection, 0.0, u_lightIntensity*0.001, normal, normalize(-fragPos), roughness, F0, color.rgb);
-	lighting = lighting + computeIBL(20, normal, normalize(-fragPos), roughness, F0);
+	lighting = lighting + computeIBL(20, normal, normalize(-fragPos), roughness, F0) * 5.0;
 
 	
 	if (color.a < 0.5)

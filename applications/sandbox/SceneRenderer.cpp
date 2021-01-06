@@ -87,7 +87,7 @@ namespace AT2
 
 
         //TODO: map buffer instead of recreating it
-        auto vertexBuffer = rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer, lrv.collectedLights);
+        auto vertexBuffer = rf.MakeVertexBufferFrom(VertexBufferType::ArrayBuffer, lrv.collectedLights);
 
         vao->SetAttributeBinding(2, vertexBuffer,
             BufferBindingParams {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, position), false, 1} );
@@ -216,7 +216,7 @@ namespace AT2
         stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
         stateManager.ApplyState(params.Wireframe ? PolygonRasterizationMode::Lines : PolygonRasterizationMode::Fill);
         stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
-        stateManager.ApplyState(FaceCullMode {true, false});
+        stateManager.ApplyState(FaceCullMode {false, true});
 
 
         //objects
