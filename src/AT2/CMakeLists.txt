@@ -15,6 +15,7 @@ find_package (glm REQUIRED)
 find_package (glad REQUIRED)
 find_package (stb REQUIRED)
 find_package (assimp REQUIRED)
+find_package (nlohmann_json REQUIRED)
 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES
     "*.h"
@@ -27,5 +28,5 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp stb::stb
-                         PUBLIC glfw::glfw glad::glad glm::glm) 
+                         PUBLIC glfw::glfw glad::glad glm::glm nlohmann_json::nlohmann_json) 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

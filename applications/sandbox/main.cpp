@@ -37,7 +37,7 @@ public:
             //spdlog::info("Exit");
         };
 
-        m_window = GlfwApplication::get().createFullscreenWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true});
+        m_window = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true}, {1280, 720});
         m_window->setLabel("Some engine test").setCursorMode(GlfwCursorMode::Disabled);
 
         SetupWindowCallbacks();
@@ -98,7 +98,7 @@ private:
         GrassTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
         NormalMapTex =
             TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        RockTex =TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
+        RockTex = TextureLoader::LoadTexture(m_renderer, "resources/jeep1.jpg"); //TODO: return back rock04.dds
 
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
         EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");

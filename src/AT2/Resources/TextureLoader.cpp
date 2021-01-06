@@ -51,7 +51,6 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
 {
     std::basic_ifstream<std::byte> file {filename, std::ios::binary};
     std::vector<std::byte> data{std::istreambuf_iterator<std::byte>(file), {}};
-
     return LoadTexture(renderer, data);
 }
 
@@ -85,6 +84,7 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
     {
         const auto size = glm::uvec3(width, height, 0);
         result = renderer->GetResourceFactory().CreateTexture(Texture2D {glm::xy(size), 1}, format);
+        result->SubImage2D({0, 0}, glm::xy(size), 0, format, parsed_data);
         stbi_image_free(parsed_data);
     }
 
