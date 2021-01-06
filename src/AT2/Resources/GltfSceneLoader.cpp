@@ -12,9 +12,9 @@ using namespace AT2::Resources;
 
 using namespace std::literals;
 
+#include <bit>
 #include <fx/gltf.h>
 #include <ranges>
-#include <bit>
 
 namespace
 {
@@ -24,58 +24,58 @@ namespace
         BufferBindingParams result;
         result.Count = 1;
 
+        using ComponentType = fx::gltf::Accessor::ComponentType;
         switch (accessor.componentType)
         {
-        case fx::gltf::Accessor::ComponentType::Byte: 
+        case ComponentType::Byte:
             result.Type = BufferDataType::Byte;
             result.Stride = 1;
             break;
-        case fx::gltf::Accessor::ComponentType::UnsignedByte:
+        case ComponentType::UnsignedByte:
             result.Type = BufferDataType ::UByte;
             result.Stride = 1;
             break;
-        case fx::gltf::Accessor::ComponentType::Short:
+        case ComponentType::Short:
             result.Type = BufferDataType::Short;
             result.Stride = 2;
             break;
-        case fx::gltf::Accessor::ComponentType::UnsignedShort:
+        case ComponentType::UnsignedShort:
             result.Type = BufferDataType ::UShort;
             result.Stride = 2;
             break;
-        case fx::gltf::Accessor::ComponentType::Float:
+        case ComponentType::Float:
             result.Type = BufferDataType ::Float;
             result.Stride = 4;
             break;
-        case fx::gltf::Accessor::ComponentType::UnsignedInt:
+        case ComponentType::UnsignedInt:
             result.Type = BufferDataType ::UInt;
             result.Stride = 4;
             break;
-        case fx::gltf::Accessor::ComponentType::None:
-            return {};
+        case ComponentType::None: return {};
         }
-        
+
+        using Type = fx::gltf::Accessor::Type;
         switch (accessor.type)
         {
-        case fx::gltf::Accessor::Type::Mat2: result.Stride *= 4; break;
-        case fx::gltf::Accessor::Type::Mat3: result.Stride *= 9; break;
-        case fx::gltf::Accessor::Type::Mat4: result.Stride *= 16; break;
-        case fx::gltf::Accessor::Type::Scalar: break;
-        case fx::gltf::Accessor::Type::Vec2:
+        case Type::Mat2: result.Stride *= 4; break;
+        case Type::Mat3: result.Stride *= 9; break;
+        case Type::Mat4: result.Stride *= 16; break;
+        case Type::Scalar: break;
+        case Type::Vec2:
             result.Count = 2;
             result.Stride *= 2;
             break;
-        case fx::gltf::Accessor::Type::Vec3:
+        case Type::Vec3:
             result.Count = 3;
             result.Stride *= 3;
             break;
-        case fx::gltf::Accessor::Type::Vec4:
+        case Type::Vec4:
             result.Count = 4;
             result.Stride *= 4;
             break;
-        case fx::gltf::Accessor::Type::None:
-            return {};
+        case Type::None: return {};
         }
- 
+
         return result;
     }
 
@@ -85,9 +85,9 @@ namespace
 
         switch (wrappingMode)
         {
-            case WrappingMode::ClampToEdge: return TextureWrapMode::ClampToEdge;
-            case WrappingMode::Repeat: return TextureWrapMode::Repeat;
-            case WrappingMode::MirroredRepeat: return TextureWrapMode::MirroredRepeat;
+        case WrappingMode::ClampToEdge: return TextureWrapMode::ClampToEdge;
+        case WrappingMode::Repeat: return TextureWrapMode::Repeat;
+        case WrappingMode::MirroredRepeat: return TextureWrapMode::MirroredRepeat;
         }
 
         return TextureWrapMode::ClampToBorder;
@@ -107,14 +107,12 @@ namespace
 
     public:
         Loader(std::shared_ptr<IRenderer> renderer, const str& sv) :
-            m_renderer(std::move(renderer)), m_document(fx::gltf::LoadFromText(sv)),
-            m_currentPath(sv)
+            m_renderer(std::move(renderer)), m_document(fx::gltf::LoadFromText(sv)), m_currentPath(sv)
         {
             m_currentPath.remove_filename();
 
             m_normalMapPlaceholder =
-                m_renderer->GetResourceFactory().CreateTexture(Texture2D {{1, 1}},
-                                                                               AT2::TextureFormats::RGBA8);
+                m_renderer->GetResourceFactory().CreateTexture(Texture2D {{1, 1}}, AT2::TextureFormats::RGBA8);
             std::array<glm::u8, 4> color = {127, 127, 255, 255};
             m_normalMapPlaceholder->SubImage2D({}, {1, 1}, 0, TextureFormats::RGBA8, color.data());
         }
@@ -170,13 +168,12 @@ namespace
             currentNode->SetTransform(std::bit_cast<glm::mat4>(node.matrix));
 
             baseNode.AddChild(currentNode);
-            
+
             if (node.mesh >= 0)
                 PopulateSubmeshes(*currentNode, static_cast<size_t>(node.mesh));
 
             if (const size_t cameraIndex = node.camera; node.camera >= 0)
             {
-                
             }
 
             for (const auto nodeIndex : node.children)
@@ -195,7 +192,8 @@ namespace
             std::ranges::transform(m_document.textures, std::back_inserter(m_textures),
                                    std::bind_front(&Loader::LoadTexture, this));
 
-            std::ranges::transform(m_document.meshes, std::back_inserter(m_meshes), std::bind_front(&Loader::LoadMesh, this));
+            std::ranges::transform(m_document.meshes, std::back_inserter(m_meshes),
+                                   std::bind_front(&Loader::LoadMesh, this));
         }
 
         std::shared_ptr<ITexture> LoadTexture(const fx::gltf::Texture& texture)
@@ -247,7 +245,8 @@ namespace
         {
             auto container = std::make_unique<UniformContainer>();
 
-            auto trySetTexture = [&](const std::string& paramName, const fx::gltf::Material::Texture& texture, std::shared_ptr<ITexture> defaultValue = nullptr) {
+            auto trySetTexture = [&](const std::string& paramName, const fx::gltf::Material::Texture& texture,
+                                     std::shared_ptr<ITexture> defaultValue = nullptr) {
                 if (!texture.empty())
                     container->SetUniform(paramName, m_textures[texture.index]);
                 else if (defaultValue)
@@ -290,8 +289,7 @@ namespace
         SubmeshGroup LoadMesh(const fx::gltf::Mesh& gltfMesh)
         {
             const static std::pair<uint32_t, std::string> requiredAttributes[] = {
-                 {1u, "POSITION"s},  {2u, "TEXCOORD_0"s},  {3u, "NORMAL"s}
-            }; //"TANGENT"
+                {1u, "POSITION"s}, {2u, "TEXCOORD_0"s}, {3u, "NORMAL"s}}; //"TANGENT"
 
 
             SubmeshGroup result {gltfMesh.primitives.size()};
@@ -300,17 +298,18 @@ namespace
                 const auto& rf = m_renderer->GetResourceFactory();
                 auto vao = rf.CreateVertexArray();
                 auto vb = rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer);
-                
 
-                std::vector <std::pair<uint32_t, BufferDataInfo>> buffersData;
+
+                std::vector<std::pair<uint32_t, BufferDataInfo>> buffersData;
                 for (const auto& [attribIndex, attribName] : requiredAttributes)
                 {
                     if (auto it = primitive.attributes.find(attribName); it != primitive.attributes.end())
                         buffersData.emplace_back(attribIndex, GetData(it->second));
                 }
 
-                const auto totalSize = std::accumulate(buffersData.begin(), buffersData.end(), size_t {},
-                    [](size_t size, const auto& bdi) { return size + bdi.second.data.size_bytes(); });
+                const auto totalSize =
+                    std::accumulate(buffersData.begin(), buffersData.end(), size_t {},
+                                    [](size_t size, const auto& bdi) { return size + bdi.second.data.size_bytes(); });
 
                 vb->SetDataRaw(std::span<const std::byte> {static_cast<const std::byte*>(nullptr), totalSize});
 
@@ -351,7 +350,7 @@ namespace
             return result;
         }
     };
-}
+} // namespace
 
 std::shared_ptr<Node> GltfMeshLoader::LoadScene(std::shared_ptr<IRenderer> renderer, const str& sv)
 {
