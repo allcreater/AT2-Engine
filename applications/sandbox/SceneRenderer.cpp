@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "AT2/Animation.h"
+
 namespace AT2
 {
     RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera) :
@@ -21,26 +23,25 @@ namespace AT2
         if (const auto* meshNode = dynamic_cast<MeshNode*>(&node))
         {
             //TODO: some kind of RenderContext?
-            active_mesh = meshNode->GetMesh();
-
-            if (const auto mesh = active_mesh.lock())
+            if (active_mesh != meshNode->GetMesh())
             {
-                stateManager.BindShader(mesh->Shader);
-                stateManager.BindVertexArray(mesh->VertexArray);
+                active_mesh = meshNode->GetMesh();
+
+                stateManager.BindShader(active_mesh->Shader);
+                stateManager.BindVertexArray(active_mesh->VertexArray);
             }
-        }
-        else if (const auto* subMeshNode = dynamic_cast<DrawableNode*>(&node))
-        {
-            if (const auto mesh = active_mesh.lock())
+
+            for (const size_t submeshIndex : meshNode->GetSubmeshIndices())
             {
                 stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
                 stateManager.GetActiveShader()->SetUniform(
                     "u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
 
-                const auto& subMesh = mesh->SubMeshes[subMeshNode->SubmeshIndex];
-                Utils::MeshRenderer::DrawSubmesh(*scene_renderer.renderer, *mesh, subMesh);
+                Utils::MeshRenderer::DrawSubmesh(*scene_renderer.renderer, *active_mesh,
+                                                 active_mesh->SubMeshes[submeshIndex]);
             }
         }
+
 
         return true;
     }
@@ -220,6 +221,16 @@ namespace AT2
 
 
         //objects
+        FuncNodeVisitor updateVisitor {
+            [time=time](Node& node)
+            {
+            if (auto* updatable = dynamic_cast<Animation::AnimationNode*>(&node))
+                updatable->update(time);
+
+            return true;
+            }};
+        params.Scene.GetRoot().Accept(updateVisitor);
+
         RenderVisitor rv {*this, params.Camera};
         params.Scene.GetRoot().Accept(rv);
 

@@ -140,7 +140,7 @@ namespace
         using SubmeshGroup = std::vector<MeshRef>;
         std::vector<SubmeshGroup> m_meshes;
         std::vector<std::shared_ptr<ITexture>> m_textures;
-        std::vector<NodeRef> m_nodes;
+        std::vector<std::shared_ptr<Animation::AnimationNode>> m_nodes;
 
         std::filesystem::path m_currentPath;
 
@@ -162,7 +162,6 @@ namespace
 
             LoadResources();
 
-            SetupAnimations();
 
             if (m_document.scene >= 0 && static_cast<size_t>(m_document.scene) < m_document.scenes.size())
             {
@@ -175,6 +174,8 @@ namespace
                 {
                     BuildSceneGraph(nodeIndex, *sceneRoot);
                 }
+
+                SetupAnimations();
 
                 return sceneRoot;
             }
@@ -192,17 +193,12 @@ namespace
         }
 
     private:
-        template <typename T>
-        auto reinterpretSpan(std::span<const std::byte> span)
-        {
-            return std::span<const T> {reinterpret_cast<const T*>(span.data()), span.size() / sizeof(T)};
-        };
 
         void SetupAnimations()
         {
             for (const auto& animation: m_document.animations)
             {
-                auto animationContainer = std::make_unique<AT2::Animation::Animation>();
+                auto animationContainer = std::make_shared<AT2::Animation::Animation>();
 
                 for (const auto& channel : animation.channels)
                 {
@@ -216,32 +212,50 @@ namespace
 
                     assert(inputChannelData.bindingParams.Type == BufferDataType::Float &&
                            inputChannelData.bindingParams.Count == 1);
-                    auto inputSpan = reinterpretSpan<float>(inputChannelData.data);
-                    auto b = reinterpretSpan<float>(outputChannelData.data);
 
                     if (channel.target.path == "translation")
                     {
                         assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
                                outputChannelData.bindingParams.Count == 3);
-                        animationContainer->AddTrack(std::span<float> {}, [](Node& node, glm::vec3 value) {
-                            node.GetTransform().setPosition(value);
-                        });
+
+                        auto index = animationContainer->addTrack(
+                            Utils::reinterpret_span_cast<float>(inputChannelData.data),
+                            Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
+                            [](glm::vec3 value, Node& node)
+                            {
+                                node.GetTransform().setPosition(value);
+                            });
+
+                        affectingNode->m_trackIndex = index;
+                        affectingNode->m_animation = animationContainer;
                     }
                     else if (channel.target.path == "rotation")
                     {
                         assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
                                outputChannelData.bindingParams.Count == 4);
-                        animationContainer->AddTrack(std::span<float> {}, [](Node& node, glm::quat value) {
+
+                        auto index = animationContainer->addTrack(
+                            Utils::reinterpret_span_cast<float>(inputChannelData.data),
+                            Utils::reinterpret_span_cast<glm::quat>(outputChannelData.data),
+                            [](glm::quat value, Node& node) {
                             node.GetTransform().setRotation(value);
                         });
+                        affectingNode->m_trackIndex = index;
+                        affectingNode->m_animation = animationContainer;
                     }
                     else if (channel.target.path == "scale")
                     {
                         assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
                                outputChannelData.bindingParams.Count == 3);
-                        animationContainer->AddTrack(std::span<float> {}, [](Node& node, glm::vec3 value) {
-                            node.GetTransform().setPosition(value);
+
+                        auto index =  animationContainer->addTrack(
+                            Utils::reinterpret_span_cast<float>(inputChannelData.data),
+                            Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
+                            [](glm::vec3 value, Node& node) {
+                                node.GetTransform().setScale(value);
                         });
+                        affectingNode->m_trackIndex = index;
+                        affectingNode->m_animation = animationContainer;
                     }
                     //else if (channel.target.path == "weights")
                     
@@ -256,21 +270,28 @@ namespace
             node.SetName("Mesh group"s + m_document.meshes[meshIndex].name);
             for (const auto& submesh : m_meshes[meshIndex])
             {
-                auto meshNode = std::make_shared<MeshNode>(submesh, submesh->Name);
-                meshNode->AddChild(std::make_shared<DrawableNode>(0));
-
+                auto meshNode = std::make_shared<MeshNode>(submesh, std::vector{0u}, submesh->Name);
                 node.AddChild(std::move(meshNode));
             }
         }
 
         void BuildSceneGraph(int32_t nodeIndex, AT2::Node& baseNode)
         {
-            if (nodeIndex <= 0)
+            if (nodeIndex < 0)
                 throw std::logic_error("BuildSceneGraph: negative node index");
 
             const fx::gltf::Node& node = m_document.nodes[static_cast<size_t>(nodeIndex)];
+            
+            auto currentNode = std::make_shared<Animation::AnimationNode>(nullptr, 0);
+            if (node.translation != fx::gltf::defaults::NullVec3 ||
+                node.rotation != fx::gltf::defaults::IdentityRotation || node.scale != fx::gltf::defaults::IdentityVec3)
+            {
+                auto tr = translate(glm::mat4 {1.0}, std::bit_cast<glm::vec3>(node.translation))
+                    * mat4_cast(std::bit_cast<glm::quat>(node.rotation));
+                auto trs = scale(tr, std::bit_cast<glm::vec3>(node.scale));
 
-            auto currentNode = std::make_shared<Node>();
+                currentNode->SetTransform(trs);
+            }
             currentNode->SetTransform(std::bit_cast<glm::mat4>(node.matrix));
             baseNode.AddChild(currentNode);
 

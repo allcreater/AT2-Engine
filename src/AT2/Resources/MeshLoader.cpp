@@ -28,7 +28,7 @@ namespace
         }
 
     public:
-        std::unique_ptr<MeshNode> Build()
+        std::shared_ptr<Node> Build()
         {
             assert(m_indicesVec.empty());
             BuildVAO();
@@ -37,17 +37,14 @@ namespace
             for (size_t i = 0; i < m_scene->mNumMaterials; ++i)
                 m_buildingMesh->Materials.push_back(TranslateMaterial(m_scene->mMaterials[i]));
 
-            auto meshNode = std::make_unique<MeshNode>();
-            meshNode->SetName("Root");
-            meshNode->SetMesh(std::move(m_buildingMesh));
+            auto rootNode = std::make_shared<Node>("Root");
+            TraverseNode(m_scene->mRootNode, *rootNode);
 
-            TraverseNode(m_scene->mRootNode, *meshNode);
-
-            return meshNode;
+            return rootNode;
         }
 
     protected:
-        std::unique_ptr<Mesh> m_buildingMesh = std::make_unique<Mesh>();
+        std::shared_ptr<Mesh> m_buildingMesh = std::make_shared<Mesh>();
         std::filesystem::path m_scenePath;
         Assimp::Importer m_importer;
         const aiScene* m_scene;
@@ -152,14 +149,12 @@ namespace
         {
             for (unsigned i = 0; i < node->mNumMeshes; i++)
             {
-                const int meshIndex = node->mMeshes[i];
+                const unsigned meshIndex = node->mMeshes[i];
                 const aiMesh* mesh = m_scene->mMeshes[meshIndex];
 
                 //TODO: don't multiply nodes when materials are the same
-                auto submesh = std::make_shared<DrawableNode>();
-                submesh->SetName("Submesh "s + mesh->mName.C_Str());
+                auto submesh = std::make_shared<MeshNode>(m_buildingMesh, std::vector{meshIndex}, "Submesh "s + mesh->mName.C_Str());
                 submesh->SetTransform(ConvertMatrix(node->mTransformation));
-                submesh->SubmeshIndex = meshIndex;
 
                 baseNode.AddChild(std::move(submesh));
             }
@@ -190,7 +185,7 @@ namespace
 
 }; // namespace
 
-std::unique_ptr<MeshNode> MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename)
+std::shared_ptr<Node> MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename)
 {
     Assimp::Importer importer;
     const auto* scene = importer.ReadFile(filename, flags);

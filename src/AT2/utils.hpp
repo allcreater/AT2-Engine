@@ -16,6 +16,18 @@ bool is_uninitialized(std::weak_ptr<T> const& weak) {
 }
 
 
+//TODO: is it lawful even at C+++20?
+template <typename T>
+auto reinterpret_span_cast(std::span<const std::byte> span)
+{
+    return std::span{reinterpret_cast<const T*>(span.data()), span.size() / sizeof(T)};
+}
+template <typename T>
+auto reinterpret_span_cast(std::span<std::byte> span)
+{
+    return std::span{reinterpret_cast<T*>(span.data()), span.size() / sizeof(T)};
+}
+
 template <typename T, typename Fn>
 auto make_unary_less(Fn&& transform)
 {

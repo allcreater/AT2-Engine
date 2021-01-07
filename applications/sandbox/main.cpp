@@ -7,6 +7,7 @@
 #include <AT2/OpenGL/GLFW/glfw_application.h>
 #include <AT2/OpenGL/GLFW/glfw_window.h>
 #include <AT2/Resources/MeshLoader.h>
+#include <AT2/Resources/GltfSceneLoader.h>
 #include <AT2/Resources/TextureLoader.h>
 
 #include <execution>
@@ -123,9 +124,16 @@ private:
 
         //Scene
         auto matBallNode = MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
-        matBallNode->GetMesh()->Shader = MeshShader;
-        matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform(), {100, 50, 0}), {100, 100, 100}));
+        matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform().asMatrix(), {100, 50, 0}), {100, 100, 100}));
         Scene.GetRoot().AddChild(std::move(matBallNode));
+
+        AT2::FuncNodeVisitor shaderSetter {[&](AT2::Node& node) {
+            if (auto meshNode = dynamic_cast<AT2::MeshNode*>(&node))
+                meshNode->GetMesh()->Shader = MeshShader;
+            return true;
+        }};
+        Scene.GetRoot().Accept(shaderSetter);
+
 
         auto terrainNode = AT2::Utils::MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
         terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
@@ -184,8 +192,11 @@ private:
         };
 
         m_window->ResizeCallback = [&](const glm::ivec2& newSize) {
-            m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(m_window->getSize().x),
-                                                       static_cast<float>(m_window->getSize().y), 1.0f, 20000.0f));
+            if (newSize.x <= 0 || newSize.y <= 0)
+                return;
+
+            m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(newSize.x),
+                                                       static_cast<float>(newSize.y), 1.0f, 20000.0f));
             sr.ResizeFramebuffers(newSize);
         };
 

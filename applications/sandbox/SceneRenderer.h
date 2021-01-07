@@ -20,7 +20,7 @@ namespace AT2
         const Camera& camera;
 
         MatrixStack transforms;
-        std::weak_ptr<const Mesh> active_mesh;
+        std::shared_ptr<const Mesh> active_mesh;
         SceneRenderer& scene_renderer;
     };
 

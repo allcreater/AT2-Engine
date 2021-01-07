@@ -126,8 +126,9 @@ namespace AT2
     {
     public:
         MeshNode() = default;
-        MeshNode(MeshRef mesh, std::string name)
+        MeshNode(MeshRef mesh, std::vector<unsigned> submeshIndices, std::string name = {})
             : m_mesh(std::move(mesh))
+            , m_submeshIndices(std::move(submeshIndices))
             , Node(std::move(name))
         {}
 
@@ -135,21 +136,11 @@ namespace AT2
         [[nodiscard]] ConstMeshRef GetMesh() const noexcept { return m_mesh; }
         MeshRef GetMesh() noexcept { return m_mesh; }
 
+        std::span<const unsigned> GetSubmeshIndices() const noexcept { return m_submeshIndices; }
+
     private:
         MeshRef m_mesh;
-    };
-
-    //TODO: unite with MeshNode
-    class DrawableNode : public Node
-    {
-    public:
-        DrawableNode() = default;
-        DrawableNode(size_t submeshIndex, std::string name = {})
-            : SubmeshIndex(submeshIndex)
-            , Node(std::move(name))
-        {}
-
-        size_t SubmeshIndex = 0;
+        std::vector<unsigned> m_submeshIndices;
     };
 
     class Scene

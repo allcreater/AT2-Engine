@@ -24,7 +24,6 @@ namespace AT2::Utils
         auto vao = rf.CreateVertexArray();
         vao->SetAttributeBinding(1, rf.MakeVertexBufferFrom(VertexBufferType::ArrayBuffer, texCoords), BufferDataTypes::Vec2);
 
-        auto rootNode = std::make_unique<MeshNode>();
 
         auto mesh = std::make_shared<Mesh>();
         mesh->Name = "Terrain";
@@ -36,14 +35,7 @@ namespace AT2::Utils
         mesh->SubMeshes.push_back(std::move(subMesh));
 
 
-        auto drawable = std::make_shared<DrawableNode>();
-        drawable->SetName("Terrain drawable");
-        drawable->SubmeshIndex = 0;
-
-        rootNode->SetMesh(std::move(mesh));
-        rootNode->AddChild(std::move(drawable));
-
-        return rootNode;
+        return std::make_unique<MeshNode>(std::move(mesh), std::vector{0u}, "Terrain drawable");
     }
 
     std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatches)
