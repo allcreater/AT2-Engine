@@ -4,6 +4,7 @@
 
 
 #include "../BufferMapperGuard.h"
+#include "../Animation.h"
 
 #include "TextureLoader.h"
 
@@ -51,7 +52,7 @@ namespace
             result.Type = BufferDataType ::UInt;
             result.Stride = 4;
             break;
-        case ComponentType::None: return {};
+        case ComponentType::None: throw std::logic_error("unsupported data type");
         }
 
         using Type = fx::gltf::Accessor::Type;
@@ -73,7 +74,7 @@ namespace
             result.Count = 4;
             result.Stride *= 4;
             break;
-        case Type::None: return {};
+        case Type::None: throw std::logic_error("unsupported data type");
         }
 
         return result;
@@ -90,7 +91,20 @@ namespace
         case WrappingMode::MirroredRepeat: return TextureWrapMode::MirroredRepeat;
         }
 
-        return TextureWrapMode::ClampToBorder;
+        throw std::logic_error("invalid conversion");
+    }
+
+    constexpr Animation::InterpolationMode TranslateInterpolationMode(fx::gltf::Animation::Sampler::Type interpolation)
+    {
+        using Type = fx::gltf::Animation::Sampler::Type;
+        switch (interpolation)
+        {
+        case Type::Step: return Animation::InterpolationMode::Step;
+        case Type::Linear: return Animation::InterpolationMode::Linear;
+        case Type::CubicSpline: return Animation::InterpolationMode::CubicSpline;
+        }
+
+        throw std::logic_error("invalid conversion");
     }
 
     class PlaceholderTextureCash
@@ -109,14 +123,10 @@ namespace
             if (auto it = m_textures.find(packedColor); it != m_textures.end())
                 return it->second;
 
-            auto texture =
-                m_renderer->GetResourceFactory().CreateTexture(Texture2D {{1, 1}}, AT2::TextureFormats::RGBA8);
-
+            auto texture = m_renderer->GetResourceFactory().CreateTexture(Texture2D {{1, 1}}, AT2::TextureFormats::RGBA8);
             texture->SubImage2D({}, {1, 1}, 0, TextureFormats::RGBA8, &packedColor);
 
             m_textures.emplace(packedColor, texture);
-
-            
 
             return texture;
         }
@@ -130,6 +140,8 @@ namespace
         using SubmeshGroup = std::vector<MeshRef>;
         std::vector<SubmeshGroup> m_meshes;
         std::vector<std::shared_ptr<ITexture>> m_textures;
+        std::vector<NodeRef> m_nodes;
+
         std::filesystem::path m_currentPath;
 
         PlaceholderTextureCash m_placeholderTextureCash;
@@ -138,15 +150,19 @@ namespace
         : m_renderer(std::move(renderer))
         , m_document(fx::gltf::LoadFromText(sv))
         , m_currentPath(sv)
+        , m_nodes(m_document.nodes.size())
         , m_placeholderTextureCash(m_renderer)
         {
             m_currentPath.remove_filename();
         }
 
-        std::shared_ptr<Node> BuildScene()
+        NodeRef BuildScene()
         {
             Log::Info() << "Building scene graph..." << std::endl;
+
             LoadResources();
+
+            SetupAnimations();
 
             if (m_document.scene >= 0 && static_cast<size_t>(m_document.scene) < m_document.scenes.size())
             {
@@ -157,7 +173,7 @@ namespace
                 auto sceneRoot = std::make_shared<Node>(scene.name + " root"s);
                 for (const auto nodeIndex : scene.nodes)
                 {
-                    BuildSceneGraph(m_document.nodes[nodeIndex], *sceneRoot);
+                    BuildSceneGraph(nodeIndex, *sceneRoot);
                 }
 
                 return sceneRoot;
@@ -171,9 +187,68 @@ namespace
                 root->AddChild(childNode);
                 PopulateSubmeshes(*childNode, meshIndex);
             }
+
+            return root;
         }
 
     private:
+        template <typename T>
+        auto reinterpretSpan(std::span<const std::byte> span)
+        {
+            return std::span<const T> {reinterpret_cast<const T*>(span.data()), span.size() / sizeof(T)};
+        };
+
+        void SetupAnimations()
+        {
+            for (const auto& animation: m_document.animations)
+            {
+                auto animationContainer = std::make_unique<AT2::Animation::Animation>();
+
+                for (const auto& channel : animation.channels)
+                {
+                    const auto& sampler = animation.samplers[channel.sampler];
+                    auto& affectingNode = m_nodes[channel.target.node];
+
+                    TranslateInterpolationMode(sampler.interpolation);
+
+                    auto inputChannelData = GetData(sampler.input);
+                    auto outputChannelData = GetData(sampler.output);
+
+                    assert(inputChannelData.bindingParams.Type == BufferDataType::Float &&
+                           inputChannelData.bindingParams.Count == 1);
+                    auto inputSpan = reinterpretSpan<float>(inputChannelData.data);
+                    auto b = reinterpretSpan<float>(outputChannelData.data);
+
+                    if (channel.target.path == "translation")
+                    {
+                        assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
+                               outputChannelData.bindingParams.Count == 3);
+                        animationContainer->AddTrack(std::span<float> {}, [](Node& node, glm::vec3 value) {
+                            node.GetTransform().setPosition(value);
+                        });
+                    }
+                    else if (channel.target.path == "rotation")
+                    {
+                        assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
+                               outputChannelData.bindingParams.Count == 4);
+                        animationContainer->AddTrack(std::span<float> {}, [](Node& node, glm::quat value) {
+                            node.GetTransform().setRotation(value);
+                        });
+                    }
+                    else if (channel.target.path == "scale")
+                    {
+                        assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
+                               outputChannelData.bindingParams.Count == 3);
+                        animationContainer->AddTrack(std::span<float> {}, [](Node& node, glm::vec3 value) {
+                            node.GetTransform().setPosition(value);
+                        });
+                    }
+                    //else if (channel.target.path == "weights")
+                    
+                }
+            }
+        }
+
         // Scene graph
 
         void PopulateSubmeshes(AT2::Node& node, size_t meshIndex)
@@ -188,12 +263,18 @@ namespace
             }
         }
 
-        void BuildSceneGraph(const fx::gltf::Node& node, AT2::Node& baseNode)
+        void BuildSceneGraph(int32_t nodeIndex, AT2::Node& baseNode)
         {
+            if (nodeIndex <= 0)
+                throw std::logic_error("BuildSceneGraph: negative node index");
+
+            const fx::gltf::Node& node = m_document.nodes[static_cast<size_t>(nodeIndex)];
+
             auto currentNode = std::make_shared<Node>();
             currentNode->SetTransform(std::bit_cast<glm::mat4>(node.matrix));
-
             baseNode.AddChild(currentNode);
+
+            m_nodes[static_cast<size_t>(nodeIndex)] = currentNode;
 
             if (node.mesh >= 0)
                 PopulateSubmeshes(*currentNode, static_cast<size_t>(node.mesh));
@@ -202,12 +283,9 @@ namespace
             {
             }
 
-            for (const auto nodeIndex : node.children)
+            for (const auto childIndex : node.children)
             {
-                assert(nodeIndex > 0);
-                const auto& childNode = m_document.nodes[nodeIndex];
-
-                BuildSceneGraph(childNode, *currentNode);
+                BuildSceneGraph(childIndex, *currentNode);
             }
         }
 
@@ -391,7 +469,7 @@ namespace
     };
 } // namespace
 
-std::shared_ptr<Node> GltfMeshLoader::LoadScene(std::shared_ptr<IRenderer> renderer, const str& sv)
+NodeRef GltfMeshLoader::LoadScene(std::shared_ptr<IRenderer> renderer, const str& sv)
 {
     Log::Info() << "Loading model from '" << sv << "'." << std::endl;
 

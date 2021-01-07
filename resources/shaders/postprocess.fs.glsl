@@ -17,7 +17,7 @@ uniform sampler2D u_colorMap;
 uniform sampler2D u_depthMap;
 
 uniform float u_tmGamma = 2.2;
-uniform float u_tmExposure = 0.5;
+uniform float u_tmExposure = 1.0;
 
 layout (location = 0) out vec4 FragColor;
 
