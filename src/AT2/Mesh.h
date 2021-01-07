@@ -50,6 +50,6 @@ namespace AT2
     };
 
     using MeshRef = std::shared_ptr<Mesh>;
-    using ConstMeshRef = std::shared_ptr<Mesh>;
+    using ConstMeshRef = std::shared_ptr<const Mesh>;
 
 } // namespace AT2

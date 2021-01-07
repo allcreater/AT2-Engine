@@ -7,6 +7,73 @@
 namespace AT2
 {
 
+    //TODO: integrate with Camera
+    class Transform
+    {
+    public:
+        Transform() { recalculate(); }
+        Transform(glm::mat4 newTransformation)
+        {
+            fromMatrix(newTransformation);
+        }
+
+        void fromMatrix(glm::mat4 newTransformation)
+        {
+            glm::vec3 skew {};
+            glm::vec4 perspective {};
+
+            transformation = newTransformation;
+            decompose(transformation, scale, rotation, position, skew, perspective);
+        }
+
+
+
+        [[nodiscard]] const glm::vec3& getPosition() const noexcept { return position; }
+        [[nodiscard]] const glm::quat& getRotation() const noexcept { return rotation; }
+        [[nodiscard]] const glm::vec3& getScale() const noexcept { return scale; }
+
+        [[nodiscard]] const glm::mat4& asMatrix() const noexcept { return transformation; }
+        [[nodiscard]] operator glm::mat4() const noexcept { return transformation; }
+
+        Transform& setPosition(glm::vec3 newPosition)
+        {
+            position = newPosition;
+            recalculate();
+
+            return *this;
+        }
+
+        Transform& setRotation(glm::quat newRotation)
+        {
+            rotation = newRotation;
+            recalculate();
+
+            return *this;
+        }
+
+        Transform& setScale(glm::vec3 newScale)
+        {
+            scale = newScale;
+            recalculate();
+
+            return *this;
+        }
+
+
+    private:
+        void recalculate()
+        {
+            transformation = glm::scale(translate(glm::mat4 {1.0f}, position) * glm::mat4_cast(rotation), scale);
+        }
+
+    private:
+        glm::vec3 position {0.0f, 0.0f, 0.0f};
+        glm::vec3 scale {1.0f, 1.0f, 1.0f};
+        glm::quat rotation {1.0f, 0.0f, 0.0f, 0.0f};
+
+        glm::mat4 transformation {};
+    };
+
     class Camera
     {
     public:

@@ -56,7 +56,8 @@ namespace AT2
             return dynamic_cast<T&>(*child_nodes[index]);
         }
 
-        [[nodiscard]] const glm::mat4& GetTransform() const noexcept { return transform; }
+        [[nodiscard]] const Transform& GetTransform() const noexcept { return transform; }
+        [[nodiscard]] Transform& GetTransform() noexcept { return transform; }
         void SetTransform(const glm::mat4& mat) noexcept { transform = mat; }
 
         void SetName(std::string newName) { name = std::move(newName); }
@@ -67,7 +68,7 @@ namespace AT2
 
     protected:
         std::string name;
-        glm::mat4 transform {1.0f};
+        Transform transform;
         std::vector<NodeRef> child_nodes;
     };
 
