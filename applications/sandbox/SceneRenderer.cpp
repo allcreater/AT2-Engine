@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <ranges>
 
 #include "AT2/Animation.h"
 
@@ -221,14 +222,12 @@ namespace AT2
 
 
         //objects
-        FuncNodeVisitor updateVisitor {
-            [time=time](Node& node)
-            {
-            if (auto* updatable = dynamic_cast<Animation::AnimationNode*>(&node))
-                updatable->update(time);
+        FuncNodeVisitor updateVisitor { [time=time](Node& node){
+            for (auto& component : node.getComponentList())
+                component->update(time);
 
             return true;
-            }};
+        }};
         params.Scene.GetRoot().Accept(updateVisitor);
 
         RenderVisitor rv {*this, params.Camera};

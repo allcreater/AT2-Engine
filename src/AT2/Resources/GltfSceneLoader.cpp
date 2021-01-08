@@ -2,7 +2,6 @@
 
 #include <filesystem>
 
-
 #include "../BufferMapperGuard.h"
 #include "../Animation.h"
 
@@ -140,7 +139,7 @@ namespace
         using SubmeshGroup = std::vector<MeshRef>;
         std::vector<SubmeshGroup> m_meshes;
         std::vector<std::shared_ptr<ITexture>> m_textures;
-        std::vector<std::shared_ptr<Animation::AnimationNode>> m_nodes;
+        std::vector<std::shared_ptr<Node>> m_nodes;
 
         std::filesystem::path m_currentPath;
 
@@ -226,8 +225,8 @@ namespace
                                 node.GetTransform().setPosition(value);
                             });
 
-                        affectingNode->m_trackIndex = index;
-                        affectingNode->m_animation = animationContainer;
+                        affectingNode->getOrCreateComponent<Animation::AnimationComponent>().addTrack(
+                            animationContainer, index);
                     }
                     else if (channel.target.path == "rotation")
                     {
@@ -240,8 +239,9 @@ namespace
                             [](glm::quat value, Node& node) {
                             node.GetTransform().setRotation(value);
                         });
-                        affectingNode->m_trackIndex = index;
-                        affectingNode->m_animation = animationContainer;
+
+                        affectingNode->getOrCreateComponent<Animation::AnimationComponent>().addTrack(
+                            animationContainer, index);
                     }
                     else if (channel.target.path == "scale")
                     {
@@ -254,8 +254,9 @@ namespace
                             [](glm::vec3 value, Node& node) {
                                 node.GetTransform().setScale(value);
                         });
-                        affectingNode->m_trackIndex = index;
-                        affectingNode->m_animation = animationContainer;
+
+                        affectingNode->getOrCreateComponent<Animation::AnimationComponent>().addTrack(
+                            animationContainer, index);
                     }
                     //else if (channel.target.path == "weights")
                     
@@ -267,7 +268,7 @@ namespace
 
         void PopulateSubmeshes(AT2::Node& node, size_t meshIndex)
         {
-            node.SetName("Mesh group"s + m_document.meshes[meshIndex].name);
+            node.SetName("Mesh group '"s + m_document.meshes[meshIndex].name + "'"s);
             for (const auto& submesh : m_meshes[meshIndex])
             {
                 auto meshNode = std::make_shared<MeshNode>(submesh, std::vector{0u}, submesh->Name);
@@ -282,7 +283,7 @@ namespace
 
             const fx::gltf::Node& node = m_document.nodes[static_cast<size_t>(nodeIndex)];
             
-            auto currentNode = std::make_shared<Animation::AnimationNode>(nullptr, 0);
+            auto currentNode = std::make_shared<Node>();
             if (node.translation != fx::gltf::defaults::NullVec3 ||
                 node.rotation != fx::gltf::defaults::IdentityRotation || node.scale != fx::gltf::defaults::IdentityVec3)
             {

@@ -33,7 +33,7 @@ namespace AT2::Animation
         CubicSpline
     };
 
-    inline float WrapValue(float x, float x_min, float x_max)
+    inline float wrapValue(float x, float x_min, float x_max)
     {
         const auto biased_x = x - x_min;
         const auto range = x_max - x_min;
@@ -45,16 +45,12 @@ namespace AT2::Animation
     class ChannelBase
     {
         InterpolationMode m_interpolationMode = InterpolationMode::Linear;
-        bool m_isCyclic = true;
 
     public:
         virtual ~ChannelBase() = default;
 
         InterpolationMode getInterpolationMode() const noexcept { return m_interpolationMode; }
         void setInterpolationMode(InterpolationMode mode) noexcept { m_interpolationMode = mode; }
-
-        bool isCyclic() const noexcept { return m_isCyclic; }
-        bool setIsCyclic(bool isCyclic) noexcept { m_isCyclic = isCyclic; }
 
         virtual void performUpdate(Node& node, float t) const = 0;
     };
@@ -77,17 +73,20 @@ namespace AT2::Animation
             assert(std::is_sorted(m_time.begin(), m_time.end()));
         }
 
-        void performUpdate(Node& node, float t) const override { m_effector(getValue(t), node); }
+        void performUpdate(Node& node, float t) const override
+        {
+            if (t <= m_time.front() || t > m_time.back())
+                return;
+
+            m_effector(getValue(t), node);
+        }
 
     private:
-        const T& getValue(float time) const
+        const T& getValue(float time) const noexcept
         {
-            time = isCyclic() ? WrapValue(time, m_time.front(), m_time.back())
-                              : std::clamp(time, m_time.front(), m_time.back());
-
-            const auto frame = findFramePosition(time);
-            const auto nextFrame = isCyclic() ? (frame + 1) % m_time.size() : std::min(frame + 1, m_time.size() - 1);
-            const auto t = (time - m_time[frame]) / (m_time[nextFrame] - m_time[frame]);
+            const auto nextFrame = findFramePosition(time);
+            const auto frame = (nextFrame > 0) ? nextFrame - 1 : 0;
+            const auto t = (nextFrame > frame ) ? (time - m_time[frame]) / (m_time[nextFrame] - m_time[frame]) : 0.0f;
 
             switch (getInterpolationMode())
             {
@@ -138,9 +137,12 @@ namespace AT2::Animation
 
             m_channels.emplace_back(std::make_unique<Channel<T, F>>(getTrustedSpan(keySpan), getTrustedSpan(valueSpan), std::forward<F>(affector)));
 
-
-
             return m_channels.size() - 1;
+        }
+
+        std::pair<float, float> getTimeRange() const noexcept
+        {
+            return m_timeRange;
         }
 
         float getDuration () const noexcept
@@ -154,27 +156,38 @@ namespace AT2::Animation
         }
     };
 
-
     using AnimationRef = std::shared_ptr<Animation>;
-    class AnimationNode : public Node
-    {
-    public:
-        AnimationRef m_animation;
-        size_t m_trackIndex; //crutch
-        
 
-        AnimationNode(AnimationRef animation, size_t trackIndex, std::string name = {})
-            : m_animation(std::move(animation))
-            , m_trackIndex(trackIndex)
-            , Node(std::move(name))
+    class AnimationComponent : public NodeComponent
+    {
+        AnimationRef m_animation;
+        std::vector<size_t> m_trackIndices;
+
+    public:
+        AnimationComponent() = default;
+
+        void update(double time) override
         {
+            if (!m_animation || !getParent())
+                return;
+
+            auto [minTime, maxTime] = m_animation->getTimeRange();
+
+            for (const auto trackIndex : m_trackIndices)
+                m_animation->getTrack(trackIndex).performUpdate(*getParent(), wrapValue(time, minTime, maxTime));
         }
 
-
-        void update(float t)
+        //checks if animation reference are same
+        void addTrack(const AnimationRef& animation, size_t trackIndex)
         {
-            if (m_animation)
-                m_animation->getTrack(m_trackIndex).performUpdate(*this, t);
+            if (m_animation != animation)
+            {
+                if (m_animation != nullptr)
+                    throw std::logic_error("Animation component could handle just one animation");
+                m_animation = animation;
+            }
+
+            m_trackIndices.push_back(trackIndex);
         }
 
     };

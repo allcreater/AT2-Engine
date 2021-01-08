@@ -31,11 +31,36 @@ namespace AT2
         bool Visit(Node& node) override { return visitFunc(node); }
     };
 
+
+    //TODO: refactor?
+    class NodeComponent
+    {
+        Node* m_parent = nullptr;
+        friend class Node;
+
+    public:
+        virtual ~NodeComponent() = default;
+        virtual void update(double t) = 0; //TODO: time should be available without params
+
+        Node* getParent() const noexcept { return m_parent; }
+
+    private:
+        void setParent(Node& newParent) { m_parent = &newParent; }
+    };
+
     class Node
     {
+        using ComponentList = std::vector<std::unique_ptr<NodeComponent>>;
+
+        std::string m_name;
+        Transform m_transform;
+        std::vector<NodeRef> child_nodes;
+        ComponentList m_componentList;
+
     public:
         Node() = default;
-        Node(std::string name) : name(std::move(name)) {}
+        Node(std::string name) : m_name(std::move(name)) {}
+        virtual ~Node() = default;
 
         virtual void Accept(NodeVisitor& nv)
         {
@@ -56,20 +81,44 @@ namespace AT2
             return dynamic_cast<T&>(*child_nodes[index]);
         }
 
-        [[nodiscard]] const Transform& GetTransform() const noexcept { return transform; }
-        [[nodiscard]] Transform& GetTransform() noexcept { return transform; }
-        void SetTransform(const glm::mat4& mat) noexcept { transform = mat; }
+        [[nodiscard]] const Transform& GetTransform() const noexcept { return m_transform; }
+        [[nodiscard]] Transform& GetTransform() noexcept { return m_transform; }
+        void SetTransform(const Transform& transform) noexcept { m_transform = transform; }
 
-        void SetName(std::string newName) { name = std::move(newName); }
-        [[nodiscard]] const std::string& GetName() const noexcept { return name; }
+        [[nodiscard]] const std::string& GetName() const noexcept { return m_name; }
+        void SetName(std::string newName) { m_name = std::move(newName); }
 
+        [[nodiscard]] const ComponentList& getComponentList() const noexcept { return m_componentList; }
+        NodeComponent& addComponent(std::unique_ptr<NodeComponent> component)
+        {
+            auto* pComponent = component.get();
+            pComponent->setParent(*this);
 
-        virtual ~Node() = default;
+            m_componentList.push_back(std::move(component));
+            return *pComponent;
+        }
 
-    protected:
-        std::string name;
-        Transform transform;
-        std::vector<NodeRef> child_nodes;
+        template <typename T>
+        requires(std::is_base_of_v<NodeComponent, T>)
+        T* getComponent()
+        {
+            auto it = std::find_if(m_componentList.begin(), m_componentList.end(),
+                                   [](const std::unique_ptr<NodeComponent>& component) {
+                                       return dynamic_cast<T*>(component.get()) != nullptr;
+                                   });
+            return (it != m_componentList.end()) ? static_cast<T*>(it->get()) : nullptr;
+        }
+
+        template <typename T>
+        requires(std::is_base_of_v<NodeComponent, T>)
+        T& getOrCreateComponent()
+        {
+            if (auto* existing = getComponent<T>())
+                return *existing;
+
+            return static_cast<T&>(addComponent(std::make_unique<T>()));
+        }
+
     };
 
     struct SphereLight
