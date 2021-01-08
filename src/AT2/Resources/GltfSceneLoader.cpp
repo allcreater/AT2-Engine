@@ -1,21 +1,19 @@
 #include "GltfSceneLoader.h"
 
+#include <bit>
+#include <ranges>
+#include <fx/gltf.h>
+#include <glm/packing.hpp>
 #include <filesystem>
 
-#include "../BufferMapperGuard.h"
 #include "../Animation.h"
-
+#include "../BufferMapperGuard.h"
 #include "TextureLoader.h"
 
 using namespace AT2;
 using namespace AT2::Resources;
-
 using namespace std::literals;
 
-#include <bit>
-#include <fx/gltf.h>
-#include <ranges>
-#include <glm/packing.hpp>
 namespace
 {
     //from gltf viewer example
@@ -284,8 +282,9 @@ namespace
             const fx::gltf::Node& node = m_document.nodes[static_cast<size_t>(nodeIndex)];
             
             auto currentNode = std::make_shared<Node>();
-            if (node.translation != fx::gltf::defaults::NullVec3 ||
-                node.rotation != fx::gltf::defaults::IdentityRotation || node.scale != fx::gltf::defaults::IdentityVec3)
+            if (!std::ranges::equal(node.translation, fx::gltf::defaults::NullVec3) ||
+                !std::ranges::equal(node.rotation , fx::gltf::defaults::IdentityRotation) ||
+                !std::ranges::equal(node.scale , fx::gltf::defaults::IdentityVec3))
             {
                 auto tr = translate(glm::mat4 {1.0}, std::bit_cast<glm::vec3>(node.translation))
                     * mat4_cast(std::bit_cast<glm::quat>(node.rotation));
@@ -293,7 +292,9 @@ namespace
 
                 currentNode->SetTransform(trs);
             }
-            currentNode->SetTransform(std::bit_cast<glm::mat4>(node.matrix));
+            else
+                currentNode->SetTransform(std::bit_cast<glm::mat4>(node.matrix));
+
             baseNode.AddChild(currentNode);
 
             m_nodes[static_cast<size_t>(nodeIndex)] = currentNode;
@@ -410,6 +411,8 @@ namespace
 
         BufferDataInfo GetData(unsigned attribIndex)
         {
+            //TODO: support sparce accesors
+
             const auto& accessor = m_document.accessors[attribIndex];
             const auto& bufferView = m_document.bufferViews[accessor.bufferView];
             const auto& buffer = m_document.buffers[bufferView.buffer];
