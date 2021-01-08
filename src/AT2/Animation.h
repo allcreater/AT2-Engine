@@ -4,6 +4,7 @@
 
 #include <any>
 #include <algorithm>
+#include <glm/gtx/spline.hpp>
 
 namespace std
 {
@@ -30,12 +31,11 @@ namespace std
 
 namespace AT2::Animation
 {
-    enum class InterpolationMode
-    {
-        Step,
-        Linear,
-        CubicSpline
-    };
+
+    struct Step {};
+    struct Linear {};
+    struct CubicSpline{};
+    using InterpolationMode = std::variant<Step, Linear, CubicSpline>;
 
     inline float wrapValue(float x, float x_min, float x_max)
     {
@@ -48,28 +48,25 @@ namespace AT2::Animation
 
     class ChannelBase
     {
-        InterpolationMode m_interpolationMode = InterpolationMode::Linear;
-
     public:
         virtual ~ChannelBase() = default;
-
-        InterpolationMode getInterpolationMode() const noexcept { return m_interpolationMode; }
-        void setInterpolationMode(InterpolationMode mode) noexcept { m_interpolationMode = mode; }
 
         virtual void performUpdate(Node& node, float t) const = 0;
     };
 
-    template <typename T, typename F = std::function(void(const T&, Node&))>
+
+    template <typename T, typename ConcreteImplementation, typename F = std::function(void(const T&, Node&))>
     class Channel : public ChannelBase
     {
+        F m_effector;
+
+    protected:
         std::span<const float> m_time;
         std::span<const T> m_values;
 
-        F m_effector;
-
     public:
         Channel(std::span<const float> timeSpan, std::span<const T> valuesSpan, F&& effector) :
-            m_time(timeSpan), m_values(valuesSpan), m_effector(std::forward<F>(effector))
+            m_effector(std::forward<F>(effector)), m_time(timeSpan), m_values(valuesSpan)
         {
             if (m_time.empty() || m_values.size() < m_time.size() || m_time.front() >= m_time.back())
                 throw std::range_error("Animation channel must be initialized with at least two different time values");
@@ -83,26 +80,26 @@ namespace AT2::Animation
             if (t <= m_time.front() || t > m_time.back())
                 return;
 
-            m_effector(getValue(t), node);
+            m_effector(static_cast<const ConcreteImplementation*>(this)->getValue(t), node);
         }
 
-    private:
-        const T& getValue(float time) const noexcept
-        {
-            const auto nextFrame = findFramePosition(time);
-            const auto frame = (nextFrame > 0) ? nextFrame - 1 : 0;
-            const auto t = (nextFrame > frame ) ? (time - m_time[frame]) / (m_time[nextFrame] - m_time[frame]) : 0.0f;
+    protected:
+        //const T& getValue(float time) const noexcept
+        //{
+        //    const auto nextFrame = findFramePosition(time);
+        //    const auto frame = (nextFrame > 0) ? nextFrame - 1 : 0;
+        //    const auto t = (nextFrame > frame ) ? (time - m_time[frame]) / (m_time[nextFrame] - m_time[frame]) : 0.0f;
+        //    //glm::cubic()
+        //    switch (InterpolationMode::Step)
+        //    {
+        //    case InterpolationMode::Step: return m_values[frame];
+        //    case InterpolationMode::Linear: return glm::mix(m_values[frame], m_values[nextFrame], t);
+        //    case InterpolationMode::CubicSpline:
+        //        return glm::mix(m_values[frame], m_values[nextFrame], glm::smoothstep(0.0f, 1.0f, t));
+        //    }
 
-            switch (getInterpolationMode())
-            {
-            case InterpolationMode::Step: return m_values[frame];
-            case InterpolationMode::Linear: return glm::mix(m_values[frame], m_values[nextFrame], t);
-            case InterpolationMode::CubicSpline:
-                return glm::mix(m_values[frame], m_values[nextFrame], glm::smoothstep(0.0f, 1.0f, t));
-            }
-
-            return {};
-        }
+        //    return {};
+        //}
 
         [[nodiscard]] size_t findFramePosition(float time) const
         {
@@ -114,12 +111,62 @@ namespace AT2::Animation
         }
     };
 
+    template <typename T, typename F>
+    class Channel<T, Step, F> : public Channel<T, Channel<T, Step, F>, F>
+    {
+    public:
+        using Channel<T, Channel<T, Step, F>, F>::Channel;
+        const T& getValue(float time) const noexcept
+        {
+            const auto nextFrame = this->findFramePosition(time);
+            return this->m_values[(nextFrame > 0) ? nextFrame - 1 : 0];
+        }
+    };
+
+    template <typename T, typename F>
+    class Channel<T, Linear, F> : public Channel<T, Channel<T, Linear, F>, F>
+    {
+    public:
+        using Channel<T, Channel<T, Linear, F>, F>::Channel;
+        const T& getValue(float time) const noexcept
+        {
+            const auto nextFrame = this->findFramePosition(time);
+            const auto frame = (nextFrame > 0) ? nextFrame - 1 : 0;
+            const auto t = (nextFrame > frame)
+                ? (time - this->m_time[frame]) / (this->m_time[nextFrame] - this->m_time[frame])
+                : 0.0f;
+
+            return glm::mix(this->m_values[frame], this->m_values[nextFrame], t);
+        }
+    };
+
+    template <typename T, typename F>
+    class Channel<T, CubicSpline, F> : public Channel<T, Channel<T, CubicSpline, F>, F>
+    {
+    public:
+        using Channel<T, Channel<T, CubicSpline, F>, F>::Channel;
+        const T& getValue(float time) const noexcept
+        {
+            const auto nextFrame = this->findFramePosition(time);
+            const auto frame = (nextFrame > 0) ? nextFrame - 1 : 0;
+            const auto frameLatency = this->m_time[nextFrame] - this->m_time[frame];
+            const auto t = (nextFrame > frame) ? (time - this->m_time[frame]) / frameLatency : 0.0f;
+
+            //m_values[k] are tuple of [in-tangent Ak(0), point Vk (+1), out-tangent Bk (+2)].
+            const auto p0 = this->m_values[frame * 3 + 1];
+            const auto m0 = frameLatency * this->m_values[frame * 3 + 2];
+            const auto p1 = this->m_values[nextFrame * 3 + 1];
+            const auto m1 = frameLatency * this->m_values[nextFrame * 3];
+
+            return glm::hermite(p0, m0, p1, m1, t);
+        }
+    };
+
+
     using AnimationNodeId = size_t;
 
 
     class Animation;
-
-
     class AnimationCollection
     {
         std::unordered_map<std::span<const std::byte>, std::pair<std::span<const std::byte>, std::any>> m_dataSources;
@@ -176,8 +223,12 @@ namespace AT2::Animation
                 return span;
             };
 
-            auto& newChannel = m_channels.emplace_back(std::make_unique<Channel<T, F>>(getTrustedSpan(keySpan), getTrustedSpan(valueSpan), std::forward<F>(affector)));
-            newChannel->setInterpolationMode(interpolation);
+            auto& newChannel = m_channels.emplace_back(std::visit(
+                [&]<typename Impl>(Impl) -> std::unique_ptr<ChannelBase> {
+                    return std::make_unique<Channel<T, Impl, F>>(getTrustedSpan(keySpan), getTrustedSpan(valueSpan),
+                                                                 std::forward<F>(affector));
+                },
+                interpolation));
 
             m_timeRange = {std::min(m_timeRange.first, keySpan.front()), std::max(m_timeRange.second, keySpan.back())};
             m_channelsByNode.emplace(animationNodeId, newChannel.get());
@@ -185,17 +236,9 @@ namespace AT2::Animation
             return m_channels.size() - 1;
         }
 
-        void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time)
-        {
-            auto [rangeBegin, rangeEnd] = m_channelsByNode.equal_range(nodeId);
-            for (auto it = rangeBegin; it != rangeEnd; ++it)
-                it->second->performUpdate(nodeInstance, wrapValue(time, m_timeRange.first, m_timeRange.second));
-        }
-
+        void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time);
         [[nodiscard]] std::pair<float, float> getTimeRange() const noexcept { return m_timeRange; }
-
         [[nodiscard]] float getDuration() const noexcept { return m_timeRange.second - m_timeRange.first; }
-
         [[nodiscard]] const ChannelBase& getTrack(size_t trackIndex) const;
     };
 
@@ -204,19 +247,12 @@ namespace AT2::Animation
     class AnimationComponent : public NodeComponent
     {
         AnimationRef m_animation;
-        //std::vector<size_t> m_trackIndices;
         AnimationNodeId m_animationNodeId;
 
     public:
         AnimationComponent(AnimationRef animation, AnimationNodeId nodeId) : m_animation(std::move(animation)), m_animationNodeId(nodeId) {}
 
-        void update(double time) override
-        {
-            if (!m_animation || !getParent())
-                return;
-
-            m_animation->updateNode(m_animationNodeId, *getParent(), time);
-        }
+        void update(double time) override;
     };
 
 } // namespace AT2::Animation

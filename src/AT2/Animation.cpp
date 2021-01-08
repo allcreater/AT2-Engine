@@ -30,7 +30,22 @@ void AnimationCollection::updateNode(AnimationNodeId nodeId, Node& nodeInstance,
 }
 
 
+void Animation::updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time)
+{
+    auto [rangeBegin, rangeEnd] = m_channelsByNode.equal_range(nodeId);
+    for (auto it = rangeBegin; it != rangeEnd; ++it)
+        it->second->performUpdate(nodeInstance, wrapValue(time, m_timeRange.first, m_timeRange.second));
+}
+
 const ChannelBase& Animation::getTrack(size_t trackIndex) const
 {
     return *m_channels.at(trackIndex);
+}
+
+void AnimationComponent::update(double time)
+{
+    if (!m_animation || !getParent())
+        return;
+
+    m_animation->updateNode(m_animationNodeId, *getParent(), time);
 }

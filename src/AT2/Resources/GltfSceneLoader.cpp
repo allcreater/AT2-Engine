@@ -96,9 +96,9 @@ namespace
         using Type = fx::gltf::Animation::Sampler::Type;
         switch (interpolation)
         {
-        case Type::Step: return Animation::InterpolationMode::Step;
-        case Type::Linear: return Animation::InterpolationMode::Linear;
-        case Type::CubicSpline: return Animation::InterpolationMode::CubicSpline;
+        case Type::Step: return Animation::Step{};
+        case Type::Linear: return Animation::Linear{};
+        case Type::CubicSpline: return Animation::CubicSpline{};
         }
 
         throw std::logic_error("invalid conversion");
