@@ -193,14 +193,20 @@ namespace
 
         void SetupAnimations()
         {
+            auto animationContainer = std::make_shared<AT2::Animation::AnimationCollection>();
             for (const auto& animation: m_document.animations)
             {
-                auto animationContainer = std::make_shared<AT2::Animation::Animation>();
+                auto& configuringAnimation = animationContainer->addAnimation(animation.name);
 
                 for (const auto& channel : animation.channels)
                 {
                     const auto& sampler = animation.samplers[channel.sampler];
-                    auto& affectingNode = m_nodes[channel.target.node];
+
+                    const size_t animationNodeId = channel.target.node;
+                    m_nodes.at(animationNodeId)
+                        ->getOrCreateComponent<Animation::AnimationComponent>(
+                            animationContainer,
+                            animationNodeId); //TODO: check that one component dont want to set different animationNodeId
 
                     TranslateInterpolationMode(sampler.interpolation);
 
@@ -215,7 +221,8 @@ namespace
                         assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
                                outputChannelData.bindingParams.Count == 3);
 
-                        auto index = animationContainer->addTrack(
+                        configuringAnimation.addTrack(
+                            animationNodeId,
                             Utils::reinterpret_span_cast<float>(inputChannelData.data),
                             Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
                             [](glm::vec3 value, Node& node)
@@ -223,38 +230,33 @@ namespace
                                 node.GetTransform().setPosition(value);
                             });
 
-                        affectingNode->getOrCreateComponent<Animation::AnimationComponent>().addTrack(
-                            animationContainer, index);
                     }
                     else if (channel.target.path == "rotation")
                     {
                         assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
                                outputChannelData.bindingParams.Count == 4);
 
-                        auto index = animationContainer->addTrack(
+                        configuringAnimation.addTrack(
+                            animationNodeId,
                             Utils::reinterpret_span_cast<float>(inputChannelData.data),
                             Utils::reinterpret_span_cast<glm::quat>(outputChannelData.data),
                             [](glm::quat value, Node& node) {
                             node.GetTransform().setRotation(value);
                         });
 
-                        affectingNode->getOrCreateComponent<Animation::AnimationComponent>().addTrack(
-                            animationContainer, index);
                     }
                     else if (channel.target.path == "scale")
                     {
                         assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
                                outputChannelData.bindingParams.Count == 3);
 
-                        auto index =  animationContainer->addTrack(
+                        configuringAnimation.addTrack(
+                            animationNodeId,
                             Utils::reinterpret_span_cast<float>(inputChannelData.data),
                             Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
                             [](glm::vec3 value, Node& node) {
                                 node.GetTransform().setScale(value);
                         });
-
-                        affectingNode->getOrCreateComponent<Animation::AnimationComponent>().addTrack(
-                            animationContainer, index);
                     }
                     //else if (channel.target.path == "weights")
                     

@@ -1,5 +1,9 @@
-#include <any>
+#pragma once
+
 #include "Scene.h"
+
+#include <any>
+#include <algorithm>
 
 namespace std
 {
@@ -73,6 +77,7 @@ namespace AT2::Animation
             assert(std::is_sorted(m_time.begin(), m_time.end()));
         }
 
+        //TODO: remember current frame and time to get rid of searching frame index. Use dt instead of t.
         void performUpdate(Node& node, float t) const override
         {
             if (t <= m_time.front() || t > m_time.back())
@@ -109,87 +114,112 @@ namespace AT2::Animation
         }
     };
 
-    //
+    using AnimationNodeId = size_t;
+
+    using CrutchMap = std::unordered_map<std::span<const std::byte>, std::pair<std::span<const std::byte>, std::any>>; //TODO!
+
+    class AnimationCollection;
     class Animation
     {
-        std::unordered_map<std::span<const std::byte>, std::pair<std::span<const std::byte>, std::any>> m_dataSources;
-        std::vector<std::unique_ptr<ChannelBase>> m_channels;
+        //AnimationCollection& m_sourceCollection;
+        CrutchMap* m_sourceCollection;
+
+        std::string m_name;
+        std::vector<ChannelBase*> m_channels;
+        std::unordered_multimap<AnimationNodeId, ChannelBase*> m_channelsByNode;
 
         std::pair<float, float> m_timeRange {0.0f, 0.0f};
 
+
+        //friend class AnimationCollection;
+
     public:
-        template <typename T, typename F>
-        size_t addTrack(std::span<const float> keySpan, std::span<const T> valueSpan, F&& affector)
+        Animation(CrutchMap* sourceCollection, std::string name) //make private?
+            :
+            m_sourceCollection(sourceCollection),
+            m_name(std::move(name))
         {
-            auto getTrustedSpan = [&]<typename T>(std::span<const T> data) -> std::span<const T> {
+        }
+
+
+        template <typename T, typename F>
+        size_t addTrack(AnimationNodeId animationNodeId, std::span<const float> keySpan, std::span<const T> valueSpan,
+                        F&& affector)
+        {
+            auto getTrustedSpan = [dataSources = m_sourceCollection]<typename T>(
+                                      std::span<const T> data) -> std::span<const T> {
                 const auto key = std::as_bytes(data);
-                if (auto it = m_dataSources.find(key); it != m_dataSources.end())
+                if (auto it = dataSources->find(key); it != dataSources->end())
                     return Utils::reinterpret_span_cast<const T>(it->second.first);
 
                 auto buffer = std::vector<T> {data.begin(), data.end()};
                 auto span = std::span<const T> {buffer};
-                m_dataSources.emplace(key, std::pair {std::as_bytes(span), std::move(buffer)});
+                dataSources->emplace(key, std::pair {std::as_bytes(span), std::move(buffer)});
 
                 return span;
             };
 
             m_timeRange = {std::min(m_timeRange.first, keySpan.front()), std::max(m_timeRange.second, keySpan.back())};
 
-            m_channels.emplace_back(std::make_unique<Channel<T, F>>(getTrustedSpan(keySpan), getTrustedSpan(valueSpan), std::forward<F>(affector)));
+            auto& newChannel = m_channels.emplace_back(std::make_unique<Channel<T, F>>(
+                getTrustedSpan(keySpan), getTrustedSpan(valueSpan), std::forward<F>(affector)).release()); //!!!!!!!!!!!!!!!!!!!!!!
+
+            m_channelsByNode.emplace(animationNodeId, newChannel); //.get());
 
             return m_channels.size() - 1;
         }
 
-        std::pair<float, float> getTimeRange() const noexcept
+        void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time)
         {
-            return m_timeRange;
+            auto [rangeBegin, rangeEnd] = m_channelsByNode.equal_range(nodeId);
+            for (auto it = rangeBegin; it != rangeEnd; ++it)
+                it->second->performUpdate(nodeInstance, wrapValue(time, m_timeRange.first, m_timeRange.second));
         }
 
-        float getDuration () const noexcept
-        {
-            return m_timeRange.second - m_timeRange.first;
-        }
+        std::pair<float, float> getTimeRange() const noexcept { return m_timeRange; }
 
-        const ChannelBase& getTrack(size_t trackIndex) const
-        {
-            return *m_channels.at(trackIndex);
-        }
+        float getDuration() const noexcept { return m_timeRange.second - m_timeRange.first; }
+
+        const ChannelBase& getTrack(size_t trackIndex) const;
     };
 
-    using AnimationRef = std::shared_ptr<Animation>;
+    class AnimationCollection
+    {
+        std::unordered_map<std::span<const std::byte>, std::pair<std::span<const std::byte>, std::any>> m_dataSources;
+        std::vector<Animation> m_animations;
+
+        Animation* m_activeAnimation = nullptr;
+
+        friend class Animation;
+
+    public:
+        bool setCurrentAnimation(size_t animationIndex);
+
+        Animation& addAnimation(std::string name);
+        const std::vector<Animation>& getAnimationsList() const noexcept { return m_animations; }
+
+        void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time); //TODO: dt!
+    };
+
+
+    using AnimationRef = std::shared_ptr<AnimationCollection>;
 
     class AnimationComponent : public NodeComponent
     {
         AnimationRef m_animation;
-        std::vector<size_t> m_trackIndices;
+        //std::vector<size_t> m_trackIndices;
+        AnimationNodeId m_animationNodeId;
 
     public:
-        AnimationComponent() = default;
+        AnimationComponent(AnimationRef animation, AnimationNodeId nodeId) : m_animation(std::move(animation)), m_animationNodeId(nodeId) {}
 
         void update(double time) override
         {
             if (!m_animation || !getParent())
                 return;
 
-            auto [minTime, maxTime] = m_animation->getTimeRange();
-
-            for (const auto trackIndex : m_trackIndices)
-                m_animation->getTrack(trackIndex).performUpdate(*getParent(), wrapValue(time, minTime, maxTime));
+            m_animation->updateNode(m_animationNodeId, *getParent(), time);
         }
-
-        //checks if animation reference are same
-        void addTrack(const AnimationRef& animation, size_t trackIndex)
-        {
-            if (m_animation != animation)
-            {
-                if (m_animation != nullptr)
-                    throw std::logic_error("Animation component could handle just one animation");
-                m_animation = animation;
-            }
-
-            m_trackIndices.push_back(trackIndex);
-        }
-
     };
 
 } // namespace AT2::Animation

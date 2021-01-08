@@ -109,14 +109,14 @@ namespace AT2
             return (it != m_componentList.end()) ? static_cast<T*>(it->get()) : nullptr;
         }
 
-        template <typename T>
+        template <typename T, typename ... Args>
         requires(std::is_base_of_v<NodeComponent, T>)
-        T& getOrCreateComponent()
+        T& getOrCreateComponent(Args ... args)
         {
             if (auto* existing = getComponent<T>())
                 return *existing;
 
-            return static_cast<T&>(addComponent(std::make_unique<T>()));
+            return static_cast<T&>(addComponent(std::make_unique<T>(std::forward<Args>(args)...)));
         }
 
     };
