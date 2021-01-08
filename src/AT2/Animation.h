@@ -104,7 +104,7 @@ namespace AT2::Animation
             return {};
         }
 
-        size_t findFramePosition(float time) const
+        [[nodiscard]] size_t findFramePosition(float time) const
         {
             auto pos = std::upper_bound(m_time.begin(), m_time.end(), time);
             if (pos == m_time.end())
@@ -116,72 +116,9 @@ namespace AT2::Animation
 
     using AnimationNodeId = size_t;
 
-    using CrutchMap = std::unordered_map<std::span<const std::byte>, std::pair<std::span<const std::byte>, std::any>>; //TODO!
 
-    class AnimationCollection;
-    class Animation
-    {
-        //AnimationCollection& m_sourceCollection;
-        CrutchMap* m_sourceCollection;
+    class Animation;
 
-        std::string m_name;
-        std::vector<ChannelBase*> m_channels;
-        std::unordered_multimap<AnimationNodeId, ChannelBase*> m_channelsByNode;
-
-        std::pair<float, float> m_timeRange {0.0f, 0.0f};
-
-
-        //friend class AnimationCollection;
-
-    public:
-        Animation(CrutchMap* sourceCollection, std::string name) //make private?
-            :
-            m_sourceCollection(sourceCollection),
-            m_name(std::move(name))
-        {
-        }
-
-
-        template <typename T, typename F>
-        size_t addTrack(AnimationNodeId animationNodeId, std::span<const float> keySpan, std::span<const T> valueSpan,
-                        F&& affector)
-        {
-            auto getTrustedSpan = [dataSources = m_sourceCollection]<typename T>(
-                                      std::span<const T> data) -> std::span<const T> {
-                const auto key = std::as_bytes(data);
-                if (auto it = dataSources->find(key); it != dataSources->end())
-                    return Utils::reinterpret_span_cast<const T>(it->second.first);
-
-                auto buffer = std::vector<T> {data.begin(), data.end()};
-                auto span = std::span<const T> {buffer};
-                dataSources->emplace(key, std::pair {std::as_bytes(span), std::move(buffer)});
-
-                return span;
-            };
-
-            m_timeRange = {std::min(m_timeRange.first, keySpan.front()), std::max(m_timeRange.second, keySpan.back())};
-
-            auto& newChannel = m_channels.emplace_back(std::make_unique<Channel<T, F>>(
-                getTrustedSpan(keySpan), getTrustedSpan(valueSpan), std::forward<F>(affector)).release()); //!!!!!!!!!!!!!!!!!!!!!!
-
-            m_channelsByNode.emplace(animationNodeId, newChannel); //.get());
-
-            return m_channels.size() - 1;
-        }
-
-        void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time)
-        {
-            auto [rangeBegin, rangeEnd] = m_channelsByNode.equal_range(nodeId);
-            for (auto it = rangeBegin; it != rangeEnd; ++it)
-                it->second->performUpdate(nodeInstance, wrapValue(time, m_timeRange.first, m_timeRange.second));
-        }
-
-        std::pair<float, float> getTimeRange() const noexcept { return m_timeRange; }
-
-        float getDuration() const noexcept { return m_timeRange.second - m_timeRange.first; }
-
-        const ChannelBase& getTrack(size_t trackIndex) const;
-    };
 
     class AnimationCollection
     {
@@ -201,6 +138,66 @@ namespace AT2::Animation
         void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time); //TODO: dt!
     };
 
+    class Animation
+    {
+        AnimationCollection& m_sourceCollection;
+
+        std::string m_name;
+        std::vector<std::unique_ptr<ChannelBase>> m_channels;
+        std::unordered_multimap<AnimationNodeId, ChannelBase*> m_channelsByNode;
+
+        std::pair<float, float> m_timeRange {0.0f, 0.0f};
+
+    public:
+        Animation(AnimationCollection& sourceCollection, std::string name) //make private?
+            :
+            m_sourceCollection(sourceCollection),
+            m_name(std::move(name))
+        {
+        }
+
+        Animation(Animation&&) noexcept = default;
+
+
+        template <typename T, typename F>
+        size_t addTrack(AnimationNodeId animationNodeId, std::span<const float> keySpan, std::span<const T> valueSpan,
+                        F&& affector, InterpolationMode interpolation)
+        {
+            auto getTrustedSpan = [&dataSources = m_sourceCollection.m_dataSources]<typename T>(
+                                      std::span<const T> data) -> std::span<const T> {
+                const auto key = std::as_bytes(data);
+                if (auto it = dataSources.find(key); it != dataSources.end())
+                    return Utils::reinterpret_span_cast<const T>(it->second.first);
+
+                auto buffer = std::vector<T> {data.begin(), data.end()};
+                auto span = std::span<const T> {buffer};
+                dataSources.emplace(key, std::pair {std::as_bytes(span), std::move(buffer)});
+
+                return span;
+            };
+
+            auto& newChannel = m_channels.emplace_back(std::make_unique<Channel<T, F>>(getTrustedSpan(keySpan), getTrustedSpan(valueSpan), std::forward<F>(affector)));
+            newChannel->setInterpolationMode(interpolation);
+
+            m_timeRange = {std::min(m_timeRange.first, keySpan.front()), std::max(m_timeRange.second, keySpan.back())};
+            m_channelsByNode.emplace(animationNodeId, newChannel.get());
+
+            return m_channels.size() - 1;
+        }
+
+        void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time)
+        {
+            auto [rangeBegin, rangeEnd] = m_channelsByNode.equal_range(nodeId);
+            for (auto it = rangeBegin; it != rangeEnd; ++it)
+                it->second->performUpdate(nodeInstance, wrapValue(time, m_timeRange.first, m_timeRange.second));
+        }
+
+        [[nodiscard]] std::pair<float, float> getTimeRange() const noexcept { return m_timeRange; }
+
+        [[nodiscard]] float getDuration() const noexcept { return m_timeRange.second - m_timeRange.first; }
+
+        [[nodiscard]] const ChannelBase& getTrack(size_t trackIndex) const;
+    };
 
     using AnimationRef = std::shared_ptr<AnimationCollection>;
 

@@ -14,7 +14,7 @@ bool AnimationCollection::setCurrentAnimation(size_t animationIndex)
 
 Animation& AnimationCollection::addAnimation(std::string name)
 {
-    return m_animations.emplace_back(&m_dataSources, std::move(name));
+    return m_animations.emplace_back(*this, std::move(name));
 }
 
 void AnimationCollection::updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time)

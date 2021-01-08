@@ -208,8 +208,7 @@ namespace
                             animationContainer,
                             animationNodeId); //TODO: check that one component dont want to set different animationNodeId
 
-                    TranslateInterpolationMode(sampler.interpolation);
-
+                    const auto interpolationMode = TranslateInterpolationMode(sampler.interpolation);
                     auto inputChannelData = GetData(sampler.input);
                     auto outputChannelData = GetData(sampler.output);
 
@@ -227,8 +226,8 @@ namespace
                             Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
                             [](glm::vec3 value, Node& node)
                             {
-                                node.GetTransform().setPosition(value);
-                            });
+                                node.GetTransform().setPosition(value); },
+                            interpolationMode);
 
                     }
                     else if (channel.target.path == "rotation")
@@ -241,8 +240,8 @@ namespace
                             Utils::reinterpret_span_cast<float>(inputChannelData.data),
                             Utils::reinterpret_span_cast<glm::quat>(outputChannelData.data),
                             [](glm::quat value, Node& node) {
-                            node.GetTransform().setRotation(value);
-                        });
+                            node.GetTransform().setRotation(value); },
+                            interpolationMode);
 
                     }
                     else if (channel.target.path == "scale")
@@ -255,8 +254,8 @@ namespace
                             Utils::reinterpret_span_cast<float>(inputChannelData.data),
                             Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
                             [](glm::vec3 value, Node& node) {
-                                node.GetTransform().setScale(value);
-                        });
+                                node.GetTransform().setScale(value); },
+                            interpolationMode);
                     }
                     //else if (channel.target.path == "weights")
                     

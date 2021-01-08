@@ -166,14 +166,13 @@ namespace AT2
             auto& rf = renderer->GetResourceFactory();
 
             gBufferFBO = renderer->GetResourceFactory().CreateFrameBuffer();
-            gBufferFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8));
-            gBufferFBO->SetColorAttachment(1, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F));
-            gBufferFBO->SetColorAttachment(2, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8));
-            gBufferFBO->SetDepthAttachment(rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::DEPTH32F));
+            gBufferFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8));   //FragColor
+            gBufferFBO->SetColorAttachment(1, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F)); //FragNormal
+            gBufferFBO->SetColorAttachment(2, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8));   //RoughnessMetallic
+            gBufferFBO->SetDepthAttachment(   rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::DEPTH32F));
 
             postProcessFBO = renderer->GetResourceFactory().CreateFrameBuffer();
-            postProcessFBO->SetColorAttachment(0,
-                                               rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F));
+            postProcessFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F));
             postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()); //depth is common with previous stage
 
             {
