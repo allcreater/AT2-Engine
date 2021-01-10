@@ -70,11 +70,8 @@ private:
 
     void OnInitialize()
     {
-        using namespace AT2::Scene;
-
-        glewExperimental = GL_TRUE;
-        if (glewInit() != GLEW_OK)
-            throw GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+            throw std::runtime_error("Failed to initialize GLAD");
 
         m_renderer = std::make_unique<AT2::GlRenderer>();
 
@@ -102,7 +99,7 @@ private:
         GrassTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
         NormalMapTex =
             TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        RockTex =TextureLoader::LoadTexture(m_renderer, "resources/rock04.dds");
+        RockTex = TextureLoader::LoadTexture(m_renderer, "resources/jeep1.jpg"); //TODO: return back rock04.dds
 
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
         EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
