@@ -104,22 +104,22 @@ private:
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
         EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
-        auto lightsRoot = std::make_shared<Node>("lights"s);
+        auto lightsRoot = std::make_shared<AT2::Scene::Node>("lights"s);
         Scene.GetRoot().AddChild(lightsRoot);
 
         for (size_t i = 0; i < NumActiveLights; ++i)
         {
             lightsRoot
-                ->AddChild(std::make_shared<LightNode>(
-                    SphereLight {}, linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
+                ->AddChild(std::make_shared<AT2::Scene::LightNode>(
+                    AT2::Scene::SphereLight {}, linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
                     "PointLight[" + std::to_string(i) + "]"))
                 .SetTransform(glm::translate(glm::mat4 {1.0},
                                              {glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0),
                                               glm::linearRand(-5000.0, 5000.0)}));
         }
 
-        lightsRoot->AddChild(std::make_shared<LightNode>(SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
-                                                              glm::vec3(500.0f), "SkyLight"));
+        lightsRoot->AddChild(std::make_shared<AT2::Scene::LightNode>(AT2::Scene::SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
+                                                                     glm::vec3(500.0f), "SkyLight"));
 
         //Scene
         auto matBallNode = MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
@@ -149,8 +149,8 @@ private:
         scene->GetTransform().setPosition({0, -20.0, 0});
         Scene.GetRoot().AddChild(scene);
 
-        FuncNodeVisitor shaderSetter {[&](Node& node) {
-            for (auto* meshComponent : node.getComponents<MeshComponent>())
+        AT2::Scene::FuncNodeVisitor shaderSetter {[&](AT2::Scene::Node& node) {
+            for (auto* meshComponent : node.getComponents<AT2::Scene::MeshComponent>())
                 meshComponent->getMesh()->Shader = MeshShader;
             return true;
         }};
@@ -161,7 +161,7 @@ private:
         {
             terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
 
-            auto mesh = terrainNode->getComponent<MeshComponent>()->getMesh();
+            auto mesh = terrainNode->getComponent<AT2::Scene::MeshComponent>()->getMesh();
             mesh->Shader = TerrainShader;
             auto& uniformStorage = mesh->GetOrCreateDefaultMaterial();
             uniformStorage.SetUniform("u_texNoise", Noise3Tex);
