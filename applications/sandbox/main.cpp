@@ -38,7 +38,7 @@ public:
             //spdlog::info("Exit");
         };
 
-        m_window = GlfwApplication::get().createFullscreenWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true});
+        m_window = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true}, {1280, 800});
         m_window->setLabel("Some engine test").setCursorMode(GlfwCursorMode::Disabled);
 
         SetupWindowCallbacks();
@@ -70,6 +70,8 @@ private:
 
     void OnInitialize()
     {
+        using namespace AT2::Scene;
+
         glewExperimental = GL_TRUE;
         if (glewInit() != GLEW_OK)
             throw GlfwException("Failed to initialize GLEW"); //yes, it's strange to throw a Glfw exception :3
@@ -105,21 +107,21 @@ private:
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
         EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
-        auto lightsRoot = std::make_shared<AT2::Node>("lights"s);
+        auto lightsRoot = std::make_shared<Node>("lights"s);
         Scene.GetRoot().AddChild(lightsRoot);
 
         for (size_t i = 0; i < NumActiveLights; ++i)
         {
             lightsRoot
-                ->AddChild(std::make_shared<AT2::LightNode>(
-                    AT2::SphereLight {}, linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
+                ->AddChild(std::make_shared<LightNode>(
+                    SphereLight {}, linearRand(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f)) * 10000.0f,
                     "PointLight[" + std::to_string(i) + "]"))
                 .SetTransform(glm::translate(glm::mat4 {1.0},
                                              {glm::linearRand(-5000.0, 5000.0), glm::linearRand(-300.0, 100.0),
                                               glm::linearRand(-5000.0, 5000.0)}));
         }
 
-        lightsRoot->AddChild(std::make_shared<AT2::LightNode>(AT2::SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
+        lightsRoot->AddChild(std::make_shared<LightNode>(SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
                                                               glm::vec3(500.0f), "SkyLight"));
 
         //Scene
@@ -127,19 +129,40 @@ private:
         matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform().asMatrix(), {100, 50, 0}), {100, 100, 100}));
         Scene.GetRoot().AddChild(std::move(matBallNode));
 
-        AT2::FuncNodeVisitor shaderSetter {[&](AT2::Node& node) {
-            if (auto meshNode = dynamic_cast<AT2::MeshNode*>(&node))
-                meshNode->GetMesh()->Shader = MeshShader;
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\RiggedFigure\glTF\RiggedFigure.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\CesiumMan\glTF\CesiumMan.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(C:\Users\allcr\Downloads\GLTF\amazing_player_female\scene.gltf)"s);
+        auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(C:\Users\allcr\Downloads\GLTF\marika\scene.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BrainStem\glTF\BrainStem.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\MetalRoughSpheres\glTF\MetalRoughSpheres.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\SciFiHelmet\glTF\SciFiHelmet.gltf)"s);
+
+        //castle
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
+        //scene->SetTransform(glm::scale(glm::translate(scene->GetTransform(), {1000, 300, 0}), {0.3, 0.3, 0.3}));
+
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\InterpolationTest\glTF\InterpolationTest.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf)"s);
+        scene->SetTransform(glm::scale(scene->GetTransform().asMatrix(), {20, 20, 20}));
+        Scene.GetRoot().AddChild(scene);
+
+        FuncNodeVisitor shaderSetter {[&](Node& node) {
+            for (auto* meshComponent : node.getComponents<MeshComponent>())
+                meshComponent->getMesh()->Shader = MeshShader;
             return true;
         }};
         Scene.GetRoot().Accept(shaderSetter);
 
 
         auto terrainNode = AT2::Utils::MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
-        terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
-        terrainNode->GetMesh()->Shader = TerrainShader;
         {
-            auto& uniformStorage = terrainNode->GetMesh()->GetOrCreateDefaultMaterial();
+            terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
+
+            auto mesh = terrainNode->getComponent<MeshComponent>()->getMesh();
+            mesh->Shader = TerrainShader;
+            auto& uniformStorage = mesh->GetOrCreateDefaultMaterial();
             uniformStorage.SetUniform("u_texNoise", Noise3Tex);
             uniformStorage.SetUniform("u_texHeight", HeightMapTex);
             uniformStorage.SetUniform("u_texNormalMap", NormalMapTex);
@@ -186,7 +209,7 @@ private:
                 NeedResourceReload = true;
             else if (key == GLFW_KEY_L)
             {
-                if (auto* skyLight = Scene.FindNode<AT2::LightNode>("SkyLight"sv))
+                if (auto* skyLight = Scene.FindNode<AT2::Scene::LightNode>("SkyLight"sv))
                     skyLight->SetEnabled(!skyLight->GetEnabled());
             }
         };
@@ -238,7 +261,7 @@ private:
 
             if (MovingLightMode)
             {
-                if (auto* light = Scene.FindNode<AT2::LightNode>("PointLight[0]"sv))
+                if (auto* light = Scene.FindNode<AT2::Scene::LightNode>("PointLight[0]"sv))
                     light->SetTransform(m_camera.getViewInverse());
             }
         };
@@ -255,8 +278,8 @@ private:
     std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
 
     AT2::Camera m_camera;
-    AT2::Scene Scene;
-    AT2::SceneRenderer sr;
+    AT2::Scene::Scene Scene;
+    AT2::Scene::SceneRenderer sr;
 
     bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true;
     double Time = 0.0;

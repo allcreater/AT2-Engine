@@ -3,7 +3,7 @@
 
 namespace AT2::Utils
 {
-    std::unique_ptr<MeshNode> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches)
+    std::unique_ptr<Scene::Node> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches)
     {
         assert(numPatches.x < 1024 && numPatches.y < 1024);
 
@@ -35,7 +35,10 @@ namespace AT2::Utils
         mesh->SubMeshes.push_back(std::move(subMesh));
 
 
-        return std::make_unique<MeshNode>(std::move(mesh), std::vector{0u}, "Terrain drawable");
+        auto node = std::make_unique<Scene::Node>("Terrain drawable");
+        node->createUniqueComponent<Scene::MeshComponent>(std::move(mesh), std::vector {0u});
+
+        return node;
     }
 
     std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatches)

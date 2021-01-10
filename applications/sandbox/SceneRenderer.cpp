@@ -4,11 +4,10 @@
 
 #include <algorithm>
 #include <utility>
-#include <ranges>
 
 #include "AT2/Animation.h"
 
-namespace AT2
+namespace AT2::Scene
 {
     RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera) :
         camera(camera), scene_renderer(renderer)
@@ -21,18 +20,32 @@ namespace AT2
 
         auto& stateManager = scene_renderer.renderer->GetStateManager();
 
-        if (const auto* meshNode = dynamic_cast<MeshNode*>(&node))
+        for (auto* meshComponent: node.getComponents<MeshComponent>())
         {
             //TODO: some kind of RenderContext?
-            if (active_mesh != meshNode->GetMesh())
+            if (active_mesh != meshComponent->getMesh())
             {
-                active_mesh = meshNode->GetMesh();
+                active_mesh = meshComponent->getMesh();
 
                 stateManager.BindShader(active_mesh->Shader);
                 stateManager.BindVertexArray(active_mesh->VertexArray);
             }
 
-            for (const size_t submeshIndex : meshNode->GetSubmeshIndices())
+            if (const auto& skinRef = meshComponent->getSkeletonInstance())
+            {
+                for (size_t index = 0; const auto& transform : skinRef->getResultJointTransforms())
+                    stateManager.GetActiveShader()->SetUniform("u_skeletonMatrices[" + std::to_string(index++) + "]",
+                                                               transforms.getModelViewInverse() * transform);
+
+                stateManager.GetActiveShader()->SetUniform("u_useSkinning", 1);
+            }
+            else
+            {
+                stateManager.GetActiveShader()->SetUniform("u_useSkinning", 0);
+            }
+
+
+            for (const size_t submeshIndex : meshComponent->GetSubmeshIndices())
             {
                 stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
                 stateManager.GetActiveShader()->SetUniform(
@@ -221,12 +234,7 @@ namespace AT2
 
 
         //objects
-        FuncNodeVisitor updateVisitor { [time=time](Node& node){
-            for (auto& component : node.getComponentList())
-                component->update(time);
-
-            return true;
-        }};
+        UpdateVisitor updateVisitor {time};
         params.Scene.GetRoot().Accept(updateVisitor);
 
         RenderVisitor rv {*this, params.Camera};

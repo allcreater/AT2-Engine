@@ -11,6 +11,7 @@
 #include "TextureLoader.h"
 
 using namespace AT2;
+using namespace AT2::Scene;
 using namespace AT2::Resources;
 using namespace std::literals;
 
@@ -138,19 +139,30 @@ namespace
         std::vector<SubmeshGroup> m_meshes;
         std::vector<std::shared_ptr<ITexture>> m_textures;
         std::vector<std::shared_ptr<Node>> m_nodes;
-
+        std::vector<MeshComponent::SkeletonInstanceRef> m_skeletonInstances;
         std::filesystem::path m_currentPath;
 
         PlaceholderTextureCash m_placeholderTextureCash;
+
     public:
         Loader(std::shared_ptr<IRenderer> renderer, const str& sv)
         : m_renderer(std::move(renderer))
-        , m_document(fx::gltf::LoadFromText(sv))
+        , m_document(fx::gltf::LoadFromText(sv, fx::gltf::ReadQuotas {64, 64 * 1024 * 1024, 64 * 1024 * 1024}))
         , m_currentPath(sv)
         , m_nodes(m_document.nodes.size())
+        , m_skeletonInstances (m_document.skins.size())
         , m_placeholderTextureCash(m_renderer)
         {
             m_currentPath.remove_filename();
+
+            for (size_t skinIndex = 0; skinIndex < m_document.skins.size(); skinIndex++)
+            {
+                const auto& skin = m_document.skins[skinIndex];
+                const auto inverseMatricesData = GetData(skin.inverseBindMatrices);
+
+                m_skeletonInstances[skinIndex] =
+                    std::make_shared<MeshComponent::SkeletonInstance>(Utils::reinterpret_span_cast<glm::mat4>(inverseMatricesData.data));
+            }
         }
 
         NodeRef BuildScene()
@@ -159,6 +171,7 @@ namespace
 
             LoadResources();
 
+            NodeRef sceneRoot;
 
             if (m_document.scene >= 0 && static_cast<size_t>(m_document.scene) < m_document.scenes.size())
             {
@@ -166,27 +179,28 @@ namespace
 
                 const auto& scene = m_document.scenes[m_document.scene];
 
-                auto sceneRoot = std::make_shared<Node>(scene.name + " root"s);
+                sceneRoot = std::make_shared<Node>(scene.name + " root"s);
                 for (const auto nodeIndex : scene.nodes)
                 {
                     BuildSceneGraph(nodeIndex, *sceneRoot);
                 }
-
-                SetupAnimations();
-
-                return sceneRoot;
             }
-
-            Log::Info() << "Scene graph is not available, loading as individual meshes" << std::endl;
-            auto root = std::make_shared<Node>("Model root"s);
-            for (size_t meshIndex = 0; meshIndex < m_meshes.size(); ++meshIndex)
+            else
             {
-                auto childNode = std::make_shared<Node>();
-                root->AddChild(childNode);
-                PopulateSubmeshes(*childNode, meshIndex);
+                Log::Info() << "Scene graph is not available, loading as individual meshes" << std::endl;
+                sceneRoot = std::make_shared<Node>("Model root"s);
+                for (size_t meshIndex = 0; meshIndex < m_meshes.size(); ++meshIndex)
+                {
+                    auto childNode = std::make_shared<Node>();
+                    sceneRoot->AddChild(childNode);
+                    PopulateSubmeshes(*childNode, meshIndex);
+                }
             }
 
-            return root;
+            SetupAnimations();
+            SetupSkins();
+
+            return sceneRoot;
         }
 
     private:
@@ -203,10 +217,12 @@ namespace
                     const auto& sampler = animation.samplers[channel.sampler];
 
                     const size_t animationNodeId = channel.target.node;
-                    m_nodes.at(animationNodeId)
+                    const auto animationComponent = m_nodes.at(animationNodeId)
                         ->getOrCreateComponent<Animation::AnimationComponent>(
                             animationContainer,
-                            animationNodeId); //TODO: check that one component dont want to set different animationNodeId
+                            animationNodeId);
+                    if (!animationComponent.isSameAs(animationContainer, animationNodeId))
+                        throw std::logic_error("different animation components on one node");
 
                     const auto interpolationMode = TranslateInterpolationMode(sampler.interpolation);
                     auto inputChannelData = GetData(sampler.input);
@@ -263,26 +279,34 @@ namespace
             }
         }
 
-        // Scene graph
-
-        void PopulateSubmeshes(AT2::Node& node, size_t meshIndex)
+        void SetupSkins()
         {
-            node.SetName("Mesh group '"s + m_document.meshes[meshIndex].name + "'"s);
-            for (const auto& submesh : m_meshes[meshIndex])
+            for (size_t skinIndex = 0; skinIndex < m_document.skins.size(); skinIndex++)
             {
-                auto meshNode = std::make_shared<MeshNode>(submesh, std::vector{0u}, submesh->Name);
-                node.AddChild(std::move(meshNode));
+                const auto& skin = m_document.skins[skinIndex];
+
+                for (size_t boneIndex = 0; auto boneNode : skin.joints)
+                    m_nodes[boneNode]->getOrCreateComponent<Animation::BoneComponent>(boneIndex++, m_skeletonInstances[skinIndex]);
             }
         }
 
-        void BuildSceneGraph(int32_t nodeIndex, AT2::Node& baseNode)
+        // Scene graph
+
+        void PopulateSubmeshes(Node& node, size_t meshIndex)
+        {
+            node.SetName("Mesh group '"s + m_document.meshes[meshIndex].name + "'"s);
+            for (const auto& submesh : m_meshes[meshIndex])
+                node.addComponent(std::make_unique<MeshComponent>(submesh, std::vector {0u}));
+        }
+
+        void BuildSceneGraph(int32_t nodeIndex, AT2::Scene::Node& baseNode)
         {
             if (nodeIndex < 0)
                 throw std::logic_error("BuildSceneGraph: negative node index");
 
             const fx::gltf::Node& node = m_document.nodes[static_cast<size_t>(nodeIndex)];
             
-            auto currentNode = std::make_shared<Node>();
+            auto currentNode = std::make_shared<Node>(node.name);
             if (!std::ranges::equal(node.translation, fx::gltf::defaults::NullVec3) ||
                 !std::ranges::equal(node.rotation , fx::gltf::defaults::IdentityRotation) ||
                 !std::ranges::equal(node.scale , fx::gltf::defaults::IdentityVec3))
@@ -302,6 +326,12 @@ namespace
 
             if (node.mesh >= 0)
                 PopulateSubmeshes(*currentNode, static_cast<size_t>(node.mesh));
+            if (node.skin >= 0)
+            {
+                Log::Debug() << "Skin at node [" << nodeIndex << "] '" << node.name << std::endl;
+                for (auto* meshComponent : currentNode->getComponents<MeshComponent>())
+                    meshComponent->setSkeletonInstance(m_skeletonInstances[node.skin]);
+            }
 
             if (const size_t cameraIndex = node.camera; node.camera >= 0)
             {
@@ -410,6 +440,7 @@ namespace
             std::span<const std::byte> data;
         };
 
+        //TODO: make type-safe!!!
         BufferDataInfo GetData(unsigned attribIndex)
         {
             //TODO: support sparce accesors

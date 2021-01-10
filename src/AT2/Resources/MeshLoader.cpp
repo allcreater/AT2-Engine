@@ -15,6 +15,7 @@
 using namespace std::literals;
 
 using namespace AT2;
+using namespace AT2::Scene;
 using namespace AT2::Resources;
 
 namespace
@@ -147,16 +148,12 @@ namespace
 
         void TraverseNode(const aiNode* node, Node& baseNode)
         {
+            baseNode.SetTransform(ConvertMatrix(node->mTransformation));
             for (unsigned i = 0; i < node->mNumMeshes; i++)
             {
                 const unsigned meshIndex = node->mMeshes[i];
-                const aiMesh* mesh = m_scene->mMeshes[meshIndex];
-
-                //TODO: don't multiply nodes when materials are the same
-                auto submesh = std::make_shared<MeshNode>(m_buildingMesh, std::vector{meshIndex}, "Submesh "s + mesh->mName.C_Str());
-                submesh->SetTransform(ConvertMatrix(node->mTransformation));
-
-                baseNode.AddChild(std::move(submesh));
+                //TODO: don't multiply components when materials are the same
+                baseNode.addComponent(std::make_unique<MeshComponent>(m_buildingMesh, std::vector {meshIndex}));
             }
 
             for (size_t i = 0; i < node->mNumChildren; i++)

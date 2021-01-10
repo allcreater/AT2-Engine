@@ -79,5 +79,8 @@ void main()
 	else
 		FragColor = vec4(lighting, 1.0);
 
-	//FragColor = vec4(1.0);//vec4(normal.xyz, 1);
+	if (isnan(normal.x) || isnan(normal.y) || isnan(normal.z) ||
+		isinf(normal.x) || isinf(normal.y) || isinf(normal.z))
+		FragColor = vec4(color.rgb, 1);
+	//FragColor = vec4(normal.xyz, 1);
 }

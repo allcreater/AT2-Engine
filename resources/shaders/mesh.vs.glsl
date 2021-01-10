@@ -8,7 +8,7 @@ layout(location = 4) in uvec4 a_Joints;
 layout(location = 5) in vec4 a_Weights;
 
 uniform bool u_useSkinning = false;
-uniform mat4 u_skeletonMatrices[100];
+uniform mat4 u_skeletonMatrices[200];
 
 layout (binding = 1) uniform CameraBlock
 {

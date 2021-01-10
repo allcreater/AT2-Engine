@@ -1,12 +1,17 @@
 #pragma once
 
+//#include <ranges>
+#include <algorithm>
+
+
 #include "AT2.h"
 #include "Mesh.h"
 #include "camera.h"
+#include "matrix_stack.h"
 
-//TODO encapsulate all graphic API calls
+//TODO: split into different headers
 
-namespace AT2
+namespace AT2::Scene
 {
     class Node;
 
@@ -14,7 +19,7 @@ namespace AT2
 
     struct NodeVisitor
     {
-        //don't sure are we really need double dispatching so that we will use RTTI instead instead of using different versions of functions there
+        //don't sure are we really need double dispatching so that we will use RTTI instead of using different versions of functions there
         virtual bool Visit(Node& ) { return false; }
         virtual void UnVisit(Node& ) {}
 
@@ -25,6 +30,7 @@ namespace AT2
     class FuncNodeVisitor : public NodeVisitor
     {
         Func visitFunc;
+
     public:
         FuncNodeVisitor(Func&& func) : visitFunc(std::forward<Func>(func)) {}
 
@@ -40,9 +46,13 @@ namespace AT2
 
     public:
         virtual ~NodeComponent() = default;
-        virtual void update(double t) = 0; //TODO: time should be available without params
 
         Node* getParent() const noexcept { return m_parent; }
+
+        void doUpdate(class UpdateVisitor&);
+
+    protected:
+        virtual void update(class UpdateVisitor&) = 0;
 
     private:
         void setParent(Node& newParent) { m_parent = &newParent; }
@@ -89,18 +99,26 @@ namespace AT2
         void SetName(std::string newName) { m_name = std::move(newName); }
 
         [[nodiscard]] const ComponentList& getComponentList() const noexcept { return m_componentList; }
-        NodeComponent& addComponent(std::unique_ptr<NodeComponent> component)
-        {
-            auto* pComponent = component.get();
-            pComponent->setParent(*this);
+        NodeComponent& addComponent(std::unique_ptr<NodeComponent> component);
 
-            m_componentList.push_back(std::move(component));
-            return *pComponent;
+        template <typename T>
+        requires(std::is_base_of_v<NodeComponent, T>) const std::vector<T*>& getComponents()
+        {
+            static std::vector<T*> s_result;
+            s_result.resize(0);
+            //return getComponentList() |
+            //    std::ranges::views::transform([](std::unique_ptr<NodeComponent>& component) { return component.get(); }) |
+            //    std::ranges::views::filter( [](NodeComponent* component) { return dynamic_cast<T*>(component); });
+            std::transform(m_componentList.begin(), m_componentList.end(), std::back_inserter(s_result),
+                           [](std::unique_ptr<NodeComponent>& component) { return dynamic_cast<T*>(component.get()); });
+            s_result.erase(std::remove(s_result.begin(), s_result.end(), nullptr),
+                s_result.end());
+
+            return s_result;
         }
 
         template <typename T>
-        requires(std::is_base_of_v<NodeComponent, T>)
-        T* getComponent()
+        requires(std::is_base_of_v<NodeComponent, T>) T* getComponent()
         {
             auto it = std::find_if(m_componentList.begin(), m_componentList.end(),
                                    [](const std::unique_ptr<NodeComponent>& component) {
@@ -110,8 +128,7 @@ namespace AT2
         }
 
         template <typename T, typename ... Args>
-        requires(std::is_base_of_v<NodeComponent, T>)
-        T& getOrCreateComponent(Args ... args)
+        requires(std::is_base_of_v<NodeComponent, T>) T& getOrCreateComponent(Args ... args)
         {
             if (auto* existing = getComponent<T>())
                 return *existing;
@@ -119,8 +136,35 @@ namespace AT2
             return static_cast<T&>(addComponent(std::make_unique<T>(std::forward<Args>(args)...)));
         }
 
+        template <typename T, typename... Args>
+        requires(std::is_base_of_v<NodeComponent, T>) T& createUniqueComponent(Args... args)
+        {
+            if (auto* existing = getComponent<T>())
+                throw std::logic_error("component should not be duplicated!");
+
+            return static_cast<T&>(addComponent(std::make_unique<T>(std::forward<Args>(args)...)));
+        }
     };
 
+    class UpdateVisitor : public NodeVisitor
+    {
+        MatrixStack m_transforms;
+        double m_time = 0.0; //TODO: dt
+
+    public:
+        UpdateVisitor(double time) : m_time(time) {}
+
+        [[nodiscard]] const MatrixStack& getTransformsStack() const noexcept { return m_transforms; }
+        [[nodiscard]] const double getTime() const noexcept { return m_time; }
+
+        //TODO: some way to send messages down to hierarchí
+
+    protected:
+        bool Visit(Node& node) override;
+        void UnVisit(Node& node) override;
+    };
+
+    //TODO: turn into components 
     struct SphereLight
     {
     };
@@ -170,26 +214,57 @@ namespace AT2
         bool enabled = true;
     };
 
-
-    class MeshNode : public Node
+    class MeshComponent : public NodeComponent
     {
     public:
-        MeshNode() = default;
-        MeshNode(MeshRef mesh, std::vector<unsigned> submeshIndices, std::string name = {})
-            : m_mesh(std::move(mesh))
-            , m_submeshIndices(std::move(submeshIndices))
-            , Node(std::move(name))
-        {}
+        class SkeletonInstance
+        {
+            std::vector<glm::mat4> m_inverseBindMatrices; //TODO: could be one for all instance
+            std::vector<glm::mat4> m_resultJointTransforms;
 
-        void SetMesh(MeshRef newMesh) { m_mesh = std::move(newMesh); }
-        [[nodiscard]] ConstMeshRef GetMesh() const noexcept { return m_mesh; }
-        MeshRef GetMesh() noexcept { return m_mesh; }
+        public:
+            SkeletonInstance(std::span<const glm::mat4> inverseBindMatrices) :
+                m_inverseBindMatrices(inverseBindMatrices.begin(), inverseBindMatrices.end()),
+                m_resultJointTransforms(inverseBindMatrices.size())
+            {
+            }
+
+            void calculateBoneTransform(size_t boneIndex, const glm::mat4& boneTransform)
+            {
+                if (boneIndex >= m_inverseBindMatrices.size())
+                    throw std::out_of_range("bone index");
+
+                m_resultJointTransforms[boneIndex] = boneTransform * m_inverseBindMatrices[boneIndex];
+            }
+
+            std::span<const glm::mat4> getResultJointTransforms() const noexcept { return m_resultJointTransforms; }
+        };
+
+        using SkeletonInstanceRef = std::shared_ptr<SkeletonInstance>;
+
+
+        MeshComponent() = default;
+        MeshComponent(MeshRef mesh, std::vector<unsigned> submeshIndices) :
+            m_mesh(std::move(mesh)), m_submeshIndices(std::move(submeshIndices)) {}
+
+
+        void setSkeletonInstance(SkeletonInstanceRef skeletonInstance) { m_skeletonInstance = std::move(skeletonInstance);}
+        [[nodiscard]] const SkeletonInstanceRef& getSkeletonInstance() const { return m_skeletonInstance; }
+
+        void setMesh(MeshRef newMesh) { m_mesh = std::move(newMesh); }
+        [[nodiscard]] ConstMeshRef getMesh() const noexcept { return m_mesh; }
+        [[nodiscard]] MeshRef getMesh() noexcept { return m_mesh; }
 
         std::span<const unsigned> GetSubmeshIndices() const noexcept { return m_submeshIndices; }
 
+        void update(UpdateVisitor&) override {}
+
     private:
         MeshRef m_mesh;
+        SkeletonInstanceRef m_skeletonInstance;
+
         std::vector<unsigned> m_submeshIndices;
+
     };
 
     class Scene

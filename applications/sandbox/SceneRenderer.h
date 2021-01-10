@@ -3,7 +3,7 @@
 #include <AT2/Scene.h>
 #include <AT2/matrix_stack.h>
 
-namespace AT2
+namespace AT2::Scene
 {
 
     class SceneRenderer;
@@ -24,6 +24,8 @@ namespace AT2
         SceneRenderer& scene_renderer;
     };
 
+
+    //TODO: make lights components, collect with usual update visitor
     struct LightRenderVisitor : NodeVisitor
     {
         friend class SceneRenderer;

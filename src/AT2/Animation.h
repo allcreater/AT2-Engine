@@ -51,11 +51,11 @@ namespace AT2::Animation
     public:
         virtual ~ChannelBase() = default;
 
-        virtual void performUpdate(Node& node, float t) const = 0;
+        virtual void performUpdate(Scene::Node& node, float t) const = 0;
     };
 
 
-    template <typename T, typename ConcreteImplementation, typename F = std::function(void(const T&, Node&))>
+    template <typename T, typename ConcreteImplementation, typename F = std::function(void(const T&, Scene::Node&))>
     class Channel : public ChannelBase
     {
         F m_effector;
@@ -75,7 +75,7 @@ namespace AT2::Animation
         }
 
         //TODO: remember current frame and time to get rid of searching frame index. Use dt instead of t.
-        void performUpdate(Node& node, float t) const override
+        void performUpdate(Scene::Node& node, float t) const override
         {
             if (t <= m_time.front() || t > m_time.back())
                 return;
@@ -163,7 +163,7 @@ namespace AT2::Animation
     };
 
 
-    using AnimationNodeId = size_t;
+    using AnimationNodeId = uint32_t;
 
 
     class Animation;
@@ -182,7 +182,7 @@ namespace AT2::Animation
         Animation& addAnimation(std::string name);
         const std::vector<Animation>& getAnimationsList() const noexcept { return m_animations; }
 
-        void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time); //TODO: dt!
+        void updateNode(AnimationNodeId nodeId, Scene::Node& nodeInstance, double time); //TODO: dt!
     };
 
     class Animation
@@ -236,7 +236,7 @@ namespace AT2::Animation
             return m_channels.size() - 1;
         }
 
-        void updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time);
+        void updateNode(AnimationNodeId nodeId, Scene::Node& nodeInstance, double time);
         [[nodiscard]] std::pair<float, float> getTimeRange() const noexcept { return m_timeRange; }
         [[nodiscard]] float getDuration() const noexcept { return m_timeRange.second - m_timeRange.first; }
         [[nodiscard]] const ChannelBase& getTrack(size_t trackIndex) const;
@@ -244,15 +244,48 @@ namespace AT2::Animation
 
     using AnimationRef = std::shared_ptr<AnimationCollection>;
 
-    class AnimationComponent : public NodeComponent
+    class NodeIdComponent : public Scene::NodeComponent
     {
-        AnimationRef m_animation;
-        AnimationNodeId m_animationNodeId;
+        AnimationNodeId m_nodeId;
 
     public:
-        AnimationComponent(AnimationRef animation, AnimationNodeId nodeId) : m_animation(std::move(animation)), m_animationNodeId(nodeId) {}
+        NodeIdComponent(AnimationNodeId nodeId) : m_nodeId(nodeId) {}
+        AnimationNodeId getNodeId() const noexcept { return m_nodeId; }
 
-        void update(double time) override;
+        void update(Scene::UpdateVisitor& updateVisitor) override {}
+    };
+
+    //TODO: should be similar to skinning infrastucture, but need to decide good way
+    class AnimationComponent : public NodeIdComponent
+    {
+        AnimationRef m_animation;
+
+    public:
+        AnimationComponent(AnimationRef animation, AnimationNodeId nodeId) : m_animation(std::move(animation)), NodeIdComponent(nodeId) {}
+
+        bool isSameAs(const AnimationRef& animation, AnimationNodeId nodeId) const noexcept
+        {
+            return m_animation == animation && getNodeId() == nodeId;
+        }
+
+        void update(Scene::UpdateVisitor& updateVisitor) override;
+    };
+
+    class BoneComponent : public Scene::NodeComponent
+    {
+        size_t m_boneIndex;
+        Scene::MeshComponent::SkeletonInstanceRef m_skeletonInstance;
+
+    public:
+        BoneComponent(size_t boneIndex, Scene::MeshComponent::SkeletonInstanceRef skeletonInstanceRef) :
+            m_boneIndex(boneIndex), m_skeletonInstance(std::move(skeletonInstanceRef))
+        {
+        }
+
+        void update(Scene::UpdateVisitor& updateVisitor) override
+        {
+            m_skeletonInstance->calculateBoneTransform(m_boneIndex, updateVisitor.getTransformsStack().getModelView());
+        }
     };
 
 } // namespace AT2::Animation
