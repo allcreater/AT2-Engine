@@ -52,7 +52,7 @@ namespace
 TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, const std::filesystem::path& path)
 {
     std::basic_ifstream<std::byte> stream {path, std::ios::binary};
-    std::vector<std::byte> data { static_cast<size_t>(file_size(path))};
+    std::vector<std::byte> data {static_cast<size_t>(file_size(path))};
     stream.read(data.data(), data.size());
 
     //std::vector<std::byte> data{std::istreambuf_iterator<std::byte>(file), {}};
@@ -80,8 +80,11 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
     TextureRef result = nullptr;
     if (parsedData)
     {
-        result = renderer->GetResourceFactory().CreateTexture(Texture2D {size, 1}, format);
+        const unsigned numMipmaps = log(std::max({size.x, size.y})) / log(2);
+
+        result = renderer->GetResourceFactory().CreateTexture(Texture2D {size, numMipmaps}, format);
         result->SubImage2D({0, 0}, glm::xy(size), 0, format, parsedData);
+        result->BuildMipmaps();
         stbi_image_free(parsedData);
     }
 
