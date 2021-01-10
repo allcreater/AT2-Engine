@@ -26,6 +26,7 @@ out fsInput {
 
 void main()
 {
+	mat3 normalMatrix = u_matNormal;
 	mat4 modelView = u_matView * u_matModel;
 	if (u_useSkinning)
 	{
@@ -34,12 +35,14 @@ void main()
 			a_Weights.y * u_skeletonMatrices[int(a_Joints.y)] +
 			a_Weights.z * u_skeletonMatrices[int(a_Joints.z)] +
 			a_Weights.w * u_skeletonMatrices[int(a_Joints.w)]);
+
+		normalMatrix = mat3(transpose(inverse(modelView)));
 	}
 	vec4 viewSpacePos = modelView * vec4(a_Position, 1.0);
 
 
 	output.texCoord = a_TexCoord;
-	output.normal = u_matNormal * a_Normal;
+	output.normal = normalMatrix * a_Normal;
 	output.position = viewSpacePos.xyz;
 
 	gl_Position = u_matProjection * viewSpacePos;
