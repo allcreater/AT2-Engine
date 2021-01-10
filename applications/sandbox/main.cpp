@@ -138,14 +138,18 @@ private:
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\SciFiHelmet\glTF\SciFiHelmet.gltf)"s);
 
         //castle
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
-        //scene->SetTransform(glm::scale(glm::translate(scene->GetTransform(), {1000, 300, 0}), {0.3, 0.3, 0.3}));
-
+        {
+            auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
+                m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
+            scene->GetTransform().setScale({20.0, 20.0, 20.0}).setPosition({1000, 300, 0});
+            Scene.GetRoot().AddChild(scene);
+        }
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\InterpolationTest\glTF\InterpolationTest.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf)"s);
-        scene->SetTransform(glm::scale(scene->GetTransform().asMatrix(), {20, 20, 20}));
+
+        scene->GetTransform().setPosition({0, -20.0, 0});
         Scene.GetRoot().AddChild(scene);
 
         FuncNodeVisitor shaderSetter {[&](Node& node) {
@@ -219,7 +223,7 @@ private:
                 return;
 
             m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(newSize.x),
-                                                       static_cast<float>(newSize.y), 1.0f, 20000.0f));
+                                                       static_cast<float>(newSize.y), 0.1f, 20000.0f));
             sr.ResizeFramebuffers(newSize);
         };
 

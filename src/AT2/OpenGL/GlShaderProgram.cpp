@@ -87,19 +87,19 @@ bool GlShaderProgram::TryCompile()
         {
             GLint infoLogLength = 0;
             glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
-            std::string infoLog(infoLogLength, '\0');
+            //if (infoLogLength > 0)
+            //{
+            //    std::string infoLog(static_cast<unsigned>(infoLogLength) - 1, '\0');
 
-            glGetShaderInfoLog(shaderId, static_cast<GLsizei>(infoLog.size()), &infoLogLength, infoLog.data());
-            if (infoLogLength > 0)
-                Log::Debug() << "Shader \"" << GetName() << "\" log: " << std::endl << infoLog;
+            //    glGetShaderInfoLog(shaderId, infoLogLength, &infoLogLength, infoLog.data());
+            //    Log::Debug() << "Shader \"" << GetName() << "\" log: " << std::endl << infoLog;
+            //}
 
             GLint status = 0;
             glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status);
             if (status != GL_TRUE)
             {
-                Log::Warning() << ShaderTypeName(shaderType) << " shader \"" << GetName() << "\" compilation failed!"
-                               << std::endl
-                               << infoLog;
+                Log::Warning() << ShaderTypeName(shaderType) << " shader \"" << GetName() << "\" compilation failed!" << std::endl;
             }
         }
 
@@ -111,11 +111,13 @@ bool GlShaderProgram::TryCompile()
         //log
         GLint infoLogLength = 0;
         glGetProgramiv(m_programId, GL_INFO_LOG_LENGTH, &infoLogLength);
-        std::string infoLog(infoLogLength, '\0');
-
-        glGetProgramInfoLog(m_programId, 2048, &infoLogLength, infoLog.data());
         if (infoLogLength > 0)
+        {
+            std::string infoLog(static_cast<unsigned>(infoLogLength) - 1, '\0');
+
+            glGetProgramInfoLog(m_programId, infoLogLength, &infoLogLength, infoLog.data());
             Log::Debug() << "Shader program log: " << std::endl << infoLog;
+        }
 
         m_currentState = (isLinked) ? State::Ready : State::Error;
     }

@@ -22,7 +22,7 @@ BraceWrapping:
   SplitEmptyNamespace: true
 BreakBeforeBraces: Custom
 BreakConstructorInitializers: AfterColon
-ColumnLimit: 120
+ColumnLimit: 140
 IncludeCategories: 
   - Regex: '^<.*'
     Priority: 1
@@ -46,10 +46,3 @@ SpaceBeforeInheritanceColon : true
 SpaceBeforeCpp11BracedList: true
 CommentPragmas:  '^[^ ]'
 IndentWrappedFunctionNames: true
----
-Language: JavaScript
-BasedOnStyle: LLVM
-ColumnLimit: 120
-IndentWidth: 4
-TabWidth: 4
-...
