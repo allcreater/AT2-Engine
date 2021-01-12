@@ -13,7 +13,7 @@ endif()
 include (${CMAKE_BINARY_DIR}/conan.cmake)
 
 conan_cmake_run (   CONANFILE conanfile.py 
-                    BUILD missing )
+                    BUILD missing BASIC_SETUP)
 
 add_subdirectory ("src/AT2/")
 add_subdirectory ("applications/sandbox/")
