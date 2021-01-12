@@ -53,7 +53,7 @@ float getWaterHeight (in vec2 texCoord)
 
 float getHeight (in vec2 texCoord)
 {
-	float result =  (textureLod(u_texHeight, texCoord, 0.0).r + textureLod(u_texHeight, texCoord, 4.0).r*0.00390625*2.0);// + texture(u_texNoise, texCoord*10.0).r * 3.0;
+	float result = texture(u_texHeight, texCoord).r;
 	
 	if (result < 0.001) //water effect
 		return getWaterHeight(texCoord);

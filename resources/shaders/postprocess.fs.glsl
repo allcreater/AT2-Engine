@@ -9,14 +9,11 @@ layout(binding = 1) uniform CameraBlock
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
     double u_time;
 };
-//uniform mat4 u_matModel;
-//uniform mat3 u_matNormal;
 
 uniform sampler3D u_texNoise;
 uniform sampler2D u_colorMap;
 uniform sampler2D u_depthMap;
 
-uniform float u_tmGamma = 2.2;
 uniform float u_tmExposure = 1.0;
 
 layout (location = 0) out vec4 FragColor;
@@ -24,7 +21,6 @@ layout (location = 0) out vec4 FragColor;
 vec4 toneMapping (vec4 color)
 {
 	vec3 mapped_color = vec3(1.0) - exp(-color.rgb * u_tmExposure);
-	mapped_color = pow(mapped_color, vec3(1.0/u_tmGamma));
 
 	return vec4(mapped_color, color.a); 
 }

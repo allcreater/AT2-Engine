@@ -172,6 +172,10 @@ private:
         }
         Scene.GetRoot().AddChild(std::move(terrainNode));
 
+        m_renderParameters.Scene = &Scene;
+        m_renderParameters.Camera = &m_camera;
+        m_renderParameters.TargetFramebuffer = &m_renderer->GetDefaultFramebuffer();
+
         sr.Initialize(m_renderer);
     }
 
@@ -186,11 +190,11 @@ private:
 
         AT2::GlTimerQuery glTimer;
         glTimer.Begin();
-        sr.RenderScene({Scene, m_camera, m_renderer->GetDefaultFramebuffer(), Time, WireframeMode});
+        sr.RenderScene(m_renderParameters);
         glTimer.End();
 
         const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
-        if (floor(Time) < floor(Time + dt))
+        if (floor(m_renderParameters.Time) < floor(m_renderParameters.Time + dt))
             AT2::Log::Debug() << "Frame time: " << frameTime << std::endl;
 
         m_renderer->FinishFrame();
@@ -203,7 +207,7 @@ private:
             std::cout << "Key " << key << " down" << std::endl;
 
             if (key == GLFW_KEY_Z)
-                WireframeMode = !WireframeMode;
+                m_renderParameters.Wireframe = !m_renderParameters.Wireframe;
             else if (key == GLFW_KEY_M)
                 MovingLightMode = !MovingLightMode;
             else if (key == GLFW_KEY_R)
@@ -240,7 +244,7 @@ private:
         m_window->ClosingCallback = [&]() { m_renderer->Shutdown(); };
 
         m_window->UpdateCallback = [&](const double dt) {
-            Time += dt;
+            m_renderParameters.Time += dt;
 
             if (m_window->isKeyDown(GLFW_KEY_LEFT_SHIFT))
                 acceleration = std::min(acceleration + static_cast<float>(dt), 200.0f);
@@ -260,6 +264,13 @@ private:
             if (m_window->isKeyDown(GLFW_KEY_ESCAPE))
                 m_window->setCloseFlag(true);
 
+			const float expositionSpeed = 1 + 2 * dt;
+            if (m_window->isKeyDown(GLFW_KEY_EQUAL))
+                m_renderParameters.Exposure *= expositionSpeed;
+            if (m_window->isKeyDown(GLFW_KEY_MINUS))
+                m_renderParameters.Exposure /= expositionSpeed;
+            m_renderParameters.Exposure = glm::clamp(m_renderParameters.Exposure, 0.001f, 10.0f);
+
             if (MovingLightMode)
             {
                 if (auto* light = Scene.FindNode<AT2::Scene::LightNode>("PointLight[0]"sv))
@@ -267,8 +278,8 @@ private:
             }
         };
 
-        m_window->RenderCallback = [this](double dt) { OnRender(dt); };
-        m_window->InitializeCallback = [this] { OnInitialize(); };
+        m_window->RenderCallback = std::bind_front(&App::OnRender, this);
+        m_window->InitializeCallback = std::bind_front(&App::OnInitialize, this);
     }
 
 private:
@@ -282,8 +293,8 @@ private:
     AT2::Scene::Scene Scene;
     AT2::Scene::SceneRenderer sr;
 
-    bool WireframeMode = false, MovingLightMode = true, NeedResourceReload = true;
-    double Time = 0.0;
+    AT2::Scene::RenderParameters m_renderParameters;
+    bool MovingLightMode = true, NeedResourceReload = true;
     float acceleration = 0.0;
 };
 

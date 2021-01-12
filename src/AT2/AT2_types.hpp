@@ -141,6 +141,7 @@ namespace AT2
     {
         TextureLayout ChannelsLayout;
         BufferDataType DataType;
+        bool PreferSRGB = false;
     };
 
     enum class TextureWrapMode

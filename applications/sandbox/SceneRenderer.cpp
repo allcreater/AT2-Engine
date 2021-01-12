@@ -218,7 +218,10 @@ namespace AT2::Scene
             dirtyFramebuffers = false;
         }
 
-        SetupCamera(params.Camera);
+        if (!params.Camera || !params.Scene || !params.TargetFramebuffer)
+            return;
+
+        SetupCamera(*params.Camera);
         renderer->SetViewport(AABB2d {{0, 0}, framebuffer_size});
 
         auto& stateManager = renderer->GetStateManager();
@@ -235,10 +238,10 @@ namespace AT2::Scene
 
         //objects
         UpdateVisitor updateVisitor {time};
-        params.Scene.GetRoot().Accept(updateVisitor);
+        params.Scene->GetRoot().Accept(updateVisitor);
 
-        RenderVisitor rv {*this, params.Camera};
-        params.Scene.GetRoot().Accept(rv);
+        RenderVisitor rv {*this, *params.Camera};
+        params.Scene->GetRoot().Accept(rv);
 
         stateManager.ApplyState(PolygonRasterizationMode::Fill);
 
@@ -251,19 +254,20 @@ namespace AT2::Scene
 
         //lights
         LightRenderVisitor lrv {*this};
-        params.Scene.GetRoot().Accept(lrv);
+        params.Scene->GetRoot().Accept(lrv);
 
         DrawPointLights(lrv);
 
         stateManager.ApplyState(DepthState {CompareFunction::Greater, false, false});
-        DrawSkyLight(lrv, params.Camera);
+        DrawSkyLight(lrv, *params.Camera);
 
 
-        params.TargetFramebuffer.Bind();
+        params.TargetFramebuffer->Bind();
         stateManager.ApplyState(DepthState {CompareFunction::Greater, false, true});
         renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
         renderer->ClearDepth(0);
 
+        postprocessUniforms->SetUniform("u_tmExposure", params.Exposure);
         DrawQuad(resources.postprocessShader, *postprocessUniforms);
     }
 

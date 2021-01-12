@@ -61,10 +61,11 @@ namespace AT2::Scene
 
     struct RenderParameters
     {
-        Scene& Scene;
-        const Camera& Camera;
-        IFrameBuffer& TargetFramebuffer;
+        Scene* Scene = nullptr;
+        const Camera* Camera = nullptr;
+        IFrameBuffer* TargetFramebuffer = nullptr;
 
+        float Exposure = 1.0f;
         double Time = 0.0f;
         bool Wireframe = false;
     };
