@@ -89,7 +89,37 @@ namespace
         case WrappingMode::MirroredRepeat: return TextureWrapMode::MirroredRepeat;
         }
 
-        throw std::logic_error("invalid conversion");
+        assert(false);
+    }
+
+    constexpr std::optional<TextureMinificationMode> TranslateMinFilter(fx::gltf::Sampler::MinFilter minFilter)
+    {
+        using MinFilter = fx::gltf::Sampler::MinFilter;
+        switch (minFilter)
+        {
+        case MinFilter::None:                   return {};
+        case MinFilter::Nearest:                return TextureMinificationMode{TextureSamplingMode::Nearest, MimpapSamplingMode::Manual};
+        case MinFilter::NearestMipMapNearest:   return TextureMinificationMode{TextureSamplingMode::Nearest, MimpapSamplingMode::Nearest};
+        case MinFilter::NearestMipMapLinear:    return TextureMinificationMode{TextureSamplingMode::Nearest, MimpapSamplingMode::Linear};
+        case MinFilter::Linear:                 return TextureMinificationMode{TextureSamplingMode::Linear, MimpapSamplingMode::Manual};
+        case MinFilter::LinearMipMapNearest:    return TextureMinificationMode{TextureSamplingMode::Linear, MimpapSamplingMode::Nearest};
+        case MinFilter::LinearMipMapLinear:     return TextureMinificationMode{TextureSamplingMode::Linear, MimpapSamplingMode::Linear};
+        }
+
+        assert(false);
+    }
+
+    constexpr std::optional<TextureSamplingMode> TranslateMagFilter(fx::gltf::Sampler::MagFilter magFilter)
+    {
+        using MagFilter = fx::gltf::Sampler::MagFilter;
+        switch (magFilter)
+        {
+        case MagFilter::None: return {};
+        case MagFilter::Nearest: return TextureSamplingMode::Nearest;
+        case MagFilter::Linear: return TextureSamplingMode::Linear;
+        }
+
+        assert(false);
     }
 
     constexpr Animation::InterpolationMode TranslateInterpolationMode(fx::gltf::Animation::Sampler::Type interpolation)
@@ -104,6 +134,7 @@ namespace
 
         throw std::logic_error("invalid conversion");
     }
+
 
     class PlaceholderTextureCash
     {
@@ -392,7 +423,10 @@ namespace
             if (sampler.wrapS != sampler.wrapT)
                 Log::Warning() << "wrapS != wrapT, using first" << std::endl;
 
-            loadedTexture->SetWrapMode(TranslateWrappingMode(sampler.wrapS));
+            loadedTexture->SetWrapMode({TranslateWrappingMode(sampler.wrapS), TranslateWrappingMode(sampler.wrapT)});
+            loadedTexture->SetSamplingMode(
+                TextureSamplingParams {*TranslateMagFilter(sampler.magFilter), *TranslateMinFilter(sampler.minFilter)});
+
             return loadedTexture;
 
             //TODO: support all sampler parameters

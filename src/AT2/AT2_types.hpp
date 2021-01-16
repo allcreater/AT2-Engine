@@ -153,6 +153,48 @@ namespace AT2
         MirrorClampToEdge
     };
 
+    struct TextureWrapParams
+    {
+        TextureWrapMode WrapS = TextureWrapMode::Repeat;
+        TextureWrapMode WrapT = TextureWrapMode::Repeat;
+        TextureWrapMode WrapR = TextureWrapMode::Repeat;
+
+        static constexpr TextureWrapParams Uniform(TextureWrapMode mode) { return {mode, mode, mode}; }
+    };
+
+    enum class TextureSamplingMode
+    {
+        // no interpolation between adjacent texels
+        Nearest,
+        // linear interpolation between adjacent texels
+        Linear
+    };
+
+    enum class MimpapSamplingMode
+    {
+        // not use automatic mipmap selection
+        Manual,
+        // select nearest mipmap
+        Nearest,
+        // linear interpolation between two nearest mipmaps
+        Linear
+    };
+    using TextureMinificationMode = std::tuple<TextureSamplingMode, MimpapSamplingMode>;
+
+    struct TextureSamplingParams
+    {
+        TextureSamplingMode Magnification = TextureSamplingMode::Linear;
+        TextureMinificationMode Minification = {TextureSamplingMode::Linear, MimpapSamplingMode::Linear};
+
+        static constexpr TextureSamplingParams Uniform(TextureSamplingMode samplingMode, bool mipmapping)
+        {
+            if (mipmapping)
+                return {samplingMode, {samplingMode, samplingMode == TextureSamplingMode::Nearest ? MimpapSamplingMode::Nearest : MimpapSamplingMode::Linear}};
+
+            return {samplingMode, {samplingMode, MimpapSamplingMode::Manual}};
+        }
+    };
+
     enum class BufferUsage : char
     {
         Read = 1 << 0,

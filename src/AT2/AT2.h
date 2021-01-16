@@ -153,7 +153,19 @@ namespace AT2
         [[nodiscard]] virtual std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const = 0;
     };
 
-    class ITexture
+
+    //Could be just a read-only tuple of params, OOP interface is just for unification
+    class ISampler
+    {
+    public:
+        virtual void SetWrapMode(TextureWrapParams wrapParams) = 0;
+        [[nodiscard]] virtual const TextureWrapParams& GetWrapMode() const noexcept = 0;
+
+        virtual void SetSamplingMode(TextureSamplingParams samplingParams) = 0;
+        [[nodiscard]] virtual const TextureSamplingParams& GetSamplingParams() const noexcept = 0;
+    };
+
+    class ITexture : public ISampler
     {
     public:
         NON_COPYABLE_OR_MOVABLE(ITexture)
@@ -175,9 +187,6 @@ namespace AT2
         [[nodiscard]] virtual size_t GetDataLength() const noexcept = 0;
 
         [[nodiscard]] virtual const Texture& GetType() const noexcept = 0;
-        //TODO: different for S,T,V
-        virtual void SetWrapMode(TextureWrapMode wrapMode) = 0;
-        [[nodiscard]] virtual const TextureWrapMode& GetWrapMode() const noexcept = 0;
 
         //TODO: think how to make better
         // Set data of a Texture1d

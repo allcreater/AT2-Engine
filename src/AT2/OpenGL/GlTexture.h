@@ -27,8 +27,6 @@ namespace AT2
         unsigned int GetId() const noexcept override { return m_id; }
 
         const Texture& GetType() const noexcept override { return m_flavor; }
-        void SetWrapMode(TextureWrapMode wrapMode) override;
-        const TextureWrapMode& GetWrapMode() const noexcept override { return m_wrapMode; }
 
         void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
                         const void* data) override;
@@ -41,12 +39,20 @@ namespace AT2
 
         GLenum GetTarget() const;
 
+        // ISampler implementation:
+        void SetWrapMode(TextureWrapParams wrapParams) override;
+        const TextureWrapParams& GetWrapMode() const noexcept override { return m_wrapParams; }
+
+        void SetSamplingMode(TextureSamplingParams samplingParams) override;
+        [[nodiscard]] const TextureSamplingParams& GetSamplingParams() const noexcept override { return m_sampling_params; }
+
     protected:
         void ReadChannelSizes();
 
     protected:
         Texture m_flavor;
-        TextureWrapMode m_wrapMode;
+        TextureWrapParams m_wrapParams;
+        TextureSamplingParams m_sampling_params;
 
         GLuint m_id {0};
         mutable int m_currentTextureModule {-1};

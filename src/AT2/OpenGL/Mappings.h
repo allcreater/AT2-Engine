@@ -209,6 +209,31 @@ namespace AT2::Mappings
         return 0;
     }
 
+    constexpr GLint TranslateTextureSamplingModes(TextureSamplingMode samplingMode,
+                                                   MimpapSamplingMode mipmapMode = MimpapSamplingMode::Manual)
+    {
+        switch (samplingMode)
+        {
+        case TextureSamplingMode::Nearest:
+            switch (mipmapMode)
+            {
+            case MimpapSamplingMode::Manual:    return GL_NEAREST;
+            case MimpapSamplingMode::Nearest:   return GL_NEAREST_MIPMAP_NEAREST;
+            case MimpapSamplingMode::Linear:    return GL_NEAREST_MIPMAP_LINEAR;
+            }
+        case TextureSamplingMode::Linear:
+            switch (mipmapMode)
+            {
+            case MimpapSamplingMode::Manual:    return GL_LINEAR;
+            case MimpapSamplingMode::Nearest:   return GL_LINEAR_MIPMAP_NEAREST;
+            case MimpapSamplingMode::Linear:    return GL_LINEAR_MIPMAP_LINEAR;
+            }
+        }
+
+        assert(false);
+        return 0;
+    }
+
     constexpr GLboolean TranslateBool(bool value)
     {
         return value ? GL_TRUE : GL_FALSE;

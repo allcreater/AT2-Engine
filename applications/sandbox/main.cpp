@@ -53,7 +53,7 @@ private:
 
         auto resultTex =
             m_renderer->GetResourceFactory().CreateTexture(Texture2D {resolution}, AT2::TextureFormats::RGBA16F);
-        resultTex->SetWrapMode(AT2::TextureWrapMode::ClampToBorder);
+        resultTex->SetWrapMode(AT2::TextureWrapParams::Uniform(AT2::TextureWrapMode::ClampToBorder));
         auto shader =
             m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 

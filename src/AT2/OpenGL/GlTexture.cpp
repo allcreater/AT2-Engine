@@ -28,13 +28,6 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m
 {
     glCreateTextures(GetTarget(), 1, &m_id);
 
-    glTextureParameteri(m_id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    const auto setupMipmapFilters = [id = m_id](glm::u32 levels) {
-        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, (levels > 1) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-        glTextureParameteri(id, GL_TEXTURE_MAX_LEVEL, static_cast<GLint>(levels));
-    };
-
     //TODO: test all cases
     std::visit(
         Utils::overloaded {
@@ -42,59 +35,75 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m
                 m_size = glm::ivec3 {texture.getSize(), 1, 1};
                 glTextureStorage1D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x);
 
-                setupMipmapFilters(texture.getLevels());
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [&](const Texture1DArray& texture) {
                 m_size = glm::ivec3 {texture.getSize(), 1};
                 glTextureStorage2D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y);
+
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [&](const Texture2D& texture) {
                 m_size = glm::ivec3 {texture.getSize(), 1};
                 glTextureStorage2D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y);
 
-                setupMipmapFilters(texture.getLevels());
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [&](const Texture2DMultisample& texture) {
                 m_size = glm::ivec3 {texture.getSize(), 1};
                 glTextureStorage2DMultisample(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x,
                                               m_size.y, texture.getFixedSampleLocations());
+
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [=](const Texture2DRectangle& texture) {
                 m_size = glm::ivec3 {texture.getSize(), 1};
-                glTextureStorage2D(m_id, texture.getLevels(), m_internalFormat, m_size.x, m_size.y);
+                glTextureStorage2D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y);
+
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [&](const Texture2DArray& texture) {
                 m_size = glm::ivec3 {texture.getSize()};
-                glTextureStorage3D(m_id, texture.getLevels(), m_internalFormat, m_size.x, m_size.y, m_size.z);
+                glTextureStorage3D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y, m_size.z);
 
-                setupMipmapFilters(texture.getLevels());
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [&](const Texture2DMultisampleArray& texture) {
                 m_size = glm::ivec3 {texture.getSize()};
                 glTextureStorage3DMultisample(m_id, static_cast<GLint>(texture.getSamples()), m_internalFormat,
                                               m_size.x, m_size.y, m_size.z, texture.getFixedSampleLocations());
+
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [&](const TextureCube& texture) {
                 m_size = glm::ivec3 {texture.getSize(), 1};
                 glTextureStorage2D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y);
 
-                glTextureParameteri(m_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTextureParameteri(m_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-                setupMipmapFilters(texture.getLevels());
+                SetWrapMode( TextureWrapParams::Uniform(TextureWrapMode::ClampToEdge));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [&](const TextureCubeArray& texture) {
                 m_size = glm::ivec3 {texture.getSize()};
                 glTextureStorage3D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y,
                                    m_size.z);
+
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::ClampToEdge));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             },
             [&](const Texture3D& texture) {
                 m_size = glm::ivec3 {texture.getSize()};
                 glTextureStorage3D(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x, m_size.y,
                                    m_size.z);
 
-                setupMipmapFilters(texture.getLevels());
+                SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             }},
         flavor);
 
@@ -129,16 +138,21 @@ void GlTexture::BuildMipmaps()
     glGenerateTextureMipmap(m_id);
 }
 
-void GlTexture::SetWrapMode(TextureWrapMode wrapMode)
+void GlTexture::SetWrapMode(TextureWrapParams wrapParams)
 {
-    //TODO: use dirty flag and set it on bind
-    m_wrapMode = wrapMode;
+    m_wrapParams = wrapParams;
 
-    const auto mode = Mappings::TranslateWrapMode(wrapMode);
+    glTextureParameteri(m_id, GL_TEXTURE_WRAP_S, Mappings::TranslateWrapMode(wrapParams.WrapS));
+    glTextureParameteri(m_id, GL_TEXTURE_WRAP_T, Mappings::TranslateWrapMode(wrapParams.WrapT));
+    glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, Mappings::TranslateWrapMode(wrapParams.WrapR));
+}
 
-    glTextureParameteri(m_id, GL_TEXTURE_WRAP_S, mode);
-    glTextureParameteri(m_id, GL_TEXTURE_WRAP_T, mode);
-    glTextureParameteri(m_id, GL_TEXTURE_WRAP_R, mode);
+void GlTexture::SetSamplingMode(TextureSamplingParams samplingParams)
+{
+    m_sampling_params = samplingParams;
+
+    glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, Mappings::TranslateTextureSamplingModes(samplingParams.Magnification));
+    glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER, std::apply(Mappings::TranslateTextureSamplingModes, samplingParams.Minification));
 }
 
 void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, ExternalTextureFormat dataFormat, const void* data)
