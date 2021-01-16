@@ -3,6 +3,18 @@
 
 using namespace AT2;
 
+namespace
+{
+    // TODO: set for different contexts individually?
+    Utils::lazy max_anisotropy = [] {
+        float result = 1.0f;
+
+        if (GLAD_GL_ARB_texture_filter_anisotropic)
+            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &result);
+
+        return result;
+    };
+}
 
 GLenum GlTexture::GetTarget() const
 {
@@ -153,6 +165,19 @@ void GlTexture::SetSamplingMode(TextureSamplingParams samplingParams)
 
     glTextureParameteri(m_id, GL_TEXTURE_MAX_LEVEL, Mappings::TranslateTextureSamplingModes(samplingParams.Magnification));
     glTextureParameteri(m_id, GL_TEXTURE_MIN_FILTER, std::apply(Mappings::TranslateTextureSamplingModes, samplingParams.Minification));
+}
+
+void GlTexture::SetAnisotropy(float anisotropy)
+{
+    if (!GLAD_GL_ARB_texture_filter_anisotropic)
+        return;
+
+    glTextureParameterf(m_id, GL_TEXTURE_MAX_ANISOTROPY, m_anisotropy = std::min(anisotropy, max_anisotropy()));
+}
+
+const float GlTexture::GetAnisotropy() const noexcept
+{
+    return m_anisotropy;
 }
 
 void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, ExternalTextureFormat dataFormat, const void* data)

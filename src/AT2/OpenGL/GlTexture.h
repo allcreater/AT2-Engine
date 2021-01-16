@@ -46,6 +46,9 @@ namespace AT2
         void SetSamplingMode(TextureSamplingParams samplingParams) override;
         [[nodiscard]] const TextureSamplingParams& GetSamplingParams() const noexcept override { return m_sampling_params; }
 
+        void SetAnisotropy(float anisotropy) override;
+        [[nodiscard]] const float GetAnisotropy() const noexcept override;
+
     protected:
         void ReadChannelSizes();
 
@@ -53,6 +56,7 @@ namespace AT2
         Texture m_flavor;
         TextureWrapParams m_wrapParams;
         TextureSamplingParams m_sampling_params;
+        float m_anisotropy = 1.0f;
 
         GLuint m_id {0};
         mutable int m_currentTextureModule {-1};

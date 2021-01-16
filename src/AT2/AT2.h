@@ -163,6 +163,12 @@ namespace AT2
 
         virtual void SetSamplingMode(TextureSamplingParams samplingParams) = 0;
         [[nodiscard]] virtual const TextureSamplingParams& GetSamplingParams() const noexcept = 0;
+
+        virtual void SetAnisotropy(float anisotropy) = 0;
+        [[nodiscard]] virtual const float GetAnisotropy() const noexcept = 0;
+
+        virtual void Bind(unsigned int unit) const = 0;
+
     };
 
     class ITexture : public ISampler
