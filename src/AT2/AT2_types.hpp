@@ -170,7 +170,7 @@ namespace AT2
         Linear
     };
 
-    enum class MimpapSamplingMode
+    enum class MipmapSamplingMode
     {
         // not use automatic mipmap selection
         Manual,
@@ -179,19 +179,19 @@ namespace AT2
         // linear interpolation between two nearest mipmaps
         Linear
     };
-    using TextureMinificationMode = std::tuple<TextureSamplingMode, MimpapSamplingMode>;
+    using TextureMinificationMode = std::tuple<TextureSamplingMode, MipmapSamplingMode>;
 
     struct TextureSamplingParams
     {
         TextureSamplingMode Magnification = TextureSamplingMode::Linear;
-        TextureMinificationMode Minification = {TextureSamplingMode::Linear, MimpapSamplingMode::Linear};
+        TextureMinificationMode Minification = {TextureSamplingMode::Linear, MipmapSamplingMode::Linear};
 
         static constexpr TextureSamplingParams Uniform(TextureSamplingMode samplingMode, bool mipmapping)
         {
             if (mipmapping)
-                return {samplingMode, {samplingMode, samplingMode == TextureSamplingMode::Nearest ? MimpapSamplingMode::Nearest : MimpapSamplingMode::Linear}};
+                return {samplingMode, {samplingMode, samplingMode == TextureSamplingMode::Nearest ? MipmapSamplingMode::Nearest : MipmapSamplingMode::Linear}};
 
-            return {samplingMode, {samplingMode, MimpapSamplingMode::Manual}};
+            return {samplingMode, {samplingMode, MipmapSamplingMode::Manual}};
         }
     };
 

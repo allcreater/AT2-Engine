@@ -98,12 +98,12 @@ namespace
         switch (minFilter)
         {
         case MinFilter::None:                   return {};
-        case MinFilter::Nearest:                return TextureMinificationMode{TextureSamplingMode::Nearest, MimpapSamplingMode::Manual};
-        case MinFilter::NearestMipMapNearest:   return TextureMinificationMode{TextureSamplingMode::Nearest, MimpapSamplingMode::Nearest};
-        case MinFilter::NearestMipMapLinear:    return TextureMinificationMode{TextureSamplingMode::Nearest, MimpapSamplingMode::Linear};
-        case MinFilter::Linear:                 return TextureMinificationMode{TextureSamplingMode::Linear, MimpapSamplingMode::Manual};
-        case MinFilter::LinearMipMapNearest:    return TextureMinificationMode{TextureSamplingMode::Linear, MimpapSamplingMode::Nearest};
-        case MinFilter::LinearMipMapLinear:     return TextureMinificationMode{TextureSamplingMode::Linear, MimpapSamplingMode::Linear};
+        case MinFilter::Nearest:                return TextureMinificationMode{TextureSamplingMode::Nearest, MipmapSamplingMode::Manual};
+        case MinFilter::NearestMipMapNearest:   return TextureMinificationMode{TextureSamplingMode::Nearest, MipmapSamplingMode::Nearest};
+        case MinFilter::NearestMipMapLinear:    return TextureMinificationMode{TextureSamplingMode::Nearest, MipmapSamplingMode::Linear};
+        case MinFilter::Linear:                 return TextureMinificationMode{TextureSamplingMode::Linear, MipmapSamplingMode::Manual};
+        case MinFilter::LinearMipMapNearest:    return TextureMinificationMode{TextureSamplingMode::Linear, MipmapSamplingMode::Nearest};
+        case MinFilter::LinearMipMapLinear:     return TextureMinificationMode{TextureSamplingMode::Linear, MipmapSamplingMode::Linear};
         }
 
         assert(false);

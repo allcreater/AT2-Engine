@@ -210,23 +210,23 @@ namespace AT2::Mappings
     }
 
     constexpr GLint TranslateTextureSamplingModes(TextureSamplingMode samplingMode,
-                                                   MimpapSamplingMode mipmapMode = MimpapSamplingMode::Manual)
+                                                   MipmapSamplingMode mipmapMode = MipmapSamplingMode::Manual)
     {
         switch (samplingMode)
         {
         case TextureSamplingMode::Nearest:
             switch (mipmapMode)
             {
-            case MimpapSamplingMode::Manual:    return GL_NEAREST;
-            case MimpapSamplingMode::Nearest:   return GL_NEAREST_MIPMAP_NEAREST;
-            case MimpapSamplingMode::Linear:    return GL_NEAREST_MIPMAP_LINEAR;
+            case MipmapSamplingMode::Manual:    return GL_NEAREST;
+            case MipmapSamplingMode::Nearest:   return GL_NEAREST_MIPMAP_NEAREST;
+            case MipmapSamplingMode::Linear:    return GL_NEAREST_MIPMAP_LINEAR;
             }
         case TextureSamplingMode::Linear:
             switch (mipmapMode)
             {
-            case MimpapSamplingMode::Manual:    return GL_LINEAR;
-            case MimpapSamplingMode::Nearest:   return GL_LINEAR_MIPMAP_NEAREST;
-            case MimpapSamplingMode::Linear:    return GL_LINEAR_MIPMAP_LINEAR;
+            case MipmapSamplingMode::Manual:    return GL_LINEAR;
+            case MipmapSamplingMode::Nearest:   return GL_LINEAR_MIPMAP_NEAREST;
+            case MipmapSamplingMode::Linear:    return GL_LINEAR_MIPMAP_LINEAR;
             }
         }
 
