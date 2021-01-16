@@ -4,102 +4,98 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/vec_swizzle.hpp>
 
+template <typename Base>
+class MipmappingMixin : public Base
+{
+    unsigned m_levels = 1;
 
-template <size_t N, bool SupportsMipmapping = 1, typename = std::enable_if<N <= 4> >
-class BaseTexture
+public:
+    template<typename ... Args>
+    constexpr MipmappingMixin(unsigned levels, Args... args) :
+        Base(args...), m_levels(levels) {}
+
+    [[nodiscard]] constexpr unsigned getLevels() const noexcept { return m_levels; }
+};
+
+template <typename Base>
+class MultisampleMixin : public Base
+{
+    glm::u8 m_samples = 1;
+    bool m_fixedSampleLocations = false;
+
+public:
+    template <typename... Args>
+    constexpr MultisampleMixin(unsigned samples, bool fixedSampleLocations, Args... args) : Base(args...), m_samples(samples), m_fixedSampleLocations(fixedSampleLocations)
+    {
+    }
+
+    [[nodiscard]] constexpr unsigned getSamples() const noexcept { return m_samples; }
+    [[nodiscard]] constexpr bool getFixedSampleLocations() const noexcept { return m_fixedSampleLocations; }
+};
+
+template <size_t N>
+requires (N <= 4)
+class TextureBase
 {
 public:
     using size_vec = glm::vec<N, glm::u32>;
+    constexpr TextureBase(size_vec size) : size(size) {}
 
-    BaseTexture(size_vec size) : size(size) {}
+    [[nodiscard]] constexpr size_vec getSize() const noexcept { return size; }
 
-    [[nodiscard]] size_vec getSize() const noexcept { return size; }
-
-
-    template <std::enable_if_t<SupportsMipmapping, int> = 0>
-    BaseTexture(size_vec size, unsigned int levels) : size(size), levels(levels) {}
-
-    template <std::enable_if_t<SupportsMipmapping, int> = 0>
-    [[nodiscard]] unsigned int getLevels() const noexcept { return levels; }
-
-    
-
-protected:
-    //void checkSize() const
-    //{
-    //	const int maxLevels = log2(glm::max(size.x, glm::max(size.y, size.z)));
-    //	assert(levels <= maxLevels);
-    //}
-    //
 private:
     size_vec size;
-    std::enable_if_t<SupportsMipmapping, glm::u32> levels = 1;
 };
 
-template <size_t N, typename = std::enable_if<N < 4> >
-struct BaseTextureArray : BaseTexture<N+1>
+
+struct Texture1D : MipmappingMixin<TextureBase<1>>
 {
-    BaseTextureArray(typename BaseTexture<N + 1>::size_vec size, unsigned int levels) : BaseTexture<N+1>(size, levels) {}
+    Texture1D(glm::uvec1 size, unsigned int levels = 1) : MipmappingMixin<TextureBase<1>>(levels, size) {}
 };
 
-struct Texture1D : BaseTexture<1>
+struct Texture1DArray : MipmappingMixin<TextureBase<2>>
 {
-    Texture1D(glm::uvec1 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
+    Texture1DArray(glm::uvec2 size, unsigned int levels = 1) : MipmappingMixin<TextureBase<2>>(levels, size) {}
 };
 
-struct Texture1DArray : BaseTextureArray<1>
+struct Texture2D : MipmappingMixin<TextureBase<2>>
 {
-    Texture1DArray(glm::uvec2 size, unsigned int levels = 1) : BaseTextureArray(size, levels) { }
+    Texture2D(glm::uvec2 size, unsigned int levels = 1) : MipmappingMixin<TextureBase<2>>(levels, size) {}
 };
 
-struct Texture2D : BaseTexture<2>
+struct Texture2DMultisample : MultisampleMixin<TextureBase<2>>
 {
-    Texture2D(glm::uvec2 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
+    Texture2DMultisample(glm::uvec2 size, glm::u8 samples, bool fixedSampleLocations) : MultisampleMixin<TextureBase<2>>(samples, fixedSampleLocations, size) {}
 };
 
-struct Texture2DMultisample : BaseTexture<2>
+struct Texture2DRectangle : MipmappingMixin<TextureBase<2>>
 {
-    Texture2DMultisample(glm::uvec2 size, glm::u8 samples, bool fixedSampleLocations) : BaseTexture(size, 0), samples(samples), fixedSampleLocations(fixedSampleLocations) { }
-    [[nodiscard]] unsigned int getSamples() const noexcept { return samples; }
-    [[nodiscard]] bool getFixedSampleLocations() const noexcept { return fixedSampleLocations; }
-private:
-    glm::u8 samples;
-    bool fixedSampleLocations;
+    Texture2DRectangle(glm::uvec2 size, unsigned int levels = 1) : MipmappingMixin<TextureBase<2>>(levels, size) {}
 };
 
-struct Texture2DRectangle : BaseTexture<2>
+struct Texture2DArray : MipmappingMixin<TextureBase<3>>
 {
-    Texture2DRectangle(glm::uvec2 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
+    Texture2DArray(glm::uvec3 size, unsigned int levels = 1) : MipmappingMixin<TextureBase<3>>(levels, size) {}
 };
 
-struct Texture2DArray : BaseTextureArray<2>
+struct Texture2DMultisampleArray : MultisampleMixin<TextureBase<3>>
 {
-    Texture2DArray(glm::uvec3 size, unsigned int levels = 1) : BaseTextureArray(size, levels) { }
+    Texture2DMultisampleArray(glm::uvec3 size, glm::u8 samples, bool fixedSampleLocations = true) : MultisampleMixin<TextureBase<3>>(samples, fixedSampleLocations, size) {}
 };
 
-struct Texture2DMultisampleArray : BaseTextureArray<2>
+struct TextureCube : MipmappingMixin<TextureBase<2>>
 {
-    Texture2DMultisampleArray(glm::uvec3 size, glm::u8 samples, bool fixedSampleLocations = true) : BaseTextureArray(size, 0), samples(samples), fixedSampleLocations(fixedSampleLocations) { }
-    [[nodiscard]] unsigned int getSamples() const noexcept { return samples; }
-    [[nodiscard]] bool getFixedSampleLocations() const noexcept { return fixedSampleLocations; }
-private:
-    glm::u8 samples;
-    bool fixedSampleLocations;
+    TextureCube(glm::uvec2 size, unsigned int levels = 1) : MipmappingMixin<TextureBase<2>>(levels, size) {}
 };
 
-struct TextureCube : BaseTexture<2>
+struct TextureCubeArray : MipmappingMixin<TextureBase<3>>
 {
-    TextureCube(glm::uvec2 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
+    TextureCubeArray(glm::uvec3 size, unsigned int levels = 1) : MipmappingMixin<TextureBase<3>>(levels, size) {}
 };
 
-struct TextureCubeArray : BaseTextureArray<2>
+struct Texture3D : MipmappingMixin<TextureBase<3>>
 {
-    TextureCubeArray(glm::uvec3 size, unsigned int levels = 1) : BaseTextureArray(size, levels) { }
-};
-
-struct Texture3D : BaseTexture<3>
-{
-    Texture3D(glm::uvec3 size, unsigned int levels = 1) : BaseTexture(size, levels) { }
+    Texture3D(glm::uvec3 size, unsigned int levels = 1) : MipmappingMixin<TextureBase<3>>(levels, size){}
 };
 
 using Texture = std::variant<

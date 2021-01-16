@@ -54,11 +54,11 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m
             },
             [&](const Texture2DMultisample& texture) {
                 m_size = glm::ivec3 {texture.getSize(), 1};
-                glTextureStorage2DMultisample(m_id, static_cast<GLint>(texture.getLevels()), m_internalFormat, m_size.x,
+                       glTextureStorage2DMultisample(m_id, static_cast<GLint>(texture.getSamples()), m_internalFormat, m_size.x,
                                               m_size.y, texture.getFixedSampleLocations());
 
                 SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
-                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear));
             },
             [=](const Texture2DRectangle& texture) {
                 m_size = glm::ivec3 {texture.getSize(), 1};
@@ -80,7 +80,7 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m
                                               m_size.x, m_size.y, m_size.z, texture.getFixedSampleLocations());
 
                 SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
-                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
+                SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear));
             },
             [&](const TextureCube& texture) {
                 m_size = glm::ivec3 {texture.getSize(), 1};

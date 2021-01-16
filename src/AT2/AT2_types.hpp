@@ -186,7 +186,7 @@ namespace AT2
         TextureSamplingMode Magnification = TextureSamplingMode::Linear;
         TextureMinificationMode Minification = {TextureSamplingMode::Linear, MipmapSamplingMode::Linear};
 
-        static constexpr TextureSamplingParams Uniform(TextureSamplingMode samplingMode, bool mipmapping)
+        static constexpr TextureSamplingParams Uniform(TextureSamplingMode samplingMode, bool mipmapping = false)
         {
             if (mipmapping)
                 return {samplingMode, {samplingMode, samplingMode == TextureSamplingMode::Nearest ? MipmapSamplingMode::Nearest : MipmapSamplingMode::Linear}};
