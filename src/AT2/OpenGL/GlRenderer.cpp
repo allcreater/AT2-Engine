@@ -56,8 +56,8 @@ GlRenderer::GlRenderer()
     PrintDiagnosticInfo();
 
     m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
-    m_resourceFactory = std::make_unique<GlResourceFactory>(this);
-    m_stateManager = std::make_unique<GlStateManager>(*m_rendererCapabilities);
+    m_resourceFactory = std::make_unique<GlResourceFactory>(*this);
+    m_stateManager = std::make_unique<GlStateManager>(*this);
 }
 
 void GlRenderer::FinishFrame()

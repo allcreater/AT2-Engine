@@ -4,8 +4,9 @@
 
 using namespace AT2;
 
-StateManager::StateManager(const IRendererCapabilities& rendererCapabilities) :
-    m_bindedTextures(rendererCapabilities.GetMaxNumberOfTextureUnits())
+StateManager::StateManager(IRenderer& renderer)
+    : m_renderer(renderer)
+    , m_bindedTextures(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
 {
 }
 
@@ -50,12 +51,12 @@ void StateManager::BindTextures(const TextureSet& _textures)
 
 void StateManager::BindFramebuffer(const std::shared_ptr<IFrameBuffer>& _framebuffer)
 {
-    assert(_framebuffer);
-
-    if (m_activeFramebuffer && m_activeFramebuffer == _framebuffer)
+    if (m_activeFramebuffer == _framebuffer)
         return;
 
-    _framebuffer->Bind();
+    auto* pFramebuffer = _framebuffer ? _framebuffer.get() : &m_renderer.GetDefaultFramebuffer();
+    pFramebuffer->Bind();
+
     m_activeFramebuffer = _framebuffer;
 }
 

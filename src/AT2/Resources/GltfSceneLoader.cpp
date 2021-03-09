@@ -256,8 +256,8 @@ namespace
                         throw std::logic_error("different animation components on one node");
 
                     const auto interpolationMode = TranslateInterpolationMode(sampler.interpolation);
-                    auto inputChannelData = GetData(sampler.input);
-                    auto outputChannelData = GetData(sampler.output);
+                    const auto inputChannelData = GetData(sampler.input);
+                    const auto outputChannelData = GetData(sampler.output);
 
                     assert(inputChannelData.bindingParams.Type == BufferDataType::Float &&
                            inputChannelData.bindingParams.Count == 1);

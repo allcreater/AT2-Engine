@@ -77,7 +77,7 @@ void main()
 	const float depth = input.elevation - terrainHeight;
 	if (depth > 0.001)
 	{
-		FragColor.rgb = mix(FragColor.rgb, vec3(0.2, 0.3, 1.0), 10.0*depth);
+		FragColor.rgb = mix(FragColor.rgb, vec3(0.2, 0.3, 1.0), clamp(10.0*depth, 0.0, 1.0));
 	}
 
 	const float snowK = smoothstep(snowLine, snowLine + 0.05, input.elevation * smoothstep(0.001, 0.01, pow(normalWS.y, 2.0)));

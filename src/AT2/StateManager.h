@@ -9,7 +9,7 @@ namespace AT2
     class StateManager : public IStateManager
     {
     public:
-        StateManager(const IRendererCapabilities& rendererCapabilities);
+        StateManager(IRenderer& renderer);
 
     public:
         void BindTextures(const TextureSet& _textures) override;
@@ -28,7 +28,12 @@ namespace AT2
             return m_activeIndexBufferType;
         }
 
+    protected:
+        IRenderer& GetRenderer() const { return m_renderer; }
+
     private:
+        IRenderer& m_renderer;
+
         std::vector<std::shared_ptr<const ITexture>> m_bindedTextures;
         std::shared_ptr<IShaderProgram> m_activeShader;
         std::shared_ptr<IFrameBuffer> m_activeFramebuffer;

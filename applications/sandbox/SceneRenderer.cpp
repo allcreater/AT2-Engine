@@ -218,7 +218,7 @@ namespace AT2::Scene
             dirtyFramebuffers = false;
         }
 
-        if (!params.Camera || !params.Scene || !params.TargetFramebuffer)
+        if (!params.Camera || !params.Scene)
             return;
 
         SetupCamera(*params.Camera);
@@ -226,8 +226,10 @@ namespace AT2::Scene
 
         auto& stateManager = renderer->GetStateManager();
 
-        gBufferFBO->Bind();
-        renderer->ClearBuffer(glm::vec4(0.0, 0.0, 1.0, 0.0));
+
+        // G-buffer pass
+        stateManager.BindFramebuffer(gBufferFBO);
+        renderer->ClearBuffer({0.0, 0.0, 1.0, 0.0});
         renderer->ClearDepth(1.0);
 
         stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
@@ -235,24 +237,20 @@ namespace AT2::Scene
         stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
         stateManager.ApplyState(FaceCullMode {false, true});
 
-
-        //objects
         UpdateVisitor updateVisitor {time};
         params.Scene->GetRoot().Accept(updateVisitor);
-
         RenderVisitor rv {*this, *params.Camera};
         params.Scene->GetRoot().Accept(rv);
 
+        // Lighting pass
+        stateManager.BindFramebuffer(postProcessFBO);
+        renderer->ClearBuffer({0.0, 0.0, 0.0, 0.0});
+
         stateManager.ApplyState(PolygonRasterizationMode::Fill);
-
-        postProcessFBO->Bind();
-
-        renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
         stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::One});
         stateManager.ApplyState(DepthState {CompareFunction::Greater, true, false});
         stateManager.ApplyState(FaceCullMode {false, true});
 
-        //lights
         LightRenderVisitor lrv {*this};
         params.Scene->GetRoot().Accept(lrv);
 
@@ -262,9 +260,10 @@ namespace AT2::Scene
         DrawSkyLight(lrv, *params.Camera);
 
 
-        params.TargetFramebuffer->Bind();
+        // Postprocess pass
+        stateManager.BindFramebuffer(params.TargetFramebuffer);
         stateManager.ApplyState(DepthState {CompareFunction::Greater, false, true});
-        renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
+        renderer->ClearBuffer({0.0, 0.0, 0.0, 0.0});
         renderer->ClearDepth(0);
 
         postprocessUniforms->SetUniform("u_tmExposure", params.Exposure);

@@ -15,8 +15,8 @@ namespace AT2
     public:
         NON_COPYABLE_OR_MOVABLE(GlResourceFactory)
 
-        GlResourceFactory(GlRenderer* renderer);
-        ~GlResourceFactory() = default;
+        GlResourceFactory(GlRenderer& renderer);
+        ~GlResourceFactory() override = default;
 
     public:
         std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos,
@@ -31,7 +31,7 @@ namespace AT2
         void ReloadResources(ReloadableGroup group) override;
 
     private:
-        GlRenderer* m_renderer;
+        GlRenderer& m_renderer;
         mutable std::vector<std::weak_ptr<IReloadable>> m_reloadableResourcesList;
     };
 
@@ -41,7 +41,7 @@ namespace AT2
         NON_COPYABLE_OR_MOVABLE(GlRenderer)
 
         GlRenderer();
-        ~GlRenderer() = default;
+        ~GlRenderer() override = default;
 
     public:
         [[nodiscard]] IResourceFactory& GetResourceFactory() const override { return *m_resourceFactory; }

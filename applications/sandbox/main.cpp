@@ -38,7 +38,7 @@ public:
             //spdlog::info("Exit");
         };
 
-        m_window = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, false, true}, {1280, 800});
+        m_window = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, true, true}, {1280, 800});
         m_window->setLabel("Some engine test").setCursorMode(GlfwCursorMode::Disabled);
 
         SetupWindowCallbacks();
@@ -72,7 +72,7 @@ private:
     {
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
             throw std::runtime_error("Failed to initialize GLAD");
-
+        
         m_renderer = std::make_unique<AT2::GlRenderer>();
 
         TerrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles(
@@ -96,10 +96,11 @@ private:
             Noise3Tex->SubImage3D({}, Noise3Tex->GetSize(), 0, AT2::TextureFormats::RGBA8, arr.get());
         }
 
-        GrassTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
-        NormalMapTex =
-            TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        RockTex = TextureLoader::LoadTexture(m_renderer, "resources/jeep1.jpg"); //TODO: return back rock04.dds
+        auto GrassTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
+        auto NormalMapTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
+        auto RockTex = TextureLoader::LoadTexture(m_renderer, "resources/Rock035_2K-JPG/Rock035_2K_Color.jpg");
+        //auto RockNormalTex = TextureLoader::LoadTexture(m_renderer, "resources/Rock035_2K-JPG/Rock035_2K_Normal.jpg");
+        //auto RockDisplacementTex = TextureLoader::LoadTexture(m_renderer, "resources/Rock035_2K-JPG/Rock035_2K_Displacement.jpg");
 
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
         EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
@@ -174,7 +175,7 @@ private:
 
         m_renderParameters.Scene = &Scene;
         m_renderParameters.Camera = &m_camera;
-        m_renderParameters.TargetFramebuffer = &m_renderer->GetDefaultFramebuffer();
+        m_renderParameters.TargetFramebuffer = nullptr;
 
         sr.Initialize(m_renderer);
     }
@@ -287,7 +288,7 @@ private:
     std::shared_ptr<AT2::IRenderer> m_renderer;
 
     std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader;
-    std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, NormalMapTex, RockTex, GrassTex, EnvironmentMapTex;
+    std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, EnvironmentMapTex;
 
     AT2::Camera m_camera;
     AT2::Scene::Scene Scene;

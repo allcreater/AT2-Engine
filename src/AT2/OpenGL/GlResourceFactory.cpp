@@ -118,7 +118,7 @@ constexpr GLint DetermineInternalFormat(ExternalTextureFormat format)
 }
 
 
-GlResourceFactory::GlResourceFactory(GlRenderer* renderer) : m_renderer(renderer) {}
+GlResourceFactory::GlResourceFactory(GlRenderer& renderer) : m_renderer(renderer) {}
 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                           const glm::uvec2& size) const
@@ -137,12 +137,12 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declar
 
 std::shared_ptr<IFrameBuffer> GlResourceFactory::CreateFrameBuffer() const
 {
-    return std::make_shared<GlFrameBuffer>(m_renderer->GetRendererCapabilities());
+    return std::make_shared<GlFrameBuffer>(m_renderer.GetRendererCapabilities());
 }
 
 std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const
 {
-    return std::make_shared<GlVertexArray>(m_renderer->GetRendererCapabilities());
+    return std::make_shared<GlVertexArray>(m_renderer.GetRendererCapabilities());
 }
 
 std::shared_ptr<IVertexBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type) const
