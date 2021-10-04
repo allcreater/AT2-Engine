@@ -164,12 +164,14 @@ namespace AT2::Animation
 
     public:
         bool setCurrentAnimation(size_t animationIndex);
+        const Animation* getCurrentAnimation() const noexcept { return m_activeAnimation; }
 
         Animation& addAnimation(std::string name);
         const std::vector<Animation>& getAnimationsList() const noexcept { return m_animations; }
 
         void updateNode(AnimationNodeId nodeId, Scene::Node& nodeInstance, const ITime& time);
     };
+
 
     class Animation
     {
@@ -253,6 +255,8 @@ namespace AT2::Animation
         {
             return m_animation == animation && getNodeId() == nodeId;
         }
+
+        const AnimationRef& getAnimation() const noexcept { return m_animation; }
 
         void update(Scene::UpdateVisitor& updateVisitor) override;
     };

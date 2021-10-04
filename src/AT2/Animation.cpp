@@ -23,8 +23,8 @@ void AnimationCollection::updateNode(AnimationNodeId nodeId, Node& nodeInstance,
 {
     if (!m_activeAnimation)
         return;
-
-    m_activeAnimation->updateNode(nodeId, nodeInstance, time.getDeltaTime().count());
+    
+    m_activeAnimation->updateNode(nodeId, nodeInstance, time.getTime().count());
 }
 
 

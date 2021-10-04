@@ -228,15 +228,67 @@ namespace
                 }
             }
 
-            SetupAnimations();
+            auto animations = SetupAnimations();
             SetupSkins();
+
+            //animations->setCurrentAnimation(0);
 
             return sceneRoot;
         }
 
     private:
 
-        void SetupAnimations()
+        void SetupAnimationChannel(const fx::gltf::Animation::Sampler& sampler, const fx::gltf::Animation::Channel& channel,
+                                          Animation::AnimationRef animationContainer,  Animation::Animation& animation)
+        {
+            const auto animationNodeId = static_cast<Animation::AnimationNodeId>(channel.target.node);
+            const auto animationComponent =
+                m_nodes.at(channel.target.node)->getOrCreateComponent<Animation::AnimationComponent>(animationContainer, animationNodeId);
+
+            if (!animationComponent.isSameAs(animationContainer, animationNodeId))
+                throw std::logic_error("different animation components on one node");
+
+            const auto interpolationMode = TranslateInterpolationMode(sampler.interpolation);
+            const auto inputChannelData = GetData(sampler.input);
+            const auto outputChannelData = GetData(sampler.output);
+
+            if(inputChannelData.bindingParams.Type != BufferDataType::Float || inputChannelData.bindingParams.Count != 1)
+                throw std::logic_error("unsupported input channel format");
+
+            if (channel.target.path == "translation")
+            {
+                if(outputChannelData.bindingParams.Type != BufferDataType::Float || outputChannelData.bindingParams.Count != 3)
+                    throw std::logic_error("unsupported output channel format");
+
+                animation.addTrack(
+                    animationNodeId, Utils::reinterpret_span_cast<float>(inputChannelData.data),
+                    Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
+                    [](glm::vec3 value, Node& node) { node.GetTransform().setPosition(value); }, interpolationMode);
+            }
+            else if (channel.target.path == "rotation")
+            {
+                if(outputChannelData.bindingParams.Type != BufferDataType::Float || outputChannelData.bindingParams.Count != 4)
+                    throw std::logic_error("unsupported output channel format");
+
+                animation.addTrack(
+                    animationNodeId, Utils::reinterpret_span_cast<float>(inputChannelData.data),
+                    Utils::reinterpret_span_cast<glm::quat>(outputChannelData.data),
+                    [](glm::quat value, Node& node) { node.GetTransform().setRotation(value); }, interpolationMode);
+            }
+            else if (channel.target.path == "scale")
+            {
+                if(outputChannelData.bindingParams.Type != BufferDataType::Float || outputChannelData.bindingParams.Count != 3)
+                    throw std::logic_error("unsupported output channel format");
+
+                animation.addTrack(
+                    animationNodeId, Utils::reinterpret_span_cast<float>(inputChannelData.data),
+                    Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
+                    [](glm::vec3 value, Node& node) { node.GetTransform().setScale(value); }, interpolationMode);
+            }
+            //else if (channel.target.path == "weights")
+        }
+
+        [[nodiscard]] Animation::AnimationRef SetupAnimations()
         {
             auto animationContainer = std::make_shared<AT2::Animation::AnimationCollection>();
             for (const auto& animation: m_document.animations)
@@ -247,68 +299,11 @@ namespace
                 {
                     const auto& sampler = animation.samplers[channel.sampler];
 
-                    const auto animationNodeId = static_cast<Animation::AnimationNodeId>(channel.target.node);
-                    const auto animationComponent =
-                        m_nodes.at(channel.target.node)
-                        ->getOrCreateComponent<Animation::AnimationComponent>(
-                            animationContainer,
-                            animationNodeId);
-                    if (!animationComponent.isSameAs(animationContainer, animationNodeId))
-                        throw std::logic_error("different animation components on one node");
-
-                    const auto interpolationMode = TranslateInterpolationMode(sampler.interpolation);
-                    const auto inputChannelData = GetData(sampler.input);
-                    const auto outputChannelData = GetData(sampler.output);
-
-                    assert(inputChannelData.bindingParams.Type == BufferDataType::Float &&
-                           inputChannelData.bindingParams.Count == 1);
-
-                    if (channel.target.path == "translation")
-                    {
-                        assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
-                               outputChannelData.bindingParams.Count == 3);
-
-                        configuringAnimation.addTrack(
-                            animationNodeId,
-                            Utils::reinterpret_span_cast<float>(inputChannelData.data),
-                            Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
-                            [](glm::vec3 value, Node& node)
-                            {
-                                node.GetTransform().setPosition(value); },
-                            interpolationMode);
-
-                    }
-                    else if (channel.target.path == "rotation")
-                    {
-                        assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
-                               outputChannelData.bindingParams.Count == 4);
-
-                        configuringAnimation.addTrack(
-                            animationNodeId,
-                            Utils::reinterpret_span_cast<float>(inputChannelData.data),
-                            Utils::reinterpret_span_cast<glm::quat>(outputChannelData.data),
-                            [](glm::quat value, Node& node) {
-                            node.GetTransform().setRotation(value); },
-                            interpolationMode);
-
-                    }
-                    else if (channel.target.path == "scale")
-                    {
-                        assert(outputChannelData.bindingParams.Type == BufferDataType::Float &&
-                               outputChannelData.bindingParams.Count == 3);
-
-                        configuringAnimation.addTrack(
-                            animationNodeId,
-                            Utils::reinterpret_span_cast<float>(inputChannelData.data),
-                            Utils::reinterpret_span_cast<glm::vec3>(outputChannelData.data),
-                            [](glm::vec3 value, Node& node) {
-                                node.GetTransform().setScale(value); },
-                            interpolationMode);
-                    }
-                    //else if (channel.target.path == "weights")
-                    
+                    SetupAnimationChannel(sampler, channel, animationContainer, configuringAnimation);
                 }
             }
+
+            return animationContainer;
         }
 
         void SetupSkins()
@@ -497,8 +492,8 @@ namespace
 
         SubmeshGroup LoadMesh(const fx::gltf::Mesh& gltfMesh)
         {
-            const static std::pair<uint32_t, std::string> requiredAttributes[] = {
-                {1u, "POSITION"s}, {2u, "TEXCOORD_0"s}, {3u, "NORMAL"s}, {4u, "JOINTS_0"}, {5u, "WEIGHTS_0"}}; //"TANGENT"
+            const static auto requiredAttributes = std::to_array<std::pair<uint32_t, std::string>>(
+                {{1u, "POSITION"s}, {2u, "TEXCOORD_0"s}, {3u, "NORMAL"s}, {4u, "JOINTS_0"s}, {5u, "WEIGHTS_0"s}}); //"TANGENT"
 
 
             SubmeshGroup result {gltfMesh.primitives.size()};
