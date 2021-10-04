@@ -2,7 +2,7 @@
 
 //#include <ranges>
 #include <algorithm>
-
+#include <chrono>
 
 #include "AT2.h"
 #include "Mesh.h"
@@ -10,6 +10,19 @@
 #include "matrix_stack.h"
 
 //TODO: split into different headers
+
+namespace AT2
+{
+    using Seconds = std::chrono::duration<double>;
+
+    class ITime
+    {
+    public:
+        [[nodiscard]] virtual Seconds getTime() const = 0;
+        [[nodiscard]] virtual Seconds getDeltaTime() const = 0;
+    };
+
+}
 
 namespace AT2::Scene
 {
@@ -149,15 +162,15 @@ namespace AT2::Scene
     class UpdateVisitor : public NodeVisitor
     {
         MatrixStack m_transforms;
-        double m_time = 0.0; //TODO: dt
+        const ITime& m_timeSource;
 
     public:
-        UpdateVisitor(double time) : m_time(time) {}
+        UpdateVisitor(const ITime& timeSource) : m_timeSource(timeSource) {}
 
         [[nodiscard]] const MatrixStack& getTransformsStack() const noexcept { return m_transforms; }
-        [[nodiscard]] const double getTime() const noexcept { return m_time; }
+        [[nodiscard]] const ITime& getTime() const noexcept { return m_timeSource; }
 
-        //TODO: some way to send messages down to hierarchí
+        //TODO: some way to send messages down to hierarchy
 
     protected:
         bool Visit(Node& node) override;
@@ -279,6 +292,7 @@ namespace AT2::Scene
         }
 
         Node* FindNode(std::string_view name, const std::type_info* nodeType = nullptr) const;
+        void Update(const ITime& time);
 
     private:
         NodeRef root = std::make_shared<Node>();

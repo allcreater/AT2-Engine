@@ -170,10 +170,8 @@ namespace AT2::Scene
     }
 
     //TODO: render context class
-    void SceneRenderer::RenderScene(const RenderParameters& params)
+    void SceneRenderer::RenderScene(const RenderParameters& params, const ITime& time)
     {
-        time = params.Time;
-
         if (dirtyFramebuffers)
         {
             auto& rf = renderer->GetResourceFactory();
@@ -221,7 +219,7 @@ namespace AT2::Scene
         if (!params.Camera || !params.Scene)
             return;
 
-        SetupCamera(*params.Camera);
+        SetupCamera(*params.Camera, time);
         renderer->SetViewport(AABB2d {{0, 0}, framebuffer_size});
 
         auto& stateManager = renderer->GetStateManager();
@@ -237,8 +235,6 @@ namespace AT2::Scene
         stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
         stateManager.ApplyState(FaceCullMode {false, true});
 
-        UpdateVisitor updateVisitor {time};
-        params.Scene->GetRoot().Accept(updateVisitor);
         RenderVisitor rv {*this, *params.Camera};
         params.Scene->GetRoot().Accept(rv);
 
@@ -270,7 +266,7 @@ namespace AT2::Scene
         DrawQuad(resources.postprocessShader, *postprocessUniforms);
     }
 
-    void SceneRenderer::SetupCamera(const Camera& camera)
+    void SceneRenderer::SetupCamera(const Camera& camera, const ITime& time)
     {
         if (!cameraUniformBuffer)
         {
@@ -283,7 +279,7 @@ namespace AT2::Scene
         cameraUniformBuffer->SetUniform("u_matProjection", camera.getProjection());
         cameraUniformBuffer->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
         cameraUniformBuffer->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
-        cameraUniformBuffer->SetUniform("u_time", time);
+        cameraUniformBuffer->SetUniform("u_time", time.getTime().count());
         cameraUniformBuffer->Bind(renderer->GetStateManager());
     }
 
@@ -296,7 +292,7 @@ namespace AT2::Scene
         stateManager.BindShader(program);
         uniformBuffer.Bind(stateManager);
         stateManager.BindVertexArray(quadMesh->VertexArray);
-        const auto primitive = quadMesh->SubMeshes.front().Primitives.front();
+        const auto& primitive = quadMesh->SubMeshes.front().Primitives.front();
         renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, 1, primitive.BaseVertex);
     }
 

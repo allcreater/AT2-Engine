@@ -69,3 +69,9 @@ Node* AT2::Scene::Scene::FindNode(std::string_view name, const std::type_info* n
 
     return visitor.GetFoundNode();
 }
+
+void AT2::Scene::Scene::Update(const ITime& time)
+{
+    UpdateVisitor updateVisitor {time};
+    GetRoot().Accept(updateVisitor);
+}

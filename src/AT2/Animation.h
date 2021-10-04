@@ -55,7 +55,7 @@ namespace AT2::Animation
     };
 
 
-    template <typename T, typename ConcreteImplementation, typename F = std::function(void(const T&, Scene::Node&))>
+    template <typename T, typename ConcreteImplementation, typename F = std::function<void(const T&, Scene::Node&)>>
     class Channel : public ChannelBase
     {
         F m_effector;
@@ -84,23 +84,6 @@ namespace AT2::Animation
         }
 
     protected:
-        //const T& getValue(float time) const noexcept
-        //{
-        //    const auto nextFrame = findFramePosition(time);
-        //    const auto frame = (nextFrame > 0) ? nextFrame - 1 : 0;
-        //    const auto t = (nextFrame > frame ) ? (time - m_time[frame]) / (m_time[nextFrame] - m_time[frame]) : 0.0f;
-        //    //glm::cubic()
-        //    switch (InterpolationMode::Step)
-        //    {
-        //    case InterpolationMode::Step: return m_values[frame];
-        //    case InterpolationMode::Linear: return glm::mix(m_values[frame], m_values[nextFrame], t);
-        //    case InterpolationMode::CubicSpline:
-        //        return glm::mix(m_values[frame], m_values[nextFrame], glm::smoothstep(0.0f, 1.0f, t));
-        //    }
-
-        //    return {};
-        //}
-
         [[nodiscard]] size_t findFramePosition(float time) const
         {
             auto pos = std::upper_bound(m_time.begin(), m_time.end(), time);
@@ -163,7 +146,10 @@ namespace AT2::Animation
     };
 
 
-    using AnimationNodeId = uint32_t;
+    enum class AnimationNodeId : uint32_t
+    {
+        None = -1
+    };
 
 
     class Animation;
@@ -182,7 +168,7 @@ namespace AT2::Animation
         Animation& addAnimation(std::string name);
         const std::vector<Animation>& getAnimationsList() const noexcept { return m_animations; }
 
-        void updateNode(AnimationNodeId nodeId, Scene::Node& nodeInstance, double time); //TODO: dt!
+        void updateNode(AnimationNodeId nodeId, Scene::Node& nodeInstance, const ITime& time);
     };
 
     class Animation

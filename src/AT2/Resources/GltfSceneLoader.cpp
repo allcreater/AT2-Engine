@@ -247,8 +247,9 @@ namespace
                 {
                     const auto& sampler = animation.samplers[channel.sampler];
 
-                    const size_t animationNodeId = channel.target.node;
-                    const auto animationComponent = m_nodes.at(animationNodeId)
+                    const auto animationNodeId = static_cast<Animation::AnimationNodeId>(channel.target.node);
+                    const auto animationComponent =
+                        m_nodes.at(channel.target.node)
                         ->getOrCreateComponent<Animation::AnimationComponent>(
                             animationContainer,
                             animationNodeId);

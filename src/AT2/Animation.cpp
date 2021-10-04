@@ -19,16 +19,12 @@ Animation& AnimationCollection::addAnimation(std::string name)
     return m_animations.emplace_back(*this, std::move(name));
 }
 
-void AnimationCollection::updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time)
+void AnimationCollection::updateNode(AnimationNodeId nodeId, Node& nodeInstance, const ITime& time)
 {
-    if (std::rand() <= 10)
-        setCurrentAnimation(std::rand() % m_animations.size());
-
-
     if (!m_activeAnimation)
         return;
 
-    m_activeAnimation->updateNode(nodeId, nodeInstance, time);
+    m_activeAnimation->updateNode(nodeId, nodeInstance, time.getDeltaTime().count());
 }
 
 

@@ -66,7 +66,6 @@ namespace AT2::Scene
         std::shared_ptr<IFrameBuffer> TargetFramebuffer = nullptr;
 
         float Exposure = 1.0f;
-        double Time = 0.0f;
         bool Wireframe = false;
     };
 
@@ -79,13 +78,13 @@ namespace AT2::Scene
 
         void Initialize(std::shared_ptr<IRenderer> renderer);
         void ResizeFramebuffers(glm::ivec2 newSize);
-        void RenderScene(const RenderParameters& params);
+        void RenderScene(const RenderParameters& params, const ITime& time);
 
+    private:
         void DrawPointLights(const LightRenderVisitor& lrv) const;
         void DrawSkyLight(const LightRenderVisitor& lrv, const Camera& camera) const;
 
-    private:
-        void SetupCamera(const Camera& camera);
+        void SetupCamera(const Camera& camera, const ITime& time);
         void DrawQuad(const std::shared_ptr<IShaderProgram>&, const IUniformContainer&) const noexcept;
 
     private:

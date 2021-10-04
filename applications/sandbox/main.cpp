@@ -106,7 +106,7 @@ private:
         EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
 
         auto lightsRoot = std::make_shared<AT2::Scene::Node>("lights"s);
-        Scene.GetRoot().AddChild(lightsRoot);
+        m_scene.GetRoot().AddChild(lightsRoot);
 
         for (size_t i = 0; i < NumActiveLights; ++i)
         {
@@ -122,10 +122,10 @@ private:
         lightsRoot->AddChild(std::make_shared<AT2::Scene::LightNode>(AT2::Scene::SkyLight {glm::vec3(0.0f, 0.707f, 0.707f), EnvironmentMapTex},
                                                                      glm::vec3(500.0f), "SkyLight"));
 
-        //Scene
+        //m_scene
         auto matBallNode = MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
         matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform().asMatrix(), {100, 50, 0}), {100, 100, 100}));
-        Scene.GetRoot().AddChild(std::move(matBallNode));
+        m_scene.GetRoot().AddChild(std::move(matBallNode));
 
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\RiggedFigure\glTF\RiggedFigure.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\CesiumMan\glTF\CesiumMan.gltf)"s);
@@ -140,7 +140,7 @@ private:
             auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
                 m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
             scene->GetTransform().setScale({20.0, 20.0, 20.0}).setPosition({1000, 300, 0});
-            Scene.GetRoot().AddChild(scene);
+            m_scene.GetRoot().AddChild(scene);
         }
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
@@ -148,14 +148,14 @@ private:
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf)"s);
 
         scene->GetTransform().setPosition({0, -20.0, 0});
-        Scene.GetRoot().AddChild(scene);
+        m_scene.GetRoot().AddChild(scene);
 
         AT2::Scene::FuncNodeVisitor shaderSetter {[&](AT2::Scene::Node& node) {
             for (auto* meshComponent : node.getComponents<AT2::Scene::MeshComponent>())
                 meshComponent->getMesh()->Shader = MeshShader;
             return true;
         }};
-        Scene.GetRoot().Accept(shaderSetter);
+        m_scene.GetRoot().Accept(shaderSetter);
 
 
         auto terrainNode = AT2::Utils::MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
@@ -171,9 +171,9 @@ private:
             uniformStorage.SetUniform("u_texGrass", GrassTex);
             uniformStorage.SetUniform("u_texRock", RockTex);
         }
-        Scene.GetRoot().AddChild(std::move(terrainNode));
+        m_scene.GetRoot().AddChild(std::move(terrainNode));
 
-        m_renderParameters.Scene = &Scene;
+        m_renderParameters.Scene = &m_scene;
         m_renderParameters.Camera = &m_camera;
         m_renderParameters.TargetFramebuffer = nullptr;
 
@@ -191,12 +191,11 @@ private:
 
         AT2::GlTimerQuery glTimer;
         glTimer.Begin();
-        sr.RenderScene(m_renderParameters);
+        sr.RenderScene(m_renderParameters, m_time);
         glTimer.End();
 
         const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
-        if (floor(m_renderParameters.Time) < floor(m_renderParameters.Time + dt))
-            AT2::Log::Debug() << "Frame time: " << frameTime << std::endl;
+        m_window->setLabel("Frame time = " + std::to_string(frameTime));
 
         m_renderer->FinishFrame();
     }
@@ -215,7 +214,7 @@ private:
                 NeedResourceReload = true;
             else if (key == GLFW_KEY_L)
             {
-                if (auto* skyLight = Scene.FindNode<AT2::Scene::LightNode>("SkyLight"sv))
+                if (auto* skyLight = m_scene.FindNode<AT2::Scene::LightNode>("SkyLight"sv))
                     skyLight->SetEnabled(!skyLight->GetEnabled());
             }
         };
@@ -245,7 +244,8 @@ private:
         m_window->ClosingCallback = [&]() { m_renderer->Shutdown(); };
 
         m_window->UpdateCallback = [&](const double dt) {
-            m_renderParameters.Time += dt;
+            m_time.Update(dt);
+            m_scene.Update(m_time);
 
             if (m_window->isKeyDown(GLFW_KEY_LEFT_SHIFT))
                 acceleration = std::min(acceleration + static_cast<float>(dt), 200.0f);
@@ -274,7 +274,7 @@ private:
 
             if (MovingLightMode)
             {
-                if (auto* light = Scene.FindNode<AT2::Scene::LightNode>("PointLight[0]"sv))
+                if (auto* light = m_scene.FindNode<AT2::Scene::LightNode>("PointLight[0]"sv))
                     light->SetTransform(m_camera.getViewInverse());
             }
         };
@@ -284,6 +284,23 @@ private:
     }
 
 private:
+    //TODO: move out of App class
+    class Time : public AT2::ITime
+    {
+        using Clock = std::chrono::steady_clock;
+        AT2::Seconds m_timeFromStart {}, m_deltaTime {};
+
+    public:
+        void Update(double dt)
+        {
+            m_deltaTime = AT2::Seconds {dt};
+            m_timeFromStart += m_deltaTime;
+        }
+
+        AT2::Seconds getTime() const override { return m_timeFromStart; }
+        AT2::Seconds getDeltaTime() const override { return m_deltaTime; }
+    } m_time;
+
     std::shared_ptr<GlfwWindow> m_window;
     std::shared_ptr<AT2::IRenderer> m_renderer;
 
@@ -291,7 +308,7 @@ private:
     std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, EnvironmentMapTex;
 
     AT2::Camera m_camera;
-    AT2::Scene::Scene Scene;
+    AT2::Scene::Scene m_scene;
     AT2::Scene::SceneRenderer sr;
 
     AT2::Scene::RenderParameters m_renderParameters;
