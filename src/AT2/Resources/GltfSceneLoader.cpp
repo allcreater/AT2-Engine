@@ -231,7 +231,8 @@ namespace
             auto animations = SetupAnimations();
             SetupSkins();
 
-            //animations->setCurrentAnimation(0);
+            //const auto animationComponent = sceneRoot->getOrCreateComponent<Animation::AnimationComponent>(animations, Animation::AnimationNodeId::None);
+            animations->setCurrentAnimation(0);
 
             return sceneRoot;
         }
@@ -313,7 +314,7 @@ namespace
                 const auto& skin = m_document.skins[skinIndex];
 
                 for (size_t boneIndex = 0; auto boneNode : skin.joints)
-                    m_nodes[boneNode]->getOrCreateComponent<Animation::BoneComponent>(boneIndex++, m_skeletonInstances[skinIndex]);
+                    m_nodes[boneNode]->getOrCreateComponent<AT2::Scene::BoneComponent>(boneIndex++, m_skeletonInstances[skinIndex]);
             }
         }
 

@@ -280,6 +280,25 @@ namespace AT2::Scene
 
     };
 
+
+    class BoneComponent : public Scene::NodeComponent
+    {
+        size_t m_boneIndex;
+        Scene::MeshComponent::SkeletonInstanceRef m_skeletonInstance;
+
+    public:
+        BoneComponent(size_t boneIndex, Scene::MeshComponent::SkeletonInstanceRef skeletonInstanceRef) :
+            m_boneIndex(boneIndex), m_skeletonInstance(std::move(skeletonInstanceRef))
+        {
+        }
+
+        void update(Scene::UpdateVisitor& updateVisitor) override
+        {
+            m_skeletonInstance->calculateBoneTransform(m_boneIndex, updateVisitor.getTransformsStack().getModelView());
+        }
+    };
+
+
     class Scene
     {
     public:
