@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "AT2/Animation.h"
+#include <AT2/Scene/Animation.h>
 
 namespace AT2::Scene
 {

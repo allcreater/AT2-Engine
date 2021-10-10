@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AT2/Scene.h>
+#include <AT2/Scene/Scene.h>
 #include <AT2/matrix_stack.h>
 
 namespace AT2::Scene

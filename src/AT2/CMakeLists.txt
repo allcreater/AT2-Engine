@@ -17,6 +17,9 @@ add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/src/")
+
+
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CONAN_LIBS})
 
 if(DEVIL_FOUND)
@@ -24,5 +27,7 @@ if(DEVIL_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${IL_LIBRARIES} ${ILU_LIBRARIES}) 
 endif()
 
+
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}/fx-gltf/include/")
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

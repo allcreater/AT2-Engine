@@ -1,5 +1,5 @@
 #include "procedural_meshes.h"
-#include <AT2/Scene.h>
+#include <AT2/Scene/Scene.h>
 
 namespace AT2::Utils
 {
