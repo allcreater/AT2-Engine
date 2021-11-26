@@ -1,10 +1,5 @@
 cmake_minimum_required (VERSION 3.7.1 FATAL_ERROR)
 
-add_definitions(
-    -DUSE_ASSIMP
-    -DGLFW_INCLUDE_NONE
-)
-
 project (AT2_Engine)
 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES
@@ -15,6 +10,15 @@ file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES
 
 add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
+)
+
+option(USE_ASSIMP "Use ASSIMP library" ON)
+option(USE_PLATFORM_HACKS "speed-up execution in exchange for some non-portable code" OFF)
+
+
+target_compile_definitions( ${PROJECT_NAME} PRIVATE
+    $<$<BOOL:${USE_ASSIMP}>:USE_ASSIMP>
+    $<$<BOOL:${USE_PLATFORM_HACKS}>:USE_PLATFORM_HACKS>
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/src/")

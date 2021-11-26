@@ -1,4 +1,5 @@
 #include <glm/gtx/spline.hpp>
+#include <variant>
 
 namespace AT2::Animation
 {
@@ -15,17 +16,16 @@ namespace AT2::Animation
         return x - range * floor(biased_x / range);
     }
 
+    //TODO: unit tests
+    using Time = float;
 
     class ChannelBase
     {
     public:
         virtual ~ChannelBase() = default;
 
-        virtual void performUpdate(Scene::Node& node, float t) const = 0;
+        virtual void performUpdate(Scene::Node& node, Time t) const = 0;
     };
-
-    //TODO: unit tests
-    using Time = float;
 
     template <typename T, typename ConcreteImplementation, typename F = std::function<void(const T&, Scene::Node&)>>
     class Channel : public ChannelBase

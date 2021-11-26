@@ -1,7 +1,7 @@
 //This file is something like sandbox. It is just functionality test, not example.
 
 #include <AT2/camera.h>
-#include <AT2/Scene.h>
+#include <AT2/Scene/Scene.h>
 #include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
 #include <AT2/OpenGL/GLFW/glfw_application.h>
@@ -87,7 +87,7 @@ private:
         Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, AT2::TextureFormats::RGBA8);
         {
             const auto arr = std::make_unique<GLubyte[]>(Noise3Tex->GetDataLength());
-
+            
             std::generate(std::execution::par_unseq, arr.get(), arr.get() + Noise3Tex->GetDataLength(),
                           [rng = std::mt19937{std::random_device {}()}]() mutable {
                               return std::uniform_int_distribution {0, 255}(rng);

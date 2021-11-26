@@ -10,6 +10,10 @@
 #include <fstream>
 #include <filesystem>
 
+#if !defined(USE_DEVIL) && defined(USE_PLATFORM_HACKS)
+#include <cstdio>
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -51,12 +55,29 @@ namespace
 
 TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, const std::filesystem::path& path)
 {
+#ifdef USE_PLATFORM_HACKS
+    // not so gracefully as with iostream, but much faster under debugger
+#if defined(WIN32) || defined(_WIN32)
+    if (std::unique_ptr<FILE, decltype(&fclose)> file {_wfopen(path.native().c_str(), L"rb"), fclose})
+#else
+    if (std::unique_ptr<FILE, decltype(&fclose)> file {std::fopen(reinterpret_cast<const char*>(path.c_str()), "rb"), fclose})
+#endif
+    {
+        std::vector<std::byte> data { static_cast<size_t>(file_size(path))};
+        fread(data.data(), 1, data.size(), file.get());
+
+        return LoadTexture(renderer, data);
+    }
+
+    return nullptr;
+#else
     std::basic_ifstream<std::byte> stream {path, std::ios::binary};
     std::vector<std::byte> data {static_cast<size_t>(file_size(path))};
     stream.read(data.data(), data.size());
 
     //std::vector<std::byte> data{std::istreambuf_iterator<std::byte>(file), {}};
     return LoadTexture(renderer, data);
+#endif
 }
 
 TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, std::span<const std::byte> rawData)

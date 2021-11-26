@@ -6,6 +6,7 @@
 #include <any>
 #include <algorithm>
 #include <glm/gtx/spline.hpp>
+#include <unordered_map>
 
 namespace AT2::Animation
 {
