@@ -4,7 +4,7 @@
 #include <utility>
 
 
-#include "../OpenGL/GLFW/callback_types.h" //TODO: detach type MousePos from GLFW
+#include "../Platform/Common.h"
 #include "UI.h"
 
 namespace AT2::UI

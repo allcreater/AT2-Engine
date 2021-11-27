@@ -1,5 +1,5 @@
 #include <AT2/OpenGL/GlRenderer.h>
-#include <AT2/OpenGL/GLFW/glfw_application.h>
+#include <AT2/Platform/GLFW/glfw_application.h>
 
 #include "UIHandler.h"
 

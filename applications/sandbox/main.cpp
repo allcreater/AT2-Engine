@@ -4,8 +4,8 @@
 #include <AT2/Scene/Scene.h>
 #include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
-#include <AT2/OpenGL/GLFW/glfw_application.h>
-#include <AT2/OpenGL/GLFW/glfw_window.h>
+#include <AT2/Platform/GLFW/glfw_application.h>
+#include <AT2/Platform/GLFW/glfw_window.h>
 #include <AT2/Resources/MeshLoader.h>
 #include <AT2/Resources/GltfSceneLoader.h>
 #include <AT2/Resources/TextureLoader.h>
