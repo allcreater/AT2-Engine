@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <mutex>
+#include <chrono>
 
 #include <GLFW/glfw3.h>
 
@@ -9,6 +10,8 @@
 
 namespace AT2::GLFW
 {
+
+    using Seconds = std::chrono::duration<double>;
 
     enum class GlfwCursorMode
     {
@@ -57,7 +60,7 @@ namespace AT2::GLFW
         GlfwWindow& setCursorMode(GlfwCursorMode cursorMode);
 
         ///@thread_safety safe
-        GlfwWindow& setLabel(const std::string& label);
+        GlfwWindow& setLabel(std::string label);
         const std::string& getLabel() const { return window_label; }
 
         ///@thread_safety safe
@@ -80,8 +83,8 @@ namespace AT2::GLFW
         //Render context available only at InitializeCallback and RenderCallback
 
         std::function<void()> InitializeCallback {};
-        std::function<void(double)> UpdateCallback {};
-        std::function<void(double)> RenderCallback {};
+        std::function<void(Seconds)> UpdateCallback {};
+        std::function<void(Seconds)> RenderCallback {};
         std::function<void()> RefreshingCallback {};
 
         std::function<void(int)> KeyDownCallback {};
@@ -101,12 +104,12 @@ namespace AT2::GLFW
             if (InitializeCallback)
                 InitializeCallback();
         }
-        void OnUpdate(double deltaTime) const
+        void OnUpdate(Seconds deltaTime) const
         {
             if (UpdateCallback)
                 UpdateCallback(deltaTime);
         }
-        void OnRender(double deltaTime) const
+        void OnRender(Seconds deltaTime) const
         {
             if (RenderCallback)
                 RenderCallback(deltaTime);
@@ -202,7 +205,7 @@ namespace AT2::GLFW
 
         mutable std::mutex mutex;
 
-        double previous_render_time {0.0};
+        Seconds previous_render_time {0.0};
     };
 
 } // namespace AT2::GLFW

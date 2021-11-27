@@ -11,19 +11,6 @@
 
 //TODO: split into different headers
 
-namespace AT2
-{
-    using Seconds = std::chrono::duration<double>;
-
-    class ITime
-    {
-    public:
-        [[nodiscard]] virtual Seconds getTime() const = 0;
-        [[nodiscard]] virtual Seconds getDeltaTime() const = 0;
-    };
-
-}
-
 namespace AT2::Scene
 {
     class Node;

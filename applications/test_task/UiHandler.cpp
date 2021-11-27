@@ -38,7 +38,7 @@ static std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_
 
 struct PlotCurveSwitchingAnimation : public IAnimation
 {
-    PlotCurveSwitchingAnimation(float duration, std::weak_ptr<Plot> plotNode, std::string_view hidingCurveName,
+    PlotCurveSwitchingAnimation(AT2::Seconds duration, std::weak_ptr<Plot> plotNode, std::string_view hidingCurveName,
                                 std::string_view appearingCurveName) :
         m_plotNode(std::move(plotNode)),
         m_Duration(duration),
@@ -47,7 +47,7 @@ struct PlotCurveSwitchingAnimation : public IAnimation
     {
     }
 
-    void Animate(double dt) override
+    void Animate(AT2::Seconds dt) override
     {
         const auto t = m_elapsedTime / m_Duration;
 
@@ -69,7 +69,7 @@ struct PlotCurveSwitchingAnimation : public IAnimation
 
 private:
     std::weak_ptr<AT2::UI::Plot> m_plotNode;
-    double m_Duration, m_elapsedTime = 0.0;
+    AT2::Seconds m_Duration, m_elapsedTime {0.0f};
     std::string m_hidingCurveName, m_appearingCurveName;
 };
 
@@ -166,14 +166,12 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
     m_uiInputHandler->EventClicked = [&](const std::shared_ptr<Node>& node) {
         if (node->GetName() == "ButtonDatasetOne" && m_plotNode->GetOrCreateCurve(DataSet2).GetColor().a >= 0.95f)
         {
-            m_animationsList.push_back(
-                std::make_unique<PlotCurveSwitchingAnimation>(1.0f, m_plotNode, DataSet2, DataSet1));
+            m_animationsList.push_back(std::make_unique<PlotCurveSwitchingAnimation>(AT2::Seconds {1.0f}, m_plotNode, DataSet2, DataSet1));
             return true;
         }
         else if (node->GetName() == "ButtonDatasetTwo" && m_plotNode->GetOrCreateCurve(DataSet1).GetColor().a >= 0.95f)
         {
-            m_animationsList.push_back(
-                std::make_unique<PlotCurveSwitchingAnimation>(1.0f, m_plotNode, DataSet1, DataSet2));
+            m_animationsList.push_back(std::make_unique<PlotCurveSwitchingAnimation>(AT2::Seconds {1.0f}, m_plotNode, DataSet1, DataSet2));
             return true;
         }
         return false;
@@ -221,7 +219,7 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
     };
 }
 
-void UiHub::Render(std::shared_ptr<IRenderer>& renderer, double dt)
+void UiHub::Render(std::shared_ptr<IRenderer>& renderer, AT2::Seconds dt)
 {
     for (auto& animation : m_animationsList)
         animation->Animate(dt);

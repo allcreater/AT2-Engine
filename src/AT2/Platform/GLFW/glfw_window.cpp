@@ -77,7 +77,7 @@ void GlfwWindow::UpdateAndRender()
             OnResize(getSize());
         }
 
-        const double currentTime = glfwGetTime();
+        const auto currentTime = Seconds { glfwGetTime() };
         OnUpdate(currentTime - previous_render_time);
         if (getSize().x > 0 && getSize().y > 0)
             OnRender(currentTime - previous_render_time);
@@ -88,11 +88,11 @@ void GlfwWindow::UpdateAndRender()
     glfwSwapBuffers(window_impl);
 }
 
-GlfwWindow& GlfwWindow::setLabel(const std::string& label)
+GlfwWindow& GlfwWindow::setLabel( std::string label)
 {
     {
         std::lock_guard lock {mutex};
-        window_label = label;
+        window_label = std::move(label);
     }
 
     GlfwApplication::get().postAction([=] {

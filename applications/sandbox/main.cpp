@@ -181,7 +181,7 @@ private:
         sr.Initialize(m_renderer);
     }
 
-    void OnRender(double dt)
+    void OnRender(AT2::Seconds dt)
     {
         if (NeedResourceReload)
         {
@@ -244,16 +244,16 @@ private:
 
         m_window->ClosingCallback = [&]() { m_renderer->Shutdown(); };
 
-        m_window->UpdateCallback = [&](const double dt) {
+        m_window->UpdateCallback = [&](const AT2::Seconds dt) {
             m_time.Update(dt);
             m_scene.Update(m_time);
 
             if (m_window->isKeyDown(GLFW_KEY_LEFT_SHIFT))
-                acceleration = std::min(acceleration + static_cast<float>(dt), 200.0f);
+                acceleration = std::min(acceleration + static_cast<float>(dt.count()), 200.0f);
             else
                 acceleration *= 0.98f;
 
-            const float moveSpeed = static_cast<float>(dt) * 50.0f + acceleration;
+            const float moveSpeed = static_cast<float>(dt.count()) * 50.0f + acceleration;
             if (m_window->isKeyDown(GLFW_KEY_W))
                 m_camera.setPosition(m_camera.getPosition() + m_camera.getForward() * moveSpeed);
             if (m_window->isKeyDown(GLFW_KEY_S))
@@ -266,7 +266,7 @@ private:
             if (m_window->isKeyDown(GLFW_KEY_ESCAPE))
                 m_window->setCloseFlag(true);
 
-			const float expositionSpeed = 1 + 2 * dt;
+			const float expositionSpeed = 1 + 2 * dt.count();
             if (m_window->isKeyDown(GLFW_KEY_EQUAL))
                 m_renderParameters.Exposure *= expositionSpeed;
             if (m_window->isKeyDown(GLFW_KEY_MINUS))
@@ -292,9 +292,9 @@ private:
         AT2::Seconds m_timeFromStart {}, m_deltaTime {};
 
     public:
-        void Update(double dt)
+        void Update(AT2::Seconds dt)
         {
-            m_deltaTime = AT2::Seconds {dt};
+            m_deltaTime = dt;
             m_timeFromStart += m_deltaTime;
         }
 

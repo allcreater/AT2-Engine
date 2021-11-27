@@ -33,7 +33,7 @@ namespace AT2::UI
 
 struct IAnimation
 {
-    virtual void Animate(double dt) = 0;
+    virtual void Animate(AT2::Seconds dt) = 0;
     virtual bool IsFinished() = 0;
 
     virtual ~IAnimation() = default;
@@ -46,7 +46,7 @@ struct UiHub
     AT2::UI::UiInputHandler& GetInputHandler() { return *m_uiInputHandler; }
 
     void Init(std::shared_ptr<AT2::IRenderer>& renderer);
-    void Render(std::shared_ptr<AT2::IRenderer>& renderer, double dt);
+    void Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::Seconds dt);
     void Resize(const glm::ivec2& newSize);
 
 private:

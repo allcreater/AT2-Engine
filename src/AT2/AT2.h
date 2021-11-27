@@ -17,6 +17,7 @@
 #include <string_view>
 #include <variant>
 #include <vector>
+#include <chrono>
 
 #include "log.h"
 #include "utils.hpp"
@@ -51,6 +52,15 @@ namespace AT2
     class IStateManager;
     class IResourceFactory;
     class IRenderer;
+
+    using Seconds = std::chrono::duration<double>;
+
+    class ITime
+    {
+    public:
+        [[nodiscard]] virtual Seconds getTime() const = 0;
+        [[nodiscard]] virtual Seconds getDeltaTime() const = 0;
+    };
 
     enum class ReloadableGroup
     {

@@ -13,7 +13,6 @@
 
 namespace AT2::GLFW
 {
-
     class GlfwException : public std::runtime_error
     {
     public:
