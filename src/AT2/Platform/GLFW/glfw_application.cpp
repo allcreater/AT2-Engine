@@ -2,6 +2,7 @@
 
 //#include <GLFW/glfw3.h>
 
+using namespace AT2::GLFW;
 
 GlfwApplication& GlfwApplication::get()
 {

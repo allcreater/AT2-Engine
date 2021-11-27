@@ -1,3 +1,3 @@
 #pragma once
 
-#include "GLFW/callback_types.h"
+#include "callback_types.h"

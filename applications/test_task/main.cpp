@@ -8,6 +8,7 @@ class App
 public:
     App()
     {
+        using namespace AT2::GLFW;
         GlfwApplication::get().OnNoActiveWindows = [] {
             GlfwApplication::get().stop();
             //spdlog::info("Exit");
@@ -21,13 +22,15 @@ public:
         SetupWindowCallbacks();
     }
 
-    void Run() { GlfwApplication::get().run(); }
+    void Run() { 
+        AT2::GLFW::GlfwApplication::get().run(); 
+    }
 
 private:
     void OnInitialize()
     {
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-            throw GlfwException("Failed to initialize GLAD"); //yes, it's strange to throw a GLAD exception :3
+            throw std::runtime_error { "Failed to initialize GLAD" };
 
         m_renderer = std::make_unique<AT2::GlRenderer>();
 
@@ -58,8 +61,6 @@ private:
 
     void SetupWindowCallbacks()
     {
-
-
         m_window->KeyDownCallback = [&](int key) {
             std::cout << "Key " << key << " down" << std::endl;
 
@@ -97,7 +98,7 @@ private:
             m_uiHub->GetInputHandler().OnMouseUp(key);
         };
 
-        m_window->MouseMoveCallback = [&](const MousePos& pos) { m_uiHub->GetInputHandler().OnMouseMove(pos); };
+        m_window->MouseMoveCallback = [&](const AT2::MousePos& pos) { m_uiHub->GetInputHandler().OnMouseMove(pos); };
 
         m_window->MouseScrollCallback = [&](const glm::vec2& scrollDir) {
             std::cout << "Scroll " << scrollDir.y << std::endl;
@@ -113,7 +114,7 @@ private:
     }
 
 private:
-    std::shared_ptr<GlfwWindow> m_window;
+    std::shared_ptr<AT2::GLFW::GlfwWindow> m_window;
     std::shared_ptr<AT2::IRenderer> m_renderer;
 
     std::unique_ptr<UiHub> m_uiHub;

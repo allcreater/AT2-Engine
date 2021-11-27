@@ -4,6 +4,7 @@
 
 #include "glfw_application.h"
 
+using namespace AT2::GLFW;
 
 GlfwWindow* GlfwWindow::FromNativeWindow(const GLFWwindow* window)
 {

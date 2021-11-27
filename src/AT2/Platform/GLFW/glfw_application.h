@@ -11,52 +11,57 @@
 
 #include "glfw_window.h"
 
-class GlfwException : public std::runtime_error
+namespace AT2::GLFW
 {
-public:
-    GlfwException(const char* reason) : std::runtime_error(reason) {}
-};
 
-
-class GlfwApplication
-{
-public:
-    static GlfwApplication& get();
-
-    GlfwApplication(const GlfwApplication&) = delete;
-    GlfwApplication(GlfwApplication&&) = delete;
-    GlfwApplication& operator=(const GlfwApplication&) = delete;
-    GlfwApplication& operator=(GlfwApplication&&) = delete;
-
-    std::function<void()> OnNoActiveWindows {};
-
-    //thread-safe
-    std::shared_ptr<GlfwWindow> createWindow(GlfwContextParameters, glm::ivec2 size);
-    std::shared_ptr<GlfwWindow> createFullscreenWindow(GlfwContextParameters);
-
-    //thread-safe
-    template <typename T>
-    std::future<void> postAction(T&& func)
+    class GlfwException : public std::runtime_error
     {
-        std::lock_guard lock {tasks_mutex};
-        tasks.emplace(std::forward<T>(func));
+    public:
+        GlfwException(const char* reason) : std::runtime_error(reason) {}
+    };
 
-        return tasks.back().get_future();
-    }
 
-    void run();
-    void stop();
+    class GlfwApplication
+    {
+    public:
+        static GlfwApplication& get();
 
-private:
-    GlfwApplication();
-    ~GlfwApplication();
+        GlfwApplication(const GlfwApplication&) = delete;
+        GlfwApplication(GlfwApplication&&) = delete;
+        GlfwApplication& operator=(const GlfwApplication&) = delete;
+        GlfwApplication& operator=(GlfwApplication&&) = delete;
 
-    std::shared_ptr<GlfwWindow> createWindowInternal(GlfwContextParameters, glm::ivec2 size, GLFWmonitor* monitor);
+        std::function<void()> OnNoActiveWindows {};
 
-private:
-    std::atomic<bool> runned {false};
-    std::mutex windows_registry_mutex, tasks_mutex;
-    std::vector<std::shared_ptr<GlfwWindow>> windows_registry;
+        //thread-safe
+        std::shared_ptr<GlfwWindow> createWindow(GlfwContextParameters, glm::ivec2 size);
+        std::shared_ptr<GlfwWindow> createFullscreenWindow(GlfwContextParameters);
 
-    std::queue<std::packaged_task<void()>> tasks;
-};
+        //thread-safe
+        template <typename T>
+        std::future<void> postAction(T&& func)
+        {
+            std::lock_guard lock {tasks_mutex};
+            tasks.emplace(std::forward<T>(func));
+
+            return tasks.back().get_future();
+        }
+
+        void run();
+        void stop();
+
+    private:
+        GlfwApplication();
+        ~GlfwApplication();
+
+        std::shared_ptr<GlfwWindow> createWindowInternal(GlfwContextParameters, glm::ivec2 size, GLFWmonitor* monitor);
+
+    private:
+        std::atomic<bool> runned {false};
+        std::mutex windows_registry_mutex, tasks_mutex;
+        std::vector<std::shared_ptr<GlfwWindow>> windows_registry;
+
+        std::queue<std::packaged_task<void()>> tasks;
+    };
+
+} // namespace AT2::GLFW

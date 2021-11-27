@@ -33,6 +33,7 @@ class App
 public:
     App()
     {
+        using namespace AT2::GLFW;
         GlfwApplication::get().OnNoActiveWindows = [] {
             GlfwApplication::get().stop();
             //spdlog::info("Exit");
@@ -44,7 +45,7 @@ public:
         SetupWindowCallbacks();
     }
 
-    void Run() { GlfwApplication::get().run(); }
+    void Run() { AT2::GLFW::GlfwApplication::get().run(); }
 
 private:
     std::shared_ptr<AT2::ITexture> ComputeHeightmap(glm::uvec2 resolution) const
@@ -230,7 +231,7 @@ private:
 
         m_window->MouseUpCallback = [](int key) { std::cout << "Mouse " << key << std::endl; };
 
-        m_window->MouseMoveCallback = [&](const MousePos& pos) {
+        m_window->MouseMoveCallback = [&](const AT2::MousePos& pos) {
             const auto relativePos = pos.getPos() / static_cast<glm::dvec2>(m_window->getSize());
 
             m_camera.setRotation(glm::angleAxis(glm::mix(-glm::pi<float>(), glm::pi<float>(), relativePos.x),
@@ -301,7 +302,7 @@ private:
         AT2::Seconds getDeltaTime() const override { return m_deltaTime; }
     } m_time;
 
-    std::shared_ptr<GlfwWindow> m_window;
+    std::shared_ptr<AT2::GLFW::GlfwWindow> m_window;
     std::shared_ptr<AT2::IRenderer> m_renderer;
 
     std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader;
