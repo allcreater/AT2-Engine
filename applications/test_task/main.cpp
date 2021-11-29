@@ -1,43 +1,24 @@
-#include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/Platform/GLFW/glfw_application.h>
+#include <AT2/Platform/Application.h>
 
 #include "UIHandler.h"
 
-class App
+class UITest : public AT2::GraphicsContext
 {
 public:
-    App()
-    {
-        using namespace AT2::GLFW;
-        GlfwApplication::get().OnNoActiveWindows = [] {
-            GlfwApplication::get().stop();
-            //spdlog::info("Exit");
-        };
-
-
-        m_window = GlfwApplication::get().createWindow({}, {1024, 768});
-
-        m_window->setLabel("Graph control demo").setCursorMode(GlfwCursorMode::Normal);
-
-        SetupWindowCallbacks();
-    }
-
-    void Run() { 
-        AT2::GLFW::GlfwApplication::get().run(); 
-    }
+    UITest() = default;
 
 private:
-    void OnInitialize()
+    void OnInitialized() override
     {
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-            throw std::runtime_error { "Failed to initialize GLAD" };
-
-        m_renderer = std::make_unique<AT2::GlRenderer>();
+        getWindow().setLabel("Graph control demo").setCursorMode(CursorMode::Normal);
 
         m_uiHub = std::make_unique<UiHub>();
-        m_uiHub->Init(m_renderer);
-        m_uiHub->Resize(m_window->getSize());
+        m_uiHub->Init(getRenderer());
+        m_uiHub->Resize(getWindow().getSize());
 
+
+        getWindow().setVSyncInterval(1);
         //Init
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -46,76 +27,72 @@ private:
         glCullFace(GL_BACK);
     }
 
-    void OnRender(const AT2::Seconds dt)
+    void OnUpdate(const AT2::Seconds dt) override 
     {
-        m_renderer->SetViewport(AABB2d {{0, 0}, m_window->getSize()});
-        m_renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
-        m_renderer->ClearDepth(0);
-
-        m_uiHub->Render(m_renderer, dt);
-
-        m_renderer->FinishFrame();
     }
 
-    void OnKeyPress(int) {}
-
-    void SetupWindowCallbacks()
+    void OnRender(const AT2::Seconds dt) override
     {
-        m_window->KeyDownCallback = [&](int key) {
-            std::cout << "Key " << key << " down" << std::endl;
+        getRenderer()->SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
+        getRenderer()->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
+        getRenderer()->ClearDepth(0);
 
-            switch (key)
-            {
-            case GLFW_KEY_R:
-            {
-                m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
-            }
-            break;
+        m_uiHub->Render(getRenderer(), dt);
 
-            case GLFW_KEY_ESCAPE:
-            {
-                m_window->setCloseFlag(true);
-            }
-            break;
-            }
-
-
-            OnKeyPress(key);
-        };
-
-        m_window->KeyRepeatCallback = [&](int key) { OnKeyPress(key); };
-
-        m_window->ResizeCallback = [&](const glm::ivec2& newSize) {
-            std::cout << "Size " << newSize.x << "x" << newSize.y << std::endl;
-            if (m_uiHub)
-                m_uiHub->Resize(newSize);
-        };
-
-        m_window->MouseDownCallback = [&](int key) { m_uiHub->GetInputHandler().OnMouseDown(key); };
-
-        m_window->MouseUpCallback = [&](int key) {
-            std::cout << "Mouse " << key << std::endl;
-            m_uiHub->GetInputHandler().OnMouseUp(key);
-        };
-
-        m_window->MouseMoveCallback = [&](const AT2::MousePos& pos) { m_uiHub->GetInputHandler().OnMouseMove(pos); };
-
-        m_window->MouseScrollCallback = [&](const glm::vec2& scrollDir) {
-            std::cout << "Scroll " << scrollDir.y << std::endl;
-            m_uiHub->GetInputHandler().OnMouseScroll(scrollDir);
-        };
-
-        m_window->InitializeCallback = [&]() { m_window->setVSyncInterval(1); };
-
-        m_window->ClosingCallback = [&]() { m_renderer->Shutdown(); };
-
-        m_window->RenderCallback = std::bind_front(&App::OnRender, this);
-        m_window->InitializeCallback = std::bind_front(&App::OnInitialize, this);
+        getRenderer()->FinishFrame();
     }
+
+    void OnKeyPress(int key) {}
+
+    void OnKeyDown (int key) override 
+    {
+        std::cout << "Key " << key << " down" << std::endl;
+
+        switch (key)
+        {
+        case GLFW_KEY_R:
+        {
+            getRenderer()->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
+        }
+        break;
+
+        case GLFW_KEY_ESCAPE:
+        {
+            getWindow().setCloseFlag(true);
+        }
+        break;
+        }
+
+
+        OnKeyPress(key);
+    }
+
+    void OnKeyRepeat(int key) override { OnKeyPress(key); }
+
+    void OnResize (glm::ivec2 newSize) override
+    {
+        std::cout << "Size " << newSize.x << "x" << newSize.y << std::endl;
+        if (m_uiHub)
+            m_uiHub->Resize(newSize);
+    };
+
+    void OnMouseDown(int key) override { m_uiHub->GetInputHandler().OnMouseDown(key); }
+
+    void OnMouseUp(int key) override 
+    {
+        std::cout << "Mouse " << key << std::endl;
+        m_uiHub->GetInputHandler().OnMouseUp(key);
+    }
+
+    void OnMouseMove(const AT2::MousePos& pos) override { m_uiHub->GetInputHandler().OnMouseMove(pos); }
+
+    void OnMouseScroll(const glm::dvec2& scrollDir) override 
+    {
+        std::cout << "Scroll " << scrollDir.y << std::endl;
+        m_uiHub->GetInputHandler().OnMouseScroll(scrollDir);
+    };
 
 private:
-    std::shared_ptr<AT2::GLFW::GlfwWindow> m_window;
-    std::shared_ptr<AT2::IRenderer> m_renderer;
 
     std::unique_ptr<UiHub> m_uiHub;
 };
@@ -124,8 +101,8 @@ int main(int argc, char* argv[])
 {
     try
     {
-        App app;
-        app.Run();
+        AT2::SingleWindowApplication app;
+        app.Run(std::make_unique<UITest>());
     }
     catch (AT2::AT2Exception& exception)
     {

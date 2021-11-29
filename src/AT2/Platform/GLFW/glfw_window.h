@@ -44,38 +44,40 @@ namespace AT2::GLFW
     };
 
 
-    class GlfwWindow final
+    class GlfwWindow final : public IWindow
     {
         friend class GlfwApplication;
 
     public:
         ///@thread_safety main thread
-        bool isKeyDown(int keyCode) const;
+        bool isKeyDown(int keyCode) const override;
         ///@thread_safety main thread
-        bool isMouseKeyDown(int button) const;
+        bool isMouseKeyDown(int button) const override;
 
         ///@thread_safety safe
-        GlfwWindow& setCursorMode(GlfwCursorMode cursorMode);
+        GlfwWindow& setCursorMode(CursorMode cursorMode) override;
 
         ///@thread_safety safe
-        GlfwWindow& setLabel(std::string label);
-        const std::string& getLabel() const { return window_label; }
+        GlfwWindow& setLabel(std::string label) override;
+        const std::string& getLabel() const override { return window_label; }
 
         ///@thread_safety safe
-        GlfwWindow& setSize(glm::ivec2 size);
-        const glm::ivec2& getSize() const { return window_size; }
+        GlfwWindow& setSize(glm::ivec2 size) override;
+        const glm::ivec2& getSize() const override { return window_size; }
 
         ///@thread_safety safe
-        void requestAttention();
+        void requestAttention() override;
 
         ///@thread_safety safe
-        GlfwWindow& setVSyncInterval(int interval);
+        GlfwWindow& setVSyncInterval(int interval) override;
 
         ///@thread_safety safe
-        GlfwWindow& setCloseFlag(bool flag);
-        bool getCloseFlag() const;
+        GlfwWindow& setCloseFlag(bool flag) override;
+        bool getCloseFlag() const override;
 
         GLFWwindow* get() const noexcept { return window_impl; }
+
+        void setWindowContext(std::unique_ptr<IWindowContext> newWindowContext) override { windowContext = std::move(newWindowContext); }
 
         //event callbacks
         //Render context available only at InitializeCallback and RenderCallback
@@ -204,6 +206,8 @@ namespace AT2::GLFW
         mutable std::mutex mutex;
 
         Seconds previous_render_time {0.0};
+
+        std::unique_ptr<IWindowContext> windowContext;
     };
 
 } // namespace AT2::GLFW

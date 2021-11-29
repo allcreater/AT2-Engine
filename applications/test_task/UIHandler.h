@@ -45,8 +45,8 @@ struct UiHub
 
     AT2::UI::UiInputHandler& GetInputHandler() { return *m_uiInputHandler; }
 
-    void Init(std::shared_ptr<AT2::IRenderer>& renderer);
-    void Render(std::shared_ptr<AT2::IRenderer>& renderer, AT2::Seconds dt);
+    void Init(const std::shared_ptr<AT2::IRenderer>& renderer);
+    void Render(const std::shared_ptr<AT2::IRenderer>& renderer, AT2::Seconds dt);
     void Resize(const glm::ivec2& newSize);
 
 private:

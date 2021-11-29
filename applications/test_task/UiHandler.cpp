@@ -122,7 +122,7 @@ glm::vec4 UiRenderer::DebugColor(const Node& node)
     return glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0);
 }
 
-void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
+void UiHub::Init(const std::shared_ptr<AT2::IRenderer>& renderer)
 {
     std::shared_ptr<Node> panel, button1, button2;
 
@@ -219,7 +219,7 @@ void UiHub::Init(std::shared_ptr<AT2::IRenderer>& renderer)
     };
 }
 
-void UiHub::Render(std::shared_ptr<IRenderer>& renderer, AT2::Seconds dt)
+void UiHub::Render(const std::shared_ptr<IRenderer>& renderer, AT2::Seconds dt)
 {
     for (auto& animation : m_animationsList)
         animation->Animate(dt);

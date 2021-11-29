@@ -6,6 +6,22 @@
 
 using namespace AT2::GLFW;
 
+namespace
+{
+    constexpr int TranslateCursorMode(CursorMode cursorMode) 
+    {
+        switch (cursorMode)
+        {
+        case CursorMode::Normal: return static_cast<int>(GlfwCursorMode::Normal);
+        case CursorMode::Hidden: return static_cast<int>(GlfwCursorMode::Hidden);
+        case CursorMode::Disabled: return static_cast<int>(GlfwCursorMode::Disabled);
+        default: 
+            throw std::domain_error("CursorMode");
+        }
+    }
+}
+
+
 GlfwWindow* GlfwWindow::FromNativeWindow(const GLFWwindow* window)
 {
     auto* const frontendPtr = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(const_cast<GLFWwindow*>(window)));
@@ -54,11 +70,11 @@ bool GlfwWindow::isMouseKeyDown(int button) const
     return window_impl && (glfwGetMouseButton(window_impl, button) == GLFW_PRESS);
 }
 
-GlfwWindow& GlfwWindow::setCursorMode(GlfwCursorMode cursorMode)
+GlfwWindow& GlfwWindow::setCursorMode(CursorMode cursorMode)
 {
     GlfwApplication::get().postAction([=] {
         if (window_impl)
-            glfwSetInputMode(window_impl, GLFW_CURSOR, static_cast<int>(cursorMode));
+            glfwSetInputMode(window_impl, GLFW_CURSOR, TranslateCursorMode(cursorMode));
     });
 
     return *this;

@@ -2,9 +2,8 @@
 
 #include <AT2/camera.h>
 #include <AT2/Scene/Scene.h>
-#include <AT2/OpenGL/GlRenderer.h>
 #include <AT2/OpenGL/GlTimerQuery.h>
-#include <AT2/Platform/GLFW/glfw_application.h>
+#include <AT2/Platform/Application.h>
 #include <AT2/Platform/GLFW/glfw_window.h>
 #include <AT2/Resources/MeshLoader.h>
 #include <AT2/Resources/GltfSceneLoader.h>
@@ -28,24 +27,10 @@ using MeshLoader = AT2::Resources::MeshLoader;
 
 constexpr size_t NumActiveLights = 50;
 
-class App
+class Sandbox final : public AT2::GraphicsContext
 {
 public:
-    App()
-    {
-        using namespace AT2::GLFW;
-        GlfwApplication::get().OnNoActiveWindows = [] {
-            GlfwApplication::get().stop();
-            //spdlog::info("Exit");
-        };
-
-        m_window = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, true, true}, {1280, 800});
-        m_window->setLabel("Some engine test").setCursorMode(GlfwCursorMode::Disabled);
-
-        SetupWindowCallbacks();
-    }
-
-    void Run() { AT2::GLFW::GlfwApplication::get().run(); }
+    Sandbox() = default;
 
 private:
     std::shared_ptr<AT2::ITexture> ComputeHeightmap(glm::uvec2 resolution) const
@@ -53,39 +38,36 @@ private:
         constexpr auto localGroupSize = glm::uvec3 {32, 32, 1};
 
         auto resultTex =
-            m_renderer->GetResourceFactory().CreateTexture(Texture2D {resolution}, AT2::TextureFormats::RGBA16F);
+            getRenderer()->GetResourceFactory().CreateTexture(Texture2D {resolution}, AT2::TextureFormats::RGBA16F);
         resultTex->SetWrapMode(AT2::TextureWrapParams::Uniform(AT2::TextureWrapMode::ClampToBorder));
         auto shader =
-            m_renderer->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
+            getRenderer()->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 
-        m_renderer->GetStateManager().BindShader(shader);
+        getRenderer()->GetStateManager().BindShader(shader);
 
         shader->SetUniform("u_result", 0);
 
         resultTex->BindAsImage(0, 0, 0, false);
-        m_renderer->DispatchCompute(glm::uvec3 {resolution, 1} / localGroupSize);
+        getRenderer()->DispatchCompute(glm::uvec3 {resolution, 1} / localGroupSize);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
         return resultTex;
     }
 
-    void OnInitialize()
+    void OnInitialized() override
     {
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-            throw std::runtime_error("Failed to initialize GLAD");
-        
-        m_renderer = std::make_unique<AT2::GlRenderer>();
+        getWindow().setVSyncInterval(1).setCursorMode(CursorMode::Disabled);
 
-        TerrainShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        TerrainShader = getRenderer()->GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/shaders/terrain.vs.glsl", "resources/shaders/terrain.tcs.glsl",
              "resources/shaders/terrain.tes.glsl", "resources/shaders/terrain.fs.glsl"});
 
 
-        MeshShader = m_renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        MeshShader = getRenderer()->GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/shaders/mesh.vs.glsl", "resources/shaders/mesh.fs.glsl"});
 
 
-        Noise3Tex = m_renderer->GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, AT2::TextureFormats::RGBA8);
+        Noise3Tex = getRenderer()->GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, AT2::TextureFormats::RGBA8);
         {
             const auto arr = std::make_unique<GLubyte[]>(Noise3Tex->GetDataLength());
             
@@ -97,14 +79,14 @@ private:
             Noise3Tex->SubImage3D({}, Noise3Tex->GetSize(), 0, AT2::TextureFormats::RGBA8, arr.get());
         }
 
-        auto GrassTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
-        auto NormalMapTex = TextureLoader::LoadTexture(m_renderer, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        auto RockTex = TextureLoader::LoadTexture(m_renderer, "resources/Rock035_2K-JPG/Rock035_2K_Color.jpg");
-        //auto RockNormalTex = TextureLoader::LoadTexture(m_renderer, "resources/Rock035_2K-JPG/Rock035_2K_Normal.jpg");
-        //auto RockDisplacementTex = TextureLoader::LoadTexture(m_renderer, "resources/Rock035_2K-JPG/Rock035_2K_Displacement.jpg");
+        auto GrassTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
+        auto NormalMapTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
+        auto RockTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Color.jpg");
+        //auto RockNormalTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Normal.jpg");
+        //auto RockDisplacementTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Displacement.jpg");
 
         HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
-        EnvironmentMapTex = TextureLoader::LoadTexture(m_renderer, "resources/04-23_Day_D.hdr");
+        EnvironmentMapTex = TextureLoader::LoadTexture(getRenderer(), "resources/04-23_Day_D.hdr");
 
         auto lightsRoot = std::make_shared<AT2::Scene::Node>("lights"s);
         m_scene.GetRoot().AddChild(lightsRoot);
@@ -124,29 +106,29 @@ private:
                                                                      glm::vec3(500.0f), "SkyLight"));
 
         //m_scene
-        auto matBallNode = MeshLoader::LoadNode(m_renderer, "resources/matball.glb");
+        auto matBallNode = MeshLoader::LoadNode(getRenderer(), "resources/matball.glb");
         matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform().asMatrix(), {100, 50, 0}), {100, 100, 100}));
         m_scene.GetRoot().AddChild(std::move(matBallNode));
 
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\RiggedFigure\glTF\RiggedFigure.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\CesiumMan\glTF\CesiumMan.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(C:\Users\allcr\Downloads\GLTF\amazing_player_female\scene.gltf)"s);
-        auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(C:\Users\allcr\Downloads\GLTF\marika\scene.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BrainStem\glTF\BrainStem.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\MetalRoughSpheres\glTF\MetalRoughSpheres.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\SciFiHelmet\glTF\SciFiHelmet.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\RiggedFigure\glTF\RiggedFigure.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\CesiumMan\glTF\CesiumMan.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(C:\Users\allcr\Downloads\GLTF\amazing_player_female\scene.gltf)"s);
+        auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(C:\Users\allcr\Downloads\GLTF\marika\scene.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BrainStem\glTF\BrainStem.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\MetalRoughSpheres\glTF\MetalRoughSpheres.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\SciFiHelmet\glTF\SciFiHelmet.gltf)"s);
 
         //castle
         {
             auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
-                m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
+                getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
             scene->GetTransform().setScale({20.0, 20.0, 20.0}).setPosition({1000, 300, 0});
             m_scene.GetRoot().AddChild(scene);
         }
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\InterpolationTest\glTF\InterpolationTest.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(m_renderer, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\InterpolationTest\glTF\InterpolationTest.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf)"s);
 
         scene->GetTransform().setPosition({0, -20.0, 0});
         m_scene.GetRoot().AddChild(scene);
@@ -159,7 +141,7 @@ private:
         m_scene.GetRoot().Accept(shaderSetter);
 
 
-        auto terrainNode = AT2::Utils::MakeTerrain(*m_renderer, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
+        auto terrainNode = AT2::Utils::MakeTerrain(*getRenderer(), glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
         {
             terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
 
@@ -178,7 +160,7 @@ private:
         m_renderParameters.Camera = &m_camera;
         m_renderParameters.TargetFramebuffer = nullptr;
 
-        sr.Initialize(m_renderer);
+        sr.Initialize(getRenderer());
     }
 
     void OnRender(AT2::Seconds dt)
@@ -186,7 +168,7 @@ private:
         if (NeedResourceReload)
         {
             std::cout << "Reloading shaders... " << std::endl;
-            m_renderer->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
+            getRenderer()->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
             NeedResourceReload = false;
         }
 
@@ -196,94 +178,98 @@ private:
         glTimer.End();
 
         const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
-        m_window->setLabel("Frame time = " + std::to_string(frameTime));
+        getWindow().setLabel("Frame time = " + std::to_string(frameTime));
 
-        m_renderer->FinishFrame();
+        getRenderer()->FinishFrame();
     }
 
 
-    void SetupWindowCallbacks()
+    void OnKeyDown(int key) override
     {
-        m_window->KeyDownCallback = [&](int key) {
-            std::cout << "Key " << key << " down" << std::endl;
+        std::cout << "Key " << key << " down" << std::endl;
 
-            if (key == GLFW_KEY_Z)
-                m_renderParameters.Wireframe = !m_renderParameters.Wireframe;
-            else if (key == GLFW_KEY_M)
-                MovingLightMode = !MovingLightMode;
-            else if (key == GLFW_KEY_R)
-                NeedResourceReload = true;
-            else if (key == GLFW_KEY_L)
-            {
-                if (auto* skyLight = m_scene.FindNode<AT2::Scene::LightNode>("SkyLight"sv))
-                    skyLight->SetEnabled(!skyLight->GetEnabled());
-            }
-        };
-
-        m_window->ResizeCallback = [&](const glm::ivec2& newSize) {
-            if (newSize.x <= 0 || newSize.y <= 0)
-                return;
-
-            m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(newSize.x),
-                                                       static_cast<float>(newSize.y), 0.1f, 20000.0f));
-            sr.ResizeFramebuffers(newSize);
-        };
-
-        m_window->MouseUpCallback = [](int key) { std::cout << "Mouse " << key << std::endl; };
-
-        m_window->MouseMoveCallback = [&](const AT2::MousePos& pos) {
-            const auto relativePos = pos.getPos() / static_cast<glm::dvec2>(m_window->getSize());
-
-            m_camera.setRotation(glm::angleAxis(glm::mix(-glm::pi<float>(), glm::pi<float>(), relativePos.x),
-                                                glm::vec3 {0.0, -1.0, 0.0}) *
-                                 glm::angleAxis(glm::mix(-glm::pi<float>() / 2, glm::pi<float>() / 2, relativePos.y),
-                                                glm::vec3 {1.0, 0.0, 0.0}));
-        };
-
-        m_window->InitializeCallback = [&]() { m_window->setVSyncInterval(1); };
-
-        m_window->ClosingCallback = [&]() { m_renderer->Shutdown(); };
-
-        m_window->UpdateCallback = [&](const AT2::Seconds dt) {
-            m_time.Update(dt);
-            m_scene.Update(m_time);
-
-            if (m_window->isKeyDown(GLFW_KEY_LEFT_SHIFT))
-                acceleration = std::min(acceleration + static_cast<float>(dt.count()), 200.0f);
-            else
-                acceleration *= 0.98f;
-
-            const float moveSpeed = static_cast<float>(dt.count()) * 50.0f + acceleration;
-            if (m_window->isKeyDown(GLFW_KEY_W))
-                m_camera.setPosition(m_camera.getPosition() + m_camera.getForward() * moveSpeed);
-            if (m_window->isKeyDown(GLFW_KEY_S))
-                m_camera.setPosition(m_camera.getPosition() - m_camera.getForward() * moveSpeed);
-            if (m_window->isKeyDown(GLFW_KEY_A))
-                m_camera.setPosition(m_camera.getPosition() + m_camera.getLeft() * moveSpeed);
-            if (m_window->isKeyDown(GLFW_KEY_D))
-                m_camera.setPosition(m_camera.getPosition() - m_camera.getLeft() * moveSpeed);
-
-            if (m_window->isKeyDown(GLFW_KEY_ESCAPE))
-                m_window->setCloseFlag(true);
-
-			const float expositionSpeed = 1 + 2 * dt.count();
-            if (m_window->isKeyDown(GLFW_KEY_EQUAL))
-                m_renderParameters.Exposure *= expositionSpeed;
-            if (m_window->isKeyDown(GLFW_KEY_MINUS))
-                m_renderParameters.Exposure /= expositionSpeed;
-            m_renderParameters.Exposure = glm::clamp(m_renderParameters.Exposure, 0.001f, 10.0f);
-
-            if (MovingLightMode)
-            {
-                if (auto* light = m_scene.FindNode<AT2::Scene::LightNode>("PointLight[0]"sv))
-                    light->SetTransform(m_camera.getViewInverse());
-            }
-        };
-
-        m_window->RenderCallback = std::bind_front(&App::OnRender, this);
-        m_window->InitializeCallback = std::bind_front(&App::OnInitialize, this);
+        if (key == GLFW_KEY_Z)
+            m_renderParameters.Wireframe = !m_renderParameters.Wireframe;
+        else if (key == GLFW_KEY_M)
+            MovingLightMode = !MovingLightMode;
+        else if (key == GLFW_KEY_R)
+            NeedResourceReload = true;
+        else if (key == GLFW_KEY_L)
+        {
+            if (auto* skyLight = m_scene.FindNode<AT2::Scene::LightNode>("SkyLight"sv))
+                skyLight->SetEnabled(!skyLight->GetEnabled());
+        }
     }
 
+    void OnResize(glm::ivec2 newSize) override
+    {
+        if (newSize.x <= 0 || newSize.y <= 0)
+            return;
+
+        m_camera.setProjection(glm::perspectiveFov(glm::radians(90.0f), static_cast<float>(newSize.x),
+                                                    static_cast<float>(newSize.y), 0.1f, 20000.0f));
+        sr.ResizeFramebuffers(newSize);
+    }
+
+    void OnMouseUp(int key) override
+    {
+        std::cout << "Mouse " << key << std::endl;
+    };
+
+    void OnMouseMove(const AT2::MousePos& pos) override
+    {
+        const auto relativePos = pos.getPos() / static_cast<glm::dvec2>(getWindow().getSize());
+
+        m_camera.setRotation(glm::angleAxis(glm::mix(-glm::pi<float>(), glm::pi<float>(), relativePos.x),
+                                            glm::vec3 {0.0, -1.0, 0.0}) *
+                                glm::angleAxis(glm::mix(-glm::pi<float>() / 2, glm::pi<float>() / 2, relativePos.y),
+                                            glm::vec3 {1.0, 0.0, 0.0}));
+    }
+
+    void OnClosing() override
+    { 
+        getRenderer()->Shutdown(); 
+    }
+
+    void OnUpdate(AT2::Seconds dt) override
+    {
+        m_time.Update(dt);
+        m_scene.Update(m_time);
+
+        if (getWindow().isKeyDown(GLFW_KEY_LEFT_SHIFT))
+            acceleration = std::min(acceleration + static_cast<float>(dt.count()), 200.0f);
+        else
+            acceleration *= 0.98f;
+
+        const float moveSpeed = static_cast<float>(dt.count()) * 50.0f + acceleration;
+        if (getWindow().isKeyDown(GLFW_KEY_W))
+            m_camera.setPosition(m_camera.getPosition() + m_camera.getForward() * moveSpeed);
+        if (getWindow().isKeyDown(GLFW_KEY_S))
+            m_camera.setPosition(m_camera.getPosition() - m_camera.getForward() * moveSpeed);
+        if (getWindow().isKeyDown(GLFW_KEY_A))
+            m_camera.setPosition(m_camera.getPosition() + m_camera.getLeft() * moveSpeed);
+        if (getWindow().isKeyDown(GLFW_KEY_D))
+            m_camera.setPosition(m_camera.getPosition() - m_camera.getLeft() * moveSpeed);
+
+        if (getWindow().isKeyDown(GLFW_KEY_ESCAPE))
+            getWindow().setCloseFlag(true);
+
+		const float expositionSpeed = 1 + 2 * dt.count();
+        if (getWindow().isKeyDown(GLFW_KEY_EQUAL))
+            m_renderParameters.Exposure *= expositionSpeed;
+        if (getWindow().isKeyDown(GLFW_KEY_MINUS))
+            m_renderParameters.Exposure /= expositionSpeed;
+        m_renderParameters.Exposure = glm::clamp(m_renderParameters.Exposure, 0.001f, 10.0f);
+
+        if (MovingLightMode)
+        {
+            if (auto* light = m_scene.FindNode<AT2::Scene::LightNode>("PointLight[0]"sv))
+                light->SetTransform(m_camera.getViewInverse());
+        }
+    }
+
+
+   
 private:
     //TODO: move out of App class
     class Time : public AT2::ITime
@@ -302,9 +288,6 @@ private:
         AT2::Seconds getDeltaTime() const override { return m_deltaTime; }
     } m_time;
 
-    std::shared_ptr<AT2::GLFW::GlfwWindow> m_window;
-    std::shared_ptr<AT2::IRenderer> m_renderer;
-
     std::shared_ptr<AT2::IShaderProgram> MeshShader, TerrainShader;
     std::shared_ptr<AT2::ITexture> Noise3Tex, HeightMapTex, EnvironmentMapTex;
 
@@ -321,8 +304,8 @@ int main(const int argc, const char* argv[])
 {
     try
     {
-        App app;
-        app.Run();
+        AT2::SingleWindowApplication app;
+        app.Run(std::make_unique<Sandbox>());
     }
     catch (AT2::AT2Exception& exception)
     {

@@ -283,5 +283,59 @@ using Uniform = std::variant
     glm::dmat4
 >;
 
+enum class CursorMode
+{
+    Normal,
+    Hidden,
+    Disabled
+};
+
+//TODO: move to separate header
+class IWindow
+{
+public:
+    class IWindowContext //TODO: technically something very near to graphics context, we still don't have separate abstraction for it
+    {
+    public:
+        virtual ~IWindowContext() = default;
+
+        virtual IWindow& getWindow() = 0;
+        virtual const IWindow& getWindow() const = 0;
+    };
+
+public:
+    virtual ~IWindow() = default;
+
+    ///@thread_safety main thread
+    virtual bool isKeyDown(int keyCode) const = 0;
+    ///@thread_safety main thread
+    virtual bool isMouseKeyDown(int button) const = 0;
+
+    ///@thread_safety safe
+    virtual IWindow& setCursorMode(CursorMode cursorMode) = 0;
+
+    ///@thread_safety safe
+    virtual IWindow& setLabel(std::string label) = 0;
+    virtual const std::string& getLabel() const = 0;
+
+    ///@thread_safety safe
+    virtual IWindow& setSize(glm::ivec2 size) = 0;
+    virtual const glm::ivec2& getSize() const = 0;
+
+    ///@thread_safety safe
+    virtual void requestAttention() = 0;
+
+    ///@thread_safety safe
+    virtual IWindow& setVSyncInterval(int interval) = 0;
+
+    ///@thread_safety safe
+    virtual IWindow& setCloseFlag(bool flag) = 0;
+    virtual bool getCloseFlag() const = 0;
+
+private:
+    virtual void setWindowContext(std::unique_ptr<IWindowContext> newWindowContext) = 0;
+    //virtual IWindowContext* getWindowContext() = 0;
+    //virtual const IWindowContext* getWindowContext() const = 0;
+};
 
 #endif
