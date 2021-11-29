@@ -10,20 +10,15 @@
 
 
 #include <array>
-#include <span>
 #include <memory>
+#include <span>
 #include <set>
 #include <string>
 #include <string_view>
-#include <variant>
 #include <vector>
-#include <chrono>
 
 #include "log.h"
 #include "utils.hpp"
-
-
-const double pi = std::acos(-1);
 
 #include "AT2_states.hpp"
 #include "AT2_textures.hpp"
@@ -52,8 +47,6 @@ namespace AT2
     class IStateManager;
     class IResourceFactory;
     class IRenderer;
-
-    using Seconds = std::chrono::duration<double>;
 
     class ITime
     {
@@ -268,7 +261,7 @@ namespace AT2
         } Case;
 
 
-        AT2Exception(const std::string& _message) : std::runtime_error(_message.c_str()), Case(ErrorCase::Unknown) {};
+        AT2Exception(const char* _message) : std::runtime_error(_message), Case(ErrorCase::Unknown) {};
         AT2Exception(ErrorCase _case, const std::string& _message) :
             std::runtime_error(_message.c_str()), Case(_case) {};
     };

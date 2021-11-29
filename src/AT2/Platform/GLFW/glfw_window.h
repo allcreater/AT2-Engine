@@ -2,17 +2,15 @@
 
 #include <functional>
 #include <mutex>
-#include <chrono>
 
 #include <GLFW/glfw3.h>
+
+#include <AT2/AT2_types.hpp>
 
 #include "../callback_types.h"
 
 namespace AT2::GLFW
 {
-
-    using Seconds = std::chrono::duration<double>;
-
     enum class GlfwCursorMode
     {
         Normal = GLFW_CURSOR_NORMAL,

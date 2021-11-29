@@ -1,13 +1,16 @@
 #pragma once
 
+#include <AT2/AT2_types.hpp>
+
 namespace AT2
 {
 	class Application
     {
     public:
+        ~Application() = default;
 
-    private:
+    protected:
         virtual void OnInitialize() {};
-        virtual void OnRender(double dt) = 0;
+        virtual void OnRender(AT2::Seconds dt) = 0;
     };
 }

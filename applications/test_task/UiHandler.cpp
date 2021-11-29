@@ -16,7 +16,7 @@ static std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_
 {
     static std::mt19937 randGenerator;
     std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.3f);
-    std::uniform_real_distribution<float> phaseDistribution(0.0f, float(pi * 2));
+    std::uniform_real_distribution<float> phaseDistribution(0.0f, float(glm::pi<double>() * 2));
     std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
 
     std::vector<std::tuple<float, float, float>> harmonics(numHarmonics);

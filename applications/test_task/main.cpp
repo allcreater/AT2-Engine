@@ -46,7 +46,7 @@ private:
         glCullFace(GL_BACK);
     }
 
-    void OnRender(const AT2::GLFW::Seconds dt)
+    void OnRender(const AT2::Seconds dt)
     {
         m_renderer->SetViewport(AABB2d {{0, 0}, m_window->getSize()});
         m_renderer->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));

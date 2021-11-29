@@ -52,10 +52,10 @@ namespace AT2::Utils
 
         for (uint32_t j = 0; j < numPatches.y; ++j)
         {
-            const double angV = j * pi / (numPatches.y - 1);
+            const double angV = j * glm::pi<double>() / (numPatches.y - 1);
             for (uint32_t i = 0; i < numPatches.x; ++i)
             {
-                const double angH = i * pi * 2 / numPatches.x;
+                const double angH = i * glm::pi<double>() * 2 / numPatches.x;
 
                 normals.emplace_back(sin(angV) * cos(angH), sin(angV) * sin(angH), cos(angV));
             }

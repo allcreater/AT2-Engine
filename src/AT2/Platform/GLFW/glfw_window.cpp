@@ -88,7 +88,7 @@ void GlfwWindow::UpdateAndRender()
     glfwSwapBuffers(window_impl);
 }
 
-GlfwWindow& GlfwWindow::setLabel( std::string label)
+GlfwWindow& GlfwWindow::setLabel(std::string label)
 {
     {
         std::lock_guard lock {mutex};

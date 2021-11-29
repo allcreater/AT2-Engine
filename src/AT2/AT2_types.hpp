@@ -2,11 +2,16 @@
 #define AT2_TYPES_H
 
 #include <glm/glm.hpp>
+
+#include <chrono>
 #include <type_traits>
+#include <variant>
+
 #include "AABB.h"
 
 namespace AT2
 {
+    using Seconds = std::chrono::duration<double>;
 
     enum class ShaderType
     {
