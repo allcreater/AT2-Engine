@@ -1,6 +1,7 @@
 #include "GlFrameBuffer.h"
 
 using namespace AT2;
+using namespace AT2::OpenGL;
 
 GlFrameBuffer::GlFrameBuffer(const IRendererCapabilities& rendererCapabilities) :
     m_colorAttachments(rendererCapabilities.GetMaxNumberOfColorAttachments())

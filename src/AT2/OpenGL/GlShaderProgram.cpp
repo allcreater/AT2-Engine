@@ -5,7 +5,8 @@
 #include "Mappings.h"
 
 using namespace AT2;
-using namespace AT2::OpenGl::Introspection;
+using namespace OpenGL;
+using namespace Introspection;
 
 GLuint LoadShader(GLenum _shaderType, const str& _text)
 {

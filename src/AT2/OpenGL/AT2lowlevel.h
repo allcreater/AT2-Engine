@@ -3,13 +3,10 @@
 
 #include <glad/glad.h>
 
-#include <sstream>
-#include <vector>
-
 #include "../AT2.h"
 
 
-namespace AT2::OpenGL::Utils
+namespace AT2::OpenGL
 {
     inline void SetGlState(GLenum state, bool enabled)
     {

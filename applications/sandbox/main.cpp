@@ -172,7 +172,7 @@ private:
             NeedResourceReload = false;
         }
 
-        AT2::GlTimerQuery glTimer;
+        AT2::OpenGL::GlTimerQuery glTimer;
         glTimer.Begin();
         sr.RenderScene(m_renderParameters, m_time);
         glTimer.End();

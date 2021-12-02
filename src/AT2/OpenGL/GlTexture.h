@@ -4,7 +4,7 @@
 #include "../AT2_textures.hpp"
 #include "AT2lowlevel.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
     class GlTexture : public ITexture
     {
@@ -84,6 +84,6 @@ namespace AT2
         size_t m_dataSize {0};
     };
 
-} // namespace AT2
+} // namespace AT2::OpenGL
 
 #endif

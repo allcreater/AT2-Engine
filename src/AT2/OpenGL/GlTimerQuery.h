@@ -3,7 +3,7 @@
 
 #include "AT2lowlevel.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
 
     class GlTimerQuery
@@ -23,5 +23,5 @@ namespace AT2
         GLuint64 m_resultValue {0};
     };
 
-} // namespace AT2
+} // namespace AT2::OpenGL
 #endif

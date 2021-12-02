@@ -3,7 +3,7 @@
 
 #include "AT2lowlevel.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
 
     class GlRenderer;
@@ -74,6 +74,6 @@ namespace AT2
         std::unique_ptr<IRendererCapabilities> m_rendererCapabilities;
     };
 
-} // namespace AT2
+} // namespace AT2::OpenGL
 
 #endif

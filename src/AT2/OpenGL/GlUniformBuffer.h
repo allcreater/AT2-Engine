@@ -4,7 +4,7 @@
 #include "GlShaderProgram.h"
 #include "GlVertexBuffer.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
 
     class GlUniformBuffer : protected GlVertexBuffer, public virtual IBuffer, public IUniformContainer
@@ -14,7 +14,7 @@ namespace AT2
 
         //UniformBlockInfo does not linked with specific program, it's just template for buffer structuring
         //TODO: Abstract interface to uniform buffer template definition. It should not be linked with program introspection directly.
-        explicit GlUniformBuffer(std::shared_ptr<const OpenGl::Introspection::UniformBlockInfo> ubi);
+        explicit GlUniformBuffer(std::shared_ptr<const OpenGL::Introspection::UniformBlockInfo> ubi);
         ~GlUniformBuffer() override;
 
     public:
@@ -28,7 +28,7 @@ namespace AT2
         void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
 
     private:
-        std::shared_ptr<const OpenGl::Introspection::UniformBlockInfo> m_uniformBlockInfo;
+        std::shared_ptr<const OpenGL::Introspection::UniformBlockInfo> m_uniformBlockInfo;
         std::string m_blockName;
         GLuint m_bindingPoint;
     };

@@ -3,7 +3,7 @@
 
 #include "AT2lowlevel.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
 
     class GlVertexBuffer : public IVertexBuffer
@@ -71,6 +71,6 @@ namespace AT2
         bool m_mapped = false;
     };
 
-} // namespace AT2
+} // namespace AT2::OpenGL
 
 #endif

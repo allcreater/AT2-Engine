@@ -4,7 +4,8 @@
 #include <utility>
 
 using namespace AT2;
-using namespace AT2::OpenGl::Introspection;
+using namespace OpenGL;
+using namespace Introspection;
 using namespace glm;
 
 GlUniformBuffer::GlUniformBuffer(std::shared_ptr<const UniformBlockInfo> ubi) :
@@ -30,7 +31,7 @@ const GLvoid* value_ptr(const T& value)
 template <typename T>
 void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name, const T& value)
 {
-    const auto* ui = Utils::find(ubi.Uniforms, name);
+    const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
     if (!ui)
         return;
 
@@ -44,7 +45,7 @@ template <typename T, length_t C, length_t R, qualifier Q>
 void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name,
                         const glm::mat<C, R, T, Q>& value)
 {
-    const auto* ui = Utils::find(ubi.Uniforms, name);
+    const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
     if (!ui)
         return;
 

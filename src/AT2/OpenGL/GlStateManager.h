@@ -3,7 +3,7 @@
 
 #include "../StateManager.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
 
 class GlStateManager : public StateManager

@@ -1,6 +1,7 @@
 #include "GlTimerQuery.h"
 
 using namespace AT2;
+using namespace OpenGL;
 
 GlTimerQuery::GlTimerQuery()
 {

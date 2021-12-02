@@ -3,7 +3,7 @@
 
 #include "AT2lowlevel.h"
 
-namespace AT2::OpenGl::Introspection
+namespace AT2::OpenGL::Introspection
 {
 
     struct UniformInfo
@@ -55,6 +55,6 @@ namespace AT2::OpenGl::Introspection
         std::unordered_map<std::string_view, UniformBlockInfo*> uniformBlocksByName; //just another view of uniformBlocks
     };
 
-} // namespace AT2::OpenGl::Introspection
+} // namespace AT2::OpenGL::Introspection
 
 #endif

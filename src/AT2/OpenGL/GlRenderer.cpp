@@ -6,7 +6,7 @@
 
 using namespace std::literals;
 using namespace AT2;
-using namespace OpenGL::Utils;
+using namespace OpenGL;
 
 namespace
 {

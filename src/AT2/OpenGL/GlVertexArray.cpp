@@ -3,6 +3,7 @@
 #include "Mappings.h"
 
 using namespace AT2;
+using namespace OpenGL;
 
 GlVertexArray::GlVertexArray(const IRendererCapabilities& _rendererCapabilities) :
     m_buffers(_rendererCapabilities.GetMaxNumberOfVertexAttributes())

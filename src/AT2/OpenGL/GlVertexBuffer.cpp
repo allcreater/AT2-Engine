@@ -3,6 +3,7 @@
 #include "../AT2.h"
 
 using namespace AT2;
+using namespace OpenGL;
 
 GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType) : m_id(0), m_publicType(bufferType)
 {

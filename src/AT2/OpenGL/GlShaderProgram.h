@@ -5,7 +5,7 @@
 #include "AT2lowlevel.h"
 #include "GlProgramIntrospection.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
     class GlShaderProgram : public IShaderProgram, public std::enable_shared_from_this<GlShaderProgram>
     {
@@ -71,14 +71,14 @@ namespace AT2
         virtual void SetName(const str& name) { m_name = name; }
 
     protected:
-        const std::shared_ptr<OpenGl::Introspection::ProgramInfo>& GetIntrospection();
+        const std::shared_ptr<OpenGL::Introspection::ProgramInfo>& GetIntrospection();
         bool TryCompile();
         void CleanUp();
 
     private:
         GLuint m_programId {0};
         std::vector<std::pair<ShaderType, GLuint>> m_shaderIds;
-        std::shared_ptr<OpenGl::Introspection::ProgramInfo> m_uniformsInfo;
+        std::shared_ptr<OpenGL::Introspection::ProgramInfo> m_uniformsInfo;
 
         str m_name;
 

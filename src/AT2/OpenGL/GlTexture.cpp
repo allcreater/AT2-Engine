@@ -2,6 +2,7 @@
 #include "Mappings.h"
 
 using namespace AT2;
+using namespace OpenGL;
 
 namespace
 {

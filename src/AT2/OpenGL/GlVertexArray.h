@@ -3,7 +3,7 @@
 
 #include "GlVertexBuffer.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
 
     class GlVertexArray : public IVertexArray
@@ -35,5 +35,5 @@ namespace AT2
         std::pair<std::shared_ptr<IVertexBuffer>, std::optional<BufferDataType>> m_indexBuffer;
     };
 
-} // namespace AT2
+} // namespace AT2::OpenGL
 #endif

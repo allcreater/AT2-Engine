@@ -15,7 +15,8 @@ namespace
     }
 }; // namespace
 
-using namespace AT2::OpenGl::Introspection;
+using namespace AT2;
+using namespace OpenGL::Introspection;
 
 std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
 {

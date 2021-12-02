@@ -5,9 +5,8 @@
 
 #include "GlTexture.h"
 
-namespace AT2
+namespace AT2::OpenGL
 {
-
     class GlFrameBuffer : public IFrameBuffer
     {
     public:
@@ -84,5 +83,5 @@ namespace AT2
         }
     };
 
-} // namespace AT2
+} // namespace AT2::OpenGL
 #endif
