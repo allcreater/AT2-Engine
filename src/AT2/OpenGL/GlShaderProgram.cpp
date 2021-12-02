@@ -51,7 +51,7 @@ GlShaderProgram::~GlShaderProgram()
 void GlShaderProgram::AttachShader(const str& _code, ShaderType _type)
 {
     if (_code.empty())
-        throw AT2Exception(AT2Exception::ErrorCase::Shader, "GlShaderProgram: trying to attach empty shader");
+        throw AT2ShaderException( "GlShaderProgram: trying to attach empty shader");
 
     const GLuint shaderId = LoadShader(Mappings::TranslateShaderType(_type), _code);
     glAttachShader(m_programId, shaderId);

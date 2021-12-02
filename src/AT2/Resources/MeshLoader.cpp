@@ -116,8 +116,7 @@ namespace
                 if (const aiTexture* embeddedTexture = m_scene->GetEmbeddedTexture(path))
                 {
                     if (embeddedTexture->mHeight)
-                        throw AT2Exception(AT2Exception::ErrorCase::Texture,
-                                           "reading raw texture from memory not implemented yet");
+                        throw AT2TextureException("reading raw texture from memory not implemented yet");
 
                     return TextureLoader::LoadTexture(m_renderer,
                                                       std::span {reinterpret_cast<const std::byte*>(embeddedTexture->pcData), embeddedTexture->mWidth});

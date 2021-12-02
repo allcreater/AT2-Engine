@@ -94,7 +94,7 @@ void GlRenderer::DispatchCompute(glm::uvec3 threadGroupSize)
 void GlRenderer::Draw(Primitives::Primitive type, size_t first, long count, int numInstances, int baseVertex)
 {
     if (first < 0 || count < 0 || numInstances < 0 || baseVertex < 0)
-        throw AT2Exception(AT2Exception::ErrorCase::Renderer, "GlRenderer: Draw arguments should be positive!");
+        throw AT2RendererException( "GlRenderer: Draw arguments should be positive!");
 
     const auto platformPrimitiveMode = Mappings::TranslatePrimitiveType(type);
 
@@ -119,8 +119,7 @@ void GlRenderer::Draw(Primitives::Primitive type, size_t first, long count, int 
     else
     {
         if (baseVertex != 0)
-            throw AT2Exception(AT2Exception::ErrorCase::Renderer,
-                               "GlRenderer: baseVertex supported only with index buffers");
+            throw AT2RendererException("GlRenderer: baseVertex supported only with index buffers");
 
         if (numInstances > 1)
             glDrawArraysInstanced(platformPrimitiveMode, static_cast<GLint>(first), static_cast<GLsizei>(count),

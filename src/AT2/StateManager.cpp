@@ -14,8 +14,7 @@ void StateManager::BindTextures(const TextureSet& _textures)
 {
     const auto numModules = m_bindedTextures.size();
     if (_textures.size() > numModules)
-        throw AT2Exception(AT2Exception::ErrorCase::Unknown,
-                           "StateManager: trying to bind more textures than free texture units");
+        throw AT2Exception("StateManager: trying to bind more textures than free texture units");
 
     //let's mark texture units which stay unchanged
     std::vector<bool> moduleLock(m_bindedTextures.size());

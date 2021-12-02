@@ -53,25 +53,21 @@ namespace AT2::OpenGL
 
         void SetColorAttachment(unsigned int, const std::shared_ptr<ITexture>&) override
         {
-            throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
-                               "GlScreenFrameBuffer dont'support attachements");
+            throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
         }
 
         [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int) const override
         {
-            throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
-                               "GlScreenFrameBuffer dont'support attachements");
+            throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
         }
         void SetDepthAttachment(const std::shared_ptr<ITexture>&) override
         {
-            throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
-                               "GlScreenFrameBuffer dont'support attachements");
+            throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
         }
 
         [[nodiscard]] std::shared_ptr<ITexture> GetDepthAttachment() const override
         {
-            throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
-                               "GlScreenFrameBuffer dont'support attachements");
+            throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
         }
 
         [[nodiscard]] glm::ivec2 GetActualSize() const override

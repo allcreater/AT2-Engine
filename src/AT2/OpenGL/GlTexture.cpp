@@ -191,17 +191,17 @@ void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, Ex
     const auto level = static_cast<GLint>(_level);
 
     if (size + offset > m_size.x)
-        throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
+        throw AT2TextureException( "Some SubImage texels out of texture bounds");
 
     if (const auto* tex1D = std::get_if<Texture1D>(&GetType()))
     {
         if (size >= static_cast<int>(tex1D->getSize().x))
-            throw AT2Exception(AT2Exception::ErrorCase::Texture, "SubImage size more than texture actual size");
+            throw AT2TextureException( "SubImage size more than texture actual size");
 
         glTextureSubImage1D(m_id, level, m_internalFormat, size, externalFormat, externalType, data);
     }
     else
-        throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
+        throw AT2NotImplementedException(
                            "SubImage1D operation could be performed only at Texture1D target");
 }
 
@@ -216,7 +216,7 @@ void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level
     const auto level = static_cast<GLint>(_level);
 
     if (const auto maxCoord = size + offset; maxCoord.x > m_size.x || maxCoord.y > m_size.y)
-        throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
+        throw AT2TextureException( "Some SubImage texels out of texture bounds");
 
     using namespace std;
 
@@ -226,8 +226,7 @@ void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level
                 glTextureSubImage2D(id, level, offset.x, offset.y, size.x, size.y, externalFormat,
                                        externalType, data);
             else
-                throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
-                                   "SubImage2D supports only Texture1DArray, Texture2D, TextureCube");
+                throw AT2NotImplementedException("SubImage2D supports only Texture1DArray, Texture2D, TextureCube");
         },
         GetType());
 }
@@ -244,7 +243,7 @@ void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level
 
     if (const auto maxCoord = size + offset;
         maxCoord.x > m_size.x || maxCoord.y > m_size.y || maxCoord.z > m_size.z)
-        throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some SubImage texels out of texture bounds");
+        throw AT2TextureException( "Some SubImage texels out of texture bounds");
 
     using namespace std;
     visit(
@@ -262,8 +261,7 @@ void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level
                                     externalType, data);
             }
             else
-                throw AT2Exception(AT2Exception::ErrorCase::NotImplemented,
-                                   "SubImage3D supports only Texture2DArray, Texture3D");
+                throw AT2NotImplementedException("SubImage3D supports only Texture2DArray, Texture3D");
         },
         GetType());
 }
@@ -272,7 +270,7 @@ void GlTexture::CopyFromFramebuffer(GLint level, glm::ivec2 pos, glm::ivec2 size
 {
     if (const auto maxCoord = textureOffset + glm::ivec3(size, 1);
         maxCoord.x > m_size.x || maxCoord.y > m_size.y || maxCoord.z > m_size.z)
-        throw AT2Exception(AT2Exception::ErrorCase::Texture, "Some CopyFromFramebuffer texels out of texture bounds");
+        throw AT2TextureException( "Some CopyFromFramebuffer texels out of texture bounds");
 
     using namespace std;
 
@@ -284,7 +282,7 @@ void GlTexture::CopyFromFramebuffer(GLint level, glm::ivec2 pos, glm::ivec2 size
                                is_same_v<T, TextureCubeArray> || is_same_v<T, TextureCube>)
                 glCopyTextureSubImage3D(id, level, textureOffset.x, textureOffset.y, textureOffset.z, pos.x, pos.y, size.x, size.y);
             else
-                throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Probably not implemented");
+                throw AT2NotImplementedException( "Probably not implemented");
         },
         GetType());
 }

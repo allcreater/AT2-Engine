@@ -35,8 +35,7 @@ void GlVertexBuffer::SetDataRaw(std::span<const std::byte> data)
 std::span<std::byte> GlVertexBuffer::Map(BufferUsage usage)
 {
     if (m_mapped)
-        throw AT2Exception(AT2Exception::ErrorCase::Buffer,
-                               "GlVertexBuffer: you must unmap buffer before you could map it again");
+        throw AT2BufferException("GlVertexBuffer: you must unmap buffer before you could map it again");
 
     m_mapped = true;
 
@@ -46,8 +45,7 @@ std::span<std::byte> GlVertexBuffer::Map(BufferUsage usage)
 std::span<std::byte> GlVertexBuffer::MapRange(BufferUsage usage, size_t offset, size_t length)
 {
     if (m_mapped)
-        throw AT2Exception(AT2Exception::ErrorCase::Buffer,
-                               "GlVertexBuffer: you must unmap buffer before you could map it again");
+        throw AT2BufferException("GlVertexBuffer: you must unmap buffer before you could map it again");
     if (offset + length > m_length)
         throw std::out_of_range("GlVertexBuffer:MapRange");
 

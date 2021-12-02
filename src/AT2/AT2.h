@@ -23,6 +23,7 @@
 #include "AT2_states.hpp"
 #include "AT2_textures.hpp"
 #include "AT2_types.hpp"
+#include "AT2_exceptions.hpp"
 
 #define NON_COPYABLE_OR_MOVABLE(type)                                                                                  \
     type(const type&) = delete;                                                                                        \
@@ -243,27 +244,6 @@ namespace AT2
         virtual void SetUniform(const str& name, const std::shared_ptr<ITexture>& value) = 0;
 
         virtual void Bind(IStateManager& stateManager) const = 0;
-    };
-
-    class AT2Exception : public std::runtime_error
-    {
-    public:
-        enum struct ErrorCase
-        {
-            Unknown = -1,
-            NotImplemented,
-            Renderer,
-            Shader,
-            Buffer,
-            Texture,
-            UI,
-            File
-        } Case;
-
-
-        AT2Exception(const char* _message) : std::runtime_error(_message), Case(ErrorCase::Unknown) {};
-        AT2Exception(ErrorCase _case, const std::string& _message) :
-            std::runtime_error(_message.c_str()), Case(_case) {};
     };
 
     class IRendererCapabilities

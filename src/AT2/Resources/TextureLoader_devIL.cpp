@@ -104,7 +104,7 @@ namespace
         ilBindImage(image.getId());
 
         if (!imageLoader())
-            throw AT2Exception(AT2Exception::ErrorCase::File, "GlResourceFactory: could not load image");
+            throw AT2IOException( "GlResourceFactory: could not load image");
 
 
         ILinfo imageInfo;
@@ -127,7 +127,7 @@ namespace
                 //...
             }
 
-            throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Cube maps still unsupported :(");
+            throw AT2NotImplementedException( "Cube maps still unsupported :(");
         }
 
 
@@ -184,12 +184,11 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
 TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, std::span<const std::byte> data)
 {
     if (data.size() > std::numeric_limits<ILuint>::max())
-        throw AT2Exception(AT2Exception::ErrorCase::Texture, "DevIL does not support images more than 4GB");
+        throw AT2TextureException( "DevIL does not support images more than 4GB");
 
     const ILenum type = ilDetermineTypeL(data.data(), static_cast<ILuint>(data.size()));
     if (type == IL_TYPE_UNKNOWN)
-        throw AT2Exception(AT2Exception::ErrorCase::Texture,
-                           "Couldn't determine texture format while reading from memory");
+        throw AT2TextureException("Couldn't determine texture format while reading from memory");
 
     return Load(renderer, [=] { return ilLoadL(type, data.data(), static_cast<ILuint>(data.size())) == IL_TRUE; });
 }

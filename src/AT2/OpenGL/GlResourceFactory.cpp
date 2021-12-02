@@ -17,7 +17,7 @@ using namespace OpenGL;
 constexpr GLint DetermineInternalFormat(ExternalTextureFormat format)
 {
     if (format.DataType == BufferDataType::Double || format.DataType == BufferDataType::Fixed)
-        throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "double and fixed-point buffer layout support not implemented");
+        throw AT2NotImplementedException( "double and fixed-point buffer layout support not implemented");
 
     switch (format.ChannelsLayout)
     {
@@ -101,7 +101,7 @@ constexpr GLint DetermineInternalFormat(ExternalTextureFormat format)
         {
         case BufferDataType::Byte:
         case BufferDataType::UByte:
-            throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "Depth component buffer does not supports byte formats");
+            throw AT2NotImplementedException( "Depth component buffer does not supports byte formats");
         case BufferDataType::Short:
         case BufferDataType::UShort:
         case BufferDataType::HalfFloat:
@@ -114,7 +114,7 @@ constexpr GLint DetermineInternalFormat(ExternalTextureFormat format)
 
         }
     case TextureLayout::StencilIndex:
-        throw AT2Exception(AT2Exception::ErrorCase::NotImplemented, "StencilIndex buffers loading not implemented");
+        throw AT2NotImplementedException( "StencilIndex buffers loading not implemented");
     }
 }
 
@@ -186,7 +186,7 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
                 else if (filename.substr(filename.length() - 8) == ".cs.glsl")
                     m_filenames.emplace_back(filename, AT2::ShaderType::Computational);
                 else
-                    throw AT2Exception(AT2Exception::ErrorCase::Shader, "unrecognized shader type"s);
+                    throw AT2ShaderException( "unrecognized shader type"s);
             }
 
             Reload();
@@ -212,7 +212,7 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
 
             std::ifstream t(_filename);
             if (!t.is_open())
-                throw AT2Exception(AT2Exception::ErrorCase::File, "file '"s + _filename + "' not found.");
+                throw AT2IOException("file '"s + _filename + "' not found.");
 
 
             return std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());

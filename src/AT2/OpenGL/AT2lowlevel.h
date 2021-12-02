@@ -23,7 +23,7 @@ namespace AT2::OpenGL
         glGetIntegerv(parameter, &result);
 
         if (result < min || result > max)
-            throw AT2Exception(AT2Exception::ErrorCase::Renderer, "renderer capabilities query error");
+            throw AT2RendererException( "renderer capabilities query error");
 
         return result;
     }

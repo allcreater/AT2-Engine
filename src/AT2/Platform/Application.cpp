@@ -10,7 +10,7 @@ void GraphicsContext::Initialize(std::shared_ptr<IWindow> window)
     m_window = std::move(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        throw AT2::AT2Exception("Failed to initialize GLAD");
+        throw AT2Exception("Failed to initialize GLAD");
 
     m_renderer = std::make_unique<AT2::OpenGL::GlRenderer>();
     OnInitialized();

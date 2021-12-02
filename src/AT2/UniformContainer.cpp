@@ -20,8 +20,7 @@ void UniformContainer::Bind(IStateManager& stateManager) const
 {
     const auto& program = stateManager.GetActiveShader();
     if (!program)
-        throw AT2Exception(AT2Exception::ErrorCase::Shader,
-                           "GlUniformContainer: try to bind uniform container when parent program is missing");
+        throw AT2ShaderException("GlUniformContainer: try to bind uniform container when parent program is missing");
 
     for (const auto& [name, value] : m_uniformsMap)
         program->SetUniform(name, value);

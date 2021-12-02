@@ -23,7 +23,7 @@ void Node::Measure(const glm::ivec2& position, const glm::uvec2& possibleSize)
     case Alignment::Center:
         m_CanvasData.Position.x = position.x + (possibleSize.x - m_CanvasData.MeasuredSize.x) / 2;
         break;
-    default: throw AT2::AT2Exception(AT2Exception::ErrorCase::UI, "Incorrect HorizontalAlignment");
+    default: throw AT2Exception( "UI: Incorrect HorizontalAlignment");
     }
 
     switch (VerticalAlignment)
@@ -34,7 +34,7 @@ void Node::Measure(const glm::ivec2& position, const glm::uvec2& possibleSize)
     case Alignment::Center:
         m_CanvasData.Position.y = position.y + (possibleSize.y - m_CanvasData.MeasuredSize.y) / 2;
         break;
-    default: throw AT2::AT2Exception(AT2Exception::ErrorCase::UI, "Incorrect VerticalAlignment");
+    default: throw AT2Exception("UI: Incorrect VerticalAlignment");
     }
 }
 

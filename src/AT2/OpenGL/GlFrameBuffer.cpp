@@ -17,7 +17,7 @@ GlFrameBuffer::~GlFrameBuffer()
 void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& abstractTexture)
 {
     if (attachmentNumber >= m_colorAttachments.size())
-        throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: unsupported attachment number");
+        throw AT2BufferException( "GlFrameBuffer: unsupported attachment number");
 
     m_dirtyFlag = true;
 
@@ -42,7 +42,7 @@ void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, const std:
         if (abstractTexture)
         {
             m_colorAttachments[attachmentNumber] = nullptr;
-            throw AT2Exception(AT2Exception::ErrorCase::Buffer,
+            throw AT2BufferException(
                                "GlFrameBuffer: attachment texture should be GlTexture");
         }
     }
@@ -53,7 +53,7 @@ void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, const std:
 std::shared_ptr<ITexture> GlFrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
 {
     if (attachmentNumber >= m_colorAttachments.size())
-        throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: unsupported attachment number");
+        throw AT2BufferException( "GlFrameBuffer: unsupported attachment number");
 
     return m_colorAttachments[attachmentNumber];
 }
@@ -67,13 +67,13 @@ void GlFrameBuffer::SetDepthAttachment(const std::shared_ptr<ITexture>& abstract
     {
         glNamedFramebufferTexture(m_id, GL_DEPTH_ATTACHMENT, 0, 0);
         if (abstractTexture)
-            throw AT2Exception(AT2Exception::ErrorCase::Buffer,
+            throw AT2BufferException(
                                "GlFrameBuffer: attachment texture should be GlTexture");
     }
     else if (std::holds_alternative<Texture2D>(m_depthAttachment->GetType()))
         glNamedFramebufferTexture(m_id, GL_DEPTH_ATTACHMENT, m_depthAttachment->GetId(), 0);
     else
-        throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: depth attachment should be Texture2D");
+        throw AT2BufferException( "GlFrameBuffer: depth attachment should be Texture2D");
 }
 
 std::shared_ptr<ITexture> GlFrameBuffer::GetDepthAttachment() const
@@ -89,7 +89,7 @@ void GlFrameBuffer::Bind()
     if (m_dirtyFlag)
     {
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            throw AT2Exception(AT2Exception::ErrorCase::Buffer, "GlFrameBuffer: validation failed");
+            throw AT2BufferException( "GlFrameBuffer: validation failed");
 
         m_size = m_colorAttachments[0]->GetSize();
         m_dirtyFlag = false;
