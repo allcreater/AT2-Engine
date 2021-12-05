@@ -14,109 +14,92 @@ using namespace std::literals;
 using namespace AT2;
 using namespace OpenGL;
 
-constexpr GLint DetermineInternalFormat(ExternalTextureFormat format)
+namespace
 {
-    if (format.DataType == BufferDataType::Double || format.DataType == BufferDataType::Fixed)
-        throw AT2NotImplementedException( "double and fixed-point buffer layout support not implemented");
-
-    switch (format.ChannelsLayout)
+    constexpr GLint DetermineInternalFormat(ExternalTextureFormat format)
     {
-    case TextureLayout::Red:
-        switch (format.DataType)
+        if (format.DataType == BufferDataType::Double || format.DataType == BufferDataType::Fixed)
+            throw AT2NotImplementedException("double and fixed-point buffer layout support not implemented");
+
+        switch (format.ChannelsLayout)
         {
-        case BufferDataType::Byte:
-        case BufferDataType::UByte:
-            return GL_R8;
-        case BufferDataType::Short:
-        case BufferDataType::UShort:
-            return GL_R16;
-        case BufferDataType::Int:
-        case BufferDataType::UInt:
-            return GL_R32I; //TODO: check correctness
-        case BufferDataType::HalfFloat:
-            return GL_R16F;
-        case BufferDataType::Float:
-            return GL_R32F;
+        case TextureLayout::Red:
+            switch (format.DataType)
+            {
+            case BufferDataType::Byte:
+            case BufferDataType::UByte: return GL_R8;
+            case BufferDataType::Short:
+            case BufferDataType::UShort: return GL_R16;
+            case BufferDataType::Int:
+            case BufferDataType::UInt: return GL_R32I; //TODO: check correctness
+            case BufferDataType::HalfFloat: return GL_R16F;
+            case BufferDataType::Float: return GL_R32F;
+            default: throw AT2Exception("Unsupported external format DataType");
+            }
+
+        case TextureLayout::RG:
+            switch (format.DataType)
+            {
+            case BufferDataType::Byte:
+            case BufferDataType::UByte: return GL_RG8;
+            case BufferDataType::Short:
+            case BufferDataType::UShort: return GL_RG16;
+            case BufferDataType::Int:
+            case BufferDataType::UInt: return GL_RG32I; //TODO: check correctness
+            case BufferDataType::HalfFloat: return GL_RG16F;
+            case BufferDataType::Float: return GL_RG32F;
+            default: throw AT2Exception("Unsupported external format DataType");
+            }
+
+        case TextureLayout::RGB:
+        case TextureLayout::BGR:
+            switch (format.DataType)
+            {
+            case BufferDataType::Byte:
+            case BufferDataType::UByte: return format.PreferSRGB ? GL_SRGB8 : GL_RGB8;
+            case BufferDataType::Short:
+            case BufferDataType::UShort: return GL_RGB16;
+            case BufferDataType::Int:
+            case BufferDataType::UInt: return GL_RGB32I; //TODO: check correctness
+            case BufferDataType::HalfFloat: return GL_RGB16F;
+            case BufferDataType::Float: return GL_RGB32F;
+            default: throw AT2Exception("Unsupported external format DataType");
+            }
+
+        case TextureLayout::RGBA:
+        case TextureLayout::BGRA:
+            switch (format.DataType)
+            {
+            case BufferDataType::Byte:
+            case BufferDataType::UByte: return format.PreferSRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+            case BufferDataType::Short:
+            case BufferDataType::UShort: return GL_RGBA16;
+            case BufferDataType::Int:
+            case BufferDataType::UInt: return GL_RGBA32I; //TODO: check correctness
+            case BufferDataType::HalfFloat: return GL_RGBA16F;
+            case BufferDataType::Float: return GL_RGBA32F;
+            default: throw AT2Exception("Unsupported external format DataType");
+            }
+
+
+        case TextureLayout::DepthComponent:
+            switch (format.DataType)
+            {
+            case BufferDataType::Byte:
+            case BufferDataType::UByte: throw AT2NotImplementedException("Depth component buffer does not supports byte formats");
+            case BufferDataType::Short:
+            case BufferDataType::UShort:
+            case BufferDataType::HalfFloat: return GL_DEPTH_COMPONENT16;
+            case BufferDataType::Int:
+            case BufferDataType::UInt: return GL_DEPTH_COMPONENT32; //TODO: check correctness
+            case BufferDataType::Float: return GL_DEPTH_COMPONENT32F;
+            default: throw AT2Exception("Unsupported external format DataType");
+            }
+        case TextureLayout::StencilIndex: throw AT2NotImplementedException("StencilIndex buffers loading not implemented");
+        default: throw AT2Exception("Unsupported external format ChannelsLayout");
         }
-
-    case TextureLayout::RG:
-        switch (format.DataType)
-        {
-        case BufferDataType::Byte:
-        case BufferDataType::UByte:
-            return GL_RG8;
-        case BufferDataType::Short:
-        case BufferDataType::UShort:
-            return GL_RG16;
-        case BufferDataType::Int:
-        case BufferDataType::UInt:
-            return GL_RG32I; //TODO: check correctness
-        case BufferDataType::HalfFloat:
-            return GL_RG16F;
-        case BufferDataType::Float:
-            return GL_RG32F;
-        }
-
-    case TextureLayout::RGB:
-    case TextureLayout::BGR:
-        switch (format.DataType)
-        {
-        case BufferDataType::Byte:
-        case BufferDataType::UByte:
-            return format.PreferSRGB ? GL_SRGB8 : GL_RGB8;
-        case BufferDataType::Short:
-        case BufferDataType::UShort:
-            return GL_RGB16;
-        case BufferDataType::Int:
-        case BufferDataType::UInt:
-            return GL_RGB32I; //TODO: check correctness
-        case BufferDataType::HalfFloat: 
-            return GL_RGB16F;
-        case BufferDataType::Float: 
-            return GL_RGB32F;
-        }
-
-    case TextureLayout::RGBA:
-    case TextureLayout::BGRA:
-        switch (format.DataType)
-        {
-        case BufferDataType::Byte:
-        case BufferDataType::UByte:
-            return format.PreferSRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
-        case BufferDataType::Short:
-        case BufferDataType::UShort:
-            return GL_RGBA16;
-        case BufferDataType::Int:
-        case BufferDataType::UInt:
-            return GL_RGBA32I; //TODO: check correctness
-        case BufferDataType::HalfFloat:
-            return GL_RGBA16F;
-        case BufferDataType::Float:
-            return GL_RGBA32F;
-        }
-
-
-    case TextureLayout::DepthComponent:
-        switch (format.DataType)
-        {
-        case BufferDataType::Byte:
-        case BufferDataType::UByte:
-            throw AT2NotImplementedException( "Depth component buffer does not supports byte formats");
-        case BufferDataType::Short:
-        case BufferDataType::UShort:
-        case BufferDataType::HalfFloat:
-            return GL_DEPTH_COMPONENT16;
-        case BufferDataType::Int:
-        case BufferDataType::UInt:
-            return GL_DEPTH_COMPONENT32; //TODO: check correctness
-        case BufferDataType::Float:
-            return GL_DEPTH_COMPONENT32F;
-
-        }
-    case TextureLayout::StencilIndex:
-        throw AT2NotImplementedException( "StencilIndex buffers loading not implemented");
     }
-}
+} // namespace
 
 
 GlResourceFactory::GlResourceFactory(GlRenderer& renderer) : m_renderer(renderer) {}

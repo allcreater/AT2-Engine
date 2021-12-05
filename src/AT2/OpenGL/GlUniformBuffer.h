@@ -7,7 +7,7 @@
 namespace AT2::OpenGL
 {
 
-    class GlUniformBuffer : protected GlVertexBuffer, public virtual IBuffer, public IUniformContainer
+    class GlUniformBuffer : public GlVertexBuffer, public IUniformContainer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(GlUniformBuffer)
@@ -15,7 +15,6 @@ namespace AT2::OpenGL
         //UniformBlockInfo does not linked with specific program, it's just template for buffer structuring
         //TODO: Abstract interface to uniform buffer template definition. It should not be linked with program introspection directly.
         explicit GlUniformBuffer(std::shared_ptr<const OpenGL::Introspection::UniformBlockInfo> ubi);
-        ~GlUniformBuffer() override;
 
     public:
         void SetUniform(const str& name, const Uniform& value) override;

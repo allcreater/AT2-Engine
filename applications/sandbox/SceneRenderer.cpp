@@ -142,8 +142,9 @@ namespace AT2::Scene
         }
     }
 
-    void SceneRenderer::Initialize(std::shared_ptr<IRenderer> renderer)
+    void SceneRenderer::Initialize(std::shared_ptr<IRenderer> _renderer)
     {
+        this->renderer = std::move(_renderer);
 
         resources.postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/shaders/postprocess.vs.glsl", "resources/shaders/postprocess.fs.glsl"});
@@ -159,8 +160,6 @@ namespace AT2::Scene
 
         lightMesh = Utils::MakeSphere(*renderer, {32, 16});
         quadMesh = Utils::MakeFullscreenQuadMesh(*renderer);
-
-        this->renderer = std::move(renderer);
     }
 
     void SceneRenderer::ResizeFramebuffers(glm::ivec2 newSize)

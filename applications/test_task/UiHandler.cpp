@@ -12,29 +12,32 @@
 using namespace AT2;
 using namespace AT2::UI;
 
-static std::vector<float> GenerateCurve(size_t numPoints, float amplitude, size_t numHarmonics = 10)
+namespace
 {
-    static std::mt19937 randGenerator;
-    std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.3f);
-    std::uniform_real_distribution<float> phaseDistribution(0.0f, float(glm::pi<double>() * 2));
-    std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
-
-    std::vector<std::tuple<float, float, float>> harmonics(numHarmonics);
-    for (auto& harmonic : harmonics)
-        harmonic = {frequencyDistribution(randGenerator), phaseDistribution(randGenerator),
-                    amplitudeDistribution(randGenerator)};
-
-    std::vector<float> data(numPoints);
-    for (size_t i = 0; i < numPoints; ++i)
+    std::vector<float> GenerateCurve(size_t numPoints, float amplitudeModifier, size_t numHarmonics = 10)
     {
-        data[i] = 0.0f;
-        for (const auto& [freq, phase, amplitude] : harmonics)
-            data[i] += sin(i * freq + phase) * amplitude;
+        static std::mt19937 randGenerator;
+        std::uniform_real_distribution<float> frequencyDistribution(0.0001f, 0.3f);
+        std::uniform_real_distribution<float> phaseDistribution(0.0f, float(glm::pi<double>() * 2));
+        std::uniform_real_distribution<float> amplitudeDistribution(0.0f, 1.0f);
+
+        std::vector<std::tuple<float, float, float>> harmonics(numHarmonics);
+        for (auto& harmonic : harmonics)
+            harmonic = {frequencyDistribution(randGenerator), phaseDistribution(randGenerator),
+                        amplitudeDistribution(randGenerator) * amplitudeModifier};
+
+        std::vector<float> data(numPoints);
+        for (size_t i = 0; i < numPoints; ++i)
+        {
+            data[i] = 0.0f;
+            for (const auto& [freq, phase, amplitude] : harmonics)
+                data[i] += sin(i * freq + phase) * amplitude;
+        }
+
+
+        return data;
     }
-
-
-    return data;
-}
+} // namespace
 
 struct PlotCurveSwitchingAnimation : public IAnimation
 {

@@ -25,7 +25,7 @@ class MultisampleMixin : public Base
 
 public:
     template <typename... Args>
-    constexpr MultisampleMixin(unsigned samples, bool fixedSampleLocations, Args... args) : Base(args...), m_samples(samples), m_fixedSampleLocations(fixedSampleLocations)
+    constexpr MultisampleMixin(glm::u8 samples, bool fixedSampleLocations, Args... args) : Base(args...), m_samples(samples), m_fixedSampleLocations(fixedSampleLocations)
     {
     }
 

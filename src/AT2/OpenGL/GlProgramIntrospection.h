@@ -29,8 +29,8 @@ namespace AT2::OpenGL::Introspection
     {
         std::string Name;
         GLint BlockIndex = 0;
-        GLint DataSize = 0;
-        GLint InitialBinding = 0;
+        GLuint DataSize = 0;
+        GLuint InitialBinding = 0;
 
         BufferedUniformMap Uniforms;
     };

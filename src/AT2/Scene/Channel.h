@@ -100,7 +100,7 @@ namespace AT2::Animation
     {
     public:
         using Channel<T, Channel<T, Step, F>, F>::Channel;
-        const T& getValue(Time time) const noexcept
+        T getValue(Time time) const noexcept
         {
             const auto nextFrame = this->findFramePosition(time);
             return this->m_values[(nextFrame > 0) ? nextFrame - 1 : 0];
@@ -112,7 +112,7 @@ namespace AT2::Animation
     {
     public:
         using Channel<T, Channel<T, Linear, F>, F>::Channel;
-        const T& getValue(Time time) const noexcept
+        T getValue(Time time) const noexcept
         {
             const auto nextFrame = this->findFramePosition(time);
             const auto frame = (nextFrame > 0) ? nextFrame - 1 : 0;
@@ -129,7 +129,7 @@ namespace AT2::Animation
     {
     public:
         using Channel<T, Channel<T, CubicSpline, F>, F>::Channel;
-        const T& getValue(Time time) const noexcept
+        T getValue(Time time) const noexcept
         {
             const auto nextFrame = this->findFramePosition(time);
             const auto frame = (nextFrame > 0) ? nextFrame - 1 : 0;

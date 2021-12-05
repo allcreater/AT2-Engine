@@ -25,19 +25,22 @@ namespace
 {
     std::tuple<ExternalTextureFormat, glm::ivec2> DetermineExternalFormat(std::span<const stbi_uc> buffer) 
     { 
+        assert(buffer.size_bytes() < std::numeric_limits<int>::max());
+        const auto intSize = static_cast<int>(buffer.size_bytes());
+
         ExternalTextureFormat format {TextureLayout::Red, BufferDataType::UByte};
 
-        if(stbi_is_16_bit_from_memory(buffer.data(), buffer.size_bytes()))
+        if (stbi_is_16_bit_from_memory(buffer.data(), intSize))
         {
             format.DataType = BufferDataType::UShort;
         }
-        else if (stbi_is_hdr_from_memory(buffer.data(), buffer.size_bytes()))
+        else if (stbi_is_hdr_from_memory(buffer.data(), intSize))
         {
             format.DataType = BufferDataType::Float;
         }
 
         int w = 0, h = 0, c = 0;
-        stbi_info_from_memory(buffer.data(), buffer.size_bytes(), &w, &h, &c);
+        stbi_info_from_memory(buffer.data(), intSize, &w, &h, &c);
 
         switch (c)
         {
@@ -101,7 +104,7 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
     TextureRef result = nullptr;
     if (parsedData)
     {
-        const unsigned numMipmaps = log(std::max({size.x, size.y})) / log(2);
+        const auto numMipmaps = static_cast<unsigned>(log(std::max(size.x, size.y)) / log(2));
 
         result = renderer->GetResourceFactory().CreateTexture(Texture2D {size, numMipmaps}, format);
         result->SubImage2D({0, 0}, glm::xy(size), 0, format, parsedData);

@@ -52,14 +52,17 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
                 const auto [blockNameLength, dataSize, binding] = getProgramResource(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex),
                                        std::array<GLenum, 3> {GL_NAME_LENGTH, GL_BUFFER_DATA_SIZE, GL_BUFFER_BINDING});
 
+                assert(blockNameLength > 0);
                 std::string blockName(static_cast<size_t>(blockNameLength)-1, '\0'); //because nameLength includes \0
                 glGetProgramResourceName(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex), blockNameLength, nullptr,
                                          blockName.data());
 
                 block.Name = std::move(blockName);
-                block.InitialBinding = binding;
                 block.BlockIndex = blockIndex;
-                block.DataSize = dataSize;
+
+                assert(dataSize > 0 && binding > 0);
+                block.DataSize = static_cast<GLuint>(dataSize);
+                block.InitialBinding = static_cast<GLuint>(binding);
 
                 //add it to lookup
                 programInfo->uniformBlocksByName.try_emplace(block.Name, &block);

@@ -18,7 +18,7 @@ using namespace std::literals;
 namespace
 {
     //from gltf viewer example
-    std::optional<BufferBindingParams> TranslateDataType(fx::gltf::Accessor const& accessor) noexcept
+    BufferBindingParams TranslateDataType(fx::gltf::Accessor const& accessor)
     {
         BufferBindingParams result;
         result.Count = 1;
@@ -89,10 +89,10 @@ namespace
         case WrappingMode::MirroredRepeat: return TextureWrapMode::MirroredRepeat;
         }
 
-        assert(false);
+        throw std::logic_error("invalid conversion");
     }
 
-    constexpr std::optional<TextureMinificationMode> TranslateMinFilter(fx::gltf::Sampler::MinFilter minFilter)
+    constexpr TextureMinificationMode TranslateMinFilter(fx::gltf::Sampler::MinFilter minFilter)
     {
         using MinFilter = fx::gltf::Sampler::MinFilter;
         switch (minFilter)
@@ -106,10 +106,10 @@ namespace
         case MinFilter::LinearMipMapLinear:     return TextureMinificationMode{TextureSamplingMode::Linear, MipmapSamplingMode::Linear};
         }
 
-        assert(false);
+        throw std::logic_error("invalid conversion");
     }
 
-    constexpr std::optional<TextureSamplingMode> TranslateMagFilter(fx::gltf::Sampler::MagFilter magFilter)
+    constexpr TextureSamplingMode TranslateMagFilter(fx::gltf::Sampler::MagFilter magFilter)
     {
         using MagFilter = fx::gltf::Sampler::MagFilter;
         switch (magFilter)
@@ -119,7 +119,7 @@ namespace
         case MagFilter::Linear: return TextureSamplingMode::Linear;
         }
 
-        assert(false);
+        throw std::logic_error("invalid conversion");
     }
 
     constexpr Animation::InterpolationMode TranslateInterpolationMode(fx::gltf::Animation::Sampler::Type interpolation)
@@ -422,7 +422,7 @@ namespace
 
             loadedTexture->SetWrapMode({TranslateWrappingMode(sampler.wrapS), TranslateWrappingMode(sampler.wrapT)});
             loadedTexture->SetSamplingMode(
-                TextureSamplingParams {*TranslateMagFilter(sampler.magFilter), *TranslateMinFilter(sampler.minFilter)});
+                TextureSamplingParams {TranslateMagFilter(sampler.magFilter), TranslateMinFilter(sampler.minFilter)});
 
             return loadedTexture;
 
@@ -482,13 +482,10 @@ namespace
 
 
             const auto dataType = TranslateDataType(accessor);
-            if (!dataType.has_value())
-                throw std::logic_error("unsupported data format");
-
-            return {*dataType, accessor.count,
+            return {dataType, accessor.count,
                     std::as_bytes(std::span {buffer.data})
                         .subspan(static_cast<uint64_t>(bufferView.byteOffset) + accessor.byteOffset,
-                                 accessor.count * dataType->Stride)};
+                                 accessor.count * dataType.Stride)};
         }
 
         SubmeshGroup LoadMesh(const fx::gltf::Mesh& gltfMesh)

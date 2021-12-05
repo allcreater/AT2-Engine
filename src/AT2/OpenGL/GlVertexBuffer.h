@@ -5,7 +5,7 @@
 
 namespace AT2::OpenGL
 {
-
+    //TODO: incorrect class and interface name. It's any buffer, not just vertex one
     class GlVertexBuffer : public IVertexBuffer
     {
     public:
@@ -60,7 +60,7 @@ namespace AT2::OpenGL
         };
 
 
-    protected:
+    private:
         GLuint m_id;
         size_t m_length {0};
 

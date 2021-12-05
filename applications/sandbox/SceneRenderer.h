@@ -101,9 +101,8 @@ namespace AT2::Scene
 
         std::shared_ptr<IUniformContainer> sphereLightsUniforms, skyLightsUniforms, postprocessUniforms;
 
-        bool dirtyFramebuffers = false;
         glm::ivec2 framebuffer_size = {512, 512};
-        double time = 0.0;
+        bool dirtyFramebuffers = false;
     };
 
 } // namespace AT2

@@ -11,14 +11,8 @@ using namespace glm;
 GlUniformBuffer::GlUniformBuffer(std::shared_ptr<const UniformBlockInfo> ubi) :
     GlVertexBuffer(VertexBufferType::UniformBuffer), m_uniformBlockInfo(std::move(ubi)), m_bindingPoint(0)
 {
-    m_length = m_uniformBlockInfo->DataSize;
-
-    glNamedBufferData(m_id, m_length, 0, static_cast<GLenum>(m_usageHint));
-}
-
-GlUniformBuffer::~GlUniformBuffer()
-{
-    glDeleteBuffers(1, &m_id);
+    constexpr std::byte* emptyData = nullptr;
+    SetDataRaw(std::span{emptyData, m_uniformBlockInfo->DataSize});
 }
 
 template <typename T>
@@ -65,11 +59,11 @@ void GlUniformBuffer::SetUniform(const str& name, const Uniform& value)
 
 void GlUniformBuffer::Bind(IStateManager&) const
 {
-    glBindBufferBase(GL_UNIFORM_BUFFER, m_bindingPoint, m_id);
+    glBindBufferBase(GL_UNIFORM_BUFFER, m_bindingPoint, GetId());
 }
 
 
-void GlUniformBuffer::SetUniform(const str& name, const std::shared_ptr<ITexture>&)
+void GlUniformBuffer::SetUniform(const str&, const std::shared_ptr<ITexture>&)
 {
     throw std::logic_error("not implemented");
 }

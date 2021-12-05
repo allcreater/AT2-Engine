@@ -119,7 +119,7 @@ namespace AT2
         [[nodiscard]] virtual glm::ivec2 GetActualSize() const = 0;
     };
 
-    class IVertexBuffer : public virtual IBuffer
+    class IVertexBuffer : public IBuffer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(IVertexBuffer)

@@ -12,7 +12,7 @@ namespace AT2::Animation
 {
     enum class AnimationNodeId : uint32_t
     {
-        None = -1
+        None = static_cast<uint32_t>(-1)
     };
 
 
