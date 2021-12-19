@@ -1,6 +1,8 @@
 #include "GlProgramIntrospection.h"
 #include <array>
 
+using namespace std::literals;
+
 namespace
 {
     template <size_t N>
@@ -23,24 +25,29 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
     GLint numUniforms = 0;
     glGetProgramInterfaceiv(program, GL_UNIFORM, GL_ACTIVE_RESOURCES, &numUniforms);
 
-    constexpr std::array<GLenum, 7> uniformAttributes {
-        GL_NAME_LENGTH, GL_LOCATION, GL_TYPE, GL_BLOCK_INDEX, GL_OFFSET, GL_ARRAY_STRIDE, GL_MATRIX_STRIDE
+    constexpr std::array<GLenum, 8> uniformAttributes {
+        GL_NAME_LENGTH, GL_LOCATION, GL_TYPE, GL_ARRAY_SIZE, GL_BLOCK_INDEX, GL_OFFSET, GL_ARRAY_STRIDE, GL_MATRIX_STRIDE
     };
 
     auto programInfo = std::unique_ptr<ProgramInfo> { new ProgramInfo() };
 
     for (GLuint uniformIndex = 0; uniformIndex < static_cast<GLuint>(numUniforms); ++uniformIndex)
     {
-        const auto [nameLength, location, type, blockIndex, offset, arrayStride, matrixStride] =
+        const auto [nameLength, location, type, arraySize, blockIndex, offset, arrayStride, matrixStride] =
             getProgramResource(program, GL_UNIFORM, uniformIndex, uniformAttributes);
+
+        assert(arraySize > 0);
 
         //ask a uniform's name
         std::string uniformName(static_cast<size_t>(nameLength)-1, '\0');  //because nameLength includes \0
         glGetProgramResourceName(program, GL_UNIFORM, uniformIndex, nameLength, nullptr, uniformName.data());
 
+        if (uniformName.ends_with("[0]"sv))
+            uniformName.resize(uniformName.length() - 3);
+
         if (blockIndex == static_cast<GLint>(GL_INVALID_INDEX)) //it's free uniforms
         {
-            programInfo->uniforms.try_emplace(std::move(uniformName), UniformInfo{location, type});
+            programInfo->uniforms.try_emplace(std::move(uniformName), UniformInfo {location, arraySize, static_cast<UniformInfo::UniformType>(type)});
         }
         else //it's uniform from uniform block
         {
@@ -69,7 +76,9 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
             }
 
             
-            block.Uniforms.try_emplace(std::move(uniformName), BufferedUniformInfo{{location, type}, offset, arrayStride, matrixStride});
+            block.Uniforms.try_emplace(
+                std::move(uniformName),
+                BufferedUniformInfo {{location, arraySize, static_cast<UniformInfo::UniformType>(type)}, offset, arrayStride, matrixStride});
         }
     }
 

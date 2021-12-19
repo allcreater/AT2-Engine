@@ -61,18 +61,17 @@ namespace AT2::OpenGL
         bool IsActive() const noexcept override;
         std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName) override;
 
-        void AttachShader(const str& data, ShaderType type) override;
+        void AttachShader(std::string_view data, ShaderType type) override;
 
         //Warning: Shader reloading/relinking will invalidate that state
-        void SetUBO(const str& blockName, unsigned int index) override;
-        void SetUniform(const str& name, Uniform value) override;
-        void SetUniformArray(const str& name, UniformArray value) override;
+        void SetUBO(std::string_view blockName, unsigned int index) override;
+        void SetUniform(std::string_view name, Uniform value) override;
+        void SetUniformArray(std::string_view name, UniformArray value) override;
 
         virtual const str& GetName() { return m_name; }
         virtual void SetName(const str& name) { m_name = name; }
 
     protected:
-        const std::shared_ptr<OpenGL::Introspection::ProgramInfo>& GetIntrospection();
         bool TryCompile();
         void CleanUp();
 

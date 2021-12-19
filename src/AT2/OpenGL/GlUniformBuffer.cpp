@@ -25,7 +25,7 @@ namespace
 
 
     template <typename T>
-    void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name, const T& value)
+    void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, std::string_view name, const T& value)
     {
         const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
         if (!ui)
@@ -38,7 +38,7 @@ namespace
 
 
     template <typename T, length_t C, length_t R, qualifier Q>
-    void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name, const glm::mat<C, R, T, Q>& value)
+    void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, std::string_view name, const glm::mat<C, R, T, Q>& value)
     {
         const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
         if (!ui)
@@ -50,7 +50,7 @@ namespace
     }
 } // namespace
 
-void GlUniformBuffer::SetUniform(const str& name, const Uniform& value)
+void GlUniformBuffer::SetUniform(std::string_view name, const Uniform& value)
 {
     using namespace glm;
 
@@ -63,7 +63,7 @@ void GlUniformBuffer::Bind(IStateManager&) const
 }
 
 
-void GlUniformBuffer::SetUniform(const str&, const std::shared_ptr<ITexture>&)
+void GlUniformBuffer::SetUniform(std::string_view, const std::shared_ptr<ITexture>&)
 {
     throw std::logic_error("not implemented");
 }

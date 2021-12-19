@@ -8,33 +8,88 @@ using namespace AT2;
 using namespace OpenGL;
 using namespace Introspection;
 
-GLuint LoadShader(GLenum _shaderType, const str& _text)
+namespace
 {
-    const GLuint shader = glCreateShader(_shaderType);
-
-    const GLchar* data = _text.c_str();
-    auto dataLength = static_cast<GLint>(_text.length());
-    glShaderSource(shader, 1, &data, &dataLength);
-
-    glCompileShader(shader);
-
-    return shader;
-}
-
-constexpr std::string_view ShaderTypeName(ShaderType type)
-{
-    using namespace std::literals;
-    switch (type)
+    template <typename T>
+    auto span_value_ptr(const std::span<T>& value)
     {
-    case ShaderType::Vertex: return "Vertex"sv;
-    case ShaderType::TesselationControl: return "Tesselation control"sv;
-    case ShaderType::TesselationEvaluation: return "Tesselation evaluation"sv;
-    case ShaderType::Geometry: return "Geometry shader"sv;
-    case ShaderType::Fragment: return "Fragmens shader"sv;
-    case ShaderType::Computational: return "Compute shader"sv;
-    default: return ""sv;
+        if constexpr (requires { typename T::value_type; })
+        {
+            return glm::value_ptr(value[0]);
+        }
+        else
+        {
+            return value.data();
+        }
     }
-}
+
+    GLuint LoadShader(GLenum _shaderType, std::string_view source)
+    {
+        const GLuint shader = glCreateShader(_shaderType);
+
+        const GLchar* data = source.data();
+        auto dataLength = static_cast<GLint>(source.length());
+        glShaderSource(shader, 1, &data, &dataLength);
+
+        glCompileShader(shader);
+
+        return shader;
+    }
+
+    constexpr std::string_view ShaderTypeName(ShaderType type)
+    {
+        using namespace std::literals;
+        switch (type)
+        {
+        case ShaderType::Vertex: return "Vertex"sv;
+        case ShaderType::TesselationControl: return "Tesselation control"sv;
+        case ShaderType::TesselationEvaluation: return "Tesselation evaluation"sv;
+        case ShaderType::Geometry: return "Geometry shader"sv;
+        case ShaderType::Fragment: return "Fragmens shader"sv;
+        case ShaderType::Computational: return "Compute shader"sv;
+        default: return ""sv;
+        }
+    }
+
+    std::optional<int> GetUniformLocation(ProgramInfo& programInfo, std::string_view name) 
+    {
+        auto uniformsIt = programInfo.getUniforms().find(name);
+        if (uniformsIt == programInfo.getUniforms().end())
+            return std::nullopt;
+
+        return uniformsIt->second.Location;
+    }
+
+
+    using namespace glm;
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const int> values)   { glProgramUniform1iv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const ivec2> values) { glProgramUniform2iv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const ivec3> values) { glProgramUniform3iv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const ivec4> values) { glProgramUniform4iv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const uint> values)  { glProgramUniform1uiv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const uvec2> values) { glProgramUniform2uiv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const uvec3> values) { glProgramUniform3uiv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const uvec4> values) { glProgramUniform4uiv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const float> values) { glProgramUniform1fv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const vec2> values)  { glProgramUniform2fv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const vec3> values)  { glProgramUniform3fv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const vec4> values)  { glProgramUniform4fv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const mat2> values)  { glProgramUniformMatrix2fv(programId, location, static_cast<int>(values.size()), false, span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const mat3> values)  { glProgramUniformMatrix3fv(programId, location, static_cast<int>(values.size()), false, span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const mat4> values)  { glProgramUniformMatrix4fv(programId, location, static_cast<int>(values.size()), false, span_value_ptr(values)); }
+
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const double> values){ glProgramUniform1dv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const dvec2> values) { glProgramUniform2dv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const dvec3> values) { glProgramUniform3dv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const dvec4> values) { glProgramUniform4dv(programId, location, static_cast<int>(values.size()), span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const dmat2> values) { glProgramUniformMatrix2dv(programId, location, static_cast<int>(values.size()), false, span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const dmat3> values) { glProgramUniformMatrix3dv(programId, location, static_cast<int>(values.size()), false, span_value_ptr(values)); }
+    void SetProgramUniformArray(GLuint programId, GLint location, std::span<const dmat4> values) { glProgramUniformMatrix4dv(programId, location, static_cast<int>(values.size()), false, span_value_ptr(values)); }
+
+} // namespace
+
 
 GlShaderProgram::GlShaderProgram()
 {
@@ -48,7 +103,7 @@ GlShaderProgram::~GlShaderProgram()
     glDeleteProgram(m_programId);
 }
 
-void GlShaderProgram::AttachShader(const str& _code, ShaderType _type)
+void GlShaderProgram::AttachShader(std::string_view _code, ShaderType _type)
 {
     if (_code.empty())
         throw AT2ShaderException( "GlShaderProgram: trying to attach empty shader");
@@ -59,23 +114,6 @@ void GlShaderProgram::AttachShader(const str& _code, ShaderType _type)
     m_shaderIds.emplace_back(_type, shaderId);
 
     m_currentState = State::Dirty;
-}
-
-const std::shared_ptr<ProgramInfo>& GlShaderProgram::GetIntrospection()
-{
-    if (TryCompile())
-    {
-        if (!m_uniformsInfo)
-            m_uniformsInfo = ProgramInfo::Request(m_programId);
-    }
-    else
-    {
-        assert(!m_uniformsInfo);
-        m_uniformsInfo.reset();
-    }
-
-    return m_uniformsInfo;
-
 }
 
 bool GlShaderProgram::TryCompile()
@@ -109,6 +147,14 @@ bool GlShaderProgram::TryCompile()
         GLint isLinked = 0;
         glGetProgramiv(m_programId, GL_LINK_STATUS, &isLinked);
 
+        if (isLinked)
+        {
+            m_uniformsInfo = ProgramInfo::Request(m_programId);
+            m_currentState = State::Ready;
+        }
+        else
+            m_currentState = State::Error;
+
         //log
         GLint infoLogLength = 0;
         glGetProgramiv(m_programId, GL_INFO_LOG_LENGTH, &infoLogLength);
@@ -119,8 +165,6 @@ bool GlShaderProgram::TryCompile()
             glGetProgramInfoLog(m_programId, infoLogLength, &infoLogLength, infoLog.data());
             Log::Debug() << "Shader program log: " << std::endl << infoLog;
         }
-
-        m_currentState = (isLinked) ? State::Ready : State::Error;
     }
 
     return m_currentState == State::Ready;
@@ -131,22 +175,20 @@ std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStora
     if (blockName.empty())
         return std::make_unique<AT2::UniformContainer>();
 
-    if (const auto& programInfo = GetIntrospection())
-    {
-        const auto uniformBlockInfo = programInfo->getUniformBlock(blockName);
-        if (!uniformBlockInfo)
-            return nullptr;
+    if (!TryCompile())
+        return nullptr;
+    assert(m_uniformsInfo);
 
-        auto uniformBuffer =
-            std::make_unique<GlUniformBuffer>(std::shared_ptr<const UniformBlockInfo>(programInfo, uniformBlockInfo));
+    const auto uniformBlockInfo = m_uniformsInfo->getUniformBlock(blockName);
+    if (!uniformBlockInfo)
+        return nullptr;
 
-        //just initial binding to make buffer usable "out of box". External code could rebind it or remap as user wants.
-        uniformBuffer->SetBindingPoint(uniformBlockInfo->InitialBinding);
+    auto uniformBuffer = std::make_unique<GlUniformBuffer>(std::shared_ptr<const UniformBlockInfo>(m_uniformsInfo, uniformBlockInfo));
 
-        return uniformBuffer;
-    }
+    //just initial binding to make buffer usable "out of box". External code could rebind it or remap as user wants.
+    uniformBuffer->SetBindingPoint(uniformBlockInfo->InitialBinding);
 
-    return nullptr;
+    return uniformBuffer;
 }
 
 void GlShaderProgram::CleanUp()
@@ -177,112 +219,37 @@ bool GlShaderProgram::IsActive() const noexcept
     return activeProgramId > 0 && m_programId == static_cast<GLuint>(activeProgramId);
 }
 
-void GlShaderProgram::SetUBO(const str& blockName, unsigned int index)
+void GlShaderProgram::SetUBO(std::string_view blockName, unsigned int index)
 {
-    const GLuint blockIndex = glGetUniformBlockIndex(m_programId, blockName.c_str());
+    if (!TryCompile())
+        return;
+    assert(m_uniformsInfo);
+
+
+    const GLuint blockIndex = m_uniformsInfo->getUniformBlock(blockName)->BlockIndex;
     if (blockIndex != GL_INVALID_INDEX)
         glUniformBlockBinding(m_programId, blockIndex, index);
     else
         Log::Warning() << "Uniform block " << blockName << "not found" << std::endl;
 }
 
-namespace
+void GlShaderProgram::SetUniform(std::string_view name, Uniform value)
 {
-    template <typename T>
-	auto span_value_ptr(const std::span<T>& value)
-    { 
-        if constexpr (requires { typename T::value_type; })
-        {
-            return glm::value_ptr(value[0]);
-        }
-        else
-        {
-            return value.data();
-        }
-    }
+    if (!TryCompile())
+        return;
+    assert(m_uniformsInfo);
 
-
+    if (const auto location = GetUniformLocation(*m_uniformsInfo, name))
+        std::visit([&]<typename T>(const T& val) { SetProgramUniformArray(m_programId, *location, std::span<const T> {&val, 1}); },
+                   value);
 }
 
-void GlShaderProgram::SetUniform(const str& name, Uniform value)
+void GlShaderProgram::SetUniformArray(std::string_view name, UniformArray value)
 {
-    if (m_currentState != State::Ready)
+    if (!TryCompile())
         return;
+    assert(m_uniformsInfo);
 
-    using namespace glm;
-
-    const auto location = glGetUniformLocation(m_programId, name.c_str());
-
-    std::visit(Utils::overloaded {
-       [&](int x) { glProgramUniform1i(m_programId, location, x); },
-       [&](const ivec2& x) { glProgramUniform2iv(m_programId, location, 1, value_ptr(x)); },
-       [&](const ivec3& x) { glProgramUniform3iv(m_programId, location, 1, value_ptr(x)); },
-       [&](const ivec4& x) { glProgramUniform4iv(m_programId, location, 1, value_ptr(x)); },
-
-       [&](unsigned int x) { glProgramUniform1ui(m_programId, location, x); },
-       [&](const uvec2& x) { glProgramUniform2uiv(m_programId, location, 1, value_ptr(x)); },
-       [&](const uvec3& x) { glProgramUniform3uiv(m_programId, location, 1, value_ptr(x)); },
-       [&](const uvec4& x) { glProgramUniform4uiv(m_programId, location, 1, value_ptr(x)); },
-
-       [&](float x) { glProgramUniform1f(m_programId, location, x); },
-       [&](const vec2& x) { glProgramUniform2fv(m_programId, location, 1, value_ptr(x)); },
-       [&](const vec3& x) { glProgramUniform3fv(m_programId, location, 1, value_ptr(x)); },
-       [&](const vec4& x) { glProgramUniform4fv(m_programId, location, 1, value_ptr(x)); },
-       [&](const mat2& x) { glProgramUniformMatrix2fv(m_programId, location, 1, false, value_ptr(x)); },
-       [&](const mat3& x) { glProgramUniformMatrix3fv(m_programId, location, 1, false, value_ptr(x)); },
-       [&](const mat4& x) { glProgramUniformMatrix4fv(m_programId, location, 1, false, value_ptr(x)); },
-
-       [&](double x) { glProgramUniform1d(m_programId, location, x); },
-       [&](const dvec2& x) { glProgramUniform2dv(m_programId, location, 1, value_ptr(x)); },
-       [&](const dvec3& x) { glProgramUniform3dv(m_programId, location, 1, value_ptr(x)); },
-       [&](const dvec4& x) { glProgramUniform4dv(m_programId, location, 1, value_ptr(x)); },
-       [&](const dmat2& x) { glProgramUniformMatrix2dv(m_programId, location, 1, false, value_ptr(x)); },
-       [&](const dmat3& x) { glProgramUniformMatrix3dv(m_programId, location, 1, false, value_ptr(x)); },
-       [&](const dmat4& x) { glProgramUniformMatrix4dv(m_programId, location, 1, false, value_ptr(x)); }},
-       value);
-}
-
-// TODO: generalize with SetUniform
-void GlShaderProgram::SetUniformArray(const str& name, UniformArray value)
-{
-    if (m_currentState != State::Ready)
-        return;
-
-    using namespace glm;
-
-    const auto location = glGetUniformLocation(m_programId, name.c_str());
-
-    const auto size = std::visit([](const auto& span)
-    {
-    	assert(span.size() < std::numeric_limits<int>::max());
-    	return static_cast<int>(span.size());
-    }, value);
-
-    std::visit(Utils::overloaded {
-        [&](std::span<int> values)    { glProgramUniform1iv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<ivec2>  values) { glProgramUniform2iv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<ivec3>  values) { glProgramUniform3iv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<ivec4>  values) { glProgramUniform4iv(m_programId, location, size, span_value_ptr(values)); },
-
-		[&](std::span<uint>   values) { glProgramUniform1uiv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<uvec2>  values) { glProgramUniform2uiv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<uvec3>  values) { glProgramUniform3uiv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<uvec4>  values) { glProgramUniform4uiv(m_programId, location, size, span_value_ptr(values)); },
-
-		[&](std::span<float>  values) { glProgramUniform1fv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<vec2>   values) { glProgramUniform2fv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<vec3>   values) { glProgramUniform3fv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<vec4>   values) { glProgramUniform4fv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<mat2>   values) { glProgramUniformMatrix2fv(m_programId, location, size, false, span_value_ptr(values)); },
-		[&](std::span<mat3>   values) { glProgramUniformMatrix3fv(m_programId, location, size, false, span_value_ptr(values)); },
-		[&](std::span<mat4>   values) { glProgramUniformMatrix4fv(m_programId, location, size, false, span_value_ptr(values)); },
-
-		[&](std::span<double> values) { glProgramUniform1dv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<dvec2>  values) { glProgramUniform2dv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<dvec3>  values) { glProgramUniform3dv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<dvec4>  values) { glProgramUniform4dv(m_programId, location, size, span_value_ptr(values)); },
-		[&](std::span<dmat2>  values) { glProgramUniformMatrix2dv(m_programId, location, size, false, span_value_ptr(values)); },
-		[&](std::span<dmat3>  values) { glProgramUniformMatrix3dv(m_programId, location, size, false, span_value_ptr(values)); },
-		[&](std::span<dmat4>  values) { glProgramUniformMatrix4dv(m_programId, location, size, false, span_value_ptr(values)); }},
-        value);
+    if (const auto location = GetUniformLocation(*m_uniformsInfo, name))
+        std::visit([&](const auto& valueSpan) { SetProgramUniformArray(m_programId, *location, valueSpan); }, value);
 }

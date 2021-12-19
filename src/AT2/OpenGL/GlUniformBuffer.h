@@ -17,10 +17,10 @@ namespace AT2::OpenGL
         explicit GlUniformBuffer(std::shared_ptr<const OpenGL::Introspection::UniformBlockInfo> ubi);
 
     public:
-        void SetUniform(const str& name, const Uniform& value) override;
+        void SetUniform(std::string_view name, const Uniform& value) override;
 
         //textures
-        void SetUniform(const str& name, const std::shared_ptr<ITexture>& value) override;
+        void SetUniform(std::string_view name, const std::shared_ptr<ITexture>& value) override;
 
         //TODO:  there should not be VertexBuffer::Bind(), it restricts Liskov's substitution principle =(
         void Bind(IStateManager& stateManager) const override;

@@ -231,13 +231,13 @@ namespace AT2
         [[nodiscard]] virtual bool IsActive() const noexcept = 0;
 
         virtual std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName = "") = 0;
-        virtual void AttachShader(const str& code, ShaderType type) = 0;
+        virtual void AttachShader( std::string_view code, ShaderType type) = 0;
 
         //Warning: Shader reloading/relinking will invalidate that state
         //TODO: make uniform buffers binding same as textures binding via StateManager
-        virtual void SetUBO(const str& blockName, unsigned int index) = 0;
-        virtual void SetUniform(const str& name, Uniform value) = 0;
-        virtual void SetUniformArray(const str& name, UniformArray value) = 0;
+        virtual void SetUBO(std::string_view blockName, unsigned int index) = 0;
+        virtual void SetUniform(std::string_view name, Uniform value) = 0;
+        virtual void SetUniformArray(std::string_view name, UniformArray value) = 0;
     };
 
     class IUniformContainer
@@ -249,8 +249,8 @@ namespace AT2
         virtual ~IUniformContainer() = default;
 
     public:
-        virtual void SetUniform(const str& name, const Uniform& value) = 0;
-        virtual void SetUniform(const str& name, const std::shared_ptr<ITexture>& value) = 0;
+        virtual void SetUniform(std::string_view name, const Uniform& value) = 0;
+        virtual void SetUniform(std::string_view name, const std::shared_ptr<ITexture>& value) = 0;
 
         virtual void Bind(IStateManager& stateManager) const = 0;
     };

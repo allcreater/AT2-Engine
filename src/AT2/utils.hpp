@@ -37,7 +37,8 @@ auto make_unary_less(Fn&& transform)
     };
 }
 
-template <typename T, typename K = typename T::key_type, typename V = typename T::mapped_type>
+template <typename T, typename K, typename V = typename T::mapped_type>
+requires requires(T map, const K& key) { map.find(key) != map.end(); }
 const std::remove_pointer_t<V>* find(const T& map, const K& key)
 {
     if (const auto it = map.find(key); it != map.end())
@@ -132,5 +133,18 @@ private:
     F f_;
     bool invoke_{ true };
 };
+
+struct string_hash
+{
+    using hash_type = std::hash<std::string_view>;
+    using is_transparent = void;
+
+    size_t operator()(const char* str) const { return hash_type {}(str); }
+    size_t operator()(std::string_view str) const { return hash_type {}(str); }
+    size_t operator()(std::string const& str) const { return hash_type {}(str); }
+};
+
+template<typename V>
+using UnorderedStringMap = std::unordered_map<std::string, V, string_hash, std::equal_to<>>;
 
 }

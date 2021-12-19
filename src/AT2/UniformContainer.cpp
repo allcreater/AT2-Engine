@@ -6,14 +6,18 @@ using namespace AT2;
 using namespace glm;
 
 
-void UniformContainer::SetUniform(const str& name, const Uniform& value)
+void UniformContainer::SetUniform(std::string_view name, const Uniform& value)
 {
-    m_uniformsMap[name] = value;
+    const auto& [it, isInserted] = m_uniformsMap.emplace(name, value);
+    if (!isInserted)
+        it->second = value;
 }
 
-void UniformContainer::SetUniform(const str& name, const std::shared_ptr<ITexture>& value)
+void UniformContainer::SetUniform(std::string_view name, const std::shared_ptr<ITexture>& value)
 {
-    m_texturesMap[name] = value;
+    const auto& [it, isInserted] = m_texturesMap.emplace(name, value);
+    if (!isInserted)
+        it->second = value;
 }
 
 void UniformContainer::Bind(IStateManager& stateManager) const

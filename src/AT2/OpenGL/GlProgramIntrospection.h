@@ -8,11 +8,14 @@ namespace AT2::OpenGL::Introspection
 
     struct UniformInfo
     {
+        enum class UniformType : GLint { None = -1 };
+
         GLint Location = 0;
-        GLint Type = 0;
+        GLint ArraySize = 0;
+        UniformType Type = UniformType::None;
     };
 
-    using UniformMap = std::unordered_map<std::string, UniformInfo>;
+    using UniformMap = Utils::UnorderedStringMap<UniformInfo>;
 
 
     struct BufferedUniformInfo : UniformInfo
@@ -22,7 +25,7 @@ namespace AT2::OpenGL::Introspection
         GLint MatrixStride = 0;
     };
 
-    using BufferedUniformMap = std::unordered_map<std::string, BufferedUniformInfo>;
+    using BufferedUniformMap = Utils::UnorderedStringMap<BufferedUniformInfo>;
 
 
     struct UniformBlockInfo
