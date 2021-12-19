@@ -52,6 +52,9 @@ namespace AT2
     class ITime
     {
     public:
+        virtual ~ITime() = default;
+
+    public:
         [[nodiscard]] virtual Seconds getTime() const = 0;
         [[nodiscard]] virtual Seconds getDeltaTime() const = 0;
     };
@@ -80,6 +83,7 @@ namespace AT2
     class IBuffer
     {
     public:
+        IBuffer() = default;
         virtual ~IBuffer() = default;
 
     public:
@@ -125,7 +129,7 @@ namespace AT2
         NON_COPYABLE_OR_MOVABLE(IVertexBuffer)
 
         IVertexBuffer() = default;
-        virtual ~IVertexBuffer() = default;
+        virtual ~IVertexBuffer() override = default;
 
     public:
         virtual void Bind() = 0;
@@ -162,6 +166,10 @@ namespace AT2
     class ISampler
     {
     public:
+        ISampler() = default;
+        virtual ~ISampler() = default;
+
+    public:
         virtual void SetWrapMode(TextureWrapParams wrapParams) = 0;
         [[nodiscard]] virtual const TextureWrapParams& GetWrapMode() const noexcept = 0;
 
@@ -169,10 +177,9 @@ namespace AT2
         [[nodiscard]] virtual const TextureSamplingParams& GetSamplingParams() const noexcept = 0;
 
         virtual void SetAnisotropy(float anisotropy) = 0;
-        [[nodiscard]] virtual const float GetAnisotropy() const noexcept = 0;
+        [[nodiscard]] virtual float GetAnisotropy() const noexcept = 0;
 
         virtual void Bind(unsigned int unit) const = 0;
-
     };
 
     class ITexture : public ISampler
@@ -181,7 +188,7 @@ namespace AT2
         NON_COPYABLE_OR_MOVABLE(ITexture)
 
         ITexture() = default;
-        virtual ~ITexture() = default;
+        virtual ~ITexture() override = default;
 
     public:
         virtual void Bind(unsigned int unit) const = 0;
@@ -230,6 +237,7 @@ namespace AT2
         //TODO: make uniform buffers binding same as textures binding via StateManager
         virtual void SetUBO(const str& blockName, unsigned int index) = 0;
         virtual void SetUniform(const str& name, Uniform value) = 0;
+        virtual void SetUniformArray(const str& name, UniformArray value) = 0;
     };
 
     class IUniformContainer
@@ -240,6 +248,7 @@ namespace AT2
         IUniformContainer() = default;
         virtual ~IUniformContainer() = default;
 
+    public:
         virtual void SetUniform(const str& name, const Uniform& value) = 0;
         virtual void SetUniform(const str& name, const std::shared_ptr<ITexture>& value) = 0;
 
@@ -250,6 +259,7 @@ namespace AT2
     {
     public:
         NON_COPYABLE_OR_MOVABLE(IRendererCapabilities)
+
         IRendererCapabilities() = default;
         virtual ~IRendererCapabilities() = default;
 

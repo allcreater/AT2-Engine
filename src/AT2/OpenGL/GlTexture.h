@@ -47,7 +47,7 @@ namespace AT2::OpenGL
         [[nodiscard]] const TextureSamplingParams& GetSamplingParams() const noexcept override { return m_sampling_params; }
 
         void SetAnisotropy(float anisotropy) override;
-        [[nodiscard]] const float GetAnisotropy() const noexcept override;
+        [[nodiscard]] float GetAnisotropy() const noexcept override;
 
     protected:
         void ReadChannelSizes();

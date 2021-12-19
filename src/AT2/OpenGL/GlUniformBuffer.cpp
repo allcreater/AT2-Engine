@@ -15,40 +15,40 @@ GlUniformBuffer::GlUniformBuffer(std::shared_ptr<const UniformBlockInfo> ubi) :
     SetDataRaw(std::span{emptyData, m_uniformBlockInfo->DataSize});
 }
 
-template <typename T>
-const GLvoid* value_ptr(const T& value)
+namespace
 {
-    return reinterpret_cast<const GLvoid*>(&value);
-}
+    template <typename T>
+    const GLvoid* value_ptr(const T& value)
+    {
+        return static_cast<const GLvoid*>(&value);
+    }
 
 
-template <typename T>
-void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name, const T& value)
-{
-    const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
-    if (!ui)
-        return;
+    template <typename T>
+    void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name, const T& value)
+    {
+        const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
+        if (!ui)
+            return;
 
-    //Unfortunately high-level methods are slowly than direct API calls :( But it could be inlined or something like that if we need it.
-    BufferMapperGuard mapping {buffer, static_cast<size_t>(ui->Offset), sizeof(T), BufferUsage::Write};
-    mapping.Set(value);
-}
+        //Unfortunately high-level methods are slowly than direct API calls :( But it could be inlined or something like that if we need it.
+        BufferMapperGuard mapping {buffer, static_cast<size_t>(ui->Offset), sizeof(T), BufferUsage::Write};
+        mapping.Set(value);
+    }
 
 
-template <typename T, length_t C, length_t R, qualifier Q>
-void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name,
-                        const glm::mat<C, R, T, Q>& value)
-{
-    const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
-    if (!ui)
-        return;
+    template <typename T, length_t C, length_t R, qualifier Q>
+    void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, const str& name, const glm::mat<C, R, T, Q>& value)
+    {
+        const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
+        if (!ui)
+            return;
 
-    BufferMapperGuard mapping {buffer, static_cast<size_t>(ui->Offset), static_cast<size_t>(C) * ui->MatrixStride,
-                               BufferUsage::Write};
-    for (decltype(C) i = 0; i < C; ++i)
-        mapping.Set(value[i], static_cast<size_t>(i) * ui->MatrixStride);
-}
-
+        BufferMapperGuard mapping {buffer, static_cast<size_t>(ui->Offset), static_cast<size_t>(C) * ui->MatrixStride, BufferUsage::Write};
+        for (decltype(C) i = 0; i < C; ++i)
+            mapping.Set(value[i], static_cast<size_t>(i) * ui->MatrixStride);
+    }
+} // namespace
 
 void GlUniformBuffer::SetUniform(const str& name, const Uniform& value)
 {

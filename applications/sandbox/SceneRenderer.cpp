@@ -7,6 +7,21 @@
 
 #include <AT2/Scene/Animation.h>
 
+namespace
+{
+
+    // Makes temporary array that holds std::transform's computation result
+    template <typename T, typename TransformFunc>
+    std::span<std::remove_const_t<T>> MakeTransformedSpan(const std::span<T> inputSpan, TransformFunc&& func)
+    {
+        static thread_local std::vector<std::remove_const_t<T>> temporaryData;
+        temporaryData.resize(inputSpan.size());
+        std::ranges::transform(inputSpan, temporaryData.begin(), std::forward<TransformFunc>(func));
+
+        return temporaryData;
+    }
+}
+
 namespace AT2::Scene
 {
     RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera) :
@@ -33,10 +48,11 @@ namespace AT2::Scene
 
             if (const auto& skinRef = meshComponent->getSkeletonInstance())
             {
-                for (size_t index = 0; const auto& transform : skinRef->getResultJointTransforms())
-                    stateManager.GetActiveShader()->SetUniform("u_skeletonMatrices[" + std::to_string(index++) + "]",
-                                                               transforms.getModelViewInverse() * transform);
+                auto skeletonMatrices = MakeTransformedSpan(
+                    skinRef->getResultJointTransforms(),
+                    [mvInverse = transforms.getModelViewInverse()](const glm::mat4& transform) { return mvInverse * transform; });
 
+                stateManager.GetActiveShader()->SetUniformArray("u_skeletonMatrices", skeletonMatrices); 
                 stateManager.GetActiveShader()->SetUniform("u_useSkinning", 1);
             }
             else

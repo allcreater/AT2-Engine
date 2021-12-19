@@ -66,6 +66,7 @@ namespace AT2::OpenGL
         //Warning: Shader reloading/relinking will invalidate that state
         void SetUBO(const str& blockName, unsigned int index) override;
         void SetUniform(const str& name, Uniform value) override;
+        void SetUniformArray(const str& name, UniformArray value) override;
 
         virtual const str& GetName() { return m_name; }
         virtual void SetName(const str& name) { m_name = name; }

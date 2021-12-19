@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <type_traits>
+#include <span>
 #include <variant>
 
 #include "AABB.h"
@@ -261,7 +262,39 @@ using Uniform = std::variant
     glm::ivec3,
     glm::ivec4,
 
-    unsigned int,
+    glm::uint,
+    glm::uvec2,
+    glm::uvec3,
+    glm::uvec4,
+
+    float,
+    glm::vec2,
+    glm::vec3,
+    glm::vec4,
+    glm::mat2,
+    glm::mat3,
+    glm::mat4,
+
+    double,
+    glm::dvec2,
+    glm::dvec3,
+    glm::dvec4,
+    glm::dmat2,
+    glm::dmat3,
+    glm::dmat4
+>;
+
+template <typename... Variants>
+using VariantOfSpans = std::variant<std::span<Variants>...>;
+
+using UniformArray = VariantOfSpans
+<
+    int,
+    glm::ivec2,
+    glm::ivec3,
+    glm::ivec4,
+
+    glm::uint,
     glm::uvec2,
     glm::uvec3,
     glm::uvec4,

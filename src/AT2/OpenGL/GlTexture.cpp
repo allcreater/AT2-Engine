@@ -176,7 +176,7 @@ void GlTexture::SetAnisotropy(float anisotropy)
     glTextureParameterf(m_id, GL_TEXTURE_MAX_ANISOTROPY, m_anisotropy = std::min(anisotropy, max_anisotropy()));
 }
 
-const float GlTexture::GetAnisotropy() const noexcept
+float GlTexture::GetAnisotropy() const noexcept
 {
     return m_anisotropy;
 }
