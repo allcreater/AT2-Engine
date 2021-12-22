@@ -17,7 +17,7 @@ in tesResult {
 	float elevation;
 	vec3 position; //in view-space
 	vec3 normal; //ws
-} input;
+} in_data;
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 FragNormal;
@@ -54,14 +54,14 @@ vec3 getFragPos(in vec3 screenCoord)
 void main()
 {
 	const float waterLine = 0.003;
-	const float snowLine = 0.2 + texture(u_texNoise, vec3(input.texCoord*10.0, input.elevation) * 0.05).r * 0.15;
+	const float snowLine = 0.2 + texture(u_texNoise, vec3(in_data.texCoord*10.0, in_data.elevation) * 0.05).r * 0.15;
 
-	const vec2 texCoord = input.texCoord*120.0;
+	const vec2 texCoord = in_data.texCoord*120.0;
 
-	vec3 normal = normalize(input.normal);
+	vec3 normal = normalize(in_data.normal);
 	
 	//apply normal deviation in TBN space
-	const vec3 matNormal = mix(vec3(0,0,1), (texture(u_texNormalMap, texCoord).rgb*2.0 - 1.0)*normalize(vec3(1,1,5)), step(waterLine, input.elevation));
+	const vec3 matNormal = mix(vec3(0,0,1), (texture(u_texNormalMap, texCoord).rgb*2.0 - 1.0)*normalize(vec3(1,1,5)), step(waterLine, in_data.elevation));
 	const mat3 tbn = cotangent_frame(normal, -getFragPos(vec3(gl_FragCoord.xy*2.0 - 1.0, 0)), texCoord);
 	normal = normalize(tbn * matNormal);
 
@@ -73,19 +73,19 @@ void main()
 	FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, grassFactor);
 
 
-	const float terrainHeight = texture(u_texHeight, input.texCoord).r;
-	const float depth = input.elevation - terrainHeight;
+	const float terrainHeight = texture(u_texHeight, in_data.texCoord).r;
+	const float depth = in_data.elevation - terrainHeight;
 	if (depth > 0.001)
 	{
 		FragColor.rgb = mix(FragColor.rgb, vec3(0.2, 0.3, 1.0), clamp(10.0*depth, 0.0, 1.0));
 	}
 
-	const float snowK = smoothstep(snowLine, snowLine + 0.05, input.elevation * smoothstep(0.001, 0.01, pow(normalWS.y, 2.0)));
+	const float snowK = smoothstep(snowLine, snowLine + 0.05, in_data.elevation * smoothstep(0.001, 0.01, pow(normalWS.y, 2.0)));
 
 	FragColor.rgb = mix(FragColor.rgb, vec3(0.97, 0.97, 1.0), snowK);
 	FragColor.a = 1.0;
 
 	FragNormal = vec4(normal, 1.0);
 
-	RoughnessMetallic = vec4(mix(0.01 + smoothstep(0.0, waterLine, input.elevation) * 0.9, 0.5, snowK), 0.0, 1.0, 1.0);
+	RoughnessMetallic = vec4(mix(0.01 + smoothstep(0.0, waterLine, in_data.elevation) * 0.9, 0.5, snowK), 0.0, 1.0, 1.0);
 }

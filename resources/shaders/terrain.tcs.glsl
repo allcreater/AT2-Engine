@@ -16,11 +16,11 @@ uniform float unMaxTessLevel	= 64.0;
 
 in	vsResult {
 	vec2 texCoord;
-} input[];
+} in_data[];
 
 out	tcsResult {
 	vec2 texCoord;
-} output[];
+} out_data[];
 
 bool PointInFrustum(in vec4 point)
 {
@@ -43,7 +43,7 @@ float getHeight (in vec2 texCoord)
 bool PointInFrustum(int i)
 {
 	vec4 pos = gl_in[i].gl_Position;
-	pos.y += getHeight(input[i].texCoord);
+	pos.y += getHeight(in_data[i].texCoord);
 	return PointInFrustum(pos);
 }
 
@@ -64,5 +64,5 @@ void main()
 	}
 
 	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
-	output[gl_InvocationID].texCoord = input[gl_InvocationID].texCoord;
+	out_data[gl_InvocationID].texCoord = in_data[gl_InvocationID].texCoord;
 }

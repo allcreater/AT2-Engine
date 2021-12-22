@@ -11,16 +11,17 @@ using namespace Introspection;
 namespace
 {
     template <typename T>
+    requires requires { typename T::value_type; }
     auto span_value_ptr(const std::span<T>& value)
     {
-        if constexpr (requires { typename T::value_type; })
-        {
-            return glm::value_ptr(value[0]);
-        }
-        else
-        {
-            return value.data();
-        }
+        return glm::value_ptr(value[0]);
+    }
+    
+    template <typename T>
+    requires std::is_arithmetic_v<T>
+    auto span_value_ptr(const std::span<T>& value)
+    {
+        return value.data();
     }
 
     GLuint LoadShader(GLenum _shaderType, std::string_view source)

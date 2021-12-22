@@ -81,7 +81,7 @@ private:
 
         auto GrassTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
         auto NormalMapTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        auto RockTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Color.jpg");
+        auto RockTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Displacement.jpg");
         //auto RockNormalTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Normal.jpg");
         //auto RockDisplacementTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Displacement.jpg");
 
@@ -113,25 +113,25 @@ private:
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\RiggedFigure\glTF\RiggedFigure.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\CesiumMan\glTF\CesiumMan.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(C:\Users\allcr\Downloads\GLTF\amazing_player_female\scene.gltf)"s);
-        auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(C:\Users\allcr\Downloads\GLTF\marika\scene.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(C:\Users\allcr\Downloads\GLTF\marika\scene.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BrainStem\glTF\BrainStem.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\MetalRoughSpheres\glTF\MetalRoughSpheres.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\SciFiHelmet\glTF\SciFiHelmet.gltf)"s);
 
         //castle
-        {
-            auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
-                getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
-            scene->GetTransform().setScale({20.0, 20.0, 20.0}).setPosition({1000, 300, 0});
-            m_scene.GetRoot().AddChild(scene);
-        }
+        //{
+        //    auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
+        //        getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
+        //    scene->GetTransform().setScale({20.0, 20.0, 20.0}).setPosition({1000, 300, 0});
+        //    m_scene.GetRoot().AddChild(scene);
+        //}
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\InterpolationTest\glTF\InterpolationTest.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf)"s);
 
-        scene->GetTransform().setPosition({0, -20.0, 0});
-        m_scene.GetRoot().AddChild(scene);
+        //scene->GetTransform().setPosition({0, -20.0, 0});
+        //m_scene.GetRoot().AddChild(scene);
 
         AT2::Scene::FuncNodeVisitor shaderSetter {[&](AT2::Scene::Node& node) {
             for (auto* meshComponent : node.getComponents<AT2::Scene::MeshComponent>())

@@ -16,14 +16,14 @@ uniform sampler3D u_texNoise;
 
 in	tcsResult {
 	vec2 texCoord;
-} input[];
+} in_data[];
 
 out tesResult {
 	vec2 texCoord;
 	float elevation;
 	vec3 position; //in view-space
 	vec3 normal; //ws
-} output;
+} out_data;
 
 
 #define Interpolate( a, p ) \
@@ -78,16 +78,16 @@ vec3 getNormal(in vec2 texCoord)
 void main()
 {
 	vec4	worldPos 	= Interpolate( gl_in, .gl_Position );
-	vec2	texCoord 	= Interpolate( input, .texCoord );
+	vec2	texCoord 	= Interpolate( in_data, .texCoord );
 
 	float height = getHeight(texCoord);
 	worldPos.y += height;
 
 
-	output.texCoord = texCoord;
-	output.elevation = height;
-	output.position = vec3(u_matView * worldPos);
+	out_data.texCoord = texCoord;
+	out_data.elevation = height;
+	out_data.position = vec3(u_matView * worldPos);
 
-	output.normal = u_matNormal * getNormal(texCoord);
+	out_data.normal = u_matNormal * getNormal(texCoord);
 	gl_Position = u_matProjection * u_matView * u_matModel * worldPos;
 }

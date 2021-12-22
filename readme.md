@@ -8,7 +8,7 @@ Simple graphics engine created for educational purpose.
 * abstraction layer for graphical API objects (right now only OpenGL 4.5 is supported)
 * resource (textures, models, shaders) loading
 * semiautomatical state managing, no need to manually bind textures
-* c++17
+* c++20
 
 ### Two applications:
 * sandbox is a playground for testing engine features
@@ -17,5 +17,15 @@ Simple graphics engine created for educational purpose.
 * test_task is a program that demonstates some UI and plot rendering (pretty obsolete)
 
 ### Dependencies:
-could be obtained via *vcpkg*:
-```vcpkg install glfw3 glew glm devil assimp gtest```
+Needs last version of C++20 compiler
+Just ensure that you have [Conan package manager](https://conan.io/downloads.html) - all should be installed automatically.
+
+Uses libraries:
+* glfw3
+* glm
+* stb
+* assimp
+* gtest
+* glad
+* nlohmann-json
+* https://github.com/jessey-git/fx-gltf

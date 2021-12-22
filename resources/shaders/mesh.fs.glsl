@@ -17,7 +17,7 @@ in fsInput {
 	vec3 texCoord;
 	vec3 normal;
 	vec3 position; //in view-space
-} input;
+} in_data;
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 FragNormal;
@@ -59,9 +59,9 @@ vec3 to_linear(in vec3 color)
 
 void main()
 {
-	//vec3 normalFromMap = (texture(u_texNormalMap, input.texCoord).rbg * 2.0 - 1.0)*vec3(1.0, 1.0, -1.0);
+	//vec3 normalFromMap = (texture(u_texNormalMap, in_data.texCoord).rbg * 2.0 - 1.0)*vec3(1.0, 1.0, -1.0);
 
-	vec2 texCoord = input.texCoord.st;
+	vec2 texCoord = in_data.texCoord.st;
 
     vec4 albedo = texture(u_texAlbedo, texCoord);
     albedo.rgb = to_linear(albedo.rgb);
@@ -81,7 +81,7 @@ void main()
 	FragColor.rgba = final_color;
 
 
-	vec3 normal = normalize(input.normal);
+	vec3 normal = normalize(in_data.normal);
 
 	const vec3 matNormal = (texture(u_texNormalMap, texCoord).rgb*2.0 - 1.0);
 	const mat3 tbn = cotangent_frame(normal, -getFragPos(vec3(gl_FragCoord.xy*2.0 - 1.0, 0)), texCoord);

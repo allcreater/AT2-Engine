@@ -22,7 +22,7 @@ out fsInput {
 	vec3 texCoord;
 	vec3 normal;
 	vec3 position; //in view-space
-} output;
+} out_data;
 
 void main()
 {
@@ -41,9 +41,9 @@ void main()
 	vec4 viewSpacePos = modelView * vec4(a_Position, 1.0);
 
 
-	output.texCoord = a_TexCoord;
-	output.normal = normalMatrix * a_Normal;
-	output.position = viewSpacePos.xyz;
+	out_data.texCoord = a_TexCoord;
+	out_data.normal = normalMatrix * a_Normal;
+	out_data.position = viewSpacePos.xyz;
 
 	gl_Position = u_matProjection * viewSpacePos;
 }
