@@ -27,5 +27,4 @@ Uses libraries:
 * assimp
 * gtest
 * glad
-* nlohmann-json
 * https://github.com/jessey-git/fx-gltf
