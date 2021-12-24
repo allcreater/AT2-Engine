@@ -144,7 +144,124 @@ struct string_hash
     size_t operator()(std::string const& str) const { return hash_type {}(str); }
 };
 
+#ifdef __cpp_lib_generic_unordered_lookup
 template<typename V>
 using UnorderedStringMap = std::unordered_map<std::string, V, string_hash, std::equal_to<>>;
+#else
+} //namespace AT2::Utils
+#include <map>
+namespace AT2::Utils
+{
+template<typename V>
+using UnorderedStringMap = std::map<std::string, V, std::less<>>;
+#endif
 
 }
+
+#ifndef __cpp_lib_bind_front
+namespace std
+{
+template<typename F, typename... FRONT_ARGS>
+    auto bind_front(F&& f, FRONT_ARGS&&... front_args)
+    {
+        // front_args are copied because multiple invocations of this closure are possible
+        return [captured_f = std::forward<F>(f), front_args...](auto&&... back_args) {
+                   return std::invoke(captured_f, front_args...,
+                                      std::forward<decltype(back_args)>(back_args)...);
+               };
+    }
+}
+#endif
+
+#ifndef __cpp_lib_bit_cast
+namespace std
+{
+template <class To, class From>
+std::enable_if_t<
+    sizeof(To) == sizeof(From) &&
+    std::is_trivially_copyable_v<From> &&
+    std::is_trivially_copyable_v<To>,
+    To>
+// constexpr support needs compiler magic
+bit_cast(const From& src) noexcept
+{
+    static_assert(std::is_trivially_constructible_v<To>,
+        "This implementation additionally requires destination type to be trivially constructible");
+ 
+    To dst;
+    std::memcpy(&dst, &src, sizeof(To));
+    return dst;
+}
+}
+#endif
+
+#ifdef __cpp_lib_ranges
+#include <ranges>
+#else
+//#include <iterator>
+#include <span>
+#include <algorithm>
+
+namespace std::ranges
+{
+/*
+template< class T >
+auto begin( T&& t ) { return std::begin(t); }
+
+template< class T >
+auto end( T&& t ) { return std::end(t); }
+
+template <class T>
+using iterator_t = decltype(ranges::begin(std::declval<T&>()));
+
+template< class T >
+concept range = requires( T& t ) {
+  ranges::begin(t); // equality-preserving for forward iterators
+  ranges::end  (t);
+};
+
+template< class T >
+  concept input_range =
+    ranges::range<T> && std::input_iterator<ranges::iterator_t<T>>;
+
+template< class T >
+  concept forward_range =
+    ranges::input_range<T> && std::forward_iterator<ranges::iterator_t<T>>;
+
+template< class T >
+  concept bidirectional_range =
+    ranges::forward_range<T> && std::bidirectional_iterator<ranges::iterator_t<T>>;
+
+template< class T >
+  concept random_access_range =
+    ranges::bidirectional_range<T> && std::random_access_iterator<ranges::iterator_t<T>>;
+
+template< class T >
+  concept contiguous_range =
+    ranges::random_access_range<T> &&
+    std::contiguous_iterator<ranges::iterator_t<T>> &&
+    requires(T& t) {
+      { ranges::data(t) } ->
+        std::same_as<std::add_pointer_t<ranges::range_reference_t<T>>>;
+    };
+*/
+template< class T >
+  concept contiguous_range =
+    requires(T& t) {
+        std::span{t};
+    };
+
+template <typename R1, typename R2>
+bool equal(R1&& range1, R2&& range2)
+{
+    return std::equal(std::begin(range1), std::end(range1), std::begin(range2));
+}
+
+template <typename R, typename It, typename F>
+void transform(R&& range, It dst, F&& transformer)
+{
+    std::transform(std::begin(range), std::end(range), dst, std::forward<F>(transformer));
+}
+
+}
+#endif

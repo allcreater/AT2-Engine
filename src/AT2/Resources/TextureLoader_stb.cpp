@@ -74,12 +74,12 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
 
     return nullptr;
 #else
-    std::basic_ifstream<std::byte> stream {path, std::ios::binary};
-    std::vector<std::byte> data {static_cast<size_t>(file_size(path))};
+    std::basic_ifstream<char> stream {path, std::ios::binary};
+    std::vector< char> data (static_cast<size_t>(file_size(path)));
     stream.read(data.data(), data.size());
 
     //std::vector<std::byte> data{std::istreambuf_iterator<std::byte>(file), {}};
-    return LoadTexture(renderer, data);
+    return LoadTexture(renderer, std::span{reinterpret_cast<const std::byte*>(data.data()), data.size()} );
 #endif
 }
 
@@ -88,7 +88,7 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
     auto data = Utils::reinterpret_span_cast<const stbi_uc>(rawData);
     auto [format, size] = DetermineExternalFormat(data);
 
-    auto parsedData = [&]() -> void* {
+    auto parsedData = [&, format=format]() -> void* {
         int width, height;
 
         switch (format.DataType)

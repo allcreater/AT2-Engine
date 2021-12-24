@@ -33,6 +33,8 @@ namespace AT2
 
     struct Mesh
     {
+        Mesh(std::string name = "") : Name{std::move(name)}{}
+        
         IUniformContainer& GetOrCreateDefaultMaterial()
         {
             if (Materials.empty())

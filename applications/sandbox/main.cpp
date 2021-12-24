@@ -71,7 +71,7 @@ private:
         {
             const auto arr = std::make_unique<GLubyte[]>(Noise3Tex->GetDataLength());
             
-            std::generate(std::execution::par_unseq, arr.get(), arr.get() + Noise3Tex->GetDataLength(),
+            std::generate(arr.get(), arr.get() + Noise3Tex->GetDataLength(),
                           [rng = std::mt19937{std::random_device {}()}]() mutable {
                               return std::uniform_int_distribution {0, 255}(rng);
                           });

@@ -21,13 +21,21 @@ namespace AT2::Animation
     class AnimationCollection
     {
     private:
-        using span_hash = decltype([]<typename T>(std::span<const T> value) {
-            return std::hash<decltype(value)::const_pointer> {}(value.data()) ^ std::hash<size_t> {}(value.size_bytes());
-        });
-
-        using span_equal = decltype([]<typename T>(std::span<const T> lhv, std::span<const T> rhv) {
-            return lhv.data() == rhv.data() && lhv.size_bytes() == rhv.size_bytes();
-        });
+        struct span_hash
+        {
+            template <typename T>
+            size_t operator()(std::span<const T> value) const {
+                return std::hash<const T*>{}(value.data()) ^ std::hash<size_t> {}(value.size_bytes());
+            }
+        };
+        
+        struct span_equal
+        {
+            template <typename T>
+            bool operator()(std::span<const T> lhv, std::span<const T> rhv) const {
+                return lhv.data() == rhv.data() && lhv.size_bytes() == rhv.size_bytes();
+            }
+        };
 
     private:
         std::unordered_map<std::span<const std::byte>, std::pair<std::span<const std::byte>, std::any>, span_hash, span_equal> m_dataSources;

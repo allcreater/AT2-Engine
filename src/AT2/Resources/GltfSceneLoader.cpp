@@ -1,7 +1,7 @@
 #include "GltfSceneLoader.h"
 
 #include <bit>
-#include <ranges>
+//#include <ranges>
 #include <fx/gltf.h>
 #include <glm/packing.hpp>
 #include <filesystem>
