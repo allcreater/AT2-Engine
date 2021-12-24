@@ -40,6 +40,7 @@ GlfwWindow::GlfwWindow(GlfwContextParameters contextParams, glm::ivec2 initialSi
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, context_parameters.context_major_version);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, context_parameters.context_minor_version);
     glfwWindowHint(GLFW_OPENGL_PROFILE, static_cast<int>(context_parameters.profile));
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
 
     glfwWindowHint(GLFW_RED_BITS, context_parameters.framebuffer_bits_red);
     glfwWindowHint(GLFW_GREEN_BITS, context_parameters.framebuffer_bits_green);

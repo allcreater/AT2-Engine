@@ -69,8 +69,8 @@ namespace AT2::Animation
         Animation(Animation&&) noexcept = default;
 
 
-        template <typename T, typename F>
-        size_t addTrack(AnimationNodeId animationNodeId, std::span<const float> keySpan, std::span<const T> valueSpan,
+        template <typename ValueT, typename F>
+        size_t addTrack(AnimationNodeId animationNodeId, std::span<const float> keySpan, std::span<const ValueT> valueSpan,
                         F&& affector, InterpolationMode interpolation)
         {
             auto getTrustedSpan = [&dataSources = m_sourceCollection.m_dataSources]<typename T>(
@@ -88,7 +88,7 @@ namespace AT2::Animation
 
             auto& newChannel = m_channels.emplace_back(std::visit(
                 [&]<typename Impl>(Impl) -> std::unique_ptr<ChannelBase> {
-                    return std::make_unique<Channel<T, Impl, F>>(getTrustedSpan(keySpan), getTrustedSpan(valueSpan),
+                    return std::make_unique<Channel<ValueT, Impl, F>>(getTrustedSpan(keySpan), getTrustedSpan(valueSpan),
                                                                  std::forward<F>(affector));
                 },
                 interpolation));

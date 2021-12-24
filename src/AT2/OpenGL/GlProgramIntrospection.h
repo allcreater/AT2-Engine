@@ -3,6 +3,8 @@
 
 #include "AT2lowlevel.h"
 
+#include <unordered_map>
+
 namespace AT2::OpenGL::Introspection
 {
 

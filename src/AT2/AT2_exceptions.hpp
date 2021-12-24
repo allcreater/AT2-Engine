@@ -13,7 +13,7 @@ namespace AT2
     public:
         AT2Exception(std::string errorMessage) : std::runtime_error("AT2Exception"), errorMessage(std::move(errorMessage)) {}
 
-        [[nodiscard]] const char* what() const override { return errorMessage.c_str(); }
+        [[nodiscard]] const char* what() const noexcept override { return errorMessage.c_str(); }
 
     private:
         std::string errorMessage;

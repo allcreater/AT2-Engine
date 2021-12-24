@@ -1,5 +1,4 @@
 #include "GlProgramIntrospection.h"
-#include <array>
 
 using namespace std::literals;
 
