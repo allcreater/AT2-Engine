@@ -4,7 +4,7 @@ import shutil, os
 
 class AT2(ConanFile):
    settings = "os", "compiler", "build_type", "arch"
-   requires = "glfw/3.3.2", "glm/0.9.9.8", "stb/20200203", "assimp/5.0.1", "gtest/1.10.0", "glad/0.1.34"#, "nlohmann_json/3.9.1"
+   requires = "glfw/3.3.2", "glm/0.9.9.8", "stb/20200203", "assimp/5.0.1", "glad/0.1.34", "nlohmann_json/3.9.1"#", gtest/1.10.0"
    generators = "cmake"
    default_options = {
     "glad:gl_version": "4.5",
