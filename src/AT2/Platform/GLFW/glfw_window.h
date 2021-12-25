@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <mutex>
+#include <optional>
 
 #include <GLFW/glfw3.h>
 

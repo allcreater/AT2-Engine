@@ -2,7 +2,7 @@
 
 #include <camera.h>
 #include <Scene/Scene.h>
-#include <Platform/Renderers/OpenGL/GlTimerQuery.h>
+//#include <Platform/Renderers/OpenGL/GlTimerQuery.h>
 #include <Platform/Application.h>
 #include <Platform/GLFW/glfw_window.h>
 #include <Resources/MeshLoader.h>
@@ -49,7 +49,7 @@ private:
 
         resultTex->BindAsImage(0, 0, 0, false);
         getRenderer()->DispatchCompute(glm::uvec3 {resolution, 1} / localGroupSize);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+//        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
         return resultTex;
     }
@@ -172,13 +172,13 @@ private:
             NeedResourceReload = false;
         }
 
-        AT2::OpenGL::GlTimerQuery glTimer;
-        glTimer.Begin();
+//        AT2::OpenGL::GlTimerQuery glTimer;
+//        glTimer.Begin();
         sr.RenderScene(m_renderParameters, m_time);
-        glTimer.End();
+//        glTimer.End();
 
-        const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
-        getWindow().setLabel("Frame time = " + std::to_string(frameTime));
+//        const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
+//        getWindow().setLabel("Frame time = " + std::to_string(frameTime));
     }
 
 
