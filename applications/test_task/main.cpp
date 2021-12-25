@@ -38,8 +38,6 @@ private:
         getRenderer()->ClearDepth(0);
 
         m_uiHub->Render(getRenderer(), dt);
-
-        getRenderer()->FinishFrame();
     }
 
     void OnKeyPress(int key) {}

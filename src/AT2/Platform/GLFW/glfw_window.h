@@ -25,7 +25,7 @@ namespace AT2::GLFW
         Compat = GLFW_OPENGL_COMPAT_PROFILE
     };
 
-    struct GlfwContextParameters
+    struct GlfwOpenGlContextParameters
     {
         GlfwOpenglProfile profile = GlfwOpenglProfile::Core;
         int context_major_version = 4;
@@ -42,6 +42,8 @@ namespace AT2::GLFW
         int framebuffer_bits_blue = 8;
         int framebuffer_bits_depth = 24;
     };
+
+    using GlfwContextParameters = std::optional<GlfwOpenGlContextParameters>;
 
 
     class GlfwWindow final : public IWindow

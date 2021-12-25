@@ -20,11 +20,14 @@ std::shared_ptr<GlfwWindow> GlfwApplication::createFullscreenWindow(GlfwContextP
 {
     auto* monitor = glfwGetPrimaryMonitor();
     const auto* defaultVideomode = glfwGetVideoMode(monitor);
-    
-    parameters.refresh_rate = defaultVideomode->refreshRate;
-    parameters.framebuffer_bits_red = defaultVideomode->redBits;
-    parameters.framebuffer_bits_green = defaultVideomode->greenBits;
-    parameters.framebuffer_bits_blue = defaultVideomode->blueBits;
+
+    if (parameters)
+    {
+        parameters->refresh_rate = defaultVideomode->refreshRate;
+        parameters->framebuffer_bits_red = defaultVideomode->redBits;
+        parameters->framebuffer_bits_green = defaultVideomode->greenBits;
+        parameters->framebuffer_bits_blue = defaultVideomode->blueBits;
+    }
 
     return createWindowInternal(parameters, {defaultVideomode->width, defaultVideomode->height}, monitor);
 }

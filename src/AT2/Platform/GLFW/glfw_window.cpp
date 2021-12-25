@@ -37,19 +37,26 @@ GlfwWindow::GlfwWindow(GlfwContextParameters contextParams, glm::ivec2 initialSi
 
     //glfwDefaultWindowHints();
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, context_parameters.context_major_version);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, context_parameters.context_minor_version);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, static_cast<int>(context_parameters.profile));
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+    if (context_parameters)
+    {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, context_parameters->context_major_version);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, context_parameters->context_minor_version);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, static_cast<int>(context_parameters->profile));
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
 
-    glfwWindowHint(GLFW_RED_BITS, context_parameters.framebuffer_bits_red);
-    glfwWindowHint(GLFW_GREEN_BITS, context_parameters.framebuffer_bits_green);
-    glfwWindowHint(GLFW_BLUE_BITS, context_parameters.framebuffer_bits_blue);
+        glfwWindowHint(GLFW_RED_BITS, context_parameters->framebuffer_bits_red);
+        glfwWindowHint(GLFW_GREEN_BITS, context_parameters->framebuffer_bits_green);
+        glfwWindowHint(GLFW_BLUE_BITS, context_parameters->framebuffer_bits_blue);
 
-    glfwWindowHint(GLFW_SAMPLES, context_parameters.msaa_samples);
-    glfwWindowHint(GLFW_REFRESH_RATE, context_parameters.refresh_rate);
-    glfwWindowHint(GLFW_SRGB_CAPABLE, context_parameters.srgb_capable);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, context_parameters.debug_context);
+        glfwWindowHint(GLFW_SAMPLES, context_parameters->msaa_samples);
+        glfwWindowHint(GLFW_REFRESH_RATE, context_parameters->refresh_rate);
+        glfwWindowHint(GLFW_SRGB_CAPABLE, context_parameters->srgb_capable);
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, context_parameters->debug_context);
+    }
+    else
+    {
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    }
 
     /* Create a windowed mode window and its OpenGL context */
     window_impl = glfwCreateWindow(window_size.x, window_size.y, window_label.c_str(), monitor, nullptr);
@@ -84,7 +91,9 @@ GlfwWindow& GlfwWindow::setCursorMode(CursorMode cursorMode)
 void GlfwWindow::UpdateAndRender()
 {
     assert(window_impl);
-    MakeContextCurrent();
+
+    if (context_parameters)
+		MakeContextCurrent();
 
     {
         if (!is_initialized)
@@ -102,7 +111,8 @@ void GlfwWindow::UpdateAndRender()
         previous_render_time = currentTime;
     }
 
-    glfwSwapBuffers(window_impl);
+    if (context_parameters)
+		glfwSwapBuffers(window_impl);
 }
 
 GlfwWindow& GlfwWindow::setLabel(std::string label)
