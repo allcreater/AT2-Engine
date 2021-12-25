@@ -6,8 +6,8 @@
 #include <glm/packing.hpp>
 #include <filesystem>
 
-#include <AT2/Scene/Animation.h>
-#include <AT2/BufferMapperGuard.h>
+#include <Scene/Animation.h>
+#include <BufferMapperGuard.h>
 #include "TextureLoader.h"
 
 using namespace AT2;

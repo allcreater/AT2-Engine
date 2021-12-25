@@ -4,10 +4,9 @@
 #include <algorithm>
 #include <chrono>
 
-#include <AT2/AT2.h>
-#include <AT2/Mesh.h>
-#include <AT2/camera.h>
-#include <AT2/matrix_stack.h>
+#include <Mesh.h>
+#include <camera.h>
+#include <matrix_stack.h>
 
 //TODO: split into different headers
 

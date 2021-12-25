@@ -1,5 +1,5 @@
-#include <AT2/Platform/GLFW/glfw_application.h>
-#include <AT2/Platform/Application.h>
+#include <Platform/GLFW/glfw_application.h>
+#include <Platform/Application.h>
 
 #include "UIHandler.h"
 

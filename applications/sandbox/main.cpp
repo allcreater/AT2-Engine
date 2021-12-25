@@ -1,13 +1,13 @@
 //This file is something like sandbox. It is just functionality test, not example.
 
-#include <AT2/camera.h>
-#include <AT2/Scene/Scene.h>
-#include <AT2/OpenGL/GlTimerQuery.h>
-#include <AT2/Platform/Application.h>
-#include <AT2/Platform/GLFW/glfw_window.h>
-#include <AT2/Resources/MeshLoader.h>
-#include <AT2/Resources/GltfSceneLoader.h>
-#include <AT2/Resources/TextureLoader.h>
+#include <camera.h>
+#include <Scene/Scene.h>
+#include <Platform/Renderers/OpenGL/GlTimerQuery.h>
+#include <Platform/Application.h>
+#include <Platform/GLFW/glfw_window.h>
+#include <Resources/MeshLoader.h>
+#include <Resources/GltfSceneLoader.h>
+#include <Resources/TextureLoader.h>
 
 #include <execution>
 #include <filesystem>

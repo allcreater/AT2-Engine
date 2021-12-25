@@ -1,4 +1,4 @@
-#include <AT2/Mesh.h>
+#include <Mesh.h>
 
 namespace AT2::Utils
 {

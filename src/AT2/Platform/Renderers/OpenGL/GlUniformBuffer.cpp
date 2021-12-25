@@ -1,5 +1,5 @@
 #include "GlUniformBuffer.h"
-#include "../BufferMapperGuard.h"
+#include <BufferMapperGuard.h>
 
 #include <utility>
 

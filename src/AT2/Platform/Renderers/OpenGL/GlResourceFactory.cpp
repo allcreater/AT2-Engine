@@ -3,7 +3,7 @@
 #include "GlTexture.h"
 #include "GlVertexArray.h"
 
-#include "../utils.hpp"
+#include <utils.hpp>
 
 #include <fstream>
 #include <optional>

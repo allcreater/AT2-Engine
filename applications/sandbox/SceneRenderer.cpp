@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <utility>
 
-#include <AT2/Scene/Animation.h>
+#include <Scene/Animation.h>
 
 namespace
 {
