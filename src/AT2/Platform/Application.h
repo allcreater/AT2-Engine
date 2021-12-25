@@ -9,8 +9,8 @@ namespace AT2
     class GraphicsContext : public IWindow::IWindowContext
     {
     public:
-        virtual IWindow& getWindow() override { return *m_window; }
-        virtual const IWindow& getWindow() const override { return *m_window; }
+    	IWindow& getWindow() override { return *m_window; }
+        const IWindow& getWindow() const override { return *m_window; }
 
         //Renderer and resources should not be exposed outside of the GraphicsContext
         const std::shared_ptr<IRenderer>& getRenderer() const noexcept { return m_renderer; }

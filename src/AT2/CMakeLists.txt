@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.7.1 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.8 FATAL_ERROR)
 
 project (AT2_Engine)
 
@@ -35,3 +35,5 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}/fx-gltf/include/")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX AT2 FILES ${${PROJECT_NAME}_SOURCES})
