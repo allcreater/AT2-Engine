@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.7.1 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.8 FATAL_ERROR)
 
 project (AT2_Engine)
 
@@ -35,3 +35,21 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}/fx-gltf/include/")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+
+# MacOS - specific
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  message ("Apple frameworks will be linked")
+  target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/3rd_party/metal-cpp/")
+  
+  find_library(QUARTZ_CORE_LIB QuartzCore)
+  find_library(METAL_LIB Metal)
+  find_library(FOUNDATION_LIB Foundation)
+  
+  if ((NOT QUARTZ_CORE_LIB) OR (NOT METAL_LIB) OR (NOT FOUNDATION_LIB) )
+    message(FATAL_ERROR "Apple frameworks not found")
+  endif()
+
+  
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${QUARTZ_CORE_LIB} ${METAL_LIB} ${FOUNDATION_LIB})
+  
+endif()
