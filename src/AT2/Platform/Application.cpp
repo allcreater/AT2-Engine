@@ -19,7 +19,8 @@ void GraphicsContext::Initialize(std::shared_ptr<IWindow> window)
 void AT2::SingleWindowApplication::Run(std::unique_ptr<GraphicsContext> graphicsContext)
 {
     using namespace AT2::GLFW;
-    auto glfwWindow = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, true, true}, {1280, 800});
+    auto glfwWindow =
+        GlfwApplication::get().createWindow(GlfwOpenGlContextParameters {GlfwOpenglProfile::Core, 4, 5, 0, 60, true, true}, {1280, 800});
 
     GlfwApplication::get().OnNoActiveWindows = [] {
         GlfwApplication::get().stop();
@@ -29,9 +30,12 @@ void AT2::SingleWindowApplication::Run(std::unique_ptr<GraphicsContext> graphics
     glfwWindow->InitializeCallback = [glfwWindow, graphicsContext=graphicsContext.get()] {
         graphicsContext->Initialize(glfwWindow);
     };
+    glfwWindow->RenderCallback = [graphicsContext = graphicsContext.get()](Seconds dt) {
+        graphicsContext->OnRender(dt);
+        graphicsContext->getRenderer()->FinishFrame();
+    };
 
     glfwWindow->UpdateCallback = std::bind_front(&GraphicsContext::OnUpdate, graphicsContext.get());
-    glfwWindow->RenderCallback = std::bind_front(&GraphicsContext::OnRender, graphicsContext.get());
     glfwWindow->RefreshingCallback = std::bind_front(&GraphicsContext::OnWindowRefreshing, graphicsContext.get());
     glfwWindow->KeyDownCallback = std::bind_front(&GraphicsContext::OnKeyDown, graphicsContext.get());
     glfwWindow->KeyUpCallback = std::bind_front(&GraphicsContext::OnKeyUp, graphicsContext.get());

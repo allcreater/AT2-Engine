@@ -179,8 +179,6 @@ private:
 
         const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
         getWindow().setLabel("Frame time = " + std::to_string(frameTime));
-
-        getRenderer()->FinishFrame();
     }
 
 
