@@ -5,7 +5,7 @@
 
 #include <list>
 
-#include "AT2/Mesh.h"
+#include <Mesh.h>
 
 //TODO: move into library
 namespace AT2::UI

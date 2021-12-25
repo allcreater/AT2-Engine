@@ -8,7 +8,7 @@ using namespace AT2::UI;
 #include <algorithm>
 
 //TODO: hide from the interface!
-#include <AT2/OpenGL/GlRenderer.h>
+#include <Platform/Renderers/OpenGL/GlRenderer.h>
 
 
 //it is possible to contain all data in one vertex buffer array and one vertex buffer, but it's more complex task and much unclear code, so let's just draw it separately

@@ -1,7 +1,7 @@
 #include "Application.h"
 
-#include <AT2/OpenGL/GlRenderer.h>
-#include <AT2/Platform/GLFW/glfw_application.h>
+#include <Renderers/OpenGL/GlRenderer.h>
+#include <GLFW/glfw_application.h>
 
 using namespace AT2;
 

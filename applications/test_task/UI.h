@@ -1,11 +1,11 @@
 #ifndef RENDERABLE_UI_HEADER
 #define RENDERABLE_UI_HEADER
 
-#include <AT2/UI/InputHelper.h>
+#include <UI/InputHelper.h>
 
 #include <utility>
 #include "LinesHelper.h"
-#include "AT2/Mesh.h"
+#include <Mesh.h>
 
 namespace AT2::UI
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AT2/AT2.h>
+#include <AT2.h>
 #include "Common.h"
 
 namespace AT2

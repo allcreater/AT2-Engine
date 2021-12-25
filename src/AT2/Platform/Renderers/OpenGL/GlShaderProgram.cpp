@@ -1,6 +1,6 @@
 #include "GlShaderProgram.h"
 
-#include "../UniformContainer.h"
+#include <UniformContainer.h>
 #include "GlUniformBuffer.h"
 #include "Mappings.h"
 

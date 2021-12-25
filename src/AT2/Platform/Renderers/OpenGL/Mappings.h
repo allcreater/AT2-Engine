@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../AT2_textures.hpp"
-#include "../AT2_types.hpp"
-#include "../AT2_states.hpp"
-#include "../utils.hpp"
+#include <AT2_textures.hpp>
+#include <AT2_types.hpp>
+#include <AT2_states.hpp>
+#include <utils.hpp>
 
 namespace AT2::Mappings
 {

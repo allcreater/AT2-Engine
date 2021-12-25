@@ -5,7 +5,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include <AT2/AT2_types.hpp>
+#include <AT2_types.hpp>
 
 #include "../callback_types.h"
 

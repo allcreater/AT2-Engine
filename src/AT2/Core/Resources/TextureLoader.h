@@ -1,7 +1,7 @@
 #pragma once
 
 #include <filesystem>
-#include <AT2/AT2.h>
+#include <AT2.h>
 
 namespace AT2::Resources
 {

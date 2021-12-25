@@ -1,6 +1,6 @@
 #include "UIHandler.h"
 
-#include <AT2/Resources/TextureLoader.h>
+#include <Resources/TextureLoader.h>
 
 #include <random>
 #include <utility>

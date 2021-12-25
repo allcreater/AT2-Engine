@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AT2/Scene/Scene.h>
+#include <Scene/Scene.h>
 
 namespace AT2::Resources
 {

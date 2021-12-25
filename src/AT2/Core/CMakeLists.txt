@@ -1,30 +1,60 @@
 cmake_minimum_required (VERSION 3.8 FATAL_ERROR)
 
-project (AT2_Engine)
+project (AT2_Engine_Core)
 
-file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES
-    "*.h"
-    "*.hpp"
-    "*.cpp"
+set (${PROJECT_NAME}_SOURCES
+    "Resources/GltfSceneLoader.h"
+    "Resources/GltfSceneLoader.cpp"
+    "Resources/MeshLoader.h"
+    "Resources/MeshLoader.cpp"
+    "Resources/TextureLoader.h"
+    "Resources/TextureLoader_devIL.cpp"
+    "Resources/TextureLoader_stb.cpp"
+
+    "Scene/Animation.h"
+    "Scene/Animation.cpp"
+    "Scene/Channel.h"
+    "Scene/Scene.h"
+    "Scene/Scene.cpp"
+
+    "UI/InputHelper.h"
+    "UI/InputHelper.cpp"
+    "UI/Plot.cpp"
+    "UI/StackPanel.cpp"
+    "UI/UI.h"
+    "UI/UI.cpp"
+
+    "AABB.h"
+    "BufferMapperGuard.h"
+    "Camera.h"
+    "log.cpp"
+    "log.h"
+    "matrix_stack.h"
+    "Mesh.h"
+    "StateManager.h"
+    "StateManager.cpp"
+    "UniformContainer.h"
+    "UniformContainer.cpp"
+    "utils.hpp"
 )
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX AT2 FILES ${${PROJECT_NAME}_SOURCES})
 
 add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
 )
 
 option(USE_ASSIMP "Use ASSIMP library" ON)
-option(USE_PLATFORM_HACKS "speed-up execution in exchange for some non-portable code" OFF)
-
 
 target_compile_definitions( ${PROJECT_NAME} PRIVATE
     $<$<BOOL:${USE_ASSIMP}>:USE_ASSIMP>
     $<$<BOOL:${USE_PLATFORM_HACKS}>:USE_PLATFORM_HACKS>
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/src/")
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}/fx-gltf/include/")
 
-
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CONAN_LIBS})
 
 if(DEVIL_FOUND)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USE_DEVIL)
@@ -32,8 +62,6 @@ if(DEVIL_FOUND)
 endif()
 
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}/fx-gltf/include/")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CONAN_LIBS})
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX AT2 FILES ${${PROJECT_NAME}_SOURCES})

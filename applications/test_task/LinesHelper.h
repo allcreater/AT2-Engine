@@ -1,7 +1,7 @@
 #ifndef LINES_HELPER_HEADER
 #define LINES_HELPER_HEADER
 
-#include <AT2/Mesh.h>
+#include <Mesh.h>
 
 class LinesHelper
 {
