@@ -5,10 +5,11 @@
 using namespace AT2;
 using namespace OpenGL;
 
-GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType) : m_id(0), m_publicType(bufferType)
+GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType)
+	: m_id{0}
+	, m_publicType{bufferType}
+	, m_privateType{static_cast<GlBufferType>(Mappings::TranslateBufferType(bufferType))}
 {
-    m_privateType = static_cast<GlBufferType>(Mappings::TranslateBufferType(bufferType));
-
     glCreateBuffers(1, &m_id);
     //TODO: use glNamedBufferStorage ?
 }

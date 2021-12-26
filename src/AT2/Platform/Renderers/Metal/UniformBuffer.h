@@ -13,7 +13,7 @@ namespace AT2::Metal
 
         //UniformBlockInfo does not linked with specific program, it's just template for buffer structuring
         //TODO: Abstract interface to uniform buffer template definition. It should not be linked with program introspection directly.
-        explicit UniformBuffer(std::shared_ptr<const OpenGL::Introspection::UniformBlockInfo> ubi);
+        explicit UniformBuffer();
 
     public:
         void SetUniform(std::string_view name, const Uniform& value) override;

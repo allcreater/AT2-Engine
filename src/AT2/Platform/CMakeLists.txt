@@ -39,16 +39,24 @@ set(OPENGL_SOURCES_LIST
 set(METAL_SOURCES_LIST
     "Renderers/Metal/AT2lowlevel.h"
     "Renderers/Metal/FrameBuffer.h"
+    "Renderers/Metal/FrameBuffer.cpp"
     "Renderers/Metal/Mappings.h"
     "Renderers/Metal/Renderer.h"
     "Renderers/Metal/Renderer.cpp"
     "Renderers/Metal/ResourceFactory.h"
+    "Renderers/Metal/ResourceFactory.cpp"
     "Renderers/Metal/ShaderProgram.h"
+    "Renderers/Metal/ShaderProgram.cpp"
     "Renderers/Metal/StateManager.h"
+    "Renderers/Metal/StateManager.cpp"
     "Renderers/Metal/Texture.h"
+    "Renderers/Metal/Texture.cpp"
     "Renderers/Metal/UniformBuffer.h"
+    "Renderers/Metal/UniformBuffer.cpp"
     "Renderers/Metal/VertexArray.h"
+    "Renderers/Metal/VertexArray.cpp"
     "Renderers/Metal/VertexBuffer.h"
+    "Renderers/Metal/VertexBuffer.cpp"
 )
 
 set(COMMON_SOURCES_LIST

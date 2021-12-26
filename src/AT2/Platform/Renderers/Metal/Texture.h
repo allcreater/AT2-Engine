@@ -5,13 +5,13 @@
 
 namespace AT2::Metal
 {
-    class Texture : public ITexture
+    class MtlTexture : public ITexture
     {
     public:
-        NON_COPYABLE_OR_MOVABLE(Texture)
+        NON_COPYABLE_OR_MOVABLE(MtlTexture)
 
-        Texture(Texture flavor, GLint internalFormat);
-        ~Texture() override;
+        MtlTexture(Texture flavor, GLint internalFormat);
+        ~MtlTexture() override;
 
         void Bind(unsigned int unit) const override;
         void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
@@ -48,8 +48,6 @@ namespace AT2::Metal
         void SetAnisotropy(float anisotropy) override;
         [[nodiscard]] float GetAnisotropy() const noexcept override;
 
-    protected:
-        void ReadChannelSizes();
 
     protected:
         Texture m_flavor;
