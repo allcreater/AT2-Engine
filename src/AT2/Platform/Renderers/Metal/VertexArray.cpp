@@ -1,6 +1,7 @@
 #include "VertexArray.h"
 
-using namespace AT2::Metal;
+using namespace AT2;
+using namespace Metal;
 
 VertexArray::VertexArray(const IRendererCapabilities& rendererCapabilities)
 {

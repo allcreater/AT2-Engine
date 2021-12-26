@@ -23,7 +23,7 @@ namespace AT2::Metal
 
         //TODO:  there should not be VertexBuffer::Bind(), it restricts Liskov's substitution principle =(
         void Bind(IStateManager& stateManager) const override;
-        void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
+        void SetBindingPoint(unsigned int index) { }
 
     private:
         std::string m_blockName;

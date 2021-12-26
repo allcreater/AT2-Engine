@@ -1,5 +1,6 @@
 #include "FrameBuffer.h"
 
+using namespace AT2;
 using namespace AT2::Metal;
 
 FrameBuffer::FrameBuffer(const IRendererCapabilities& rendererCapabilities)

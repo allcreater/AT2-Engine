@@ -1,8 +1,9 @@
 #include "UniformBuffer.h"
 
+using namespace AT2;
 using namespace AT2::Metal;
 
-UniformBuffer::UniformBuffer()
+UniformBuffer::UniformBuffer() : VertexBuffer(VertexBufferType::UniformBuffer)
 {
 	
 }

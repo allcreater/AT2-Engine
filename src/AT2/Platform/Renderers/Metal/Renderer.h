@@ -10,7 +10,7 @@ class Renderer : public IRenderer
 public:
     NON_COPYABLE_OR_MOVABLE(Renderer)
 
-    Renderer();
+    explicit Renderer( id nsWindow );
     ~Renderer() override = default;
 
 public:
@@ -38,6 +38,8 @@ private:
     std::unique_ptr<IStateManager> m_stateManager;
     std::unique_ptr<IResourceFactory> m_resourceFactory;
     std::unique_ptr<IRendererCapabilities> m_rendererCapabilities;
+    
+    MtlPtr<MTL::Device> device;
 };
 
 }

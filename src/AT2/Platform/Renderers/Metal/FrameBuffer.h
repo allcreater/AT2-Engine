@@ -16,7 +16,7 @@ namespace AT2::Metal
 
     public:
         void Bind() override;
-        [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
+        [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 
         void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) override;
         [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const override;
@@ -25,12 +25,10 @@ namespace AT2::Metal
         [[nodiscard]] glm::ivec2 GetActualSize() const noexcept override { return m_size; }
 
     private:
-        GLuint m_id;
-
         glm::ivec2 m_size {0, 0};
 
-        std::vector<std::shared_ptr<GlTexture>> m_colorAttachments;
-        std::shared_ptr<GlTexture> m_depthAttachment;
+        std::vector<std::shared_ptr<MtlTexture>> m_colorAttachments;
+        std::shared_ptr<MtlTexture> m_depthAttachment;
 
         bool m_dirtyFlag {true};
     };

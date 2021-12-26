@@ -1,8 +1,8 @@
-#include "MtlTexture.h"
+#include "Texture.h"
 
 using namespace AT2::Metal;
 
-MtlTexture::MtlTexture(Texture flavor, GLint internalFormat)
+MtlTexture::MtlTexture(Texture flavor) : m_flavor(flavor)
 {
 	
 }
@@ -32,16 +32,16 @@ void MtlTexture::BuildMipmaps()
 	
 }
 
-void MtlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalMtlTextureFormat dataFormat, const void* data)
+void MtlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, const void* data)
 {
 	
 }
 
-void MtlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalMtlTextureFormat dataFormat, const void* data)
+void MtlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat, const void* data)
 {
 }
 
-void MtlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalMtlTextureFormat dataFormat, const void* data)
+void MtlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat, const void* data)
 {
 }
 
@@ -51,12 +51,12 @@ void MtlTexture::CopyFromFramebuffer(int _level, glm::ivec2 pos, glm::ivec2 size
 }
 
 
-void MtlTexture::SetWrapMode(MtlTextureWrapParams wrapParams)
+void MtlTexture::SetWrapMode(TextureWrapParams wrapParams)
 {
 	
 }
 
-void MtlTexture::SetSamplingMode(MtlTextureSamplingParams samplingParams)
+void MtlTexture::SetSamplingMode(TextureSamplingParams samplingParams)
 {
 	
 }

@@ -10,7 +10,7 @@ namespace AT2::Metal
     public:
         NON_COPYABLE_OR_MOVABLE(MtlTexture)
 
-        MtlTexture(Texture flavor, GLint internalFormat);
+        MtlTexture(Texture flavor);
         ~MtlTexture() override;
 
         void Bind(unsigned int unit) const override;
@@ -22,7 +22,7 @@ namespace AT2::Metal
         glm::uvec3 GetSize() const noexcept override { return glm::uvec3(m_size); }
         size_t GetDataLength() const noexcept override { return m_dataSize; }
 
-        int GetCurrentModule() const noexcept override { return m_currentTextureModule; }
+        int GetCurrentModule() const noexcept override { return 0; }
         unsigned int GetId() const noexcept override { return 0; }
 
         const Texture& GetType() const noexcept override { return m_flavor; }
@@ -35,8 +35,6 @@ namespace AT2::Metal
                         const void* data) override;
 
         void CopyFromFramebuffer(int _level, glm::ivec2 pos, glm::ivec2 size, glm::ivec3 textureOffset = {});
-
-        GLenum GetTarget() const;
 
         // ISampler implementation:
         void SetWrapMode(TextureWrapParams wrapParams) override;

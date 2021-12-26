@@ -2,7 +2,7 @@
 
 using namespace AT2::Metal;
 
-:VertexBuffer::VertexBuffer(VertexBufferType bufferType)
+VertexBuffer::VertexBuffer(VertexBufferType bufferType)
 {
 	
 }

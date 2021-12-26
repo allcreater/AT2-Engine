@@ -8,16 +8,21 @@
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 
+//test
+#include "Mappings.h"
+
+using namespace AT2;
 using namespace AT2::Metal;
 
-Renderer::Renderer()
+Renderer::Renderer(id nsWindow)
 {
-    
+    //device.reset( MTL::CreateSystemDefaultDevice() );
+
 }
 
 void Renderer::Shutdown()
 {
-    
+    //device.reset();
 }
 
 void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)

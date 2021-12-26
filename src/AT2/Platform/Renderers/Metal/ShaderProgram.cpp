@@ -1,5 +1,6 @@
 #include "ShaderProgram.h"
 
+using namespace AT2;
 using namespace AT2::Metal;
 
 ShaderProgram::ShaderProgram()

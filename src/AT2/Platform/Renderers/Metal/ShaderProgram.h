@@ -34,8 +34,8 @@ namespace AT2::Metal
         void CleanUp();
 
     private:
-        std::vector<std::pair<ShaderType, GLuint>> m_shaderIds;
-        std::shared_ptr<OpenGL::Introspection::ProgramInfo> m_uniformsInfo;
+        //std::vector<std::pair<ShaderType, GLuint>> m_shaderIds;
+        //std::shared_ptr<OpenGL::Introspection::ProgramInfo> m_uniformsInfo;
 
         str m_name;
 

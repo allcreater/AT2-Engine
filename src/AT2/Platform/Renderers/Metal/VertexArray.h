@@ -15,7 +15,7 @@ namespace AT2::Metal
 
     public:
         void Bind() override;
-        [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
+        [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 
         void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer, BufferDataType type) override;
         [[nodiscard]] std::shared_ptr<IVertexBuffer> GetIndexBuffer() const override { return m_indexBuffer.first; }
@@ -27,8 +27,6 @@ namespace AT2::Metal
         [[nodiscard]] std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const override;
 
     private:
-        GLuint m_id;
-
         //we are sure that all buffer will be at least GlVertexBuffer or derived types
         std::vector<std::pair<std::shared_ptr<IVertexBuffer>, BufferBindingParams>> m_buffers;
         std::pair<std::shared_ptr<IVertexBuffer>, std::optional<BufferDataType>> m_indexBuffer;

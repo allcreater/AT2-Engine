@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AT2lowlevel.h"
+
 #include <AT2_textures.hpp>
 #include <AT2_types.hpp>
 #include <AT2_states.hpp>
@@ -7,38 +9,21 @@
 
 namespace AT2::Mappings
 {
-
-    constexpr GLint TranslateShaderType(ShaderType shaderType)
-    {
-        switch (shaderType)
-        {
-        case ShaderType::Vertex: return GL_VERTEX_SHADER;
-        case ShaderType::TesselationControl: return GL_TESS_CONTROL_SHADER;
-        case ShaderType::TesselationEvaluation: return GL_TESS_EVALUATION_SHADER;
-        case ShaderType::Geometry: return GL_GEOMETRY_SHADER;
-        case ShaderType::Fragment: return GL_FRAGMENT_SHADER;
-        case ShaderType::Computational: return GL_COMPUTE_SHADER;
-        }
-
-        assert(false);
-        return 0;
-    }
-
-    constexpr GLint TranslateWrapMode(TextureWrapMode wrapMode)
+    constexpr MTL::SamplerAddressMode TranslateWrapMode(TextureWrapMode wrapMode)
     {
         switch (wrapMode)
         {
-        case TextureWrapMode::ClampToEdge: return GL_CLAMP_TO_EDGE;
-        case TextureWrapMode::ClampToBorder: return GL_CLAMP_TO_BORDER;
-        case TextureWrapMode::MirroredRepeat: return GL_MIRRORED_REPEAT;
-        case TextureWrapMode::Repeat: return GL_REPEAT;
-        case TextureWrapMode::MirrorClampToEdge: return GL_MIRROR_CLAMP_TO_EDGE;
+            case TextureWrapMode::ClampToEdge: return MTL::SamplerAddressModeClampToEdge;
+            case TextureWrapMode::ClampToBorder: return MTL::SamplerAddressModeClampToBorderColor;
+            case TextureWrapMode::MirroredRepeat: return MTL::SamplerAddressModeMirrorRepeat;
+            case TextureWrapMode::Repeat: return MTL::SamplerAddressModeRepeat;
+            case TextureWrapMode::MirrorClampToEdge: return MTL::SamplerAddressModeMirrorClampToEdge;
+            //SamplerAddressModeClampToZero is unsuppported
         }
 
-        assert(false);
-        return 0;
+        throw AT2Exception("Unsupported TextureWrapMode");
     }
-
+/*
     constexpr GLenum TranslateExternalFormat(TextureLayout layout)
     {
         switch (layout)
@@ -102,44 +87,48 @@ namespace AT2::Mappings
         assert(false);
         return 0;
     }
+ */
 
-    constexpr GLenum TranslateTextureTarget(const Texture& texture)
+    constexpr MTL::TextureType TranslateTextureTarget(const Texture& texture)
     {
         return std::visit(
-            Utils::overloaded {[](const Texture1D&) { return GL_TEXTURE_1D; },
-                               [](const Texture1DArray&) { return GL_TEXTURE_1D_ARRAY; },
-                               [](const Texture2DArray&) { return GL_TEXTURE_2D_ARRAY; },
-                               [](const Texture2D&) { return GL_TEXTURE_2D; },
-                               [](const Texture2DMultisample&) { return GL_TEXTURE_2D_MULTISAMPLE; },
-                               [](const Texture2DRectangle&) { return GL_TEXTURE_RECTANGLE; },
-                               [](const Texture2DMultisampleArray&) { return GL_TEXTURE_2D_MULTISAMPLE_ARRAY; },
-                               [](const TextureCube&) { return GL_TEXTURE_CUBE_MAP; },
-                               [](const TextureCubeArray&) { return GL_TEXTURE_CUBE_MAP_ARRAY; },
-                               [](const Texture3D&) { return GL_TEXTURE_3D; }},
-            texture);
+            Utils::overloaded {
+                [](const Texture1D&) { return MTL::TextureType1D; },
+                [](const Texture1DArray&) { return MTL::TextureType1DArray; },
+                [](const Texture2DArray&) { return MTL::TextureType2DArray; },
+                [](const Texture2D&) { return MTL::TextureType2D; },
+                [](const Texture2DMultisample&) { return MTL::TextureType2DMultisample; },
+                [](const Texture2DRectangle&) { return MTL::TextureType2D; },
+                [](const Texture2DMultisampleArray&) { return MTL::TextureType2DMultisampleArray; },
+                [](const TextureCube&) { return MTL::TextureTypeCube; },
+                [](const TextureCubeArray&) { return MTL::TextureTypeCubeArray; },
+                [](const Texture3D&) { return MTL::TextureType3D; }
+                //MTL::TextureTypeTextureBuffer
+            }, texture);
     }
 
-    inline GLenum TranslatePrimitiveType(const Primitives::Primitive& primitive)
+    inline MTL::PrimitiveType TranslatePrimitiveType(const Primitives::Primitive& primitive)
     {
         using namespace Primitives;
 
         return std::visit(
             Utils::overloaded {
-                              [](const Points&) { return GL_POINTS; },
-                              [](const LineStrip&) { return GL_LINE_STRIP; },
-                              [](const LineLoop&) { return GL_LINE_LOOP; },
-                              [](const Lines&) { return GL_LINES; },
-                              [](const LineStripAdjacency&) { return GL_LINE_STRIP_ADJACENCY; },
-                              [](const LinesAdjacency&) { return GL_LINES_ADJACENCY; },
-                              [](const TriangleStrip&) { return GL_TRIANGLE_STRIP; },
-                              [](const TriangleFan&) { return GL_TRIANGLE_FAN; },
-                              [](const Triangles&) { return GL_TRIANGLES; },
-                              [](const TriangleStripAdjacency&) { return GL_TRIANGLE_STRIP_ADJACENCY; },
-                              [](const TrianglesAdjacency&) { return GL_TRIANGLES_ADJACENCY; },
-                              [](const Patches&) { return GL_PATCHES; }},
-            primitive);
+                [](const Points&) { return MTL::PrimitiveTypePoint; },
+                [](const LineStrip&) { return MTL::PrimitiveTypeLineStrip; },
+//              [](const LineLoop&) { return GL_LINE_LOOP; },
+                [](const Lines&) { return MTL::PrimitiveTypeLine; },
+//              [](const LineStripAdjacency&) { return GL_LINE_STRIP_ADJACENCY; },
+//              [](const LinesAdjacency&) { return GL_LINES_ADJACENCY; },
+                [](const TriangleStrip&) { return MTL::PrimitiveTypeTriangleStrip; },
+//              [](const TriangleFan&) { return GL_TRIANGLE_FAN; },
+                [](const Triangles&) { return MTL::PrimitiveTypeTriangle; },
+//              [](const TriangleStripAdjacency&) { return GL_TRIANGLE_STRIP_ADJACENCY; },
+//              [](const TrianglesAdjacency&) { return GL_TRIANGLES_ADJACENCY; },
+//              [](const Patches&) { return GL_PATCHES; }},
+                [](const auto&) -> MTL::PrimitiveType { throw AT2Exception("This primitive type is not supported by Metal"); }
+            }, primitive);
     }
-
+/*
     constexpr GLenum TranslateCompareFunction(CompareFunction function)
     {
         switch (function)
@@ -181,62 +170,57 @@ namespace AT2::Mappings
         assert(false);
         return 0;
     }
-
-    constexpr GLenum TranslateFaceCullMode(FaceCullMode mode)
+*/
+    constexpr std::optional<MTL::CullMode> TranslateFaceCullMode(FaceCullMode mode)
     {
         switch ((mode.CullFront ? 0b10 : 0) | (mode.CullBack ? 0b01 : 0))
         {
-        case 0b00: return 0;
-        case 0b01: return GL_BACK;
-        case 0b10: return GL_FRONT;
-        case 0b11: return GL_FRONT_AND_BACK;
+        case 0b00: return MTL::CullModeNone;
+        case 0b01: return MTL::CullModeBack;
+        case 0b10: return MTL::CullModeFront;
+        case 0b11: return std::nullopt;
         }
 
-        assert(false);
-        return 0;
+        throw AT2Exception("Unsupported FaceCullMode");
     }
 
-    constexpr GLenum TranslatePolygonRasterizationMode(PolygonRasterizationMode mode)
+    constexpr MTL::TriangleFillMode TranslatePolygonRasterizationMode(PolygonRasterizationMode mode)
     {
         switch (mode)
         {
-            case PolygonRasterizationMode::Point: return GL_POINT;
-            case PolygonRasterizationMode::Lines: return GL_LINE;
-            case PolygonRasterizationMode::Fill: return GL_FILL;
+            //case PolygonRasterizationMode::Point:
+            case PolygonRasterizationMode::Lines: return MTL::TriangleFillModeLines;
+            case PolygonRasterizationMode::Fill: return MTL::TriangleFillModeFill;
         }
 
-        assert(false);
-        return 0;
+        throw AT2Exception("Unsupported PolygonRasterizationMode");
     }
 
-    constexpr GLint TranslateTextureSamplingModes(TextureSamplingMode samplingMode,
-                                                   MipmapSamplingMode mipmapMode = MipmapSamplingMode::Manual)
+    constexpr MTL::SamplerMipFilter TranslateTextureMipMode(MipmapSamplingMode mipmapMode)
+    {
+        switch (mipmapMode)
+        {
+            case MipmapSamplingMode::Manual:    return MTL::SamplerMipFilterNotMipmapped;
+            case MipmapSamplingMode::Nearest:   return MTL::SamplerMipFilterNearest;
+            case MipmapSamplingMode::Linear:    return MTL::SamplerMipFilterLinear;
+        }
+    }
+
+    constexpr MTL::SamplerMinMagFilter TranslateTextureSamplingMode(TextureSamplingMode samplingMode)
     {
         switch (samplingMode)
         {
-        case TextureSamplingMode::Nearest:
-            switch (mipmapMode)
-            {
-            case MipmapSamplingMode::Manual:    return GL_NEAREST;
-            case MipmapSamplingMode::Nearest:   return GL_NEAREST_MIPMAP_NEAREST;
-            case MipmapSamplingMode::Linear:    return GL_NEAREST_MIPMAP_LINEAR;
-            }
-        case TextureSamplingMode::Linear:
-            switch (mipmapMode)
-            {
-            case MipmapSamplingMode::Manual:    return GL_LINEAR;
-            case MipmapSamplingMode::Nearest:   return GL_LINEAR_MIPMAP_NEAREST;
-            case MipmapSamplingMode::Linear:    return GL_LINEAR_MIPMAP_LINEAR;
-            }
+            case TextureSamplingMode::Nearest:  return MTL::SamplerMinMagFilterNearest;
+            case TextureSamplingMode::Linear:   return MTL::SamplerMinMagFilterLinear;
         }
 
-        assert(false);
-        return 0;
+        throw AT2Exception("Unsupported TextureSamplingMode");
     }
-
+/*
     constexpr GLboolean TranslateBool(bool value)
     {
         return value ? GL_TRUE : GL_FALSE;
     }
+ */
 
 } // namespace AT2::Mappings
