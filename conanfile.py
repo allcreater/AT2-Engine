@@ -8,8 +8,8 @@ class AT2(ConanFile):
 
    generators = "cmake"
    options = {
-      "use_sdl": ["ON", "OFF"],
-      "use_gtest": ["ON", "OFF"]
+      "use_sdl": ["ON", "OFF", "True", "False"],
+      "use_gtest": ["ON", "OFF", "True", "False"]
    }
    default_options = {
       "glad:gl_version": "4.5",
@@ -18,12 +18,12 @@ class AT2(ConanFile):
     }
 
    def requirements(self):
-      if self.options.use_sdl == "ON":
+      if self.options.use_sdl in ["ON", "True"]:
          self.requires("sdl/[>=2.0.18]")
       else:
          self.requires("glfw/[>=3.3.2]")
 
-      if self.options.use_gtest == "ON":
+      if self.options.use_gtest in ["ON", "True"]:
          self.requires("gtest/[>=1.10.0]")
 
    def imports(self):

@@ -81,7 +81,7 @@ private:
 
         auto GrassTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
         auto NormalMapTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        auto RockTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Displacement.jpg");
+        //auto RockTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Color.jpg");
         //auto RockNormalTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Normal.jpg");
         //auto RockDisplacementTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Displacement.jpg");
 
@@ -152,7 +152,7 @@ private:
             uniformStorage.SetUniform("u_texHeight", HeightMapTex);
             uniformStorage.SetUniform("u_texNormalMap", NormalMapTex);
             uniformStorage.SetUniform("u_texGrass", GrassTex);
-            uniformStorage.SetUniform("u_texRock", RockTex);
+            uniformStorage.SetUniform("u_texRock", GrassTex);
         }
         m_scene.GetRoot().AddChild(std::move(terrainNode));
 
