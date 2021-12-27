@@ -1,7 +1,18 @@
 #include "Application.h"
 
 #include <Renderers/OpenGL/GlRenderer.h>
-#include <GLFW/glfw_application.h>
+
+#ifdef USE_SDL_INSTEADOF_SFML
+	#include <SDL/application.h>
+	using namespace AT2::SDL;
+
+	GLADloadproc openglFunctionsBinder = nullptr;
+#else
+	#include <GLFW/glfw_application.h>
+
+	using namespace AT2::GLFW;
+	GLADloadproc openglFunctionsBinder = reinterpret_cast<GLADloadproc>(glfwGetProcAddress);
+#endif
 
 using namespace AT2;
 
@@ -9,20 +20,21 @@ void GraphicsContext::Initialize(std::shared_ptr<IWindow> window)
 {
     m_window = std::move(window);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        throw AT2Exception("Failed to initialize GLAD");
-
-    m_renderer = std::make_unique<AT2::OpenGL::GlRenderer>();
+    m_renderer = std::make_unique<OpenGL::GlRenderer>(openglFunctionsBinder);
     OnInitialized();
 }
 
 void AT2::SingleWindowApplication::Run(std::unique_ptr<GraphicsContext> graphicsContext)
 {
-    using namespace AT2::GLFW;
-    auto glfwWindow = GlfwApplication::get().createWindow({GlfwOpenglProfile::Core, 4, 5, 0, 60, true, true}, {1280, 800});
+    ContextParameters contextParams {
+    	.contextType = OpenGLContextParams{OpenglProfile::Core, 4, 5, true},
+    	.refresh_rate = 60
+    };
 
-    GlfwApplication::get().OnNoActiveWindows = [] {
-        GlfwApplication::get().stop();
+    auto glfwWindow = ConcreteApplication::get().createWindow(contextParams, {1280, 800});
+
+    ConcreteApplication::get().OnNoActiveWindows = [] {
+        ConcreteApplication::get().stop();
         //spdlog::info("Exit");
     };
 
@@ -45,5 +57,5 @@ void AT2::SingleWindowApplication::Run(std::unique_ptr<GraphicsContext> graphics
 
     glfwWindow->setWindowContext(std::move(graphicsContext));
 
-    AT2::GLFW::GlfwApplication::get().run();
+    ConcreteApplication::get().run();
 }

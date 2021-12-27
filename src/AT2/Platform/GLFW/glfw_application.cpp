@@ -4,23 +4,23 @@
 
 using namespace AT2::GLFW;
 
-GlfwApplication& GlfwApplication::get()
+ConcreteApplication& ConcreteApplication::get()
 {
-    static GlfwApplication keeper;
+    static ConcreteApplication keeper;
     return keeper;
 }
 
 
-std::shared_ptr<GlfwWindow> GlfwApplication::createWindow(GlfwContextParameters parameters, glm::ivec2 size)
+std::shared_ptr<Window> ConcreteApplication::createWindow(ContextParameters parameters, glm::ivec2 size)
 {
     return createWindowInternal(parameters, size, nullptr);
 }
 
-std::shared_ptr<GlfwWindow> GlfwApplication::createFullscreenWindow(GlfwContextParameters parameters)
+std::shared_ptr<Window> ConcreteApplication::createFullscreenWindow(ContextParameters parameters)
 {
     auto* monitor = glfwGetPrimaryMonitor();
     const auto* defaultVideomode = glfwGetVideoMode(monitor);
-    
+
     parameters.refresh_rate = defaultVideomode->refreshRate;
     parameters.framebuffer_bits_red = defaultVideomode->redBits;
     parameters.framebuffer_bits_green = defaultVideomode->greenBits;
@@ -29,10 +29,10 @@ std::shared_ptr<GlfwWindow> GlfwApplication::createFullscreenWindow(GlfwContextP
     return createWindowInternal(parameters, {defaultVideomode->width, defaultVideomode->height}, monitor);
 }
 
-std::shared_ptr<GlfwWindow> GlfwApplication::createWindowInternal(GlfwContextParameters parameters, glm::ivec2 size, GLFWmonitor* monitor)
+std::shared_ptr<Window> ConcreteApplication::createWindowInternal(ContextParameters parameters, glm::ivec2 size, GLFWmonitor* monitor)
 {
-    auto* const pWindow = new GlfwWindow(parameters, size, monitor);
-    std::shared_ptr<GlfwWindow> window {pWindow};
+    auto* const pWindow = new Window(parameters, size, monitor);
+    std::shared_ptr<Window> window {pWindow};
 
     std::lock_guard lock {windows_registry_mutex};
     windows_registry.push_back(window);
@@ -40,7 +40,7 @@ std::shared_ptr<GlfwWindow> GlfwApplication::createWindowInternal(GlfwContextPar
     return window;
 }
 
-void GlfwApplication::run()
+void ConcreteApplication::run()
 {
     if (runned)
         throw GlfwException {"Already running!"};
@@ -63,7 +63,7 @@ void GlfwApplication::run()
             std::lock_guard lock {windows_registry_mutex};
 
             windows_registry.erase(std::remove_if(std::begin(windows_registry), std::end(windows_registry),
-                                                  [](const std::shared_ptr<GlfwWindow>& window) {
+                                                  [](const std::shared_ptr<Window>& window) {
                                                       if (window->getCloseFlag() || window.use_count() == 1)
                                                       {
                                                           window->Close();
@@ -85,13 +85,13 @@ void GlfwApplication::run()
     }
 }
 
-void GlfwApplication::stop()
+void ConcreteApplication::stop()
 {
     if (!runned.exchange(false))
         throw GlfwException {"Isn't running!"};
 }
 
-GlfwApplication::GlfwApplication()
+ConcreteApplication::ConcreteApplication()
 {
     if (!glfwInit())
         throw GlfwException("Initialization failed");
@@ -99,7 +99,7 @@ GlfwApplication::GlfwApplication()
     glfwSetErrorCallback([](int, const char* message) { throw GlfwException(message); });
 }
 
-GlfwApplication::~GlfwApplication()
+ConcreteApplication::~ConcreteApplication()
 {
     glfwTerminate();
 }

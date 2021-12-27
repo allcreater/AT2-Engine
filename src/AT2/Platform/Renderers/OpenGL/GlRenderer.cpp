@@ -46,8 +46,11 @@ namespace
     }
 } // namespace
 
-GlRenderer::GlRenderer()
+GlRenderer::GlRenderer(GLADloadproc glFunctionsBinder)
 {
+    if (!gladLoadGLLoader(glFunctionsBinder))
+        throw AT2RendererException("Failed to initialize GLAD");
+
     glDebugMessageCallback(GlErrorCallback, this);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
