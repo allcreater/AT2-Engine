@@ -1,25 +1,30 @@
 #include "Application.h"
 
 #include <Renderers/Metal/Renderer.h>
-#include <GLFW/glfw_application.h>
 
 using namespace AT2;
+#ifdef USE_SDL_INSTEADOF_SFML
+	#include "SDL/application.h"
+	using namespace AT2::SDL;
+#else
+	#include "GLFW/glfw_application.h"
+	using namespace AT2::GLFW;
+#endif
 
 void GraphicsContext::Initialize(std::shared_ptr<IWindow> window) 
 {
     m_window = std::move(window);
 
-    m_renderer = std::make_unique<AT2::Metal::Renderer>();
+    m_renderer = std::make_unique<AT2::Metal::Renderer>(m_window->getNativeSwapchain());
     OnInitialized();
 }
 
 void AT2::SingleWindowApplication::Run(std::unique_ptr<GraphicsContext> graphicsContext)
 {
-    using namespace AT2::GLFW;
-    auto glfwWindow = GlfwApplication::get().createWindow(std::nullopt, {1280, 800});
+    auto glfwWindow = ConcreteApplication::get().createWindow(ContextParameters{MetalContextParams{}}, {1280, 800});
 
-    GlfwApplication::get().OnNoActiveWindows = [] {
-        GlfwApplication::get().stop();
+    ConcreteApplication::get().OnNoActiveWindows = [] {
+        ConcreteApplication::get().stop();
         //spdlog::info("Exit");
     };
 
@@ -46,5 +51,5 @@ void AT2::SingleWindowApplication::Run(std::unique_ptr<GraphicsContext> graphics
 
     glfwWindow->setWindowContext(std::move(graphicsContext));
 
-    AT2::GLFW::GlfwApplication::get().run();
+    ConcreteApplication::get().run();
 }

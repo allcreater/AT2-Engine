@@ -10,6 +10,7 @@ namespace AT2::SDL
     {
         virtual ~IPlatformGraphicsContext() = default;
 
+        virtual void* getPlatformSwapchain() const = 0;
         virtual void makeCurrent() = 0;
         virtual void swapBuffers() = 0;
     };

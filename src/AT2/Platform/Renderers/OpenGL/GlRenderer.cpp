@@ -39,7 +39,7 @@ namespace
 
     void PrintDiagnosticInfo()
     {
-        Log::Info() << "OpenGL 4.5 renderer created. \n"sv
+        Log::Info() << "AT2 OpenGL renderer initialized. \n"sv
                     << "Renderer: "sv << glGetString(GL_RENDERER) << " ("sv << glGetString(GL_VERSION) << ")\n"sv
                     << "Vendor: "sv << glGetString(GL_VENDOR) << '\n'
                     << "GLSL version: "sv << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;

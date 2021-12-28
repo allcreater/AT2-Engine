@@ -54,6 +54,7 @@ std::unique_ptr<IPlatformGraphicsContext> MakeOpenglContext(SDL_Window* window, 
         SDL_Window* window;
         SDL_GLContext context;
 
+        void* getPlatformSwapchain() const override { return nullptr; }
         void makeCurrent() override { SDL_GL_MakeCurrent(window, context); }
         void swapBuffers() override { SDL_GL_SwapWindow(window); }
     };
@@ -77,6 +78,7 @@ std::unique_ptr<IPlatformGraphicsContext> MakeMetalContext(SDL_Window* window, c
         SDL_Window* window;
         SDL_Renderer* renderer;
 
+        void* getPlatformSwapchain() const override { return SDL_RenderGetMetalLayer(renderer); }
         void makeCurrent() override {}
         void swapBuffers() override {}
     };
@@ -93,18 +95,20 @@ std::unique_ptr<IPlatformGraphicsContext> MakeDummyContext(SDL_Window* window, c
         ~DummyContext() override = default;
 
     private:
+        void* getPlatformSwapchain() const override { return nullptr; }
         void makeCurrent() override {}
         void swapBuffers() override {}
 
     };
 
-    return nullptr; //std::make_unique<DummyContext>();
+    return std::make_unique<DummyContext>();
 }
 
 std::unique_ptr<IPlatformGraphicsContext> SDL::MakeGraphicsContext(SDL_Window* window, const ContextParameters& contextParams)
 {
     return std::visit(Utils::overloaded {
     	[=](const OpenGLContextParams&) { return MakeOpenglContext(window, contextParams); },
+        [=](const MetalContextParams&) { return MakeMetalContext(window, contextParams); },
         [=](std::monostate) { return MakeDummyContext(window, contextParams); }
     }, contextParams.contextType);
 }
@@ -113,7 +117,7 @@ Uint32 SDL::GetContextSpecificWindowFlags( const ContextParameters& contextParam
 {
     return std::visit( Utils::overloaded {
     	[](const OpenGLContextParams&) -> Uint32 { return SDL_WINDOW_OPENGL; },
-        //SDL_WINDOW_METAL
+        [](const MetalContextParams&) -> Uint32 { return 0; }, // SDL_WINDOW_METAL ?
         [](const auto&) -> Uint32 { return 0; }
     }, contextParams.contextType);
 }

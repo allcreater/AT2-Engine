@@ -26,7 +26,12 @@ namespace AT2
         bool debug_context = false;
     };
 
-    using ConcreteContextParams = std::variant<std::monostate, OpenGLContextParams>;
+    struct MetalContextParams
+    {
+        
+    };
+
+    using ConcreteContextParams = std::variant<std::monostate, OpenGLContextParams, MetalContextParams>;
 
     struct ContextParameters
     {

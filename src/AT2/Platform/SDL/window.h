@@ -37,7 +37,8 @@ namespace AT2::SDL
         bool getCloseFlag() const override { return closeFlag; }
 
         SDL_Window* get() const noexcept { return window_impl; }
-
+        void* getNativeSwapchain() const override { return graphicsContext->getPlatformSwapchain(); }
+        
     private:
         ///@thread_safety main thread
         Window(const ContextParameters& contextParameters, glm::ivec2 initialSize);
@@ -55,7 +56,7 @@ namespace AT2::SDL
 
         bool is_initialized {false};
         bool swap_interval_need_update {true};
-        std::atomic<bool> closeFlag;
+        std::atomic<bool> closeFlag{false};
 
         //mutables is just for track some parameters in callbacks
         mutable int swap_interval {0};

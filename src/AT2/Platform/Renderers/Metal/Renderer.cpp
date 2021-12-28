@@ -1,23 +1,36 @@
 #include "Renderer.h"
 
-// Generating Metal-cpp implementation
-#define NS_PRIVATE_IMPLEMENTATION
-#define CA_PRIVATE_IMPLEMENTATION
-#define MTL_PRIVATE_IMPLEMENTATION
-#include <Foundation/Foundation.hpp>
-#include <Metal/Metal.hpp>
-#include <QuartzCore/QuartzCore.hpp>
-
 //test
 #include "Mappings.h"
 
 using namespace AT2;
 using namespace AT2::Metal;
 
-Renderer::Renderer(id nsWindow)
+using namespace std::literals;
+
+// https://github.com/gzorin/sdl-metal-cpp-example
+
+Renderer::Renderer(void* metalLayer)
 {
     //device.reset( MTL::CreateSystemDefaultDevice() );
-
+    
+    //auto* nswin = static_cast<NSWindow*>(nsWindow);
+    /*
+    CAMetalLayer* layer = [CAMetalLayer layer];
+    layer.device = device.get();
+    layer.pixelFormat = MTL::PixelFormatBGRA8Unorm;
+    nswin.contentView.layer = layer;
+    nswin.contentView.wantsLayer = YES;
+     */
+ 
+    swapchain = reinterpret_cast<CA::MetalLayer*>(metalLayer);
+    device = swapchain->device();
+    
+    Log::Info() << "AT2 Metal renderer initialized"sv
+                << "Device name: " << device->name()->cString(NS::ASCIIStringEncoding) << '\n';
+    
+    //library = device->librar
+    commandQueue = device->newCommandQueue();
 }
 
 void Renderer::Shutdown()
@@ -54,6 +67,7 @@ void Renderer::FinishFrame()
 {
     
 }
+
 
 AT2::IFrameBuffer& Renderer::GetDefaultFramebuffer() const
 {
