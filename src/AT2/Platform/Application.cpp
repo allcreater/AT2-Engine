@@ -3,12 +3,12 @@
 #include <Renderers/OpenGL/GlRenderer.h>
 
 #ifdef USE_SDL_INSTEADOF_SFML
-	#include <SDL/application.h>
+	#include "SDL/application.h"
 	using namespace AT2::SDL;
 
-	GLADloadproc openglFunctionsBinder = nullptr;
+	GLADloadproc openglFunctionsBinder = reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress);
 #else
-	#include <GLFW/glfw_application.h>
+	#include "GLFW/glfw_application.h"
 
 	using namespace AT2::GLFW;
 	GLADloadproc openglFunctionsBinder = reinterpret_cast<GLADloadproc>(glfwGetProcAddress);

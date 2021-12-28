@@ -1,4 +1,4 @@
-#include <Platform/GLFW/glfw_application.h>
+#include <glad/glad.h>
 #include <Platform/Application.h>
 
 #include "UIHandler.h"
@@ -48,20 +48,10 @@ private:
     {
         std::cout << "Key " << key << " down" << std::endl;
 
-        switch (key)
-        {
-        case GLFW_KEY_R:
-        {
+    	if (key == AT2::Keys::Key_R)
             getRenderer()->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
-        }
-        break;
-
-        case GLFW_KEY_ESCAPE:
-        {
+        else if (key == AT2::Keys::Key_Escape)
             getWindow().setCloseFlag(true);
-        }
-        break;
-        }
 
 
         OnKeyPress(key);

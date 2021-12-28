@@ -11,7 +11,9 @@ set(GLFW_SOURCES_LIST
 
 set (SDL_SOURCES_LIST
     "SDL/application.h"
+    "SDL/application.cpp"
     "SDL/window.h"
+    "SDL/window.cpp"
 )
 
 set(OPENGL_SOURCES_LIST

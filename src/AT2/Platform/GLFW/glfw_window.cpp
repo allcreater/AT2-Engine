@@ -25,11 +25,11 @@ namespace
     {
 	    switch ( profile )
 	    {
-        case AT2::OpenglProfile::Any: return GLFW_OPENGL_ANY_PROFILE;
         case AT2::OpenglProfile::Core: return GLFW_OPENGL_CORE_PROFILE;
         case AT2::OpenglProfile::Compat: return GLFW_OPENGL_COMPAT_PROFILE;
         default: 
             throw std::domain_error("OpengProfile");
+	    	//return GLFW_OPENGL_ANY_PROFILE;
 	    }
     }
 }

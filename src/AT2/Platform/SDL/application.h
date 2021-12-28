@@ -32,8 +32,8 @@ namespace AT2::SDL
         std::function<void()> OnNoActiveWindows {};
 
         //thread-safe
-        std::shared_ptr<Window> createWindow(ContextParameters, glm::ivec2 size);
-        std::shared_ptr<Window> createFullscreenWindow(ContextParameters);
+        std::shared_ptr<Window> createWindow(const ContextParameters&, glm::ivec2 size);
+        std::shared_ptr<Window> createFullscreenWindow(const ContextParameters&);
 
         //thread-safe
         template <typename T>
@@ -52,7 +52,22 @@ namespace AT2::SDL
         ConcreteApplication();
         ~ConcreteApplication();
 
-        std::shared_ptr<Window> createWindowInternal(ContextParameters, glm::ivec2 size);
+        std::shared_ptr<Window> createWindowInternal(const ContextParameters& params, glm::ivec2 size);
+
+		template <typename Func>
+		requires std::is_invocable_v<Func, Window&>
+		void DoOnWindow(Uint32 windowId, Func&& func)
+		{
+		    auto* sdlWindow = SDL_GetWindowFromID(windowId);
+		    if (!sdlWindow)
+		        return;
+
+		    auto* window = Window::FromNativeWindow(sdlWindow);
+		    if (!window)
+		        return;
+
+		    func(*window);
+		}
 
     private:
         std::atomic<bool> runned {false};

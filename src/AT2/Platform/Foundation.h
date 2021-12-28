@@ -13,7 +13,6 @@ namespace AT2
     //TODO: move to separate file
     enum class OpenglProfile
     {
-        Any,
         Core,
         Compat
     };

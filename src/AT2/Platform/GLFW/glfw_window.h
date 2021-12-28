@@ -11,8 +11,6 @@ namespace AT2::GLFW
         friend class ConcreteApplication;
 
     public:
-        //using WindowBase::WindowBase;
-
         ///@thread_safety main thread
         bool isKeyDown(int keyCode) const override;
         ///@thread_safety main thread

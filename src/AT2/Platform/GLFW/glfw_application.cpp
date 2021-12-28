@@ -1,6 +1,21 @@
 #include "glfw_application.h"
 
-//#include <GLFW/glfw3.h>
+//TODO: burn with fire!
+namespace AT2::Keys
+{
+    extern const int Key_W = GLFW_KEY_W;
+    extern const int Key_S = GLFW_KEY_S;
+    extern const int Key_A = GLFW_KEY_A;
+    extern const int Key_D = GLFW_KEY_D;
+    extern const int Key_Z = GLFW_KEY_Z;
+    extern const int Key_L = GLFW_KEY_L;
+    extern const int Key_R = GLFW_KEY_R;
+    extern const int Key_M = GLFW_KEY_M;
+    extern const int Key_LShift = GLFW_KEY_LEFT_SHIFT;
+    extern const int Key_Escape = GLFW_KEY_ESCAPE;
+    extern const int Key_Equal = GLFW_KEY_EQUAL;
+    extern const int Key_Minus = GLFW_KEY_MINUS;
+} // namespace AT2::Keys
 
 using namespace AT2::GLFW;
 

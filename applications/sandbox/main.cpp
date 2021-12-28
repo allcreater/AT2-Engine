@@ -4,7 +4,6 @@
 #include <Scene/Scene.h>
 #include <Platform/Renderers/OpenGL/GlTimerQuery.h>
 #include <Platform/Application.h>
-#include <Platform/GLFW/glfw_window.h>
 #include <Resources/MeshLoader.h>
 #include <Resources/GltfSceneLoader.h>
 #include <Resources/TextureLoader.h>
@@ -188,13 +187,13 @@ private:
     {
         std::cout << "Key " << key << " down" << std::endl;
 
-        if (key == GLFW_KEY_Z)
+        if (key == AT2::Keys::Key_Z)
             m_renderParameters.Wireframe = !m_renderParameters.Wireframe;
-        else if (key == GLFW_KEY_M)
+        else if (key == AT2::Keys::Key_M)
             MovingLightMode = !MovingLightMode;
-        else if (key == GLFW_KEY_R)
+        else if (key == AT2::Keys::Key_R)
             NeedResourceReload = true;
-        else if (key == GLFW_KEY_L)
+        else if (key == AT2::Keys::Key_L)
         {
             if (auto* skyLight = m_scene.FindNode<AT2::Scene::LightNode>("SkyLight"sv))
                 skyLight->SetEnabled(!skyLight->GetEnabled());
@@ -236,28 +235,28 @@ private:
         m_time.Update(dt);
         m_scene.Update(m_time);
 
-        if (getWindow().isKeyDown(GLFW_KEY_LEFT_SHIFT))
+        if (getWindow().isKeyDown(AT2::Keys::Key_LShift))
             acceleration = std::min(acceleration + static_cast<float>(dt.count()), 200.0f);
         else
             acceleration *= 0.98f;
 
         const float moveSpeed = static_cast<float>(dt.count()) * 50.0f + acceleration;
-        if (getWindow().isKeyDown(GLFW_KEY_W))
+        if (getWindow().isKeyDown(AT2::Keys::Key_W))
             m_camera.setPosition(m_camera.getPosition() + m_camera.getForward() * moveSpeed);
-        if (getWindow().isKeyDown(GLFW_KEY_S))
+        if (getWindow().isKeyDown(AT2::Keys::Key_S))
             m_camera.setPosition(m_camera.getPosition() - m_camera.getForward() * moveSpeed);
-        if (getWindow().isKeyDown(GLFW_KEY_A))
+        if (getWindow().isKeyDown(AT2::Keys::Key_A))
             m_camera.setPosition(m_camera.getPosition() + m_camera.getLeft() * moveSpeed);
-        if (getWindow().isKeyDown(GLFW_KEY_D))
+        if (getWindow().isKeyDown(AT2::Keys::Key_D))
             m_camera.setPosition(m_camera.getPosition() - m_camera.getLeft() * moveSpeed);
 
-        if (getWindow().isKeyDown(GLFW_KEY_ESCAPE))
+        if (getWindow().isKeyDown(AT2::Keys::Key_Escape))
             getWindow().setCloseFlag(true);
 
 		const float expositionSpeed = 1 + 2 * dt.count();
-        if (getWindow().isKeyDown(GLFW_KEY_EQUAL))
+        if (getWindow().isKeyDown(AT2::Keys::Key_Equal))
             m_renderParameters.Exposure *= expositionSpeed;
-        if (getWindow().isKeyDown(GLFW_KEY_MINUS))
+        if (getWindow().isKeyDown(AT2::Keys::Key_Minus))
             m_renderParameters.Exposure /= expositionSpeed;
         m_renderParameters.Exposure = glm::clamp(m_renderParameters.Exposure, 0.001f, 10.0f);
 
