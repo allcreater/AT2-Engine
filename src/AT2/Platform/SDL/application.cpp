@@ -137,7 +137,11 @@ void ConcreteApplication::run()
                 break;
 
             case SDL_MOUSEMOTION:
-                DoOnWindow(sdlEvent.motion.windowID, [e = sdlEvent.motion](Window& wnd) { wnd.MoveMouse({e.xrel, -e.yrel}); });
+                if (SDL_GetRelativeMouseMode()) //TODO: bypass crutches
+					DoOnWindow(sdlEvent.motion.windowID, [e = sdlEvent.motion](Window& wnd) { wnd.MoveMouse({e.xrel, -e.yrel}); });
+                else
+					DoOnWindow(sdlEvent.motion.windowID, [e = sdlEvent.motion](Window& wnd) { wnd.OnMouseMove({e.x, e.y}); });
+
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
