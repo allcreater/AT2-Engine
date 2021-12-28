@@ -1,19 +1,9 @@
 #pragma once
 
-#include <SDL2/SDL.h>
-
-#include "../Foundation.h"
+#include "graphics_context.h"
 
 namespace AT2::SDL
 {
-    struct IPlatformGraphicContext
-    {
-        virtual ~IPlatformGraphicContext() = default;
-
-        virtual void makeCurrent() = 0;
-        virtual void swapBuffers() = 0;
-    };
-
     class Window final : public WindowBase
     {
         friend class ConcreteApplication;
@@ -60,7 +50,7 @@ namespace AT2::SDL
         static Window* FromNativeWindow(SDL_Window* window);
 
     private:
-        std::unique_ptr<IPlatformGraphicContext> graphicsContext;
+        std::unique_ptr<IPlatformGraphicsContext> graphicsContext;
         SDL_Window* window_impl {nullptr};
 
         bool is_initialized {false};
