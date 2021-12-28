@@ -1,4 +1,3 @@
-#include <Platform/GLFW/glfw_application.h>
 #include <Platform/Application.h>
 
 #include "UIHandler.h"
@@ -19,12 +18,11 @@ private:
 
 
         getWindow().setVSyncInterval(1);
-        //Init
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+		getRenderer()->GetStateManager().ApplyState(
+		AT2::BlendMode {AT2::BlendFactor::SourceAlpha, AT2::BlendFactor::OneMinusSourceAlpha, glm::vec4 {1}});
+		getRenderer()->GetStateManager().ApplyState(AT2::FaceCullMode {});
+
     }
 
     void OnUpdate(const AT2::Seconds dt) override 
@@ -46,20 +44,10 @@ private:
     {
         std::cout << "Key " << key << " down" << std::endl;
 
-        switch (key)
-        {
-        case GLFW_KEY_R:
-        {
+    	if (key == AT2::Keys::Key_R)
             getRenderer()->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
-        }
-        break;
-
-        case GLFW_KEY_ESCAPE:
-        {
+        else if (key == AT2::Keys::Key_Escape)
             getWindow().setCloseFlag(true);
-        }
-        break;
-        }
 
 
         OnKeyPress(key);

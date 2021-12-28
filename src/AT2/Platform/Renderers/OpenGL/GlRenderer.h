@@ -40,7 +40,7 @@ namespace AT2::OpenGL
     public:
         NON_COPYABLE_OR_MOVABLE(GlRenderer)
 
-        GlRenderer();
+        GlRenderer(GLADloadproc glFunctionsBinder);
         ~GlRenderer() override = default;
 
     public:

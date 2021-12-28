@@ -4,13 +4,27 @@ import shutil, os
 
 class AT2(ConanFile):
    settings = "os", "compiler", "build_type", "arch"
-   requires = "glfw/3.3.2", "glm/0.9.9.8", "stb/20200203", "assimp/5.0.1", "glad/0.1.34", "nlohmann_json/3.9.1"#", gtest/1.10.0"
+   requires = ["glm/0.9.9.8", "stb/20200203", "assimp/5.0.1", "glad/0.1.34", "nlohmann_json/3.9.1"]
+
    generators = "cmake"
+   options = {
+      "use_sdl": ["ON", "OFF", "True", "False"],
+      "use_gtest": ["ON", "OFF", "True", "False"]
+   }
    default_options = {
-    "glad:gl_version": "4.5",
-    "glad:gl_profile" : "core",
-    "glad:extensions" : "GL_ARB_texture_filter_anisotropic, GL_ARB_seamless_cubemap_per_texture"
+      "glad:gl_version": "4.5",
+      "glad:gl_profile" : "core",
+      "glad:extensions" : "GL_ARB_texture_filter_anisotropic, GL_ARB_seamless_cubemap_per_texture"
     }
+
+   def requirements(self):
+      if self.options.use_sdl in ["ON", "True"]:
+         self.requires("sdl/[>=2.0.18]")
+      else:
+         self.requires("glfw/[>=3.3.2]")
+
+      if self.options.use_gtest in ["ON", "True"]:
+         self.requires("gtest/[>=1.10.0]")
 
    def imports(self):
       self.copy("*.dll", dst="bin", src="bin")

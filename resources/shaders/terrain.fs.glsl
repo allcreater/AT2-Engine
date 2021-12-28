@@ -51,6 +51,12 @@ vec3 getFragPos(in vec3 screenCoord)
     return pos.xyz/pos.w;
 }
 
+vec3 to_linear(in vec3 color)
+{
+    const float gamma = 2.2f;
+    return pow(color, vec3(gamma));
+}
+
 void main()
 {
 	const float waterLine = 0.003;
@@ -70,7 +76,7 @@ void main()
 
 	
 	const float grassFactor = 1.0 - smoothstep(0.07, 0.1, normalWS.y);
-	FragColor.rgb = mix(texture(u_texGrass, texCoord).rgb, texture(u_texRock, texCoord*2.0).rgb, grassFactor);
+	FragColor.rgb = mix(to_linear(texture(u_texGrass, texCoord).rgb), to_linear(texture(u_texRock, texCoord*2.0).rgb), grassFactor);
 
 
 	const float terrainHeight = texture(u_texHeight, in_data.texCoord).r;

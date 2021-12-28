@@ -44,8 +44,6 @@ add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
 )
 
-option(USE_ASSIMP "Use ASSIMP library" ON)
-
 target_compile_definitions( ${PROJECT_NAME} PRIVATE
     $<$<BOOL:${USE_ASSIMP}>:USE_ASSIMP>
     $<$<BOOL:${USE_PLATFORM_HACKS}>:USE_PLATFORM_HACKS>

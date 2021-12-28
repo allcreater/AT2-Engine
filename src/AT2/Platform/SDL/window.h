@@ -1,16 +1,15 @@
 #pragma once
 
-#include "../Foundation.h"
+#include "graphics_context.h"
 
-#include <GLFW/glfw3.h>
-
-namespace AT2::GLFW
+namespace AT2::SDL
 {
     class Window final : public WindowBase
     {
         friend class ConcreteApplication;
 
     public:
+
         ///@thread_safety main thread
         bool isKeyDown(int keyCode) const override;
         ///@thread_safety main thread
@@ -34,34 +33,31 @@ namespace AT2::GLFW
         Window& setVSyncInterval(int interval) override;
 
         ///@thread_safety safe
-        Window& setCloseFlag(bool flag) override;
-        bool getCloseFlag() const override;
+        Window& setCloseFlag(bool flag) override { closeFlag = flag; return *this; }
+        bool getCloseFlag() const override { return closeFlag; }
 
-        GLFWwindow* get() const noexcept { return window_impl; }
+        SDL_Window* get() const noexcept { return window_impl; }
 
     private:
         ///@thread_safety main thread
-        Window(ContextParameters params, glm::ivec2 initialSize, GLFWmonitor* monitor = nullptr);
-
-        void SetupCallbacks();
-        void MakeContextCurrent();
+        Window(const ContextParameters& contextParameters, glm::ivec2 initialSize);
 
         ///@thread_safety main thread
         void Close();
         ///@thread_safety any thread
-        void UpdateAndRender();
+        void UpdateAndRender(); //TODO: move to WindowBase. Optionally merge two "contexts" into one
 
-        static Window* FromNativeWindow(const GLFWwindow* window);
+        static Window* FromNativeWindow(SDL_Window* window);
 
     private:
-        const ContextParameters context_parameters;
-        GLFWwindow* window_impl {nullptr};
+        std::unique_ptr<IPlatformGraphicsContext> graphicsContext;
+        SDL_Window* window_impl {nullptr};
 
         bool is_initialized {false};
         bool swap_interval_need_update {true};
+        std::atomic<bool> closeFlag;
 
         //mutables is just for track some parameters in callbacks
         mutable int swap_interval {0};
     };
-
-} // namespace AT2::GLFW
+} //AT2::SDL
