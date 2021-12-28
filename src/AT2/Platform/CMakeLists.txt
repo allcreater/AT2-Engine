@@ -10,6 +10,15 @@ set(GLFW_SOURCES_LIST
     "GLFW/glfw_window.cpp"
 )
 
+set (SDL_SOURCES_LIST
+    "SDL/application.h"
+    "SDL/application.cpp"
+    "SDL/graphics_context.h"
+    "SDL/graphics_context.cpp"
+    "SDL/window.h"
+    "SDL/window.cpp"
+)
+
 set(OPENGL_SOURCES_LIST
     "Renderers/OpenGL/AT2lowlevel.h"
     "Renderers/OpenGL/GlFrameBuffer.h"
@@ -64,22 +73,24 @@ set(COMMON_SOURCES_LIST
     "callback_types.h"
     "callback_types.cpp"
     "Common.h"
+    "Foundation.h"
 )
 
+if (USE_SDL_INSTEADOF_SFML)
+    list(APPEND AT2_PLATFORM_SOURCES_LIST ${SDL_SOURCES_LIST})
+else()
+    list(APPEND AT2_PLATFORM_SOURCES_LIST ${GLFW_SOURCES_LIST})
+endif()
+list(APPEND AT2_PLATFORM_SOURCES_LIST ${COMMON_SOURCES_LIST})
 
 # Gathering all together into AT2_PLATFORM_SOURCES_LIST
-set(AT2_PLATFORM_SOURCES_LIST)
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     list(APPEND AT2_PLATFORM_SOURCES_LIST
-        ${GLFW_SOURCES_LIST}
-        ${COMMON_SOURCES_LIST}
         ${METAL_SOURCES_LIST}
         "Application_Metal.cpp"
     )
 else()
     list(APPEND AT2_PLATFORM_SOURCES_LIST
-        ${GLFW_SOURCES_LIST}
-        ${COMMON_SOURCES_LIST}
         ${OPENGL_SOURCES_LIST}
         "Application.cpp"
     )
@@ -92,6 +103,7 @@ add_library(${PROJECT_NAME} STATIC ${AT2_PLATFORM_SOURCES_LIST})
 
 target_compile_definitions( ${PROJECT_NAME} PRIVATE
     $<$<BOOL:${USE_PLATFORM_HACKS}>:USE_PLATFORM_HACKS>
+    $<$<BOOL:${USE_SDL_INSTEADOF_SFML}>:USE_SDL_INSTEADOF_SFML>
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

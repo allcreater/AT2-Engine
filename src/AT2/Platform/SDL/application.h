@@ -8,15 +8,14 @@
 #include <queue>
 #include <vector>
 
+#include "window.h"
 
-#include "glfw_window.h"
-
-namespace AT2::GLFW
+namespace AT2::SDL
 {
-    class GlfwException : public std::runtime_error
+    class Exception : public std::runtime_error
     {
     public:
-        GlfwException(const char* reason) : std::runtime_error(reason) {}
+        Exception(const char* reason) : std::runtime_error(reason) {}
     };
 
 
@@ -33,8 +32,8 @@ namespace AT2::GLFW
         std::function<void()> OnNoActiveWindows {};
 
         //thread-safe
-        std::shared_ptr<Window> createWindow(ContextParameters, glm::ivec2 size);
-        std::shared_ptr<Window> createFullscreenWindow(ContextParameters);
+        std::shared_ptr<Window> createWindow(const ContextParameters&, glm::ivec2 size);
+        std::shared_ptr<Window> createFullscreenWindow(const ContextParameters&);
 
         //thread-safe
         template <typename T>
@@ -53,7 +52,22 @@ namespace AT2::GLFW
         ConcreteApplication();
         ~ConcreteApplication();
 
-        std::shared_ptr<Window> createWindowInternal(ContextParameters, glm::ivec2 size, GLFWmonitor* monitor);
+        std::shared_ptr<Window> createWindowInternal(const ContextParameters& params, glm::ivec2 size);
+
+		template <typename Func>
+		requires std::is_invocable_v<Func, Window&>
+		void DoOnWindow(Uint32 windowId, Func&& func)
+		{
+		    auto* sdlWindow = SDL_GetWindowFromID(windowId);
+		    if (!sdlWindow)
+		        return;
+
+		    auto* window = Window::FromNativeWindow(sdlWindow);
+		    if (!window)
+		        return;
+
+		    func(*window);
+		}
 
     private:
         std::atomic<bool> runned {false};
@@ -63,4 +77,4 @@ namespace AT2::GLFW
         std::queue<std::packaged_task<void()>> tasks;
     };
 
-} // namespace AT2::GLFW
+} // namespace AT2::SDL

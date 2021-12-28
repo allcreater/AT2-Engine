@@ -195,7 +195,7 @@ bit_cast(const From& src) noexcept
 }
 #endif
 
-#ifdef __cpp_lib_ranges
+#if defined( __cpp_lib_ranges) || _MSC_VER >= 1929
 #include <ranges>
 #else
 //#include <iterator>
