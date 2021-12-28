@@ -76,16 +76,19 @@ namespace AT2
             if (InitializeCallback)
                 InitializeCallback();
         }
+
         void OnUpdate(Seconds deltaTime) const
         {
             if (UpdateCallback)
                 UpdateCallback(deltaTime);
         }
+
         void OnRender(Seconds deltaTime) const
         {
             if (RenderCallback)
                 RenderCallback(deltaTime);
         }
+
         void OnWindowRefreshing() const
         {
             if (RefreshingCallback)
@@ -103,6 +106,7 @@ namespace AT2
             if (KeyUpCallback)
                 KeyUpCallback(key);
         }
+
         void OnKeyRepeat(int key) const
         {
             if (KeyRepeatCallback)
@@ -126,25 +130,39 @@ namespace AT2
         {
             mousePosition.y = window_size.y - mousePosition.y; //WTF?
 
-            if (MouseMoveCallback != nullptr)
+            if (MouseMoveCallback)
                 MouseMoveCallback(MousePos {mousePosition, previous_mouse_pos});
 
             previous_mouse_pos = mousePosition;
         }
+
         void OnMouseDown(int button) const
         {
             if (MouseDownCallback)
                 MouseDownCallback(button);
         }
+
         void OnMouseUp(int button) const
         {
             if (MouseUpCallback)
                 MouseUpCallback(button);
         }
+
         void OnMouseScroll(const glm::dvec2& scrollDirection) const
         {
             if (MouseScrollCallback)
                 MouseScrollCallback(scrollDirection);
+        }
+
+        // Produces MouseMove event by relative mouse position
+        void MoveMouse(const glm::vec2& mouseMove) const
+        {
+            const auto mousePosition = previous_mouse_pos + mouseMove;
+
+            if (MouseMoveCallback)
+                MouseMoveCallback(MousePos {mousePosition, previous_mouse_pos});
+
+            previous_mouse_pos = mousePosition;
         }
 
     protected:

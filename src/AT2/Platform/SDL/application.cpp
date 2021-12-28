@@ -33,7 +33,7 @@ std::shared_ptr<Window> ConcreteApplication::createWindow(const ContextParameter
 std::shared_ptr<Window> ConcreteApplication::createFullscreenWindow(const ContextParameters& parameters)
 {
     auto window = createWindowInternal(parameters, {0, 0});
-    //make fullscreen;
+    SDL_SetWindowFullscreen(window->get(), SDL_WINDOW_FULLSCREEN_DESKTOP);
     return window;
 }
 
@@ -49,30 +49,6 @@ std::shared_ptr<Window> ConcreteApplication::createFullscreenWindow(const Contex
     case GLFW_REPEAT: wnd->OnKeyRepeat(key); break;
     default: throw GlfwException("Unknown key action");
     }
-});
-
-glfwSetMouseButtonCallback(window_impl, [](GLFWwindow* window, int button, int action, int mods) {
-    auto* const wnd = FromNativeWindow(window);
-    if (action == GLFW_PRESS)
-        wnd->OnMouseDown(button);
-    else if (action == GLFW_RELEASE)
-        wnd->OnMouseUp(button);
-});
-
-glfwSetCursorPosCallback(window_impl, [](GLFWwindow* window, double x, double y) { FromNativeWindow(window)->OnMouseMove({x, y}); });
-
-glfwSetFramebufferSizeCallback(window_impl, [](GLFWwindow* window, int w, int h) { FromNativeWindow(window)->OnResize({w, h}); });
-
-glfwSetWindowCloseCallback(window_impl, [](GLFWwindow* window) { FromNativeWindow(window)->OnClosing(); });
-
-glfwSetWindowRefreshCallback(window_impl, [](GLFWwindow* window) {
-    auto* const wnd = FromNativeWindow(window);
-    wnd->OnWindowRefreshing();
-    //wnd->UpdateAndRender();
-});
-
-glfwSetScrollCallback(window_impl, [](GLFWwindow* window, double offsetX, double offsetY) {
-    FromNativeWindow(window)->OnMouseScroll({offsetX, offsetY});
 });
 */
 
@@ -139,7 +115,13 @@ void ConcreteApplication::run()
                 {
                 case SDL_WINDOWEVENT_SIZE_CHANGED:
                 case SDL_WINDOWEVENT_RESIZED: 
-                    DoOnWindow(sdlEvent.window.windowID, [e = sdlEvent.window](Window& wnd) { wnd.OnResize({e.data1, e.data2}); }); break;
+                    DoOnWindow(sdlEvent.window.windowID, [e = sdlEvent.window](Window& wnd) { wnd.OnResize({e.data1, e.data2}); });
+                	break;
+
+	            case SDL_WINDOWEVENT_EXPOSED: 
+                    DoOnWindow(sdlEvent.window.windowID, [](Window& wnd) { wnd.OnWindowRefreshing(); });
+                	break;
+
                 default: 
                     break;
                 }
@@ -155,22 +137,23 @@ void ConcreteApplication::run()
                 break;
 
             case SDL_MOUSEMOTION:
-                DoOnWindow(sdlEvent.motion.windowID, [e = sdlEvent.motion](Window& wnd) { wnd.OnMouseMove({e.x, e.y}); });
+                DoOnWindow(sdlEvent.motion.windowID, [e = sdlEvent.motion](Window& wnd) { wnd.MoveMouse({e.xrel, -e.yrel}); });
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
-                DoOnWindow(sdlEvent.button.windowID, [e = sdlEvent.button](Window& wnd) { wnd.OnMouseDown( e.button ); });
+                DoOnWindow(sdlEvent.button.windowID, [e = sdlEvent.button](Window& wnd) { wnd.OnMouseDown( e.button - 1 ); });
                 break;
 
             case SDL_MOUSEBUTTONUP:
-                DoOnWindow(sdlEvent.button.windowID, [e = sdlEvent.button](Window& wnd) { wnd.OnMouseUp( e.button ); });
+                DoOnWindow(sdlEvent.button.windowID, [e = sdlEvent.button](Window& wnd) { wnd.OnMouseUp( e.button - 1 ); });
                 break;
 
             case SDL_MOUSEWHEEL:
                 DoOnWindow(sdlEvent.wheel.windowID, [e = sdlEvent.wheel](Window& wnd) { wnd.OnMouseScroll({e.preciseX, e.preciseY}); });
                 break;
 
-            break;
+            default:
+				break;
             }
         }
     }
@@ -186,7 +169,6 @@ ConcreteApplication::ConcreteApplication()
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
         throw Exception("Initialization failed");
-
 }
 
 ConcreteApplication::~ConcreteApplication()

@@ -36,10 +36,11 @@ namespace
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE, contextParams.framebuffer_bits_red);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, contextParams.framebuffer_bits_green);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, contextParams.framebuffer_bits_blue);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, contextParams.framebuffer_bits_depth);
+
         SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, contextParams.srgb_capable);
 
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
 
         const auto flags = !!params.debug_context * SDL_GL_CONTEXT_DEBUG_FLAG | SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, flags);
@@ -137,11 +138,12 @@ Window::Window(const ContextParameters& contextParameters, glm::ivec2 initialSiz
 {
     const Uint32 additionalFlags =
         std::visit(Utils::overloaded {
-        	[](const OpenGLContextParams&) -> Uint32{ return SDL_WINDOW_OPENGL; }, 
+        	[](const OpenGLContextParams&) -> Uint32{ return SDL_WINDOW_OPENGL; },
+            //SDL_WINDOW_METAL
             [](const auto&) -> Uint32{ return 0; }
     }, contextParameters.contextType);
 
-    window_impl = SDL_CreateWindow(window_label.c_str(), -1, -1, window_size.x, window_size.y, SDL_WINDOW_ALLOW_HIGHDPI | additionalFlags);
+    window_impl = SDL_CreateWindow(window_label.c_str(), 100, 100, window_size.x, window_size.y, SDL_WINDOW_ALLOW_HIGHDPI | additionalFlags);
     if (!window_impl)
         throw Exception("Window creation failed");
 
@@ -157,8 +159,8 @@ bool Window::isKeyDown(int keyCode) const
 
 bool Window::isMouseKeyDown(int button) const
 {
-    return false;
-    //return window_impl && (glfwGetMouseButton(window_impl, button) == GLFW_PRESS);
+    glm::ivec2 pos;
+    return window_impl && SDL_GetMouseState(&pos.x, &pos.y) & SDL_BUTTON(button - 1);
 }
 
 Window& Window::setCursorMode(CursorMode cursorMode)
@@ -233,7 +235,7 @@ void Window::requestAttention()
 {
     ConcreteApplication::get().postAction([=] {
         if (window_impl)
-            SDL_RaiseWindow(window_impl);
+            SDL_FlashWindow(window_impl, SDL_FLASH_UNTIL_FOCUSED);
     });
 }
 
