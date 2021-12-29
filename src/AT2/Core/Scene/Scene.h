@@ -5,7 +5,7 @@
 #include <chrono>
 
 #include <Mesh.h>
-#include <camera.h>
+#include <Camera.h>
 #include <matrix_stack.h>
 
 //TODO: split into different headers

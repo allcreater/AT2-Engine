@@ -1,6 +1,6 @@
 //This file is something like sandbox. It is just functionality test, not example.
 
-#include <camera.h>
+#include <Camera.h>
 #include <Scene/Scene.h>
 //#include <Platform/Renderers/OpenGL/GlTimerQuery.h>
 #include <Platform/Application.h>
