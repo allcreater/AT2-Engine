@@ -30,11 +30,10 @@ for:
     - image: Ubuntu2004
 
   install:
+  - sudo apt purge -y --allow-change-held-packages mssql-server
   - sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-  - sudo apt-get update
-  - sudo apt-get -y install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm python-clang 
-  - sudo apt-get -y install libc++-13-dev libc++abi-13-dev
-#  - sudo apt-get upgrade clang
+  - sudo apt-get -y install clang-13 libc++-13-dev libc++abi-13-dev
+#  - sudo apt-get -y upgrade clang
 
   - sudo apt-get -y install libgl-dev
   - source $HOME/venv3.9/bin/activate
@@ -45,5 +44,5 @@ for:
   - mkdir out && cd out
   - export CC=/usr/bin/clang-13
   - export CXX=/usr/bin/clang++-13
-  - cmake -DCMAKE_BUILD_TYPE=Debug -CMAKE_CXX_FLAGS="-stdlib=libc++" ..
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-stdlib=libc++" ..
   - make
