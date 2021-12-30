@@ -58,7 +58,7 @@ Window::Window(ContextParameters contextParams, glm::ivec2 initialSize, GLFWmoni
           glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
           glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, params.debug_context);
     	},
-    	[](std::monostate) { glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); }
+    	[](const auto&) { glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); }
     }, contextParams.contextType);
 
     glfwWindowHint(GLFW_RED_BITS, context_parameters.framebuffer_bits_red);

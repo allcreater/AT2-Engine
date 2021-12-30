@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <unordered_map>
 #include <optional>
 
 //TODO: include GSL?
@@ -145,7 +146,6 @@ struct string_hash
 };
 
 #ifdef __cpp_lib_generic_unordered_lookup
-#include <unordered_map>
 template<typename V>
 using UnorderedStringMap = std::unordered_map<std::string, V, string_hash, std::equal_to<>>;
 #else
