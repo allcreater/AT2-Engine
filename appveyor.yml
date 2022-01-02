@@ -8,6 +8,10 @@ environment:
   platform: x64
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
+  matrix:
+  - cmake_options: -DUSE_SDL_INSTEADOF_SFML=OFF
+  - cmake_options: -DUSE_SDL_INSTEADOF_SFML=ON
+
 for:
 -
   # Windows
@@ -21,7 +25,7 @@ for:
 
   build_script:
   - mkdir out && cd out
-  - cmake -DCMAKE_BUILD_TYPE=%Configuration% ..
+  - cmake -DCMAKE_BUILD_TYPE=%Configuration% %cmake_options% ..
 
 -
   # Ubuntu
@@ -44,5 +48,5 @@ for:
   - mkdir out && cd out
   - export CC=/usr/bin/clang-13
   - export CXX=/usr/bin/clang++-13
-  - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-stdlib=libc++" ..
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-stdlib=libc++" %cmake_options% ..
   - make
