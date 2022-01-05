@@ -7,10 +7,6 @@ using namespace AT2::UI;
 
 #include <algorithm>
 
-//TODO: hide from the interface!
-#include <Platform/Renderers/OpenGL/GlRenderer.h>
-
-
 //it is possible to contain all data in one vertex buffer array and one vertex buffer, but it's more complex task and much unclear code, so let's just draw it separately
 class AT2::UI::CurveDrawable : public IUiRenderer
 {
@@ -22,8 +18,7 @@ public:
 
         auto& stateManager = renderer.GetStateManager();
         stateManager.BindVertexArray(m_VAO);
-        glEnable(GL_LINE_SMOOTH);
-        glLineWidth(1.5);
+        stateManager.ApplyState(LineRasterizationMode {true, 1.5f});
         m_uniforms->SetUniform("u_matProjection", m_projectionMatrix);
 
         m_uniforms->Bind(stateManager);

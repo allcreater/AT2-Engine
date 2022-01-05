@@ -65,7 +65,13 @@ namespace AT2
         Fill
     };
 
-    using RenderState = std::variant<DepthState, BlendMode, FaceCullMode, PolygonRasterizationMode>;
+    struct LineRasterizationMode
+    {
+        bool Smooth = false;
+        float LineWidth = 1.0f;
+    };
+
+    using RenderState = std::variant<DepthState, BlendMode, FaceCullMode, PolygonRasterizationMode, LineRasterizationMode>;
 
 
 } // namespace AT2
