@@ -15,13 +15,6 @@ using namespace AT2;
 	GLADloadproc openglFunctionsBinder = reinterpret_cast<GLADloadproc>(glfwGetProcAddress);
 #endif
 
-void WindowContextBase::Initialize(std::shared_ptr<IWindow> window) 
-{
-    m_window = std::move(window);
-
-    m_renderer = std::make_unique<OpenGL::GlRenderer>(openglFunctionsBinder);
-    OnInitialized();
-}
 
 void AT2::SingleWindowApplication::Run(std::unique_ptr<WindowContextBase> windowContext)
 {
@@ -37,8 +30,10 @@ void AT2::SingleWindowApplication::Run(std::unique_ptr<WindowContextBase> window
         //spdlog::info("Exit");
     };
 
-    window->InitializeCallback = [window, windowContext=windowContext.get()] {
-        windowContext->Initialize(window);
+    window->InitializeCallback = [window = window.get(), windowContext = windowContext.get()] {
+        windowContext->m_window = window;
+        windowContext->m_renderer = std::make_unique<OpenGL::GlRenderer>(openglFunctionsBinder);
+        windowContext->OnInitialized();
     };
 
     window->RenderCallback = [windowContext = windowContext.get()](Seconds dt) {

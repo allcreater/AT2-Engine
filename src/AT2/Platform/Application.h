@@ -8,6 +8,8 @@ namespace AT2
     //Base class for window-specific user data.
     class WindowContextBase : public IWindow::IWindowContext
     {
+        friend class SingleWindowApplication;
+
     public:
     	IWindow& getWindow() override { return *m_window; }
         const IWindow& getWindow() const override { return *m_window; }
@@ -29,14 +31,10 @@ namespace AT2
         virtual void OnMouseUp(int button) {}
         virtual void OnMouseScroll(const glm::dvec2& scrollDirection) {}
 
-    private:
-        friend class SingleWindowApplication;
-        void Initialize(std::shared_ptr<IWindow> window);
 
     private:
-        std::shared_ptr<IWindow> m_window;
+        IWindow* m_window = nullptr; // guaranteed to be not null after initialization
         std::shared_ptr<IRenderer> m_renderer;
-
     };
 
 	class SingleWindowApplication final
