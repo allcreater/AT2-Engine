@@ -32,6 +32,26 @@ namespace
 	    	//return GLFW_OPENGL_ANY_PROFILE;
 	    }
     }
+
+    class GlfwUnifiedContext : public AT2::IPlatformGraphicsContext
+    {
+    public:
+        GlfwUnifiedContext(GLFWwindow* window) : window {window} {}
+
+        void setVSyncInterval(int interval) override { glfwSwapInterval(interval); }
+        void* getPlatformSwapchain() const override { return nullptr; }
+        void makeCurrent() override
+        {
+            GLFWwindow* actualContext = glfwGetCurrentContext();
+
+            if (actualContext != window)
+                glfwMakeContextCurrent(window);
+        }
+        void swapBuffers() override { glfwSwapBuffers(window); }
+
+    private:
+        GLFWwindow* window;
+    };
 }
 
 
@@ -44,7 +64,6 @@ Window* Window::FromNativeWindow(const GLFWwindow* window)
 
 Window::Window(ContextParameters contextParams, glm::ivec2 initialSize, GLFWmonitor* monitor)
 	: WindowBase( initialSize)
-    , context_parameters(contextParams)
 {
     //std::lock_guard lock(ConcreteApplication::Get().mutex);
 
@@ -61,14 +80,14 @@ Window::Window(ContextParameters contextParams, glm::ivec2 initialSize, GLFWmoni
     	[](const auto&) { glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); }
     }, contextParams.contextType);
 
-    glfwWindowHint(GLFW_RED_BITS, context_parameters.framebuffer_bits_red);
-    glfwWindowHint(GLFW_GREEN_BITS, context_parameters.framebuffer_bits_green);
-    glfwWindowHint(GLFW_BLUE_BITS, context_parameters.framebuffer_bits_blue);
-    glfwWindowHint(GLFW_DEPTH_BITS, context_parameters.framebuffer_bits_depth);
+    glfwWindowHint(GLFW_RED_BITS, contextParams.framebuffer_bits_red);
+    glfwWindowHint(GLFW_GREEN_BITS, contextParams.framebuffer_bits_green);
+    glfwWindowHint(GLFW_BLUE_BITS, contextParams.framebuffer_bits_blue);
+    glfwWindowHint(GLFW_DEPTH_BITS, contextParams.framebuffer_bits_depth);
 
-    glfwWindowHint(GLFW_SAMPLES, context_parameters.msaa_samples);
-    glfwWindowHint(GLFW_REFRESH_RATE, context_parameters.refresh_rate);
-    glfwWindowHint(GLFW_SRGB_CAPABLE, context_parameters.srgb_capable);
+    glfwWindowHint(GLFW_SAMPLES, contextParams.msaa_samples);
+    glfwWindowHint(GLFW_REFRESH_RATE, contextParams.refresh_rate);
+    glfwWindowHint(GLFW_SRGB_CAPABLE, contextParams.srgb_capable);
 
     /* Create a windowed mode window and its OpenGL context */
     window_impl = glfwCreateWindow(window_size.x, window_size.y, window_label.c_str(), monitor, nullptr);
@@ -76,6 +95,8 @@ Window::Window(ContextParameters contextParams, glm::ivec2 initialSize, GLFWmoni
         throw GlfwException("Window creation failed");
 
     glfwSetWindowUserPointer(window_impl, this);
+
+    graphicsContext = std::make_unique<GlfwUnifiedContext>(window_impl);
 
     SetupCallbacks();
 }
@@ -100,30 +121,6 @@ Window& Window::setCursorMode(CursorMode cursorMode)
     return *this;
 }
 
-void Window::UpdateAndRender()
-{
-    assert(window_impl);
-    MakeContextCurrent();
-
-    {
-        if (!is_initialized)
-        {
-            is_initialized = true;
-            OnInitialize();
-            OnResize(getSize());
-        }
-
-        const auto currentTime = Seconds { glfwGetTime() };
-        OnUpdate(currentTime - previous_render_time);
-        if (getSize().x > 0 && getSize().y > 0)
-            OnRender(currentTime - previous_render_time);
-
-        previous_render_time = currentTime;
-    }
-
-    glfwSwapBuffers(window_impl); //TODO: same strategy as in SDL?
-}
-
 Window& Window::setLabel(std::string label)
 {
     {
@@ -141,10 +138,10 @@ Window& Window::setLabel(std::string label)
 
 Window& Window::setVSyncInterval(int interval)
 {
-    std::lock_guard lock {mutex};
-
-    swap_interval = interval;
-    swap_interval_need_update = true;
+    ConcreteApplication::get().postAction([this, interval] {
+        graphicsContext->makeCurrent();
+        graphicsContext->setVSyncInterval(interval);
+    });
 
     return *this;
 }
@@ -240,28 +237,14 @@ void Window::SetupCallbacks()
     });
 }
 
-void Window::MakeContextCurrent()
-{
-    GLFWwindow* actualContext = glfwGetCurrentContext();
-
-    if (actualContext != window_impl)
-    {
-        glfwMakeContextCurrent(window_impl);
-
-        if (swap_interval_need_update)
-        {
-            glfwSwapInterval(swap_interval);
-            swap_interval_need_update = false;
-        }
-    }
-}
-
 void Window::Close()
 {
     std::lock_guard lock {mutex};
 
     assert(window_impl);
 
+    graphicsContext = nullptr; // must be deinitialized before window itself
     glfwDestroyWindow(window_impl);
+
     window_impl = nullptr;
 }

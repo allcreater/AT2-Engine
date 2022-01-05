@@ -48,16 +48,12 @@ namespace AT2::GLFW
 
         ///@thread_safety main thread
         void Close();
-        ///@thread_safety any thread
-        void UpdateAndRender();
 
         static Window* FromNativeWindow(const GLFWwindow* window);
 
     private:
-        const ContextParameters context_parameters;
         GLFWwindow* window_impl {nullptr};
 
-        bool is_initialized {false};
         bool swap_interval_need_update {true};
 
         //mutables is just for track some parameters in callbacks

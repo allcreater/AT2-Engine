@@ -2,7 +2,7 @@
 
 #include "UIHandler.h"
 
-class UITest : public AT2::GraphicsContext
+class UITest : public AT2::WindowContextBase
 {
 public:
     UITest() = default;

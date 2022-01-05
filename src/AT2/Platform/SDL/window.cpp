@@ -61,32 +61,6 @@ Window& Window::setCursorMode(CursorMode cursorMode)
     return *this;
 }
 
-void Window::UpdateAndRender()
-{
-    assert(window_impl);
-
-    graphicsContext->makeCurrent();
-
-    {
-        if (!is_initialized)
-        {
-            is_initialized = true;
-            OnInitialize();
-            OnResize(getSize());
-        }
-
-        
-        const auto currentTime = Seconds {SDL_GetTicks64() / 1000.0 };
-        OnUpdate(currentTime - previous_render_time);
-        if (getSize().x > 0 && getSize().y > 0)
-            OnRender(currentTime - previous_render_time);
-
-        previous_render_time = currentTime;
-    }
-
-    graphicsContext->swapBuffers();
-}
-
 Window& Window::setLabel(std::string label)
 {
     {
@@ -102,12 +76,13 @@ Window& Window::setLabel(std::string label)
     return *this;
 }
 
+//TODO: move to Foundation when application task query will be available from everywhere
 Window& Window::setVSyncInterval(int interval)
 {
-    std::lock_guard lock {mutex};
-
-    swap_interval = interval;
-    swap_interval_need_update = true;
+    ConcreteApplication::get().postAction([this, interval] {
+    	graphicsContext->makeCurrent();
+        graphicsContext->setVSyncInterval(interval);
+    });
 
     return *this;
 }

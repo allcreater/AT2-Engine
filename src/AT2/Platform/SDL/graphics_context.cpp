@@ -54,6 +54,7 @@ std::unique_ptr<IPlatformGraphicsContext> MakeOpenglContext(SDL_Window* window, 
         SDL_Window* window;
         SDL_GLContext context;
 
+        void setVSyncInterval(int interval) override { SDL_GL_SetSwapInterval(interval); }
         void* getPlatformSwapchain() const override { return nullptr; }
         void makeCurrent() override { SDL_GL_MakeCurrent(window, context); }
         void swapBuffers() override { SDL_GL_SwapWindow(window); }
@@ -78,6 +79,7 @@ std::unique_ptr<IPlatformGraphicsContext> MakeMetalContext(SDL_Window* window, c
         SDL_Window* window;
         SDL_Renderer* renderer;
 
+        void setVSyncInterval(int interval) override { }
         void* getPlatformSwapchain() const override { return SDL_RenderGetMetalLayer(renderer); }
         void makeCurrent() override {}
         void swapBuffers() override {}
@@ -95,10 +97,10 @@ std::unique_ptr<IPlatformGraphicsContext> MakeDummyContext(SDL_Window* window, c
         ~DummyContext() override = default;
 
     private:
+        void setVSyncInterval(int interval) override {}
         void* getPlatformSwapchain() const override { return nullptr; }
         void makeCurrent() override {}
         void swapBuffers() override {}
-
     };
 
     return std::make_unique<DummyContext>();

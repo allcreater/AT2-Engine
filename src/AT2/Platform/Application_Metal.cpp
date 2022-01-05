@@ -19,37 +19,37 @@ void GraphicsContext::Initialize(std::shared_ptr<IWindow> window)
     OnInitialized();
 }
 
-void AT2::SingleWindowApplication::Run(std::unique_ptr<GraphicsContext> graphicsContext)
+void AT2::SingleWindowApplication::Run(std::unique_ptr<GraphicsContext> windowContext)
 {
-    auto glfwWindow = ConcreteApplication::get().createWindow(ContextParameters{MetalContextParams{}}, {1280, 800});
+    auto window = ConcreteApplication::get().createWindow(ContextParameters{MetalContextParams{}}, {1280, 800});
 
     ConcreteApplication::get().OnNoActiveWindows = [] {
         ConcreteApplication::get().stop();
         //spdlog::info("Exit");
     };
 
-    glfwWindow->InitializeCallback = [glfwWindow, graphicsContext=graphicsContext.get()] {
-        graphicsContext->Initialize(glfwWindow);
+    window->InitializeCallback = [window, windowContext=windowContext.get()] {
+        windowContext->Initialize(window);
     };
 
-    glfwWindow->RenderCallback = [graphicsContext = graphicsContext.get()](Seconds dt) {
-        graphicsContext->OnRender(dt);
-        graphicsContext->getRenderer()->FinishFrame();
+    window->RenderCallback = [windowContext = windowContext.get()](Seconds dt) {
+        windowContext->OnRender(dt);
+        windowContext->getRenderer()->FinishFrame();
     };
 
-    glfwWindow->UpdateCallback = std::bind_front(&GraphicsContext::OnUpdate, graphicsContext.get());
-    glfwWindow->RefreshingCallback = std::bind_front(&GraphicsContext::OnWindowRefreshing, graphicsContext.get());
-    glfwWindow->KeyDownCallback = std::bind_front(&GraphicsContext::OnKeyDown, graphicsContext.get());
-    glfwWindow->KeyUpCallback = std::bind_front(&GraphicsContext::OnKeyUp, graphicsContext.get());
-    glfwWindow->KeyRepeatCallback = std::bind_front(&GraphicsContext::OnKeyRepeat, graphicsContext.get());
-    glfwWindow->ResizeCallback = std::bind_front(&GraphicsContext::OnResize, graphicsContext.get());
-    glfwWindow->ClosingCallback = std::bind_front(&GraphicsContext::OnClosing, graphicsContext.get());
-    glfwWindow->MouseMoveCallback = std::bind_front(&GraphicsContext::OnMouseMove, graphicsContext.get());
-    glfwWindow->MouseDownCallback = std::bind_front(&GraphicsContext::OnMouseDown, graphicsContext.get());
-    glfwWindow->MouseUpCallback = std::bind_front(&GraphicsContext::OnMouseUp, graphicsContext.get());
-    glfwWindow->MouseScrollCallback = std::bind_front(&GraphicsContext::OnMouseScroll, graphicsContext.get());
+    window->UpdateCallback = std::bind_front(&GraphicsContext::OnUpdate, windowContext.get());
+    window->RefreshingCallback = std::bind_front(&GraphicsContext::OnWindowRefreshing, windowContext.get());
+    window->KeyDownCallback = std::bind_front(&GraphicsContext::OnKeyDown, windowContext.get());
+    window->KeyUpCallback = std::bind_front(&GraphicsContext::OnKeyUp, windowContext.get());
+    window->KeyRepeatCallback = std::bind_front(&GraphicsContext::OnKeyRepeat, windowContext.get());
+    window->ResizeCallback = std::bind_front(&GraphicsContext::OnResize, windowContext.get());
+    window->ClosingCallback = std::bind_front(&GraphicsContext::OnClosing, windowContext.get());
+    window->MouseMoveCallback = std::bind_front(&GraphicsContext::OnMouseMove, windowContext.get());
+    window->MouseDownCallback = std::bind_front(&GraphicsContext::OnMouseDown, windowContext.get());
+    window->MouseUpCallback = std::bind_front(&GraphicsContext::OnMouseUp, windowContext.get());
+    window->MouseScrollCallback = std::bind_front(&GraphicsContext::OnMouseScroll, windowContext.get());
 
-    glfwWindow->setWindowContext(std::move(graphicsContext));
+    window->setWindowContext(std::move(windowContext));
 
     ConcreteApplication::get().run();
 }

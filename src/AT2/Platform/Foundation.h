@@ -48,11 +48,25 @@ namespace AT2
         bool srgb_capable = true;
     };
 
+	struct IPlatformGraphicsContext
+    {
+        virtual ~IPlatformGraphicsContext() = default;
+
+        virtual void setVSyncInterval(int interval) = 0;
+        virtual void* getPlatformSwapchain() const = 0;
+        virtual void makeCurrent() = 0;
+        virtual void swapBuffers() = 0;
+        
+    };
+
     class WindowBase : public IWindow
     {
     public:
         WindowBase(glm::ivec2 windowSize = {}, std::string label = {}) : window_size(windowSize), window_label(std::move(label)) {}
         //void* get() const noexcept { return window_impl; }
+
+    	IPlatformGraphicsContext& getGraphicsContext() { return *graphicsContext; }
+    	const IPlatformGraphicsContext& getGraphicsContext() const { return *graphicsContext; }
 
         void setWindowContext(std::unique_ptr<IWindowContext> newWindowContext) override { windowContext = std::move(newWindowContext); }
 
@@ -170,6 +184,31 @@ namespace AT2
             previous_mouse_pos = mousePosition;
         }
 
+        void UpdateAndRender()
+        {
+            graphicsContext->makeCurrent();
+
+            {
+                if (firstUpdate)
+                {
+                    firstUpdate = false;
+
+                    OnInitialize();
+                    OnResize(getSize());
+                }
+
+                //TODO: encapsulate time in ITime
+                const auto currentTime = std::chrono::steady_clock::now();
+                OnUpdate(currentTime - previous_render_time);
+                if (getSize().x > 0 && getSize().y > 0)
+                    OnRender(currentTime - previous_render_time);
+
+                previous_render_time = currentTime;
+            }
+
+            graphicsContext->swapBuffers();
+        }
+
     protected:
         std::string window_label {"New window"};
 
@@ -179,8 +218,12 @@ namespace AT2
 
         mutable std::mutex mutex;
 
-        Seconds previous_render_time {0.0};
 
+        std::unique_ptr<IPlatformGraphicsContext> graphicsContext;
         std::unique_ptr<IWindowContext> windowContext;
+
+    private:
+        std::chrono::steady_clock::time_point previous_render_time;
+        bool firstUpdate = true;
     };
 } // namespace AT2::SDL

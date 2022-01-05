@@ -364,8 +364,6 @@ public:
     ///@thread_safety safe
     virtual IWindow& setCloseFlag(bool flag) = 0;
     virtual bool getCloseFlag() const = 0;
-    
-    virtual void* getNativeSwapchain() const { return nullptr; } //TODO: uncrutch
 
 private:
     virtual void setWindowContext(std::unique_ptr<IWindowContext> newWindowContext) = 0;

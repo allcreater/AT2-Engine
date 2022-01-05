@@ -26,7 +26,7 @@ using MeshLoader = AT2::Resources::MeshLoader;
 
 constexpr size_t NumActiveLights = 50;
 
-class Sandbox final : public AT2::GraphicsContext
+class Sandbox final : public AT2::WindowContextBase
 {
 public:
     Sandbox() = default;
@@ -211,7 +211,7 @@ private:
     void OnMouseUp(int key) override
     {
         std::cout << "Mouse " << key << std::endl;
-    };
+    }
 
     void OnMouseMove(const AT2::MousePos& pos) override
     {
@@ -264,8 +264,6 @@ private:
                 light->SetTransform(m_camera.getViewInverse());
         }
     }
-
-
    
 private:
     //TODO: move out of App class

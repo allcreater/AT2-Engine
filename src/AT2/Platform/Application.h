@@ -6,13 +6,13 @@
 namespace AT2
 {
     //Base class for window-specific user data.
-    class GraphicsContext : public IWindow::IWindowContext
+    class WindowContextBase : public IWindow::IWindowContext
     {
     public:
     	IWindow& getWindow() override { return *m_window; }
         const IWindow& getWindow() const override { return *m_window; }
 
-        //Renderer and resources should not be exposed outside of the GraphicsContext
+        //Renderer and resources should not be exposed outside of the WindowContextBase
         const std::shared_ptr<IRenderer>& getRenderer() const noexcept { return m_renderer; }
 
         virtual void OnInitialized() {}
@@ -42,6 +42,6 @@ namespace AT2
 	class SingleWindowApplication final
     {
     public:        
-        void Run(std::unique_ptr<GraphicsContext> graphicsContext);
+        void Run(std::unique_ptr<WindowContextBase> windowContext);
     };
 }
