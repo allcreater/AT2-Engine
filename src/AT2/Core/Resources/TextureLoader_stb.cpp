@@ -87,15 +87,24 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
 {
     auto data = Utils::reinterpret_span_cast<const stbi_uc>(rawData);
     auto [format, size] = DetermineExternalFormat(data);
-
+    
+    int requiredNumberOfChannels = 0; // default, no transformations
+#ifdef __APPLE__
+    if (format.ChannelsLayout == TextureLayout::RGB)
+    {
+        format.ChannelsLayout = TextureLayout::RGBA;
+        requiredNumberOfChannels = 4;
+    }
+#endif
+    
     auto parsedData = [&, format=format]() -> void* {
         int width, height;
 
         switch (format.DataType)
         {
-        case BufferDataType::UByte: return stbi_load_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, 0);
-        case BufferDataType::UShort: return stbi_load_16_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, 0);
-        case BufferDataType::Float: return stbi_loadf_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, 0);
+        case BufferDataType::UByte: return stbi_load_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, requiredNumberOfChannels);
+        case BufferDataType::UShort: return stbi_load_16_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, requiredNumberOfChannels);
+        case BufferDataType::Float: return stbi_loadf_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, requiredNumberOfChannels);
         }
 
         return nullptr;

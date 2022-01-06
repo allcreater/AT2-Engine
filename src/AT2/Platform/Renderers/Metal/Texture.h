@@ -5,12 +5,14 @@
 
 namespace AT2::Metal
 {
+    class Renderer;
+
     class MtlTexture : public ITexture
     {
     public:
         NON_COPYABLE_OR_MOVABLE(MtlTexture)
 
-        MtlTexture(Texture flavor);
+        MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format);
         ~MtlTexture() override;
 
         void Bind(unsigned int unit) const override;
@@ -52,7 +54,7 @@ namespace AT2::Metal
         TextureWrapParams m_wrapParams;
         TextureSamplingParams m_sampling_params;
         float m_anisotropy = 1.0f;
-
+        MTL::Texture* m_texture;
         //internal size representation is int instead of uint, so that we need to do casting on request :(
         glm::ivec3 m_size;
 

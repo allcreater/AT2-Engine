@@ -23,6 +23,77 @@ namespace AT2::Mappings
 
         throw AT2Exception("Unsupported TextureWrapMode");
     }
+
+    constexpr MTL::PixelFormat TranslateExternalFormat(ExternalTextureFormat format)
+    {
+        if (format.DataType == BufferDataType::Double || format.DataType == BufferDataType::Fixed)
+            throw AT2NotImplementedException("double and fixed-point buffer layout support not implemented");
+
+        switch (format.ChannelsLayout)
+        {
+        case TextureLayout::Red:
+            switch (format.DataType)
+            {
+                case BufferDataType::Byte: return MTL::PixelFormatR8Sint;
+                case BufferDataType::UByte: return MTL::PixelFormatR8Uint;
+                case BufferDataType::Short: return MTL::PixelFormatR16Sint;
+                case BufferDataType::UShort: return MTL::PixelFormatR16Uint;
+                case BufferDataType::Int: return MTL::PixelFormatR32Sint;
+                case BufferDataType::UInt: return MTL::PixelFormatR32Uint;
+                case BufferDataType::HalfFloat: return MTL::PixelFormatR16Float;
+                case BufferDataType::Float: return MTL::PixelFormatR32Float;
+                default: throw AT2Exception("Unsupported external format DataType");
+            }
+
+        case TextureLayout::RG:
+            switch (format.DataType)
+            {
+                case BufferDataType::Byte: return MTL::PixelFormatRG8Sint;
+                case BufferDataType::UByte: return MTL::PixelFormatRG8Uint;
+                case BufferDataType::Short: return MTL::PixelFormatRG16Sint;
+                case BufferDataType::UShort: return MTL::PixelFormatRG16Uint;
+                case BufferDataType::Int: return MTL::PixelFormatRG32Sint;
+                case BufferDataType::UInt: return MTL::PixelFormatRG32Uint;
+                case BufferDataType::HalfFloat: return MTL::PixelFormatRG16Float;
+                case BufferDataType::Float: return MTL::PixelFormatRG32Float;
+                default: throw AT2Exception("Unsupported external format DataType");
+            }
+
+        case TextureLayout::RGB:
+        case TextureLayout::BGR:
+            switch (format.DataType)
+            {
+            default: throw AT2Exception("Unsupported external format DataType");
+            }
+
+        case TextureLayout::RGBA:
+        case TextureLayout::BGRA: //TODO: own branch
+            switch (format.DataType)
+            {
+                case BufferDataType::Byte: return MTL::PixelFormatRGBA8Sint;
+                case BufferDataType::UByte: return MTL::PixelFormatRGBA8Uint;
+                case BufferDataType::Short: return MTL::PixelFormatRGBA16Sint;
+                case BufferDataType::UShort: return MTL::PixelFormatRGBA16Uint;
+                case BufferDataType::Int: return MTL::PixelFormatRGBA32Sint;
+                case BufferDataType::UInt: return MTL::PixelFormatRGBA32Uint;
+                case BufferDataType::HalfFloat: return MTL::PixelFormatRGBA16Float;
+                case BufferDataType::Float: return MTL::PixelFormatRGBA32Float;
+                default: throw AT2Exception("Unsupported external format DataType");
+            }
+
+
+        case TextureLayout::DepthComponent:
+            switch (format.DataType)
+            {
+                case BufferDataType::Short:
+                case BufferDataType::UShort: return MTL::PixelFormatDepth16Unorm;
+                case BufferDataType::Float: return MTL::PixelFormatDepth32Float;
+                default: throw AT2Exception("Depth component could be short or float");
+            }
+        case TextureLayout::StencilIndex: throw AT2NotImplementedException("StencilIndex buffers loading not implemented");
+        default: throw AT2Exception("Unsupported external format ChannelsLayout");
+        }
+    }
 /*
     constexpr GLenum TranslateExternalFormat(TextureLayout layout)
     {

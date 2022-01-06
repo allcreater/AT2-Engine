@@ -34,6 +34,9 @@ public:
 
     [[nodiscard]] IFrameBuffer& GetDefaultFramebuffer() const override;
 
+    //for internal use only
+    MTL::Device* getDevice() noexcept { return device; }
+    
 private:
     std::unique_ptr<IStateManager> m_stateManager;
     std::unique_ptr<IResourceFactory> m_resourceFactory;

@@ -103,7 +103,7 @@ using Texture = std::variant<
     Texture1DArray,
     Texture2D,
     Texture2DMultisample,
-    Texture2DRectangle,
+    Texture2DRectangle,//TODO: remove, deduce type automatically by dimensions
     Texture2DArray,
     Texture2DMultisampleArray,
     TextureCube,

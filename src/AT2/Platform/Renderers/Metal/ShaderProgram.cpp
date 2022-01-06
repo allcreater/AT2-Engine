@@ -1,4 +1,5 @@
 #include "ShaderProgram.h"
+#include "UniformBuffer.h"
 
 using namespace AT2;
 using namespace AT2::Metal;
@@ -25,7 +26,7 @@ bool ShaderProgram::IsActive() const noexcept
 
 std::unique_ptr<IUniformContainer> ShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
 {
-    return std::unique_ptr<IUniformContainer>();
+    return std::make_unique<UniformBuffer>();
 }
 
 void ShaderProgram::AttachShader(std::string_view data, ShaderType type)

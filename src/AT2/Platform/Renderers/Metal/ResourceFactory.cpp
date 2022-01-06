@@ -6,6 +6,7 @@
 #include "VertexArray.h"
 #include "VertexBuffer.h"
 #include "ShaderProgram.h"
+#include "Mappings.h"
 
 using namespace AT2;
 using namespace AT2::Metal;
@@ -17,12 +18,12 @@ ResourceFactory::ResourceFactory(Renderer& renderer) : m_renderer(renderer)
 
 std::shared_ptr<ITexture> ResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const
 {
-    return std::make_shared<MtlTexture>(Texture2D{size});
+    return std::make_shared<MtlTexture>(m_renderer, Texture2D{size}, MTL::PixelFormatRGBA8Unorm);
 }
 
 std::shared_ptr<ITexture> ResourceFactory::CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const
 {
-    return std::make_shared<MtlTexture>(declaration);
+    return std::make_shared<MtlTexture>(m_renderer, declaration, Mappings::TranslateExternalFormat(desiredFormat));
 }
 
 std::shared_ptr<IFrameBuffer> ResourceFactory::CreateFrameBuffer() const

@@ -59,16 +59,15 @@ namespace AT2
 
     namespace BufferDataTypes
     {
-        template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+        template <typename T>
+        requires std::is_arithmetic_v<T>
         constexpr BufferDataType DeduceBufferDataType()
         {
             const bool isUnsigned = std::is_unsigned_v<T>;
-            if (std::is_same_v<T, float>)
+            if constexpr (std::is_same_v<T, float>)
                 return BufferDataType::Float;
-            if (std::is_same_v<T, double>)
+            if constexpr (std::is_same_v<T, double>)
                 return BufferDataType::Double;
-
-            static_assert(std::is_arithmetic_v<T>);
 
             switch (sizeof(T))
             {
