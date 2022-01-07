@@ -38,7 +38,7 @@ std::shared_ptr<IVertexArray> ResourceFactory::CreateVertexArray() const
 
 std::shared_ptr<IVertexBuffer> ResourceFactory::CreateVertexBuffer(VertexBufferType type) const
 {
-    return std::make_shared<VertexBuffer>(type);
+    return std::make_shared<VertexBuffer>(m_renderer, type);
 }
 
 std::shared_ptr<IVertexBuffer> ResourceFactory::CreateVertexBuffer(VertexBufferType type, std::span<const std::byte> data) const
@@ -50,7 +50,7 @@ std::shared_ptr<IVertexBuffer> ResourceFactory::CreateVertexBuffer(VertexBufferT
 
 std::shared_ptr<IShaderProgram> ResourceFactory::CreateShaderProgramFromFiles(std::initializer_list<str> files) const
 {
-    return std::make_shared<ShaderProgram>();
+    return std::make_shared<ShaderProgram>(m_renderer);
 }
 
 void AT2::Metal::ResourceFactory::ReloadResources(ReloadableGroup group)

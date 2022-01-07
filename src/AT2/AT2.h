@@ -350,6 +350,7 @@ namespace AT2
         virtual void SetViewport(const AABB2d& viewport) = 0;
         virtual void ClearBuffer(const glm::vec4& color) = 0;
         virtual void ClearDepth(float depth) = 0;
+        virtual void BeginFrame() = 0;
         virtual void FinishFrame() = 0;
 
         [[nodiscard]] virtual IFrameBuffer& GetDefaultFramebuffer() const = 0;

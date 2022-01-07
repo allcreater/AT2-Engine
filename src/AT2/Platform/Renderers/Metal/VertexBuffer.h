@@ -4,19 +4,21 @@
 
 namespace AT2::Metal
 {
+    class Renderer;
+
     class VertexBuffer : public IVertexBuffer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(VertexBuffer)
 
-        VertexBuffer(VertexBufferType bufferType);
+        VertexBuffer(Renderer&, VertexBufferType bufferType);
         ~VertexBuffer() override;
 
     public:
         [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
-        [[nodiscard]] VertexBufferType GetType() const noexcept override { return m_publicType; }
+        [[nodiscard]] VertexBufferType GetType() const noexcept override { return type; }
 
-        [[nodiscard]] size_t GetLength() const noexcept override { return m_length; }
+        [[nodiscard]] size_t GetLength() const noexcept override;
 
         void Bind() override;
         void SetDataRaw(std::span<const std::byte> data) override;
@@ -26,10 +28,11 @@ namespace AT2::Metal
         void Unmap() override;
 
     private:
-        size_t m_length {0};
+        Renderer& renderer;
+        VertexBufferType type;
 
-        VertexBufferType m_publicType;
-
+        MtlPtr<MTL::Buffer> buffer;
+        
         bool m_mapped = false;
     };
 

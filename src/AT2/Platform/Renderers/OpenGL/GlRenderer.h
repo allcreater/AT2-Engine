@@ -60,6 +60,7 @@ namespace AT2::OpenGL
         void SetViewport(const AABB2d& viewport) override;
         void ClearBuffer(const glm::vec4& color) override;
         void ClearDepth(float depth) override;
+        void BeginFrame() override;
         void FinishFrame() override;
 
         [[nodiscard]] IFrameBuffer& GetDefaultFramebuffer() const override;

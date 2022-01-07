@@ -30,12 +30,21 @@ public:
     void SetViewport(const AABB2d& viewport) override;
     void ClearBuffer(const glm::vec4& color) override;
     void ClearDepth(float depth) override;
+    void BeginFrame() override;
     void FinishFrame() override;
 
     [[nodiscard]] IFrameBuffer& GetDefaultFramebuffer() const override;
 
-    //for internal use only
-    MTL::Device* getDevice() noexcept { return device; }
+public: // for internal use only
+    struct FrameContext
+    {
+        MtlPtr<CA::MetalDrawable> drawable;
+        MtlPtr<MTL::CommandBuffer> commandBuffer;
+        MtlPtr<MTL::RenderCommandEncoder> renderEncoder;
+    };
+    
+    MTL::Device* getDevice() noexcept { return device.get(); }
+    std::optional<FrameContext>& getFrameContext() { return frameContext; }
     
 private:
     std::unique_ptr<IStateManager> m_stateManager;
@@ -43,9 +52,10 @@ private:
     std::unique_ptr<IRendererCapabilities> m_rendererCapabilities;
     
     CA::MetalLayer* swapchain;
-    MTL::Device* device;
-    MTL::Library* library;
-    MTL::CommandQueue* commandQueue;
+    MtlPtr<MTL::Device> device;
+    MtlPtr<MTL::CommandQueue> commandQueue;
+    
+    std::optional<FrameContext> frameContext;
 };
 
 }

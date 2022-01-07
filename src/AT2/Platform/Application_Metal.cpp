@@ -33,6 +33,7 @@ void AT2::SingleWindowApplication::Run(std::unique_ptr<WindowContextBase> window
     };
 
     window->RenderCallback = [windowContext = windowContext.get()](Seconds dt) {
+        windowContext->getRenderer()->BeginFrame();
         windowContext->OnRender(dt);
         windowContext->getRenderer()->FinishFrame();
     };

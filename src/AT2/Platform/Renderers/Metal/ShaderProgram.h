@@ -5,12 +5,14 @@
 
 namespace AT2::Metal
 {
+    class Renderer;
+
     class ShaderProgram : public IShaderProgram, public std::enable_shared_from_this<ShaderProgram>
     {
     public:
         NON_COPYABLE_OR_MOVABLE(ShaderProgram)
 
-        ShaderProgram();
+        ShaderProgram(Renderer& renderer);
         ~ShaderProgram() override;
 
     public:
@@ -37,13 +39,11 @@ namespace AT2::Metal
         //std::vector<std::pair<ShaderType, GLuint>> m_shaderIds;
         //std::shared_ptr<OpenGL::Introspection::ProgramInfo> m_uniformsInfo;
 
+        Renderer& renderer;
         str m_name;
-
-        enum class State
-        {
-            Dirty,
-            Ready,
-            Error
-        } m_currentState = State::Dirty;
+        
+        
+        MtlPtr<MTL::Library> library;
+        MtlPtr<MTL::RenderPipelineState> pipeline;
     };
 } // namespace AT2::Metal

@@ -45,19 +45,8 @@ private:
 
 Renderer::Renderer(void* metalLayer)
 {
-    //device.reset( MTL::CreateSystemDefaultDevice() );
-    
-    //auto* nswin = static_cast<NSWindow*>(nsWindow);
-    /*
-    CAMetalLayer* layer = [CAMetalLayer layer];
-    layer.device = device.get();
-    layer.pixelFormat = MTL::PixelFormatBGRA8Unorm;
-    nswin.contentView.layer = layer;
-    nswin.contentView.wantsLayer = YES;
-     */
- 
     swapchain = reinterpret_cast<CA::MetalLayer*>(metalLayer);
-    device = swapchain->device();
+    device.reset(swapchain->device());
     
     Log::Info() << "AT2 Metal renderer initialized"sv
                 << "Device name: " << device->name()->cString(NS::ASCIIStringEncoding) << '\n';
@@ -66,13 +55,11 @@ Renderer::Renderer(void* metalLayer)
     m_resourceFactory = std::make_unique<ResourceFactory>(*this);
     m_stateManager = std::make_unique<MtlStateManager>(*this);
     
-    //library = device->librar
-    commandQueue = device->newCommandQueue();
+    commandQueue.reset(device->newCommandQueue());
 }
 
 void Renderer::Shutdown()
 {
-    //device.reset();
 }
 
 void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)
@@ -82,27 +69,53 @@ void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)
 
 void Renderer::Draw(Primitives::Primitive type, size_t first, long int count, int numInstances, int baseVertex)
 {
+    assert(frameContext);
     
+    if (std::holds_alternative<Primitives::Patches>(type))
+        throw AT2Exception("patches rendering is not implemented yet");
+        
+    //frameContext->renderEncoder->drawPrimitives(Mappings::TranslatePrimitiveType(type), first, count, numInstances);
 }
 
 void Renderer::SetViewport(const AABB2d& viewport)
 {
+    assert(frameContext);
     
+    frameContext->renderEncoder->setViewport(MTL::Viewport{viewport.MinBound.x, viewport.MinBound.y, viewport.GetWidth(), viewport.GetHeight(), 0.0f, 1.0f});
 }
 
 void Renderer::ClearBuffer(const glm::vec4& color)
 {
-    
 }
 
 void Renderer::ClearDepth(float depth)
 {
+
+}
+
+void Renderer::BeginFrame()
+{
+    frameContext = FrameContext{};
+    frameContext->drawable = swapchain->nextDrawable();
     
+    auto defaultPassDescriptor = ConstructMetalObject<MTL::RenderPassDescriptor>();
+    auto* colorAttachment = defaultPassDescriptor->colorAttachments()->object(0);
+    colorAttachment->setClearColor(MTL::ClearColor(0.0, 0.5, 0.0, 1));
+    colorAttachment->setLoadAction(MTL::LoadActionClear);
+    colorAttachment->setStoreAction(MTL::StoreActionStore);
+    colorAttachment->setTexture(frameContext->drawable->texture());
+    
+    frameContext->commandBuffer = commandQueue->commandBuffer();
+    frameContext->renderEncoder = frameContext->commandBuffer->renderCommandEncoder(defaultPassDescriptor.get());
 }
 
 void Renderer::FinishFrame()
 {
+    frameContext->renderEncoder->endEncoding();
+    frameContext->commandBuffer->presentDrawable(frameContext->drawable.get());
+    frameContext->commandBuffer->commit();
     
+    frameContext.reset();
 }
 
 

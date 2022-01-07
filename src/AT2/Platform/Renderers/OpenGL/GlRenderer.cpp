@@ -63,6 +63,10 @@ GlRenderer::GlRenderer(GLADloadproc glFunctionsBinder)
     m_stateManager = std::make_unique<GlStateManager>(*this);
 }
 
+void GlRenderer::BeginFrame()
+{
+}
+
 void GlRenderer::FinishFrame()
 {
     glFinish();
