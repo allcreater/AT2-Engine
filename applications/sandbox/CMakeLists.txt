@@ -1,8 +1,12 @@
 project (AT2_sandbox)
 
-file (GLOB ${PROJECT_NAME}_SOURCES
-"*.cpp"
-"../*.cpp" #for some utilities that are still not implemented at library
+set (${PROJECT_NAME}_SOURCES
+    "main.cpp"
+    "SceneRenderer.cpp"
+    "SceneRenderer.h"
+    "../mesh_renderer.h"
+    "../procedural_meshes.cpp"
+    "../procedural_meshes.h"
 )
 
 add_executable(${PROJECT_NAME}

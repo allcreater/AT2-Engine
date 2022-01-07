@@ -1,8 +1,16 @@
 project (Test_Task)
 
-file (GLOB ${PROJECT_NAME}_SOURCES
-"*.cpp"
-"../*.cpp" #for some utilities that are still not implemented at library
+set (${PROJECT_NAME}_SOURCES
+    "LinesHelper.cpp"
+    "LinesHelper.h"
+    "main.cpp"
+    "UI.cpp"
+    "UI.h"
+    "UiHandler.cpp"
+    "UIHandler.h"
+    "../mesh_renderer.h"
+    "../procedural_meshes.cpp"
+    "../procedural_meshes.h"
 )
 
 add_executable(${PROJECT_NAME}

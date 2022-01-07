@@ -359,16 +359,16 @@ namespace AT2
     using TextureRef = std::shared_ptr<ITexture>;
 
     //TODO: move from main header
-    //TODO: Container concept?
     template <typename... Args>
+    requires(std::ranges::contiguous_range<Args> &&...)
     [[nodiscard]] std::shared_ptr<IVertexArray> MakeVertexArray(IResourceFactory& factory,
-                                                                std::pair<unsigned, const std::vector<Args>&>... args)
+                                                                std::pair<unsigned, const Args&>... args)
     {
         auto vertexArray = factory.CreateVertexArray();
         static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetAttributeBinding(args.first,
-                                          factory.MakeVertexBufferFrom(VertexBufferType::ArrayBuffer, args.second),
-                                          BufferDataTypes::BufferTypeOf<Args>),
+                                              factory.MakeVertexBufferFrom(VertexBufferType::ArrayBuffer, args.second),
+                                              BufferDataTypes::BufferTypeOf<std::decay_t<decltype(args.second[0])>>),
              0)...});
 
         return vertexArray;

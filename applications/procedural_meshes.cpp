@@ -96,15 +96,18 @@ namespace AT2::Utils
 
     std::unique_ptr<Mesh> MakeFullscreenQuadMesh(const IRenderer& renderer)
     {
-        static std::vector positions = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0),
+        constexpr std::array positions = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0),
                                         glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};
+
+        constexpr std::array indices = {0, 1, 2, 0, 2, 3};
 
         auto& rf = renderer.GetResourceFactory();
         auto vao = MakeVertexArray(rf, std::make_pair(1u, std::cref(positions)));
+        vao->SetIndexBuffer(rf.MakeVertexBufferFrom(VertexBufferType::IndexBuffer, indices), BufferDataType::UInt);
 
-
+        
         SubMesh subMesh;
-        subMesh.Primitives.push_back({Primitives::TriangleFan {}, 0, 4});
+        subMesh.Primitives.push_back({Primitives::Triangles {}, 0, indices.size()});
 
         auto mesh = std::make_unique<Mesh>();
         mesh->VertexArray = vao;
