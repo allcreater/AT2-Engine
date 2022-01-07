@@ -36,9 +36,15 @@ set (${PROJECT_NAME}_SOURCES
     "UniformContainer.h"
     "UniformContainer.cpp"
     "utils.hpp"
+
+    "../AT2.h"
+    "../AT2_exceptions.hpp"
+    "../AT2_states.hpp"
+    "../AT2_textures.hpp"
+    "../AT2_types.hpp"
 )
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX AT2 FILES ${${PROJECT_NAME}_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX AT2 FILES ${${PROJECT_NAME}_SOURCES})
 
 add_library(${PROJECT_NAME} STATIC
     ${${PROJECT_NAME}_SOURCES}
