@@ -1,30 +1,30 @@
-#include "VertexBuffer.h"
+#include "Buffer.h"
 #include "Renderer.h"
 
 using namespace AT2::Metal;
 
-VertexBuffer::VertexBuffer(Renderer& renderer, VertexBufferType bufferType)
+Buffer::Buffer(Renderer& renderer, VertexBufferType bufferType)
 : renderer{renderer}
 , type{bufferType}
 {
 	
 }
 
-VertexBuffer::~VertexBuffer()
+Buffer::~Buffer()
 {
 }
 
-size_t VertexBuffer::GetLength() const noexcept
+size_t Buffer::GetLength() const noexcept
 {
     return buffer ? buffer->length() : 0;
 }
 
-void VertexBuffer::Bind()
+void Buffer::Bind()
 {
 	
 }
      
-void VertexBuffer::SetDataRaw(std::span<const std::byte> data)
+void Buffer::SetDataRaw(std::span<const std::byte> data)
 {
     if (data.empty())
         buffer.reset();
@@ -32,7 +32,7 @@ void VertexBuffer::SetDataRaw(std::span<const std::byte> data)
         buffer = renderer.getDevice()->newBuffer(data.data(), data.size(), MTL::ResourceOptionCPUCacheModeDefault);
 }
 
-std::span<std::byte> VertexBuffer::Map(BufferUsage usage)
+std::span<std::byte> Buffer::Map(BufferUsage usage)
 {
     if (!buffer)
         throw AT2BufferException("buffer is empty");
@@ -40,12 +40,12 @@ std::span<std::byte> VertexBuffer::Map(BufferUsage usage)
     return {static_cast<std::byte*>(buffer->contents()), buffer->length()};
 }
 
-std::span<std::byte> VertexBuffer::MapRange(BufferUsage usage, size_t offset, size_t length)
+std::span<std::byte> Buffer::MapRange(BufferUsage usage, size_t offset, size_t length)
 {
     return Map(usage).subspan(offset).first(length);
 }
 
-void VertexBuffer::Unmap()
+void Buffer::Unmap()
 {
 	
 }

@@ -6,17 +6,17 @@
 namespace AT2::OpenGL
 {
     //TODO: incorrect class and interface name. It's any buffer, not just vertex one
-    class GlVertexBuffer : public IVertexBuffer
+    class GlBuffer : public IBuffer
     {
     public:
-        NON_COPYABLE_OR_MOVABLE(GlVertexBuffer)
+        NON_COPYABLE_OR_MOVABLE(GlBuffer)
 
-        GlVertexBuffer(VertexBufferType bufferType);
-        ~GlVertexBuffer() override;
+        GlBuffer(VertexBufferType bufferType);
+        ~GlBuffer() override;
 
     public:
-        [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
-        [[nodiscard]] VertexBufferType GetType() const noexcept override { return m_publicType; }
+        [[nodiscard]] unsigned int GetId() const noexcept { return m_id; }
+        [[nodiscard]] VertexBufferType GetType() const noexcept { return m_publicType; }
 
         [[nodiscard]] size_t GetLength() const noexcept override { return m_length; }
 

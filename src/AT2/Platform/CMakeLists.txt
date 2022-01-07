@@ -40,8 +40,8 @@ set(OPENGL_SOURCES_LIST
     "Renderers/OpenGL/GlUniformBuffer.cpp"
     "Renderers/OpenGL/GlVertexArray.h"
     "Renderers/OpenGL/GlVertexArray.cpp"
-    "Renderers/OpenGL/GlVertexBuffer.h"
-    "Renderers/OpenGL/GlVertexBuffer.cpp"
+    "Renderers/OpenGL/GlBuffer.h"
+    "Renderers/OpenGL/GlBuffer.cpp"
     "Renderers/OpenGL/Mappings.h"
 )
 
@@ -65,8 +65,8 @@ set(METAL_SOURCES_LIST
     "Renderers/Metal/UniformBuffer.cpp"
     "Renderers/Metal/VertexArray.h"
     "Renderers/Metal/VertexArray.cpp"
-    "Renderers/Metal/VertexBuffer.h"
-    "Renderers/Metal/VertexBuffer.cpp"
+    "Renderers/Metal/Buffer.h"
+    "Renderers/Metal/Buffer.cpp"
 )
 
 set(COMMON_SOURCES_LIST

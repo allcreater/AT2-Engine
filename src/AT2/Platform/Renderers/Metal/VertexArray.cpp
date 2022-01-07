@@ -19,18 +19,18 @@ void VertexArray::Bind()
 	
 }
 
-void VertexArray::SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer, BufferDataType type)
+void VertexArray::SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType type)
 {
 	
 }
 
-void VertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IVertexBuffer> buffer,
+void VertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IBuffer> buffer,
                                       const BufferBindingParams& binding)
 {
     m_buffers.at(attributeIndex) = { buffer, binding };
 }
 
-std::shared_ptr<IVertexBuffer> VertexArray::GetVertexBuffer(unsigned int index) const
+std::shared_ptr<IBuffer> VertexArray::GetVertexBuffer(unsigned int index) const
 {
     return m_buffers.at(index).first;
 }

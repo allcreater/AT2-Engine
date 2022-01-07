@@ -9,7 +9,7 @@ using namespace Introspection;
 using namespace glm;
 
 GlUniformBuffer::GlUniformBuffer(std::shared_ptr<const UniformBlockInfo> ubi) :
-    GlVertexBuffer(VertexBufferType::UniformBuffer), m_uniformBlockInfo(std::move(ubi)), m_bindingPoint(0)
+    GlBuffer(VertexBufferType::UniformBuffer), m_uniformBlockInfo(std::move(ubi)), m_bindingPoint(0)
 {
     constexpr std::byte* emptyData = nullptr;
     SetDataRaw(std::span{emptyData, m_uniformBlockInfo->DataSize});

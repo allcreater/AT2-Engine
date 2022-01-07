@@ -6,13 +6,13 @@ namespace AT2::Metal
 {
     class Renderer;
 
-    class VertexBuffer : public IVertexBuffer
+    class Buffer : public IBuffer
     {
     public:
-        NON_COPYABLE_OR_MOVABLE(VertexBuffer)
+        NON_COPYABLE_OR_MOVABLE(Buffer)
 
-        VertexBuffer(Renderer&, VertexBufferType bufferType);
-        ~VertexBuffer() override;
+        Buffer(Renderer&, VertexBufferType bufferType);
+        ~Buffer() override;
 
     public:
         [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }

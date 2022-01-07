@@ -1,11 +1,11 @@
-#include "GlVertexBuffer.h"
+#include "GlBuffer.h"
 #include "Mappings.h"
 #include "../AT2.h"
 
 using namespace AT2;
 using namespace OpenGL;
 
-GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType)
+GlBuffer::GlBuffer(VertexBufferType bufferType)
 	: m_id{0}
 	, m_publicType{bufferType}
 	, m_privateType{static_cast<GlBufferType>(Mappings::TranslateBufferType(bufferType))}
@@ -14,17 +14,17 @@ GlVertexBuffer::GlVertexBuffer(VertexBufferType bufferType)
     //TODO: use glNamedBufferStorage ?
 }
 
-void GlVertexBuffer::Bind()
+void GlBuffer::Bind()
 {
     glBindBuffer(static_cast<GLenum>(m_privateType), m_id);
 }
 
-GlVertexBuffer::~GlVertexBuffer()
+GlBuffer::~GlBuffer()
 {
     glDeleteBuffers(1, &m_id);
 }
 
-void GlVertexBuffer::SetDataRaw(std::span<const std::byte> data)
+void GlBuffer::SetDataRaw(std::span<const std::byte> data)
 {
     assert(!m_mapped);
 
@@ -33,22 +33,22 @@ void GlVertexBuffer::SetDataRaw(std::span<const std::byte> data)
     m_length = data.size();
 }
 
-std::span<std::byte> GlVertexBuffer::Map(BufferUsage usage)
+std::span<std::byte> GlBuffer::Map(BufferUsage usage)
 {
     if (m_mapped)
-        throw AT2BufferException("GlVertexBuffer: you must unmap buffer before you could map it again");
+        throw AT2BufferException("GlBuffer: you must unmap buffer before you could map it again");
 
     m_mapped = true;
 
     return {static_cast<std::byte*>(glMapNamedBuffer(m_id, Mappings::TranslateBufferUsage(usage))), m_length};
 }
 
-std::span<std::byte> GlVertexBuffer::MapRange(BufferUsage usage, size_t offset, size_t length)
+std::span<std::byte> GlBuffer::MapRange(BufferUsage usage, size_t offset, size_t length)
 {
     if (m_mapped)
-        throw AT2BufferException("GlVertexBuffer: you must unmap buffer before you could map it again");
+        throw AT2BufferException("GlBuffer: you must unmap buffer before you could map it again");
     if (offset + length > m_length)
-        throw std::out_of_range("GlVertexBuffer:MapRange");
+        throw std::out_of_range("GlBuffer:MapRange");
 
     m_mapped = true;
 
@@ -59,7 +59,7 @@ std::span<std::byte> GlVertexBuffer::MapRange(BufferUsage usage, size_t offset, 
     return {static_cast<std::byte*>(glMapNamedBufferRange(m_id, offset, length, mapFlags)), length};
 }
 
-void GlVertexBuffer::Unmap()
+void GlBuffer::Unmap()
 {
     if (!m_mapped)
         return;

@@ -1,12 +1,12 @@
 #pragma once
 
 #include "ShaderProgram.h"
-#include "VertexBuffer.h"
+#include "Buffer.h"
 
 namespace AT2::Metal
 {
 
-    class UniformBuffer : public VertexBuffer, public IUniformContainer
+    class UniformBuffer : public Buffer, public IUniformContainer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(UniformBuffer)
@@ -21,7 +21,7 @@ namespace AT2::Metal
         //textures
         void SetUniform(std::string_view name, const std::shared_ptr<ITexture>& value) override;
 
-        //TODO:  there should not be VertexBuffer::Bind(), it restricts Liskov's substitution principle =(
+        //TODO:  there should not be Buffer::Bind(), it restricts Liskov's substitution principle =(
         void Bind(IStateManager& stateManager) const override;
         void SetBindingPoint(unsigned int index) { }
 

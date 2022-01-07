@@ -145,6 +145,21 @@ struct string_hash
     size_t operator()(std::string const& str) const { return hash_type {}(str); }
 };
 
+// does static_cast from pointer-like type to ref
+// 1. debug-time dynamic cast (under assert)
+// 2. run-time nullptr check (throws exception)
+template <typename DestinationT, typename SourceT>
+requires requires(SourceT ptr) { ptr == nullptr, static_cast<std::add_lvalue_reference_t<DestinationT>>(*ptr); }
+std::add_lvalue_reference_t<DestinationT> safe_dereference_cast(SourceT ptr)
+{
+	if (ptr == nullptr)
+	    throw std::bad_cast();
+
+    using ResultT = std::add_lvalue_reference_t<DestinationT>;
+    assert(dynamic_cast<std::add_pointer_t<ResultT>>(&*ptr));
+    return static_cast<ResultT>(*ptr);
+}
+
 #ifdef __cpp_lib_generic_unordered_lookup
 template<typename V>
 using UnorderedStringMap = std::unordered_map<std::string, V, string_hash, std::equal_to<>>;

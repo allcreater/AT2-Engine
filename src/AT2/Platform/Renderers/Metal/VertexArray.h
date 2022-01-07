@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VertexBuffer.h"
+#include "Buffer.h"
 
 namespace AT2::Metal
 {
@@ -17,19 +17,19 @@ namespace AT2::Metal
         void Bind() override;
         [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 
-        void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer, BufferDataType type) override;
-        [[nodiscard]] std::shared_ptr<IVertexBuffer> GetIndexBuffer() const override { return m_indexBuffer.first; }
+        void SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType type) override;
+        [[nodiscard]] std::shared_ptr<IBuffer> GetIndexBuffer() const override { return m_indexBuffer.first; }
         [[nodiscard]] std::optional<BufferDataType> GetIndexBufferType() const override { return m_indexBuffer.second; }
 
-        void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IVertexBuffer> buffer,
+        void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IBuffer> buffer,
                              const BufferBindingParams& binding) override;
-        [[nodiscard]] std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const override;
+        [[nodiscard]] std::shared_ptr<IBuffer> GetVertexBuffer(unsigned int index) const override;
         [[nodiscard]] std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const override;
 
     private:
         //we are sure that all buffer will be at least GlVertexBuffer or derived types
-        std::vector<std::pair<std::shared_ptr<IVertexBuffer>, BufferBindingParams>> m_buffers;
-        std::pair<std::shared_ptr<IVertexBuffer>, std::optional<BufferDataType>> m_indexBuffer;
+        std::vector<std::pair<std::shared_ptr<IBuffer>, BufferBindingParams>> m_buffers;
+        std::pair<std::shared_ptr<IBuffer>, std::optional<BufferDataType>> m_indexBuffer;
     };
 
 } // namespace AT2::Metal

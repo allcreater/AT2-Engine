@@ -2,12 +2,12 @@
 #define AT2_GL_UNIFORMBUFFER_H
 
 #include "GlShaderProgram.h"
-#include "GlVertexBuffer.h"
+#include "GlBuffer.h"
 
 namespace AT2::OpenGL
 {
 
-    class GlUniformBuffer : public GlVertexBuffer, public IUniformContainer
+    class GlUniformBuffer : public GlBuffer, public IUniformContainer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(GlUniformBuffer)

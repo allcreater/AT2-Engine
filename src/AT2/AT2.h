@@ -39,7 +39,6 @@ namespace AT2
     class IReloadable;
     class IBuffer;
     class IFrameBuffer;
-    class IVertexBuffer;
     class IVertexArray;
     class ITexture;
     class IShaderProgram;
@@ -100,6 +99,10 @@ namespace AT2
         virtual std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) = 0;
         virtual void Unmap() = 0;
 
+        virtual void Bind() = 0;
+
+        //[[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
+        //[[nodiscard]] virtual VertexBufferType GetType() const noexcept = 0;
     protected:
     };
 
@@ -123,21 +126,6 @@ namespace AT2
         [[nodiscard]] virtual glm::ivec2 GetActualSize() const = 0;
     };
 
-    class IVertexBuffer : public IBuffer
-    {
-    public:
-        NON_COPYABLE_OR_MOVABLE(IVertexBuffer)
-
-        IVertexBuffer() = default;
-        virtual ~IVertexBuffer() override = default;
-
-    public:
-        virtual void Bind() = 0;
-
-        [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
-        [[nodiscard]] virtual VertexBufferType GetType() const noexcept = 0;
-    };
-
     class IVertexArray
     {
     public:
@@ -150,14 +138,14 @@ namespace AT2
         virtual void Bind() = 0;
         [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
 
-        virtual void SetIndexBuffer(std::shared_ptr<IVertexBuffer> buffer, BufferDataType type) = 0;
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> GetIndexBuffer() const = 0;
+        virtual void SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType type) = 0;
+        [[nodiscard]] virtual std::shared_ptr<IBuffer> GetIndexBuffer() const = 0;
         [[nodiscard]] virtual std::optional<BufferDataType> GetIndexBufferType() const = 0;
 
         //TODO GetOrCreateVertexBuffer ?
-        virtual void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IVertexBuffer> buffer,
+        virtual void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IBuffer> buffer,
                                      const BufferBindingParams& bindingParams) = 0;
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> GetVertexBuffer(unsigned int index) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<IBuffer> GetVertexBuffer(unsigned int index) const = 0;
         [[nodiscard]] virtual std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const = 0;
     };
 
@@ -306,7 +294,7 @@ namespace AT2
 
     public:
         template <std::ranges::contiguous_range T>
-        std::shared_ptr<IVertexBuffer> MakeVertexBufferFrom(VertexBufferType type, const T& data)
+        std::shared_ptr<IBuffer> MakeVertexBufferFrom(VertexBufferType type, const T& data)
         {
             return CreateVertexBuffer(type, std::as_bytes(std::span {data}));
         }
@@ -319,8 +307,8 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(VertexBufferType type, std::span<const std::byte> data) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateVertexBuffer(VertexBufferType type, std::span<const std::byte> data) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IShaderProgram>
             CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
 

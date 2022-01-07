@@ -3,7 +3,7 @@
 using namespace AT2;
 using namespace AT2::Metal;
 
-UniformBuffer::UniformBuffer(Renderer& renderer) : VertexBuffer(renderer, VertexBufferType::UniformBuffer)
+UniformBuffer::UniformBuffer(Renderer& renderer) : Buffer(renderer, VertexBufferType::UniformBuffer)
 {
 	
 }

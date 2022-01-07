@@ -24,25 +24,24 @@ GlVertexArray::~GlVertexArray()
     glDeleteVertexArrays(1, &m_id);
 }
 
-void GlVertexArray::SetIndexBuffer(std::shared_ptr<IVertexBuffer> _buffer, BufferDataType type)
+void GlVertexArray::SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType type)
 {
-    if (!_buffer) //if present we must ensure that it right
+    if (!buffer) //if present we must ensure that it right
     {
-        assert(dynamic_cast<GlVertexBuffer*>(_buffer.get()));
+        const auto& glBuffer = Utils::safe_dereference_cast<GlBuffer&>(buffer.get());
 
-        if (_buffer->GetType() != VertexBufferType::IndexBuffer)
-            throw AT2Exception("GlVertexBuffer: must be index buffer!");
+        if (glBuffer.GetType() != VertexBufferType::IndexBuffer)
+            throw AT2Exception("GlBuffer: must be index buffer!");
 
         if (type != BufferDataType::UByte && type != BufferDataType::UShort && type != BufferDataType::UInt)
-            throw AT2Exception("GlVertexBuffer: index buffer must be one of three types: UByte, UShort, UInt");
+            throw AT2Exception("GlBuffer: index buffer must be one of three types: UByte, UShort, UInt");
     }
 
-    const auto* buffer = _buffer.get();
-    m_indexBuffer = {std::move(_buffer), buffer ? type : std::optional<BufferDataType>{}};
+    m_indexBuffer = {std::move(buffer), buffer ? type : std::optional<BufferDataType> {}};
 }
 
 
-void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IVertexBuffer> buffer,
+void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IBuffer> buffer,
                                     const BufferBindingParams& binding)
 {
     if (!buffer)
@@ -53,16 +52,16 @@ void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared
         return;
     }
 
-    assert(dynamic_cast<GlVertexBuffer*>(buffer.get()));
+    const auto& glBuffer = Utils::safe_dereference_cast<GlBuffer&>(buffer.get());
 
-    if (buffer->GetType() != VertexBufferType::ArrayBuffer)
-        throw AT2Exception("GlVertexBuffer: trying to attach incorrect type buffer");
+    if (glBuffer.GetType() != VertexBufferType::ArrayBuffer)
+        throw AT2Exception("GlBuffer: trying to attach incorrect type buffer");
 
     const auto platformDataType = Mappings::TranslateExternalType(binding.Type);
     const auto bindingIndex = attributeIndex;
 
 
-    glVertexArrayVertexBuffer(m_id, bindingIndex, buffer->GetId(), binding.Offset, binding.Stride);
+    glVertexArrayVertexBuffer(m_id, bindingIndex, glBuffer.GetId(), binding.Offset, binding.Stride);
     glVertexArrayBindingDivisor(m_id, bindingIndex, binding.Divisor);
 
     switch (binding.Type)
@@ -91,7 +90,7 @@ void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared
     m_buffers.at(attributeIndex) = {std::move(buffer), binding};
 }
 
-std::shared_ptr<IVertexBuffer> GlVertexArray::GetVertexBuffer(unsigned int index) const
+std::shared_ptr<IBuffer> GlVertexArray::GetVertexBuffer(unsigned int index) const
 {
     return m_buffers.at(index).first;
 }
