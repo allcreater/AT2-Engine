@@ -294,9 +294,9 @@ namespace AT2
 
     public:
         template <std::ranges::contiguous_range T>
-        std::shared_ptr<IBuffer> MakeVertexBufferFrom(VertexBufferType type, const T& data)
+        std::shared_ptr<IBuffer> MakeBufferFrom(VertexBufferType type, const T& data)
         {
-            return CreateVertexBuffer(type, std::as_bytes(std::span {data}));
+            return CreateBuffer(type, std::as_bytes(std::span {data}));
         }
 
     public:
@@ -307,8 +307,8 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 
-        [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateVertexBuffer(VertexBufferType type) const = 0;
-        [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateVertexBuffer(VertexBufferType type, std::span<const std::byte> data) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type, std::span<const std::byte> data) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IShaderProgram>
             CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
 
@@ -356,7 +356,7 @@ namespace AT2
         auto vertexArray = factory.CreateVertexArray();
         static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetAttributeBinding(args.first,
-                                              factory.MakeVertexBufferFrom(VertexBufferType::ArrayBuffer, args.second),
+                                              factory.MakeBufferFrom(VertexBufferType::ArrayBuffer, args.second),
                                               BufferDataTypes::BufferTypeOf<std::decay_t<decltype(args.second[0])>>),
              0)...});
 

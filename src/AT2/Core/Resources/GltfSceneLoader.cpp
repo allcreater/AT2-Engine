@@ -499,7 +499,7 @@ namespace
             {
                 const auto& rf = m_renderer->GetResourceFactory();
                 auto vao = rf.CreateVertexArray();
-                auto vb = rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer);
+                auto vb = rf.CreateBuffer(VertexBufferType::ArrayBuffer);
 
 
                 std::vector<std::pair<uint32_t, BufferDataInfo>> buffersData;
@@ -533,7 +533,7 @@ namespace
                 {
                     const auto indexBufferInfo = GetData(primitive.indices);
 
-                    auto ib = rf.CreateVertexBuffer(VertexBufferType::IndexBuffer, indexBufferInfo.data);
+                    auto ib = rf.CreateBuffer(VertexBufferType::IndexBuffer, indexBufferInfo.data);
                     vao->SetIndexBuffer(ib, indexBufferInfo.bindingParams.Type);
 
                     primitivesCount = indexBufferInfo.count;

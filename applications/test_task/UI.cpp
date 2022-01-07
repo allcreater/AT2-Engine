@@ -57,7 +57,7 @@ private:
         auto& rf = renderer.GetResourceFactory();
 
         m_VAO = rf.CreateVertexArray();
-        m_VAO->SetAttributeBinding(0, rf.CreateVertexBuffer(VertexBufferType::ArrayBuffer), AT2::BufferDataTypes::Float);
+        m_VAO->SetAttributeBinding(0, rf.CreateBuffer(VertexBufferType::ArrayBuffer), AT2::BufferDataTypes::Float);
 
 
         m_uniforms = renderer.GetStateManager().GetActiveShader()->CreateAssociatedUniformStorage();

@@ -25,8 +25,8 @@ namespace AT2::OpenGL
                                                 ExternalTextureFormat desiredFormat) const override;
         std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const override;
         std::shared_ptr<IVertexArray> CreateVertexArray() const override;
-        std::shared_ptr<IBuffer> CreateVertexBuffer(VertexBufferType type) const override;
-        std::shared_ptr<IBuffer> CreateVertexBuffer(VertexBufferType type, std::span<const std::byte> data) const override;
+        std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type) const override;
+        std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type, std::span<const std::byte> data) const override;
         std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const override;
         void ReloadResources(ReloadableGroup group) override;
 

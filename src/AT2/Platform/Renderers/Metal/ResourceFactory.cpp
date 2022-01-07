@@ -36,14 +36,14 @@ std::shared_ptr<IVertexArray> ResourceFactory::CreateVertexArray() const
     return std::make_shared<VertexArray>(m_renderer.GetRendererCapabilities());
 }
 
-std::shared_ptr<IBuffer> ResourceFactory::CreateVertexBuffer(VertexBufferType type) const
+std::shared_ptr<IBuffer> ResourceFactory::CreateBuffer(VertexBufferType type) const
 {
     return std::make_shared<Buffer>(m_renderer, type);
 }
 
-std::shared_ptr<IBuffer> ResourceFactory::CreateVertexBuffer(VertexBufferType type, std::span<const std::byte> data) const
+std::shared_ptr<IBuffer> ResourceFactory::CreateBuffer(VertexBufferType type, std::span<const std::byte> data) const
 {
-    auto buffer = CreateVertexBuffer(type);
+    auto buffer = CreateBuffer(type);
     buffer->SetDataRaw(data);
     return buffer;
 }

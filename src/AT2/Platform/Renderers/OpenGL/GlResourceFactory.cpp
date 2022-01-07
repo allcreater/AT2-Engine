@@ -129,15 +129,15 @@ std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const
     return std::make_shared<GlVertexArray>(m_renderer.GetRendererCapabilities());
 }
 
-std::shared_ptr<IBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type) const
+std::shared_ptr<IBuffer> GlResourceFactory::CreateBuffer(VertexBufferType type) const
 {
     return std::make_shared<GlBuffer>(type);
 }
 
-std::shared_ptr<IBuffer> GlResourceFactory::CreateVertexBuffer(VertexBufferType type,
+std::shared_ptr<IBuffer> GlResourceFactory::CreateBuffer(VertexBufferType type,
                                                                              std::span<const std::byte> data) const
 {
-    auto buffer = CreateVertexBuffer(type);
+    auto buffer = CreateBuffer(type);
     buffer->SetDataRaw(data);
     return buffer;
 }

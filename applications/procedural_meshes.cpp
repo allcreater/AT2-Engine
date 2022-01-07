@@ -22,7 +22,7 @@ namespace AT2::Utils
 
         auto& rf = renderer.GetResourceFactory();
         auto vao = rf.CreateVertexArray();
-        vao->SetAttributeBinding(1, rf.MakeVertexBufferFrom(VertexBufferType::ArrayBuffer, texCoords), BufferDataTypes::Vec2);
+        vao->SetAttributeBinding(1, rf.MakeBufferFrom(VertexBufferType::ArrayBuffer, texCoords), BufferDataTypes::Vec2);
 
 
         auto mesh = std::make_shared<Mesh>();
@@ -82,7 +82,7 @@ namespace AT2::Utils
         auto mesh = std::make_unique<Mesh>();
 
         mesh->VertexArray = MakeVertexArray(rf, std::make_pair(1u, std::cref(normals)));
-        mesh->VertexArray->SetIndexBuffer(rf.MakeVertexBufferFrom(VertexBufferType::IndexBuffer, indices),
+        mesh->VertexArray->SetIndexBuffer(rf.MakeBufferFrom(VertexBufferType::IndexBuffer, indices),
                                           BufferDataType::UInt);
 
 
@@ -103,7 +103,7 @@ namespace AT2::Utils
 
         auto& rf = renderer.GetResourceFactory();
         auto vao = MakeVertexArray(rf, std::make_pair(1u, std::cref(positions)));
-        vao->SetIndexBuffer(rf.MakeVertexBufferFrom(VertexBufferType::IndexBuffer, indices), BufferDataType::UInt);
+        vao->SetIndexBuffer(rf.MakeBufferFrom(VertexBufferType::IndexBuffer, indices), BufferDataType::UInt);
 
         
         SubMesh subMesh;
