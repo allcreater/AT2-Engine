@@ -65,10 +65,10 @@ namespace AT2
         Fill
     };
 
-    struct LineRasterizationMode
+    enum class LineRasterizationMode
     {
-        bool Smooth = false;
-        float LineWidth = 1.0f;
+        Normal,
+        Smooth
     };
 
     using RenderState = std::variant<DepthState, BlendMode, FaceCullMode, PolygonRasterizationMode, LineRasterizationMode>;

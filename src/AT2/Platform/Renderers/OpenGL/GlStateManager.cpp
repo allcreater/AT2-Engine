@@ -31,8 +31,7 @@ void OpenGL::GlStateManager::ApplyState(RenderState state)
             glPolygonMode(GL_FRONT_AND_BACK, Mappings::TranslatePolygonRasterizationMode(state));
         },
 		[](const LineRasterizationMode& state){
-			SetGlState(GL_LINE_SMOOTH, state.Smooth);
-			glLineWidth(state.LineWidth);
+			SetGlState(GL_LINE_SMOOTH, state == LineRasterizationMode::Smooth);
 		}
     }, state);
 }

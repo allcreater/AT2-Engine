@@ -18,7 +18,7 @@ public:
 
         auto& stateManager = renderer.GetStateManager();
         stateManager.BindVertexArray(m_VAO);
-        stateManager.ApplyState(LineRasterizationMode {true, 1.5f});
+        stateManager.ApplyState(LineRasterizationMode::Smooth);
         m_uniforms->SetUniform("u_matProjection", m_projectionMatrix);
 
         m_uniforms->Bind(stateManager);
