@@ -60,7 +60,7 @@ constexpr char source[] = R"(
     pd->setVertexDescriptor(vd.get());
     
     //pipeline = renderer.getDevice()->newRenderPipelineState(pd.get(), &errorOutput);
-    
+
     checkErrors(errorOutput);
     
 }

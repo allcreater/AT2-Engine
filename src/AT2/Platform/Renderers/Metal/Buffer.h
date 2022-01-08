@@ -15,7 +15,7 @@ namespace AT2::Metal
         ~Buffer() override;
 
     public:
-        [[nodiscard]] VertexBufferType GetType() const noexcept override { return type; }
+        //[[nodiscard]] VertexBufferType GetType() const noexcept { return type; }
 
         [[nodiscard]] size_t GetLength() const noexcept override;
 

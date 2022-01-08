@@ -15,7 +15,6 @@ namespace AT2::Metal
         ~FrameBuffer() override;
 
     public:
-        void Bind() override;
         [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 
         void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) override;
@@ -43,8 +42,6 @@ namespace AT2::Metal
             static MetalScreenFrameBuffer defaultFB;
             return defaultFB;
         }
-
-        void Bind() override { }
 
         [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 

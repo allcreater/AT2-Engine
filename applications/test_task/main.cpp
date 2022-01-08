@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     catch (AT2::AT2Exception& exception)
     {
         std::cout << "Runtime exception:" << exception.what() << std::endl;
-        system("PAUSE");
+        std::cin.get();
     }
 
     return 0;

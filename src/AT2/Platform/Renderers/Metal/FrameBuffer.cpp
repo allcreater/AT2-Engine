@@ -13,11 +13,6 @@ FrameBuffer::~FrameBuffer()
 	
 }
 
-void FrameBuffer::Bind()
-{
-	
-}
-
 void FrameBuffer::SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture)
 {
 	
