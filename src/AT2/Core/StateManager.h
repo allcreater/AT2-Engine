@@ -3,6 +3,8 @@
 
 #include "AT2.h"
 
+#include <lru_cache.h>
+
 namespace AT2
 {
     class StateManager : public IStateManager
@@ -40,7 +42,9 @@ namespace AT2
     private:
         IRenderer& m_renderer;
 
-        std::vector<std::shared_ptr<const ITexture>> m_bindedTextures;
+        std::vector<unsigned int> m_freeTextureSlots;
+        lru_cache<std::shared_ptr<const ITexture>, unsigned int> m_activeTextures;
+
         std::shared_ptr<IShaderProgram> m_activeShader;
         std::shared_ptr<IFrameBuffer> m_activeFramebuffer;
         std::shared_ptr<IVertexArray> m_activeVertexArray;

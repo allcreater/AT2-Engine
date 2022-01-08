@@ -1,49 +1,37 @@
 #include "StateManager.h"
 #include <algorithm>
 #include <cassert>
+#include <numeric>
 
 using namespace AT2;
 
 StateManager::StateManager(IRenderer& renderer)
     : m_renderer(renderer)
-	, m_bindedTextures(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
+	, m_freeTextureSlots(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
+    , m_activeTextures(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
 {
+    std::iota(m_freeTextureSlots.begin(), m_freeTextureSlots.end(), 0);
+    std::reverse(m_freeTextureSlots.begin(), m_freeTextureSlots.end());
 }
 
 void StateManager::BindTextures(const TextureSet& _textures)
 {
-    const auto numModules = m_bindedTextures.size();
-    if (_textures.size() > numModules)
-        throw AT2Exception("StateManager: trying to bind more textures than free texture units");
+    //TODO: use Strategy pattern
+    //TODO: release textures with reference count == 1
+    const auto texturesMapper = [this](const std::shared_ptr<const ITexture>& texture) {
+        assert(!m_freeTextureSlots.empty());
 
-    //let's mark texture units which stay unchanged
-    std::vector<bool> moduleLock(m_bindedTextures.size());
+        const auto textureIndex = m_freeTextureSlots.back();
+        DoBind(*texture, textureIndex);
+
+        m_freeTextureSlots.pop_back();
+        return std::tuple {textureIndex};
+    };
+
+    const auto textureUnmapper = [this](auto&& kv) { m_freeTextureSlots.push_back(kv.second); };
+
     for (const auto& texture : _textures)
-    {
-        if (const auto unit = GetActiveTextureIndex(texture))
-            moduleLock[*unit] = true;
-    }
-
-
-    auto textureToBoundIterator = _textures.begin();
-    for (unsigned currentModule = 0; currentModule < numModules && textureToBoundIterator != _textures.end();
-         ++currentModule)
-    {
-        if (!GetActiveTextureIndex(*textureToBoundIterator))
-        {
-            if (!moduleLock[currentModule])
-            {
-                auto& texture = m_bindedTextures[currentModule];
-
-                texture = *textureToBoundIterator;
-                DoBind(*texture, currentModule);
-
-                ++textureToBoundIterator;
-            }
-        }
-        else
-            ++textureToBoundIterator;
-    }
+        m_activeTextures.put(texture, texturesMapper, textureUnmapper);
 }
 
 void StateManager::BindFramebuffer(const std::shared_ptr<IFrameBuffer>& _framebuffer)
@@ -102,8 +90,7 @@ std::shared_ptr<IVertexArray> StateManager::GetActiveVertexArray() const
     return m_activeVertexArray;
 }
 
-std::optional<unsigned> StateManager::GetActiveTextureIndex( std::shared_ptr<const ITexture> texture ) const noexcept
+std::optional<unsigned> StateManager::GetActiveTextureIndex(std::shared_ptr<const ITexture> texture) const noexcept
 {
-    auto it = std::find(m_bindedTextures.begin(), m_bindedTextures.end(), texture);
-    return it != m_bindedTextures.end() ? std::distance(m_bindedTextures.begin(), it) : std::optional<unsigned> {};
+    return m_activeTextures.find(texture);
 }

@@ -29,6 +29,7 @@ set (${PROJECT_NAME}_SOURCES
     "Camera.h"
     "log.cpp"
     "log.h"
+    "lru_cache.h"
     "matrix_stack.h"
     "Mesh.h"
     "StateManager.h"
