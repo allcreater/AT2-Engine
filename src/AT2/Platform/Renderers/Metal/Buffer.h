@@ -15,12 +15,10 @@ namespace AT2::Metal
         ~Buffer() override;
 
     public:
-        [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
         [[nodiscard]] VertexBufferType GetType() const noexcept override { return type; }
 
         [[nodiscard]] size_t GetLength() const noexcept override;
 
-        void Bind() override;
         void SetDataRaw(std::span<const std::byte> data) override;
 
         std::span<std::byte> Map(BufferUsage usage) override;

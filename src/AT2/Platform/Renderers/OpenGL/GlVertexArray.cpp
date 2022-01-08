@@ -11,14 +11,6 @@ GlVertexArray::GlVertexArray(const IRendererCapabilities& _rendererCapabilities)
     glCreateVertexArrays(1, &m_id);
 }
 
-//TODO: unlink vertex array from index buffer?
-void GlVertexArray::Bind()
-{
-    glBindVertexArray(m_id);
-    if (m_indexBuffer.first)
-        m_indexBuffer.first->Bind();
-}
-
 GlVertexArray::~GlVertexArray()
 {
     glDeleteVertexArrays(1, &m_id);

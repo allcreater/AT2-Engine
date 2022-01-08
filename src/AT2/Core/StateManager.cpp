@@ -6,7 +6,7 @@ using namespace AT2;
 
 StateManager::StateManager(IRenderer& renderer)
     : m_renderer(renderer)
-    , m_bindedTextures(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
+	, m_bindedTextures(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
 {
 }
 
@@ -20,9 +20,8 @@ void StateManager::BindTextures(const TextureSet& _textures)
     std::vector<bool> moduleLock(m_bindedTextures.size());
     for (const auto& texture : _textures)
     {
-        const int unit = texture->GetCurrentModule();
-        if (unit >= 0)
-            moduleLock[unit] = true;
+        if (const auto unit = GetActiveTextureIndex(texture))
+            moduleLock[*unit] = true;
     }
 
 
@@ -30,16 +29,15 @@ void StateManager::BindTextures(const TextureSet& _textures)
     for (unsigned currentModule = 0; currentModule < numModules && textureToBoundIterator != _textures.end();
          ++currentModule)
     {
-        if ((*textureToBoundIterator)->GetCurrentModule() < 0)
+        if (!GetActiveTextureIndex(*textureToBoundIterator))
         {
             if (!moduleLock[currentModule])
             {
                 auto& texture = m_bindedTextures[currentModule];
-                if (texture)
-                    texture->Unbind();
 
                 texture = *textureToBoundIterator;
-                texture->Bind(currentModule);
+                DoBind(*texture, currentModule);
+
                 ++textureToBoundIterator;
             }
         }
@@ -53,8 +51,7 @@ void StateManager::BindFramebuffer(const std::shared_ptr<IFrameBuffer>& _framebu
     if (m_activeFramebuffer == _framebuffer)
         return;
 
-    auto* pFramebuffer = _framebuffer ? _framebuffer.get() : &m_renderer.GetDefaultFramebuffer();
-    pFramebuffer->Bind();
+    DoBind(_framebuffer ? *_framebuffer : m_renderer.GetDefaultFramebuffer());
 
     m_activeFramebuffer = _framebuffer;
 }
@@ -66,7 +63,7 @@ void StateManager::BindShader(const std::shared_ptr<IShaderProgram>& _shader)
     if (m_activeShader && m_activeShader == _shader)
         return;
 
-    _shader->Bind();
+    DoBind(*_shader);
     m_activeShader = _shader;
 }
 
@@ -77,7 +74,7 @@ void StateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexA
 
     if (_vertexArray)
     {
-        _vertexArray->Bind();
+        DoBind(*_vertexArray);
 
         m_activeIndexBufferType = _vertexArray->GetIndexBufferType();
     }
@@ -103,4 +100,10 @@ std::shared_ptr<IShaderProgram> StateManager::GetActiveShader() const
 std::shared_ptr<IVertexArray> StateManager::GetActiveVertexArray() const
 {
     return m_activeVertexArray;
+}
+
+std::optional<unsigned> StateManager::GetActiveTextureIndex( std::shared_ptr<const ITexture> texture ) const noexcept
+{
+    auto it = std::find(m_bindedTextures.begin(), m_bindedTextures.end(), texture);
+    return it != m_bindedTextures.end() ? std::distance(m_bindedTextures.begin(), it) : std::optional<unsigned> {};
 }

@@ -204,17 +204,7 @@ MtlTexture::~MtlTexture()
 	
 }
 
-void MtlTexture::Bind(unsigned int unit) const
-{
-	
-}
-
 void MtlTexture::BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
-{
-	
-}
-
-void MtlTexture::Unbind() const
 {
 	
 }

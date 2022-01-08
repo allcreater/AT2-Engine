@@ -14,11 +14,6 @@ VertexArray::~VertexArray()
 	
 }
 
-void VertexArray::Bind()
-{
-	
-}
-
 void VertexArray::SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType type)
 {
 	

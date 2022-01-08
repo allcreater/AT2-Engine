@@ -15,7 +15,6 @@ namespace AT2::OpenGL
         ~GlVertexArray() override;
 
     public:
-        void Bind() override;
         [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
 
         void SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType type) override;

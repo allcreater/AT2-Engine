@@ -18,11 +18,6 @@ size_t Buffer::GetLength() const noexcept
 {
     return buffer ? buffer->length() : 0;
 }
-
-void Buffer::Bind()
-{
-	
-}
      
 void Buffer::SetDataRaw(std::span<const std::byte> data)
 {

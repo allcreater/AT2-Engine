@@ -16,7 +16,8 @@ namespace AT2::OpenGL
         ~GlFrameBuffer() override;
 
     public:
-        void Bind() override;
+        void Bind();
+
         [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
 
         void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) override;
@@ -47,7 +48,7 @@ namespace AT2::OpenGL
             return defaultFB;
         }
 
-        void Bind() override { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+        void Bind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 
         [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 

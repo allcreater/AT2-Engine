@@ -99,7 +99,6 @@ namespace AT2
         virtual std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) = 0;
         virtual void Unmap() = 0;
 
-        virtual void Bind() = 0;
 
         //[[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
         //[[nodiscard]] virtual VertexBufferType GetType() const noexcept = 0;
@@ -115,7 +114,6 @@ namespace AT2
         virtual ~IFrameBuffer() = default;
 
     public:
-        virtual void Bind() = 0;
         [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
 
         virtual void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) = 0;
@@ -135,7 +133,6 @@ namespace AT2
         virtual ~IVertexArray() = default;
 
     public:
-        virtual void Bind() = 0;
         [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
 
         virtual void SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType type) = 0;
@@ -166,8 +163,6 @@ namespace AT2
 
         virtual void SetAnisotropy(float anisotropy) = 0;
         [[nodiscard]] virtual float GetAnisotropy() const noexcept = 0;
-
-        virtual void Bind(unsigned int unit) const = 0;
     };
 
     class ITexture : public ISampler
@@ -179,14 +174,11 @@ namespace AT2
         virtual ~ITexture() override = default;
 
     public:
-        virtual void Bind(unsigned int unit) const = 0;
         //TODO: think about interface
         virtual void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
                                  BufferUsage usage = BufferUsage::ReadWrite) const = 0;
-        virtual void Unbind() const = 0;
         virtual void BuildMipmaps() = 0;
 
-        [[nodiscard]] virtual int GetCurrentModule() const noexcept = 0;
         [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
         [[nodiscard]] virtual glm::uvec3 GetSize() const noexcept = 0;
         [[nodiscard]] virtual size_t GetDataLength() const noexcept = 0;
@@ -269,7 +261,7 @@ namespace AT2
         virtual ~IStateManager() = default;
 
     public:
-        virtual void BindTextures(const TextureSet& textures) = 0;
+        virtual void BindTextures(const TextureSet& textures) = 0; //TODO: more flexible interface with possibility to add textures one-by-one + something like UnbindTextures() 
         virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
         virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
         virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
@@ -282,6 +274,8 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> GetActiveVertexArray() const = 0;
 
         [[nodiscard]] virtual std::optional<BufferDataType> GetIndexDataType() const noexcept = 0;
+
+    	[[nodiscard]] virtual std::optional<unsigned int> GetActiveTextureIndex(std::shared_ptr<const ITexture> texture) const noexcept = 0;
     };
 
     class IResourceFactory

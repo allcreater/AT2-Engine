@@ -35,5 +35,5 @@ void UniformContainer::Bind(IStateManager& stateManager) const
     stateManager.BindTextures(set);
 
     for (const auto& [name, value] : m_texturesMap)
-        program->SetUniform(name, value->GetCurrentModule());
+        program->SetUniform(name, static_cast<int>(*stateManager.GetActiveTextureIndex(value)));
 }

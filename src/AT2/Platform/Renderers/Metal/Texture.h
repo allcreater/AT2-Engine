@@ -15,16 +15,13 @@ namespace AT2::Metal
         MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format);
         ~MtlTexture() override;
 
-        void Bind(unsigned int unit) const override;
         void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
                          BufferUsage usage = BufferUsage::ReadWrite) const override;
 
-        void Unbind() const override;
         void BuildMipmaps() override;
         glm::uvec3 GetSize() const noexcept override { return glm::uvec3(m_size); }
         size_t GetDataLength() const noexcept override { return m_dataSize; }
 
-        int GetCurrentModule() const noexcept override { return 0; }
         unsigned int GetId() const noexcept override { return 0; }
 
         const Texture& GetType() const noexcept override { return m_flavor; }

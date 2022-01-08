@@ -20,7 +20,6 @@ namespace AT2::OpenGL
 
         [[nodiscard]] size_t GetLength() const noexcept override { return m_length; }
 
-        void Bind() override;
         void SetDataRaw(std::span<const std::byte> data) override;
 
         std::span<std::byte> Map(BufferUsage usage) override;
@@ -65,7 +64,6 @@ namespace AT2::OpenGL
         size_t m_length {0};
 
         VertexBufferType m_publicType;
-        GlBufferType m_privateType;
         GlBufferUsageHint m_usageHint = GlBufferUsageHint::StaticDraw;
 
         bool m_mapped = false;

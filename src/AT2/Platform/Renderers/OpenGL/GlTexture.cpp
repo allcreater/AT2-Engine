@@ -128,22 +128,10 @@ GlTexture::~GlTexture()
     glDeleteTextures(1, &m_id);
 }
 
-void GlTexture::Bind(unsigned int unit) const
-{
-    glBindTextureUnit(unit, m_id);
-
-    m_currentTextureModule = unit;
-}
-
 void GlTexture::BindAsImage(unsigned unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
 {
     glBindImageTexture(unit, GetId(), static_cast<GLint>(level), isLayered, static_cast<GLint>(layer), Mappings::TranslateBufferUsage(usage),
                        m_internalFormat);
-}
-
-void GlTexture::Unbind() const
-{
-    m_currentTextureModule = -1;
 }
 
 void GlTexture::BuildMipmaps()

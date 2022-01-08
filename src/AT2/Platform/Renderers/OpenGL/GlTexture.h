@@ -14,16 +14,13 @@ namespace AT2::OpenGL
         GlTexture(Texture flavor, GLint internalFormat);
         ~GlTexture() override;
 
-        void Bind(unsigned int unit) const override;
         void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
                          BufferUsage usage = BufferUsage::ReadWrite) const override;
 
-        void Unbind() const override;
         void BuildMipmaps() override;
         glm::uvec3 GetSize() const noexcept override { return glm::uvec3(m_size); }
         size_t GetDataLength() const noexcept override { return m_dataSize; }
 
-        int GetCurrentModule() const noexcept override { return m_currentTextureModule; }
         unsigned int GetId() const noexcept override { return m_id; }
 
         const Texture& GetType() const noexcept override { return m_flavor; }
@@ -59,8 +56,6 @@ namespace AT2::OpenGL
         float m_anisotropy = 1.0f;
 
         GLuint m_id {0};
-        mutable int m_currentTextureModule {-1};
-
         GLenum m_internalFormat {0};
         //internal size representation is int instead of uint, so that we need to do casting on request :(
         glm::ivec3 m_size;

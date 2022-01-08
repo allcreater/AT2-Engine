@@ -5,7 +5,6 @@
 
 namespace AT2
 {
-
     class StateManager : public IStateManager
     {
     public:
@@ -25,11 +24,18 @@ namespace AT2
 
         [[nodiscard]] std::optional<BufferDataType> GetIndexDataType() const noexcept override
         {
-            return m_activeIndexBufferType;
+	        return m_activeIndexBufferType;
         }
+
+        [[nodiscard]] std::optional<unsigned> GetActiveTextureIndex(std::shared_ptr<const ITexture> texture) const noexcept override;
 
     protected:
         IRenderer& GetRenderer() const { return m_renderer; }
+
+        virtual void DoBind(const ITexture& texture, unsigned index) = 0;
+        virtual void DoBind(IFrameBuffer& framebuffer) = 0;
+        virtual void DoBind(IShaderProgram& shader) = 0;
+        virtual void DoBind(IVertexArray& vertexArray) = 0;
 
     private:
         IRenderer& m_renderer;

@@ -14,7 +14,6 @@ namespace AT2::Metal
         ~VertexArray() override;
 
     public:
-        void Bind() override;
         [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
 
         void SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType type) override;
