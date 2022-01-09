@@ -62,7 +62,7 @@ private:
 
     void OnInitialized() override
     {
-	    getWindow().setVSyncInterval(1).setCursorMode(CursorMode::Normal);
+	    getWindow().setVSyncInterval(0).setCursorMode(CursorMode::Hidden);
 
         m_camera.setView(lookAt(glm::vec3 {5, 1, 0}, glm::vec3 {0, 0, 0}, glm::vec3 {0, 1, 0}));
 
@@ -78,10 +78,10 @@ private:
 	{
         getRenderer()->SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
         getRenderer()->ClearBuffer(glm::vec4(0.0, 0.0, 0.5, 0.0));
-        getRenderer()->ClearDepth(0);
+        getRenderer()->ClearDepth(1.0f);
 
         auto& stateManager = getRenderer()->GetStateManager();
-    	//stateManager.ApplyState(AT2::DepthState { AT2::CompareFunction::Less, true, true});
+    	stateManager.ApplyState(AT2::DepthState { AT2::CompareFunction::Less, true, true});
         stateManager.ApplyState(AT2::FaceCullMode {false, true});
 
     	AT2::Utils::MeshRenderer::DrawMesh(*getRenderer(), m_cubeMesh, m_cubeMesh.Shader );
@@ -106,6 +106,8 @@ private:
 
     void OnMouseMove(const AT2::MousePos& pos) override
     {
+        const auto angularSpeed = glm::vec3 {pos.getDeltaPos(), 0.0f} * 0.004f;
+        m_cubeRotation = glm::normalize(m_cubeRotation * glm::quat {angularSpeed});
     }
 
     void OnClosing() override
@@ -118,8 +120,8 @@ private:
             getWindow().setCloseFlag(true);
 
         using namespace std::chrono_literals;
-        constexpr glm::vec3 angles {1.0f, 1.3f, 1.2f};
-        m_cubeRotation = glm::normalize(m_cubeRotation * (glm::quat {angles * static_cast<float>(dt / 1.0s)}));
+        const auto angularSpeed = glm::vec3 {1.0f, 1.3f, 1.2f} * static_cast<float>(dt/1s);
+        m_cubeRotation = glm::normalize(m_cubeRotation * glm::quat {angularSpeed});
 
 
     	m_cubeMesh.GetOrCreateDefaultMaterial().SetUniform("u_matModelView", m_camera.getView() * glm::mat4 {m_cubeRotation});

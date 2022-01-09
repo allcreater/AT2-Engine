@@ -1,5 +1,7 @@
 #include "example_cube.h"
 
+//TODO: switchable examples in one application
+
 int main(const int argc, const char* argv[])
 {
     try
