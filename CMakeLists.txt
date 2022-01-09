@@ -27,6 +27,7 @@ conan_cmake_run (   CONANFILE conanfile.py
 )
 
 add_subdirectory ("src/AT2/")
+add_subdirectory ("applications/examples/")
 add_subdirectory ("applications/sandbox/")
 add_subdirectory ("applications/test_task/")
 

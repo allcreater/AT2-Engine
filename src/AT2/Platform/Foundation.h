@@ -192,6 +192,7 @@ namespace AT2
                 if (firstUpdate)
                 {
                     firstUpdate = false;
+                    previous_render_time = std::chrono::steady_clock::now();
 
                     OnInitialize();
                     OnResize(getSize());
