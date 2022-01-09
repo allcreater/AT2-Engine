@@ -225,7 +225,6 @@ private:
 
     void OnClosing() override
     { 
-        getRenderer()->Shutdown(); 
     }
 
     void OnUpdate(AT2::Seconds dt) override

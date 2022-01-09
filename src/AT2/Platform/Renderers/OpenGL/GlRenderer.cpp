@@ -89,9 +89,6 @@ void GlRenderer::ClearDepth(float depth)
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-
-void GlRenderer::Shutdown() {}
-
 void GlRenderer::DispatchCompute(glm::uvec3 threadGroupSize)
 {
     glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);

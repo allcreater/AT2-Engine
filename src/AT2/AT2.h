@@ -322,8 +322,6 @@ namespace AT2
         [[nodiscard]] virtual IStateManager& GetStateManager() const = 0;
         [[nodiscard]] virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
-        virtual void Shutdown() = 0;
-
         virtual void DispatchCompute(glm::uvec3 threadGroupSize) = 0;
         //Draws count vertices connected by primitive type.
         virtual void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1,
@@ -351,7 +349,7 @@ namespace AT2
         static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetAttributeBinding(args.first,
                                               factory.MakeBufferFrom(VertexBufferType::ArrayBuffer, args.second),
-                                              BufferDataTypes::BufferTypeOf<std::decay_t<decltype(args.second[0])>>),
+                                              BufferDataTypes::BufferTypeOf<std::remove_cvref_t<decltype(args.second[0])>>),
              0)...});
 
         return vertexArray;

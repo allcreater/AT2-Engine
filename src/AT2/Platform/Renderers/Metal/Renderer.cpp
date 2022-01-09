@@ -58,10 +58,6 @@ Renderer::Renderer(void* metalLayer)
     commandQueue.reset(device->newCommandQueue());
 }
 
-void Renderer::Shutdown()
-{
-}
-
 void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)
 {
     

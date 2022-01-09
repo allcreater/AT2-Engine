@@ -51,8 +51,6 @@ namespace AT2::OpenGL
             return *m_rendererCapabilities;
         }
 
-        void Shutdown() override;
-
         void DispatchCompute(glm::uvec3 threadGroupSize) override;
         void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1,
                   int baseVertex = 0) override;

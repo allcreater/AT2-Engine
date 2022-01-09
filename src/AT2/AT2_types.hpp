@@ -57,6 +57,8 @@ namespace AT2
         unsigned int Divisor = 0;
     };
 
+
+    //TODO: to separate header
     namespace BufferDataTypes
     {
         template <typename T>
@@ -80,11 +82,17 @@ namespace AT2
             return BufferDataType::Byte; //TODO: think what to do here :)
         }
 
-        template <typename T, typename = std::enable_if<std::is_arithmetic_v<T>>>
+        template <typename T>
         constexpr BufferBindingParams BufferTypeOf = {DeduceBufferDataType<T>(), 1, sizeof(T)};
 
         template <typename T, glm::length_t L, glm::qualifier Q>
         constexpr BufferBindingParams BufferTypeOf<glm::vec<L, T, Q>> = {DeduceBufferDataType<T>(), L, sizeof(glm::vec<L, T, Q>)};
+
+    	template <typename T, size_t N>
+        constexpr BufferBindingParams BufferTypeOf<T[N]> = {DeduceBufferDataType<T>(), N, sizeof(T[N])};
+
+    	template <typename T, size_t N>
+        constexpr BufferBindingParams BufferTypeOf<std::array<T, N>> = {DeduceBufferDataType<T>(), N, sizeof(std::array<T, N>)};
 
         //scalars
         constexpr BufferBindingParams Byte = BufferTypeOf<std::int8_t>;
