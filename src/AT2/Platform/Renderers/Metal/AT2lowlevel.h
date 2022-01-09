@@ -82,4 +82,19 @@ auto ConstructMetalObject()
     return MtlPtr<T>{T::alloc()->init()};
 }
 
+inline MtlPtr<NS::String> MakeMetalString(std::string_view view)
+{
+    std::string viewCopy { view };
+    return NS::String::string(viewCopy.data(), NS::UTF8StringEncoding);
+}
+
+inline void CheckErrors(NS::Error* error)
+{
+    if (!error)
+        return;
+    
+    const auto* description = error->description()->cString(NS::UTF8StringEncoding);
+    throw AT2Exception( description );
+};
+
 } //AT2::Metal

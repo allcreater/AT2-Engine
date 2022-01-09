@@ -10,32 +10,38 @@ namespace {
 }
 
 
-ShaderProgram::ShaderProgram(Renderer& renderer) : renderer(renderer)
+ShaderProgram::ShaderProgram(Renderer& renderer) : m_renderer(renderer)
 {
 constexpr char source[] = R"(
     #include <metal_stdlib>
     using namespace metal;
 
-    struct VertexIn {
-      float4 position [[ attribute(0) ]];
+    struct VertexIn
+    {
+        float3 position [[ attribute(1) ]];
+        float2 texCoord [[ attribute(2) ]];
     };
 
-    vertex float4 vertex_main(const VertexIn vertex_in [[ stage_in ]]) {
-      return vertex_in.position;
+    struct VertexUniforms
+    {
+        float4x4 u_matModelView;
+        float4x4 u_matProjection;
+    };
+
+    vertex float4 vertex_main(
+        const VertexIn vertex_in        [[ stage_in ]],
+        constant VertexUniforms& params [[ buffer(0) ]]
+    )
+    {
+        const auto viewSpacePos = params.u_matModelView * float4(vertex_in.position, 1);
+        return params.u_matProjection * viewSpacePos;
     }
 
-    fragment float4 fragment_main() {
-      return float4(1, 0, 0, 1);
+    fragment float4 fragment_main(texture2d<float, access::sample> texAlbedo [[texture(0)]])
+    {
+        return float4(1, 0, 0, 1);
     }
 )";
-    
-    auto checkErrors = [](NS::Error* error){
-        if (!error)
-            return;
-        
-        const auto* description = error->description()->cString(NS::UTF8StringEncoding);
-        throw AT2ShaderException( description );
-    };
     
     auto sourceString = NS::String::string(source, NS::UTF8StringEncoding);
     
@@ -44,25 +50,8 @@ constexpr char source[] = R"(
     //compileOptions->setLanguageVersion(MTL::LanguageVersion2_0);
     
     NS::Error* errorOutput = nullptr;
-    library = renderer.getDevice()->newLibrary(sourceString, compileOptions.get(), &errorOutput);
-    checkErrors(errorOutput);
-    
-    
-    auto* funcVS = library->newFunction(NS::String::string("vertex_main", NS::ASCIIStringEncoding));
-    auto* funcFS = library->newFunction(NS::String::string("fragment_main", NS::ASCIIStringEncoding));
-    
-    const auto vd = ConstructMetalObject<MTL::VertexDescriptor>();
-    //vd->attributes()->object(0)->
-    
-    const auto pd = ConstructMetalObject<MTL::RenderPipelineDescriptor>();
-    pd->setVertexFunction(funcVS);
-    pd->setFragmentFunction(funcFS);
-    pd->setVertexDescriptor(vd.get());
-    
-    //pipeline = renderer.getDevice()->newRenderPipelineState(pd.get(), &errorOutput);
-
-    checkErrors(errorOutput);
-    
+    m_library = renderer.getDevice()->newLibrary(sourceString, compileOptions.get(), &errorOutput);
+    CheckErrors(errorOutput);
 }
 
 ShaderProgram::~ShaderProgram()
@@ -72,9 +61,8 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::Bind()
 {
-    assert (renderer.getFrameContext());
+    assert (m_renderer.getFrameContext());
     
-    //renderer.getFrameContext()->renderEncoder->setRenderPipelineState(pipeline.get());
 }
 
 bool ShaderProgram::IsActive() const noexcept
@@ -84,15 +72,11 @@ bool ShaderProgram::IsActive() const noexcept
 
 std::unique_ptr<IUniformContainer> ShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
 {
-    return std::make_unique<UniformBuffer>(renderer);
+    return std::make_unique<UniformBuffer>(m_renderer);
 }
 
 void ShaderProgram::AttachShader(std::string_view data, ShaderType type)
 {
-    /*
-    std::string dataCopy;
-    auto sourceString = NS::String::string(dataCopy.data(), NS::UTF8StringEncoding); // doing copy twice, bad =(
-     */
 }
 
 void ShaderProgram::SetUBO(std::string_view blockName, unsigned int index)

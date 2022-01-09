@@ -44,6 +44,15 @@ public: // for internal use only
     MTL::Device* getDevice() noexcept { return device.get(); }
     std::optional<FrameContext>& getFrameContext() { return frameContext; }
     
+    void UpdateStateParams(const std::function<void(MTL::RenderPipelineDescriptor&)>& command)
+    {
+        if (!m_buildingState)
+            m_buildingState = ConstructMetalObject<MTL::RenderPipelineDescriptor>();
+        
+        command(*m_buildingState);
+        m_needNewState = true;
+    }
+    
 private:
     std::unique_ptr<IStateManager> m_stateManager;
     std::unique_ptr<IResourceFactory> m_resourceFactory;
@@ -52,6 +61,10 @@ private:
     CA::MetalLayer* swapchain;
     MtlPtr<MTL::Device> device;
     MtlPtr<MTL::CommandQueue> commandQueue;
+    
+    MtlPtr<MTL::RenderPipelineState> m_activeState;
+    MtlPtr<MTL::RenderPipelineDescriptor> m_buildingState;
+    bool m_needNewState = true;
     
     std::optional<FrameContext> frameContext;
 };

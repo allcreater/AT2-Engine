@@ -31,19 +31,17 @@ namespace AT2::Metal
         virtual const str& GetName() { return m_name; }
         virtual void SetName(const str& name) { m_name = name; }
 
+        MtlPtr<MTL::Library> GetLibrary() { return m_library; }
+        
     protected:
         bool TryCompile();
         void CleanUp();
 
     private:
-        //std::vector<std::pair<ShaderType, GLuint>> m_shaderIds;
-        //std::shared_ptr<OpenGL::Introspection::ProgramInfo> m_uniformsInfo;
-
-        Renderer& renderer;
+        Renderer& m_renderer;
         str m_name;
         
         
-        MtlPtr<MTL::Library> library;
-        MtlPtr<MTL::RenderPipelineState> pipeline;
+        MtlPtr<MTL::Library> m_library;
     };
 } // namespace AT2::Metal

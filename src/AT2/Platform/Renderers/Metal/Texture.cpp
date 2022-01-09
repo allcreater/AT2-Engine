@@ -249,10 +249,9 @@ void MtlTexture::CopyFromFramebuffer(int _level, glm::ivec2 pos, glm::ivec2 size
 	
 }
 
-
 void MtlTexture::SetWrapMode(TextureWrapParams wrapParams)
 {
-	
+    
 }
 
 void MtlTexture::SetSamplingMode(TextureSamplingParams samplingParams)

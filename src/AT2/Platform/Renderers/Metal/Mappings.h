@@ -94,6 +94,72 @@ namespace AT2::Mappings
         default: throw AT2Exception("Unsupported external format ChannelsLayout");
         }
     }
+
+    constexpr MTL::VertexFormat TranslateVertexFormat(const BufferBindingParams& params)
+    {
+        switch (params.Count)
+        {
+            case 1:
+                switch (params.Type)
+                {
+                    case BufferDataType::Byte: return params.IsNormalized ? MTL::VertexFormatCharNormalized : MTL::VertexFormatChar;
+                    case BufferDataType::UByte: return params.IsNormalized ? MTL::VertexFormatUCharNormalized : MTL::VertexFormatUChar;
+                    case BufferDataType::Short: return params.IsNormalized ? MTL::VertexFormatShortNormalized : MTL::VertexFormatShort;
+                    case BufferDataType::UShort: return params.IsNormalized ? MTL::VertexFormatUShortNormalized : MTL::VertexFormatUShort;
+                    case BufferDataType::Int: return MTL::VertexFormatInt;
+                    case BufferDataType::UInt: return MTL::VertexFormatUInt;
+                    case BufferDataType::HalfFloat: return MTL::VertexFormatHalf;
+                    case BufferDataType::Float: return MTL::VertexFormatFloat;
+                    default:
+                        throw AT2Exception("Unsupported vertex format");
+                };
+            case 2:
+                switch (params.Type)
+                {
+                    case BufferDataType::Byte: return params.IsNormalized ? MTL::VertexFormatChar2Normalized : MTL::VertexFormatChar2;
+                    case BufferDataType::UByte: return params.IsNormalized ? MTL::VertexFormatUChar2Normalized : MTL::VertexFormatUChar2;
+                    case BufferDataType::Short: return params.IsNormalized ? MTL::VertexFormatShort2Normalized : MTL::VertexFormatShort2;
+                    case BufferDataType::UShort: return params.IsNormalized ? MTL::VertexFormatUShort2Normalized : MTL::VertexFormatUShort2;
+                    case BufferDataType::Int: return MTL::VertexFormatInt2;
+                    case BufferDataType::UInt: return MTL::VertexFormatUInt2;
+                    case BufferDataType::HalfFloat: return MTL::VertexFormatHalf2;
+                    case BufferDataType::Float: return MTL::VertexFormatFloat2;
+                    default:
+                        throw AT2Exception("Unsupported vertex format");
+                };
+            case 3:
+                switch (params.Type)
+                {
+                    case BufferDataType::Byte: return params.IsNormalized ? MTL::VertexFormatChar3Normalized : MTL::VertexFormatChar3;
+                    case BufferDataType::UByte: return params.IsNormalized ? MTL::VertexFormatUChar3Normalized : MTL::VertexFormatUChar3;
+                    case BufferDataType::Short: return params.IsNormalized ? MTL::VertexFormatShort3Normalized : MTL::VertexFormatShort3;
+                    case BufferDataType::UShort: return params.IsNormalized ? MTL::VertexFormatUShort3Normalized : MTL::VertexFormatUShort3;
+                    case BufferDataType::Int: return MTL::VertexFormatInt3;
+                    case BufferDataType::UInt: return MTL::VertexFormatUInt3;
+                    case BufferDataType::HalfFloat: return MTL::VertexFormatHalf3;
+                    case BufferDataType::Float: return MTL::VertexFormatFloat3;
+                    default:
+                        throw AT2Exception("Unsupported vertex format");
+                };
+            case 4:
+                switch (params.Type)
+                {
+                    case BufferDataType::Byte: return params.IsNormalized ? MTL::VertexFormatChar4Normalized : MTL::VertexFormatChar4;
+                    case BufferDataType::UByte: return params.IsNormalized ? MTL::VertexFormatUChar4Normalized : MTL::VertexFormatUChar4;
+                    case BufferDataType::Short: return params.IsNormalized ? MTL::VertexFormatShort4Normalized : MTL::VertexFormatShort4;
+                    case BufferDataType::UShort: return params.IsNormalized ? MTL::VertexFormatUShort4Normalized : MTL::VertexFormatUShort4;
+                    case BufferDataType::Int: return MTL::VertexFormatInt4;
+                    case BufferDataType::UInt: return MTL::VertexFormatUInt4;
+                    case BufferDataType::HalfFloat: return MTL::VertexFormatHalf4;
+                    case BufferDataType::Float: return MTL::VertexFormatFloat4;
+                    default:
+                        throw AT2Exception("Unsupported vertex format");
+                };
+            default:
+                throw AT2Exception("Unsupported vertex format: Count must be in range 1..4");
+        }
+    }
+
 /*
     constexpr GLenum TranslateExternalFormat(TextureLayout layout)
     {

@@ -69,8 +69,22 @@ void Renderer::Draw(Primitives::Primitive type, size_t first, long int count, in
     
     if (std::holds_alternative<Primitives::Patches>(type))
         throw AT2Exception("patches rendering is not implemented yet");
+    
+    //TODO: to function
+    if (m_needNewState || !m_activeState)
+    {
+        auto* colorAttachmentDescriptor = m_buildingState->colorAttachments()->object(0);
+        colorAttachmentDescriptor->setPixelFormat(swapchain->pixelFormat());
         
-    //frameContext->renderEncoder->drawPrimitives(Mappings::TranslatePrimitiveType(type), first, count, numInstances);
+        NS::Error* error = nullptr;
+        MtlPtr<MTL::RenderPipelineState> newState = device->newRenderPipelineState(m_buildingState.get(), &error);
+        CheckErrors(error);
+        
+        frameContext->renderEncoder->setRenderPipelineState(newState.get());
+        m_activeState = std::move(newState);
+    }
+    
+    frameContext->renderEncoder->drawPrimitives(Mappings::TranslatePrimitiveType(type), first, count, numInstances);
 }
 
 void Renderer::SetViewport(const AABB2d& viewport)
