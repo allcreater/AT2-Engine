@@ -199,24 +199,24 @@ namespace AT2::Scene
 
             postProcessFBO = renderer->GetResourceFactory().CreateFrameBuffer();
             postProcessFBO->SetColorAttachment(0, {rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F), glm::vec4{}});
-            postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()->Texture); //depth is common with previous stage
+            postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment().Texture); //depth is common with previous stage
 
             {
                 sphereLightsUniforms = resources.sphereLightsShader->CreateAssociatedUniformStorage();
                 //sphereLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
-                sphereLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0)->Texture);
-                sphereLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1)->Texture);
-                sphereLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2)->Texture);
-                sphereLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment()->Texture);
+                sphereLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0).Texture);
+                sphereLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1).Texture);
+                sphereLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2).Texture);
+                sphereLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment().Texture);
             }
 
             {
                 skyLightsUniforms = resources.skyLightsShader->CreateAssociatedUniformStorage();
                 //skyLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
-                skyLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0)->Texture);
-                skyLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1)->Texture);
-                skyLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2)->Texture);
-                skyLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment()->Texture);
+                skyLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0).Texture);
+                skyLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1).Texture);
+                skyLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2).Texture);
+                skyLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment().Texture);
                 //skyLightsUniforms->SetUniform("u_environmentMap", 0);
             }
 
@@ -224,8 +224,8 @@ namespace AT2::Scene
             {
                 postprocessUniforms = resources.postprocessShader->CreateAssociatedUniformStorage();
                 //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-                postprocessUniforms->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0)->Texture);
-                postprocessUniforms->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment()->Texture);
+                postprocessUniforms->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0).Texture);
+                postprocessUniforms->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment().Texture);
             }
 
             dirtyFramebuffers = false;
