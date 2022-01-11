@@ -6,6 +6,8 @@
 
 namespace AT2::Metal
 {
+    class Renderer;
+
     class FrameBuffer : public IFrameBuffer
     {
     public:
@@ -38,32 +40,24 @@ namespace AT2::Metal
 
     class MetalScreenFrameBuffer : public IFrameBuffer
     {
-        MetalScreenFrameBuffer() = default;
-
     public:
-        static MetalScreenFrameBuffer& Get()
-        {
-            static MetalScreenFrameBuffer defaultFB;
-            return defaultFB;
-        }
+        MetalScreenFrameBuffer(Renderer& renderer, CA::MetalLayer* swapChain) : m_renderer{renderer}, m_swapChain{swapChain} {}
 
-        [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
-
-        void SetColorAttachment(unsigned int, const std::shared_ptr<ITexture>&) override
+        void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) override
         {
             throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
         }
 
-        [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int) const override
+        const ColorAttachment* GetColorAttachment(unsigned int attachmentNumber) const override
         {
             throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
         }
-        void SetDepthAttachment(const std::shared_ptr<ITexture>&) override
+        void SetDepthAttachment(DepthAttachment attachment) override
         {
             throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
         }
 
-        [[nodiscard]] std::shared_ptr<ITexture> GetDepthAttachment() const override
+        [[nodiscard]] const DepthAttachment* GetDepthAttachment() const override
         {
             throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
         }
@@ -72,6 +66,25 @@ namespace AT2::Metal
         {
             return {0, 0};
         }
+        
+        void SetClearColor(std::optional<glm::vec4> color) override;
+        void SetClearDepth(std::optional<float> depth) override;
+
+        void Render(RenderFunc renderFunc) override;
+        
+    private:
+        Renderer& m_renderer;
+        MtlPtr<CA::MetalLayer> m_swapChain;
+        
+        std::optional<glm::vec4> m_clearColor;
+        std::optional<float> m_clearDepth;
+        
+        struct FrameContext
+        {
+            MtlPtr<CA::MetalDrawable> drawable;
+            MtlPtr<MTL::CommandBuffer> commandBuffer;
+            MtlPtr<MTL::RenderCommandEncoder> renderEncoder;
+        };
     };
 
 } // namespace AT2::Metal

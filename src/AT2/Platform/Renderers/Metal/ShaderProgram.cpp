@@ -24,7 +24,7 @@ constexpr char source[] = R"(
 
     struct VertexUniforms
     {
-        float4x4 u_matModelView;
+        float4x4 u_matModelView [[id(0)]];
         float4x4 u_matProjection;
     };
 

@@ -26,7 +26,6 @@ public:
     using pointer = T*;
     using element_type = T;
     
-    
     // special members
     
     MtlPtr() = default;
@@ -59,6 +58,13 @@ public:
     void reset(T* newPtr = nullptr) noexcept { MtlPtr{newPtr}.swap(*this); }
     void swap(MtlPtr& other) noexcept { std::swap(ptr, other.ptr); }
     
+    static MtlPtr adopt(T* ptr)
+    {
+        MtlPtr wrapper;
+        wrapper.ptr = ptr;
+        return wrapper;
+    }
+    
 private:
     void try_retain()
     {
@@ -79,7 +85,7 @@ private:
 template <typename T>
 auto ConstructMetalObject()
 {
-    return MtlPtr<T>{T::alloc()->init()};
+    return MtlPtr<T>::adopt(T::alloc()->init());
 }
 
 inline MtlPtr<NS::String> MakeMetalString(std::string_view view)

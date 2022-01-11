@@ -26,8 +26,6 @@ public:
               int baseVertex = 0) override;
 
     void SetViewport(const AABB2d& viewport) override;
-    void ClearBuffer(const glm::vec4& color) override;
-    void ClearDepth(float depth) override;
     void BeginFrame() override;
     void FinishFrame() override;
 
@@ -42,7 +40,7 @@ public: // for internal use only
     };
     
     MTL::Device* getDevice() noexcept { return device.get(); }
-    std::optional<FrameContext>& getFrameContext() { return frameContext; }
+    MTL::CommandQueue* getCommandQueue() noexcept { return commandQueue.get(); }
     
     void UpdateStateParams(const std::function<void(MTL::RenderPipelineDescriptor&)>& command)
     {
@@ -57,6 +55,7 @@ private:
     std::unique_ptr<IStateManager> m_stateManager;
     std::unique_ptr<IResourceFactory> m_resourceFactory;
     std::unique_ptr<IRendererCapabilities> m_rendererCapabilities;
+    std::unique_ptr<IFrameBuffer> m_defaultFramebuffer;
     
     CA::MetalLayer* swapchain;
     MtlPtr<MTL::Device> device;

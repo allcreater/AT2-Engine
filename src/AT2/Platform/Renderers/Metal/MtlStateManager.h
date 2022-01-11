@@ -18,7 +18,6 @@ protected:
     Renderer& GetRenderer() const;
     
     void DoBind(const ITexture& texture, unsigned index) override;
-    void DoBind(IFrameBuffer& frameBuffer) override;
     void DoBind(IShaderProgram& shaderProgram) override;
     void DoBind(IVertexArray& vertexArray) override;
     

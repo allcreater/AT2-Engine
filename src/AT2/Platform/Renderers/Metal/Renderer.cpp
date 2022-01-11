@@ -4,6 +4,7 @@
 #include "Mappings.h"
 #include "ResourceFactory.h"
 #include "MtlStateManager.h"
+#include "FrameBuffer.h"
 
 using namespace AT2;
 using namespace AT2::Metal;
@@ -54,6 +55,7 @@ Renderer::Renderer(void* metalLayer)
     m_rendererCapabilities = std::make_unique<MtlRendererCapabilities>(*this);
     m_resourceFactory = std::make_unique<ResourceFactory>(*this);
     m_stateManager = std::make_unique<MtlStateManager>(*this);
+    m_defaultFramebuffer = std::make_unique<MetalScreenFrameBuffer>(*this, swapchain);
     
     commandQueue.reset(device->newCommandQueue());
 }
@@ -65,6 +67,7 @@ void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)
 
 void Renderer::Draw(Primitives::Primitive type, size_t first, long int count, int numInstances, int baseVertex)
 {
+    /*
     assert(frameContext);
     
     if (std::holds_alternative<Primitives::Patches>(type))
@@ -85,51 +88,26 @@ void Renderer::Draw(Primitives::Primitive type, size_t first, long int count, in
     }
     
     frameContext->renderEncoder->drawPrimitives(Mappings::TranslatePrimitiveType(type), first, count, numInstances);
+     */
 }
 
 void Renderer::SetViewport(const AABB2d& viewport)
 {
-    assert(frameContext);
+//    assert(frameContext);
     
-    frameContext->renderEncoder->setViewport(MTL::Viewport{viewport.MinBound.x, viewport.MinBound.y, viewport.GetWidth(), viewport.GetHeight(), 0.0f, 1.0f});
-}
-
-void Renderer::ClearBuffer(const glm::vec4& color)
-{
-}
-
-void Renderer::ClearDepth(float depth)
-{
-
+//    frameContext->renderEncoder->setViewport(MTL::Viewport{viewport.MinBound.x, viewport.MinBound.y, viewport.GetWidth(), viewport.GetHeight(), 0.0f, 1.0f});
 }
 
 void Renderer::BeginFrame()
 {
-    frameContext = FrameContext{};
-    frameContext->drawable = swapchain->nextDrawable();
-    
-    auto defaultPassDescriptor = ConstructMetalObject<MTL::RenderPassDescriptor>();
-    auto* colorAttachment = defaultPassDescriptor->colorAttachments()->object(0);
-    colorAttachment->setClearColor(MTL::ClearColor(0.0, 0.5, 0.0, 1));
-    colorAttachment->setLoadAction(MTL::LoadActionClear);
-    colorAttachment->setStoreAction(MTL::StoreActionStore);
-    colorAttachment->setTexture(frameContext->drawable->texture());
-    
-    frameContext->commandBuffer = commandQueue->commandBuffer();
-    frameContext->renderEncoder = frameContext->commandBuffer->renderCommandEncoder(defaultPassDescriptor.get());
 }
 
 void Renderer::FinishFrame()
 {
-    frameContext->renderEncoder->endEncoding();
-    frameContext->commandBuffer->presentDrawable(frameContext->drawable.get());
-    frameContext->commandBuffer->commit();
-    
-    frameContext.reset();
 }
 
 
 AT2::IFrameBuffer& Renderer::GetDefaultFramebuffer() const
 {
-    throw AT2::AT2Exception("");
+    return *m_defaultFramebuffer;
 }

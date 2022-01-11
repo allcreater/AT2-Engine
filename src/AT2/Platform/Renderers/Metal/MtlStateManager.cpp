@@ -27,11 +27,11 @@ void MtlStateManager::ApplyState(RenderState state)
         },
         [this](const FaceCullMode& state){
             auto cullMode = Mappings::TranslateFaceCullMode(state);
-            if (cullMode)
-                GetRenderer().getFrameContext()->renderEncoder->setCullMode(*cullMode);
+//            if (cullMode)
+//                GetRenderer().getFrameContext()->renderEncoder->setCullMode(*cullMode);
         },
         [this](const PolygonRasterizationMode& state){
-            GetRenderer().getFrameContext()->renderEncoder->setTriangleFillMode(Mappings::TranslatePolygonRasterizationMode(state));
+//            GetRenderer().getFrameContext()->renderEncoder->setTriangleFillMode(Mappings::TranslatePolygonRasterizationMode(state));
             
         },
         [](const LineRasterizationMode& state){
@@ -51,11 +51,6 @@ void MtlStateManager::DoBind(const ITexture& texture, unsigned index)
     //GetRenderer().getFrameContext()->renderEncoder->setVertexTexture(<#const MTL::Texture *texture#>, <#NS::UInteger index#>)
 }
 
-void MtlStateManager::DoBind(IFrameBuffer& frameBuffer)
-{
-    
-}
-
 void MtlStateManager::DoBind(IShaderProgram& shaderProgram)
 {
     auto& mtlVertexArray = Utils::safe_dereference_cast<ShaderProgram&>(&shaderProgram);
@@ -63,6 +58,18 @@ void MtlStateManager::DoBind(IShaderProgram& shaderProgram)
     GetRenderer().UpdateStateParams([&](MTL::RenderPipelineDescriptor& params){
         auto* funcVS = mtlVertexArray.GetLibrary()->newFunction(NS::String::string("vertex_main", NS::ASCIIStringEncoding));
         auto* funcFS = mtlVertexArray.GetLibrary()->newFunction(NS::String::string("fragment_main", NS::ASCIIStringEncoding));
+        
+        MTL::Argument* reflection;
+        funcVS->newArgumentEncoder(0, &reflection);
+        auto name = reflection->name()->cString(NS::ASCIIStringEncoding);
+        auto* members = reflection->bufferStructType()->members();
+        for (int i = 0; i < members->count(); ++i)
+        {
+            const auto* member = static_cast<MTL::StructMember*>(members->object(i));
+            auto name = member->name()->cString(NS::UTF8StringEncoding);
+            auto dataType = member->dataType();
+        }
+        
         params.setVertexFunction(funcVS);
         params.setFragmentFunction(funcFS);
     });
@@ -75,4 +82,7 @@ void MtlStateManager::DoBind(IVertexArray& vertexArray)
     GetRenderer().UpdateStateParams([&](MTL::RenderPipelineDescriptor& params){
         params.setVertexDescriptor(mtlVertexArray.GetVertexDescriptor().get());
     });
+    
+    
+    //GetRenderer().getFrameContext()->renderEncoder->setVertexBuffer(<#const MTL::Buffer *buffer#>, <#NS::UInteger offset#>, <#NS::UInteger index#>)
 }
