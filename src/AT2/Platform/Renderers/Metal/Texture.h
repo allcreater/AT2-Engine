@@ -22,7 +22,7 @@ namespace AT2::Metal
         glm::uvec3 GetSize() const noexcept override { return glm::uvec3(m_size); }
         size_t GetDataLength() const noexcept override { return m_dataSize; }
 
-        unsigned int GetId() const noexcept override { return 0; }
+        MTL::Texture* getNativeHandle() noexcept { return m_texture.get(); }
 
         const Texture& GetType() const noexcept override { return m_flavor; }
 
@@ -51,7 +51,7 @@ namespace AT2::Metal
         TextureWrapParams m_wrapParams;
         TextureSamplingParams m_sampling_params;
         float m_anisotropy = 1.0f;
-        MTL::Texture* m_texture;
+        MtlPtr<MTL::Texture> m_texture;
         //internal size representation is int instead of uint, so that we need to do casting on request :(
         glm::ivec3 m_size;
 

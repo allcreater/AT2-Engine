@@ -2,6 +2,8 @@
 #include "AT2lowlevel.h"
 #include "GlBuffer.h"
 #include "GlFrameBuffer.h"
+#include "GlShaderProgram.h"
+#include "GlTexture.h"
 #include "Mappings.h"
 
 using namespace AT2;
@@ -40,12 +42,14 @@ void OpenGL::GlStateManager::ApplyState(RenderState state)
 
 void OpenGL::GlStateManager::DoBind(const ITexture& texture, unsigned index)
 {
-    glBindTextureUnit(index, texture.GetId());
+    const auto& glTexture = Utils::safe_dereference_cast<const GlTexture&>(&texture);
+    glBindTextureUnit(index, glTexture.GetId());
 }
 
 void OpenGL::GlStateManager::DoBind( IShaderProgram& shader )
 {
-    shader.Bind();
+    auto& glProgram = Utils::safe_dereference_cast<GlShaderProgram&>(&shader);
+    glProgram.Bind();
 }
 
 void OpenGL::GlStateManager::DoBind( IVertexArray& vertexArray )

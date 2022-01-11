@@ -16,7 +16,6 @@ namespace AT2::Metal
         ~ShaderProgram() override;
 
     public:
-        void Bind() override;
         unsigned int GetId() const noexcept override { return 0; }
         bool IsActive() const noexcept override;
         std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName) override;

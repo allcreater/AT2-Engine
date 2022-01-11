@@ -116,7 +116,7 @@ namespace AT2
         
         struct ColorAttachment
         {
-            ColorAttachment(std::shared_ptr<ITexture> texture, std::optional<glm::vec4> clearColor = {}) :
+            ColorAttachment(std::shared_ptr<ITexture> texture = nullptr, std::optional<glm::vec4> clearColor = {}) :
                 Texture {texture}, ClearColor {clearColor}
             {}
 
@@ -140,9 +140,9 @@ namespace AT2
         //TODO: the Builder pattern, or encapsulate params in special descriptor class?
 
         virtual void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) = 0;
-        [[nodiscard]] virtual const ColorAttachment* GetColorAttachment(unsigned int attachmentNumber) const = 0;
+        [[nodiscard]] virtual ColorAttachment GetColorAttachment(unsigned int attachmentNumber) const = 0;
         virtual void SetDepthAttachment(DepthAttachment attachment) = 0;
-        [[nodiscard]] virtual const DepthAttachment* GetDepthAttachment() const = 0;
+        [[nodiscard]] virtual DepthAttachment GetDepthAttachment() const = 0;
 
         // set clear color for all attachments
         virtual void SetClearColor(std::optional<glm::vec4> color) = 0;
@@ -210,7 +210,6 @@ namespace AT2
                                  BufferUsage usage = BufferUsage::ReadWrite) const = 0;
         virtual void BuildMipmaps() = 0;
 
-        [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
         [[nodiscard]] virtual glm::uvec3 GetSize() const noexcept = 0;
         [[nodiscard]] virtual size_t GetDataLength() const noexcept = 0;
 
@@ -237,7 +236,6 @@ namespace AT2
         virtual ~IShaderProgram() = default;
 
     public:
-        virtual void Bind() = 0;
         [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
         [[nodiscard]] virtual bool IsActive() const noexcept = 0;
 

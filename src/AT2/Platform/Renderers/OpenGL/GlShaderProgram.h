@@ -16,7 +16,7 @@ namespace AT2::OpenGL
         ~GlShaderProgram() override;
 
     public:
-        void Bind() override;
+        void Bind();
         unsigned int GetId() const noexcept override { return m_programId; }
         bool IsActive() const noexcept override;
         std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName) override;

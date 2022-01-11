@@ -28,7 +28,7 @@ std::shared_ptr<ITexture> ResourceFactory::CreateTexture(const Texture& declarat
 
 std::shared_ptr<IFrameBuffer> ResourceFactory::CreateFrameBuffer() const
 {
-    return std::make_shared<FrameBuffer>(m_renderer.GetRendererCapabilities());
+    return std::make_shared<FrameBuffer>(m_renderer, m_renderer.GetRendererCapabilities().GetMaxNumberOfColorAttachments());
 }
 
 std::shared_ptr<IVertexArray> ResourceFactory::CreateVertexArray() const

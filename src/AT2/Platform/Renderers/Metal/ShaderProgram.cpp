@@ -59,12 +59,6 @@ ShaderProgram::~ShaderProgram()
 	
 }
 
-void ShaderProgram::Bind()
-{
-    assert (m_renderer.getFrameContext());
-    
-}
-
 bool ShaderProgram::IsActive() const noexcept
 {
     return false;

@@ -4,96 +4,136 @@
 using namespace AT2;
 using namespace AT2::Metal;
 
-FrameBuffer::FrameBuffer(const IRendererCapabilities& rendererCapabilities)
+namespace
 {
-	
+    void SetAttachmentTexture(auto* attachment, MTL::Texture* nativeTexture)
+    {
+        if (nativeTexture)
+        {
+            attachment->setTexture(nativeTexture);
+            attachment->setStoreAction(MTL::StoreActionStore);
+        }
+        else
+        {
+            attachment->setStoreAction(MTL::StoreActionDontCare);
+        }
+    }
+
+    void SetAttachmentTexture(auto* attachment, ITexture* texture)
+    {
+        auto* mtlTexture = dynamic_cast<MtlTexture*>(texture);
+        if (!mtlTexture && texture)
+            throw AT2Exception("texture is not MtlTexture");
+        
+        SetAttachmentTexture(attachment, mtlTexture->getNativeHandle());
+    }
+
+    void SetAttachmentClearColor(MTL::RenderPassColorAttachmentDescriptor* attachment, const std::optional<glm::vec4>& clearColor)
+    {
+        if (clearColor)
+        {
+            attachment->setClearColor(MTL::ClearColor(clearColor->r, clearColor->g, clearColor->b, clearColor->a));
+            attachment->setLoadAction(MTL::LoadActionClear);
+        }
+        else
+            attachment->setLoadAction(MTL::LoadActionDontCare);
+    }
+
+    void SetAttachmentClearDepth(MTL::RenderPassDepthAttachmentDescriptor* attachment, const std::optional<float>& clearDepth)
+    {
+        if (clearDepth)
+        {
+            attachment->setClearDepth(clearDepth.value());
+            attachment->setLoadAction(MTL::LoadActionClear);
+        }
+        else
+            attachment->setLoadAction(MTL::LoadActionDontCare);
+    }
 }
 
-FrameBuffer::~FrameBuffer()
+FrameBuffer::FrameBuffer(Renderer& renderer, size_t maxAttachments)
+: m_renderer{renderer}
+, m_colorAttachments{maxAttachments}
+, m_renderPassDescriptor{ConstructMetalObject<MTL::RenderPassDescriptor>()}
 {
-	
 }
 
 void FrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) 
 {
+    if (attachmentNumber >= m_colorAttachments.size())
+        throw AT2BufferException( "FrameBuffer: unsupported attachment number");
+    
+    auto* colorAttachment = m_renderPassDescriptor->colorAttachments()->object(attachmentNumber);
+    SetAttachmentClearColor(colorAttachment, attachment.ClearColor);
+    SetAttachmentTexture(colorAttachment, attachment.Texture.get());
+    
+    m_colorAttachments[attachmentNumber] = std::move(attachment);
 }
 
-const IFrameBuffer::ColorAttachment* FrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
+IFrameBuffer::ColorAttachment FrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
 {
-    return nullptr;
+    m_colorAttachments.at(attachmentNumber);
 }
 
 void FrameBuffer::SetDepthAttachment(DepthAttachment attachment)
 {
-	
+    auto* depthAttachment = m_renderPassDescriptor->depthAttachment();
+
+    SetAttachmentTexture(depthAttachment, attachment.Texture.get());
+    SetAttachmentClearDepth(depthAttachment, attachment.ClearDepth);
+
+    m_depthAttachment = std::move(attachment);
 }
 
-const IFrameBuffer::DepthAttachment* FrameBuffer::GetDepthAttachment() const
+IFrameBuffer::DepthAttachment FrameBuffer::GetDepthAttachment() const
 {
-    return nullptr;
+    return m_depthAttachment;
 }
 
 void FrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
 {
+    for (size_t i = 0; i < m_renderer.GetRendererCapabilities().GetMaxNumberOfColorAttachments(); ++i)
+        SetAttachmentClearColor(m_renderPassDescriptor->colorAttachments()->object(i), color);
 }
 
 void FrameBuffer::SetClearDepth(std::optional<float> depth) 
 {
+    SetAttachmentClearDepth(m_renderPassDescriptor->depthAttachment(), depth);
 }
 
 void FrameBuffer::Render(RenderFunc renderFunc) 
 {
+    auto* commandBuffer = m_renderer.getCommandQueue()->commandBuffer();
+    auto* renderEncoder = commandBuffer->renderCommandEncoder(m_renderPassDescriptor.get());
+    
+    renderFunc(m_renderer);
+    
+    renderEncoder->endEncoding();
+    OnCommit(commandBuffer);
+    commandBuffer->commit();
 }
 
 
-//
+// MetalScreenFrameBuffer
 
-void MetalScreenFrameBuffer::SetClearColor(std::optional<glm::vec4> color)
+glm::ivec2 MetalScreenFrameBuffer::GetActualSize() const noexcept
 {
-    m_clearColor = color;
-}
-
-void MetalScreenFrameBuffer::SetClearDepth(std::optional<float> depth)
-{
-    m_clearDepth = depth;
+    return {};
 }
 
 void MetalScreenFrameBuffer::Render(RenderFunc renderFunc)
 {
-    std::optional<FrameContext> frameContext = FrameContext{};
-    frameContext->drawable = m_swapChain->nextDrawable();
+    m_drawable = m_swapChain->nextDrawable();
     
+    //TODO: is it a crutch or a feature?
+    SetAttachmentTexture(m_renderPassDescriptor->colorAttachments()->object(0), m_drawable->texture());
     
-    auto defaultPassDescriptor = ConstructMetalObject<MTL::RenderPassDescriptor>();
-    auto* colorAttachment = defaultPassDescriptor->colorAttachments()->object(0);
+    FrameBuffer::Render(std::move(renderFunc));
     
-    if (m_clearColor)
-    {
-        colorAttachment->setClearColor(MTL::ClearColor(m_clearColor->r, m_clearColor->g, m_clearColor->b, m_clearColor->a));
-        colorAttachment->setLoadAction(MTL::LoadActionClear);
-    }
-    else
-        colorAttachment->setLoadAction(MTL::LoadActionDontCare);
-        
-    if (m_clearDepth)
-    {
-        defaultPassDescriptor->depthAttachment()->setClearDepth(m_clearDepth.value());
-        defaultPassDescriptor->depthAttachment()->setLoadAction(MTL::LoadActionClear);
-    }
-    else
-        defaultPassDescriptor->depthAttachment()->setLoadAction(MTL::LoadActionDontCare);
-        
-    colorAttachment->setStoreAction(MTL::StoreActionStore);
-    colorAttachment->setTexture(frameContext->drawable->texture());
-    
-    
-    frameContext->commandBuffer = m_renderer.getCommandQueue()->commandBuffer();
-    frameContext->renderEncoder = frameContext->commandBuffer->renderCommandEncoder(defaultPassDescriptor.get());
-    
-    //
-    renderFunc(m_renderer);
-    
-    frameContext->renderEncoder->endEncoding();
-    frameContext->commandBuffer->presentDrawable(frameContext->drawable.get());
-    frameContext->commandBuffer->commit();
+    m_drawable->release();
+}
+
+void MetalScreenFrameBuffer::OnCommit(MTL::CommandBuffer* commandBuffer)
+{
+    commandBuffer->presentDrawable(m_drawable);
 }

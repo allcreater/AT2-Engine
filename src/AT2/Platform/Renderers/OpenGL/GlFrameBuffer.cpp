@@ -43,7 +43,7 @@ void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttac
 
         if (isError)
         {
-            m_colorAttachments[attachmentNumber].reset();
+            m_colorAttachments[attachmentNumber] = {};
             throw AT2BufferException(
                                "GlFrameBuffer: attachment texture should be GlTexture");
         }
@@ -52,12 +52,9 @@ void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttac
     m_colorAttachments[attachmentNumber] = std::move(attachment);
 }
 
-const IFrameBuffer::ColorAttachment* GlFrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
+IFrameBuffer::ColorAttachment GlFrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
 {
-    if (attachmentNumber >= m_colorAttachments.size())
-        throw AT2BufferException( "GlFrameBuffer: unsupported attachment number");
-
-    return m_colorAttachments[attachmentNumber].has_value() ? &m_colorAttachments[attachmentNumber].value() : nullptr;
+    return m_colorAttachments.at(attachmentNumber);
 }
 
 void GlFrameBuffer::SetDepthAttachment(DepthAttachment attachment)
@@ -81,18 +78,16 @@ void GlFrameBuffer::SetDepthAttachment(DepthAttachment attachment)
         throw AT2BufferException( "GlFrameBuffer: depth attachment should be Texture2D");
 }
 
-const IFrameBuffer::DepthAttachment* GlFrameBuffer::GetDepthAttachment() const
+IFrameBuffer::DepthAttachment GlFrameBuffer::GetDepthAttachment() const
 {
-    return &m_depthAttachment;
+    return m_depthAttachment;
 }
 
 void AT2::OpenGL::GlFrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
 {
     for (auto& attachment : m_colorAttachments)
-    {
-        if (attachment)
-            attachment->ClearColor = color;
-    }
+        attachment.ClearColor = color;
+
 }
 
 void AT2::OpenGL::GlFrameBuffer::SetClearDepth(std::optional<float> depth) 
@@ -110,25 +105,22 @@ void GlFrameBuffer::Render(RenderFunc renderFunc)
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             throw AT2BufferException("GlFrameBuffer: validation failed");
 
-        m_size = m_colorAttachments[0]->Texture->GetSize();
+        m_size = m_colorAttachments[0].Texture->GetSize();
         m_dirtyFlag = false;
     }
 
     const auto numAttachments = m_colorAttachments.size();
     std::vector<GLenum> buffers(numAttachments);
     for (GLenum i = 0; i < numAttachments; ++i)
-        buffers[i] = (m_colorAttachments[i]) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
+        buffers[i] = (m_colorAttachments[i].Texture) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
     glDrawBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
 
 
     // clearing buffers
     for (size_t i = 0; i < numAttachments; ++i)
     {
-        if (!m_colorAttachments[i])
-            break;
-
-        if (m_colorAttachments[i]->ClearColor)
-            glClearBufferfv(GL_COLOR, i, glm::value_ptr(m_colorAttachments[i]->ClearColor.value()));
+        if (m_colorAttachments[i].ClearColor)
+            glClearBufferfv(GL_COLOR, i, glm::value_ptr(m_colorAttachments[i].ClearColor.value()));
     }
 
     if (m_depthAttachment.ClearDepth)
@@ -150,7 +142,7 @@ void GlScreenFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, Colo
     throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
 }
 
-[[nodiscard]] const IFrameBuffer::ColorAttachment* GlScreenFrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
+[[nodiscard]] IFrameBuffer::ColorAttachment GlScreenFrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
 {
     throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
 }
@@ -159,7 +151,7 @@ void GlScreenFrameBuffer::SetDepthAttachment(DepthAttachment attachment)
     throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
 }
 
-[[nodiscard]] const IFrameBuffer::DepthAttachment* GlScreenFrameBuffer::GetDepthAttachment() const
+[[nodiscard]] IFrameBuffer::DepthAttachment GlScreenFrameBuffer::GetDepthAttachment() const
 {
     throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
 }

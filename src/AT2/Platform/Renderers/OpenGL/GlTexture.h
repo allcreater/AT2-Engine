@@ -21,7 +21,7 @@ namespace AT2::OpenGL
         glm::uvec3 GetSize() const noexcept override { return glm::uvec3(m_size); }
         size_t GetDataLength() const noexcept override { return m_dataSize; }
 
-        unsigned int GetId() const noexcept override { return m_id; }
+        unsigned int GetId() const noexcept { return m_id; }
 
         const Texture& GetType() const noexcept override { return m_flavor; }
 
