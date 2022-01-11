@@ -56,8 +56,6 @@ namespace AT2::OpenGL
                   int baseVertex = 0) override;
 
         void SetViewport(const AABB2d& viewport) override;
-        void ClearBuffer(const glm::vec4& color) override;
-        void ClearDepth(float depth) override;
         void BeginFrame() override;
         void FinishFrame() override;
 
@@ -71,6 +69,7 @@ namespace AT2::OpenGL
         std::unique_ptr<IStateManager> m_stateManager;
         std::unique_ptr<IResourceFactory> m_resourceFactory;
         std::unique_ptr<IRendererCapabilities> m_rendererCapabilities;
+        std::unique_ptr<IFrameBuffer> m_defaultFramebuffer;
     };
 
 } // namespace AT2::OpenGL

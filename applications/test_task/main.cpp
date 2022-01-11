@@ -23,6 +23,9 @@ private:
 		AT2::BlendMode {AT2::BlendFactor::SourceAlpha, AT2::BlendFactor::OneMinusSourceAlpha, glm::vec4 {1}});
 		getRenderer()->GetStateManager().ApplyState(AT2::FaceCullMode {});
 
+        getRenderer()->GetDefaultFramebuffer().SetClearColor(glm::vec4{});
+        getRenderer()->GetDefaultFramebuffer().SetClearDepth(0.0f);
+
     }
 
     void OnUpdate(const AT2::Seconds dt) override 
@@ -31,11 +34,11 @@ private:
 
     void OnRender(const AT2::Seconds dt) override
     {
-        getRenderer()->SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
-        getRenderer()->ClearBuffer(glm::vec4(0.0, 0.0, 0.0, 0.0));
-        getRenderer()->ClearDepth(0);
+        getRenderer()->GetDefaultFramebuffer().Render([&](AT2::IRenderer& renderer) {
+            getRenderer()->SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
 
-        m_uiHub->Render(getRenderer(), dt);
+            m_uiHub->Render(getRenderer(), dt);
+        });
     }
 
     void OnKeyPress(int key) {}

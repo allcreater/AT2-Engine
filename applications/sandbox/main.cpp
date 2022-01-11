@@ -157,7 +157,7 @@ private:
 
         m_renderParameters.Scene = &m_scene;
         m_renderParameters.Camera = &m_camera;
-        m_renderParameters.TargetFramebuffer = nullptr;
+        m_renderParameters.TargetFramebuffer = &getRenderer()->GetDefaultFramebuffer();
 
         sr.Initialize(getRenderer());
     }

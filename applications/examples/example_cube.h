@@ -62,7 +62,10 @@ private:
 
     void OnInitialized() override
     {
-	    getWindow().setVSyncInterval(0).setCursorMode(CursorMode::Hidden);
+        getWindow().setVSyncInterval(0).setCursorMode(CursorMode::Hidden);
+
+        getRenderer()->GetDefaultFramebuffer().SetClearColor(glm::vec4{0.0, 0.0, 0.5, 0.0});
+        getRenderer()->GetDefaultFramebuffer().SetClearDepth(1.0f);
 
         m_camera.setView(lookAt(glm::vec3 {5, 1, 0}, glm::vec3 {0, 0, 0}, glm::vec3 {0, 1, 0}));
 
@@ -75,16 +78,16 @@ private:
     }
 
     void OnRender(AT2::Seconds dt) override
-	{
-        getRenderer()->SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
-        getRenderer()->ClearBuffer(glm::vec4(0.0, 0.0, 0.5, 0.0));
-        getRenderer()->ClearDepth(1.0f);
+    {
+        getRenderer()->GetDefaultFramebuffer().Render([&](AT2::IRenderer& renderer){
+            renderer.SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
 
-        auto& stateManager = getRenderer()->GetStateManager();
-    	stateManager.ApplyState(AT2::DepthState { AT2::CompareFunction::Less, true, true});
-        stateManager.ApplyState(AT2::FaceCullMode {false, true});
+            auto& stateManager = getRenderer()->GetStateManager();
+    	    stateManager.ApplyState(AT2::DepthState { AT2::CompareFunction::Less, true, true});
+            stateManager.ApplyState(AT2::FaceCullMode {false, true});
 
-    	AT2::Utils::MeshRenderer::DrawMesh(*getRenderer(), m_cubeMesh, m_cubeMesh.Shader );
+    	    AT2::Utils::MeshRenderer::DrawMesh(*getRenderer(), m_cubeMesh, m_cubeMesh.Shader );
+        });
     }
 
     void OnKeyDown(int key) override

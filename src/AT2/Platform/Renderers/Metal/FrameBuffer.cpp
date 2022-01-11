@@ -13,22 +13,33 @@ FrameBuffer::~FrameBuffer()
 	
 }
 
-void FrameBuffer::SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture)
+void FrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) 
 {
-	
 }
 
-std::shared_ptr<ITexture> FrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
+const IFrameBuffer::ColorAttachment* GetColorAttachment(unsigned int attachmentNumber) const
 {
     return std::shared_ptr<ITexture>();
 }
 
-void FrameBuffer::SetDepthAttachment(const std::shared_ptr<ITexture>& texture)
+void FrameBuffer::SetDepthAttachment(DepthAttachment attachment)
 {
 	
 }
 
-std::shared_ptr<ITexture> FrameBuffer::GetDepthAttachment() const
+const IFrameBuffer::DepthAttachment* FrameBuffer::GetDepthAttachment() const
 {
     return std::shared_ptr<ITexture>();
+}
+
+void FrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
+{
+}
+
+void FrameBuffer::SetClearDepth(std::optional<float> depth) 
+{
+}
+
+void FrameBuffer::Render(RenderFunc renderFunc) 
+{
 }

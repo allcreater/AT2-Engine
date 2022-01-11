@@ -63,7 +63,7 @@ namespace AT2::Scene
     {
         Scene* Scene = nullptr;
         const Camera* Camera = nullptr;
-        std::shared_ptr<IFrameBuffer> TargetFramebuffer = nullptr;
+        IFrameBuffer* TargetFramebuffer; // not null
 
         float Exposure = 1.0f;
         bool Wireframe = false;

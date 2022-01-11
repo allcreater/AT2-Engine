@@ -12,72 +12,59 @@ namespace AT2::OpenGL
     public:
         NON_COPYABLE_OR_MOVABLE(GlFrameBuffer)
 
-        GlFrameBuffer(const IRendererCapabilities& rendererCapabilities);
+        GlFrameBuffer(IRenderer& renderer);
         ~GlFrameBuffer() override;
 
     public:
-        void Bind();
+        void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) override;
+        [[nodiscard]] const ColorAttachment* GetColorAttachment(unsigned int attachmentNumber) const override;
+        void SetDepthAttachment(DepthAttachment attachment) override;
+        [[nodiscard]] const DepthAttachment* GetDepthAttachment() const override;
 
-        [[nodiscard]] unsigned int GetId() const noexcept override { return m_id; }
+        void SetClearColor(std::optional<glm::vec4> color) override;
+        void SetClearDepth(std::optional<float> depth) override;
 
-        void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) override;
-        [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const override;
-        void SetDepthAttachment(const std::shared_ptr<ITexture>& texture) override;
-        [[nodiscard]] std::shared_ptr<ITexture> GetDepthAttachment() const override;
         [[nodiscard]] glm::ivec2 GetActualSize() const noexcept override { return m_size; }
 
+        void Render(RenderFunc renderFunc) override;
+
     private:
+        IRenderer& m_renderer;
         GLuint m_id;
 
         glm::ivec2 m_size {0, 0};
 
-        std::vector<std::shared_ptr<GlTexture>> m_colorAttachments;
-        std::shared_ptr<GlTexture> m_depthAttachment;
+        std::vector<std::optional<ColorAttachment>> m_colorAttachments;
+        DepthAttachment m_depthAttachment;
 
         bool m_dirtyFlag {true};
+
     };
 
     class GlScreenFrameBuffer : public IFrameBuffer
     {
-        GlScreenFrameBuffer() = default;
-
     public:
-        static GlScreenFrameBuffer& Get()
-        {
-            static GlScreenFrameBuffer defaultFB;
-            return defaultFB;
-        }
+        NON_COPYABLE_OR_MOVABLE(GlScreenFrameBuffer)
 
-        void Bind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+        GlScreenFrameBuffer(IRenderer& renderer);
 
-        [[nodiscard]] unsigned int GetId() const noexcept override { return 0; }
+        void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) override;
 
-        void SetColorAttachment(unsigned int, const std::shared_ptr<ITexture>&) override
-        {
-            throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
-        }
+        [[nodiscard]] const ColorAttachment* GetColorAttachment(unsigned int attachmentNumber) const override;
+        void SetDepthAttachment(DepthAttachment attachment) override;
+        [[nodiscard]] const DepthAttachment* GetDepthAttachment() const override;
 
-        [[nodiscard]] std::shared_ptr<ITexture> GetColorAttachment(unsigned int) const override
-        {
-            throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
-        }
-        void SetDepthAttachment(const std::shared_ptr<ITexture>&) override
-        {
-            throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
-        }
+        void SetClearColor(std::optional<glm::vec4> color) override;
+        void SetClearDepth(std::optional<float> depth) override;
 
-        [[nodiscard]] std::shared_ptr<ITexture> GetDepthAttachment() const override
-        {
-            throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
-        }
+        [[nodiscard]] glm::ivec2 GetActualSize() const override;
 
-        [[nodiscard]] glm::ivec2 GetActualSize() const override
-        {
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
+        void Render(RenderFunc renderFunc) override;
 
-            return {viewport[2] - viewport[0], viewport[3] - viewport[1]};
-        }
+    private:
+        IRenderer& m_renderer;
+        std::optional<glm::vec4> m_clearColor;
+        std::optional<float> m_clearDepth;
     };
 
 } // namespace AT2::OpenGL

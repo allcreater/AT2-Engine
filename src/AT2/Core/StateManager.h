@@ -14,13 +14,11 @@ namespace AT2
 
     public:
         void BindTextures(const TextureSet& _textures) override;
-        void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& _framebuffer) override;
         void BindShader(const std::shared_ptr<IShaderProgram>& _shader) override;
         void BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexArray) override;
         //TODO: BindIndexArray?
 
         //TextureSet& GetActiveTextures() const override;
-        [[nodiscard]] std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const override;
         [[nodiscard]] std::shared_ptr<IShaderProgram> GetActiveShader() const override;
         [[nodiscard]] std::shared_ptr<IVertexArray> GetActiveVertexArray() const override;
 
@@ -35,7 +33,6 @@ namespace AT2
         IRenderer& GetRenderer() const { return m_renderer; }
 
         virtual void DoBind(const ITexture& texture, unsigned index) = 0;
-        virtual void DoBind(IFrameBuffer& framebuffer) = 0;
         virtual void DoBind(IShaderProgram& shader) = 0;
         virtual void DoBind(IVertexArray& vertexArray) = 0;
 
@@ -46,7 +43,6 @@ namespace AT2
         lru_cache<std::shared_ptr<const ITexture>, unsigned int> m_activeTextures;
 
         std::shared_ptr<IShaderProgram> m_activeShader;
-        std::shared_ptr<IFrameBuffer> m_activeFramebuffer;
         std::shared_ptr<IVertexArray> m_activeVertexArray;
 
         std::optional<BufferDataType> m_activeIndexBufferType;

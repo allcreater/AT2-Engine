@@ -105,6 +105,7 @@ namespace AT2
     protected:
     };
 
+    //TODO: evolve to IRenderPass
     class IFrameBuffer
     {
     public:
@@ -112,16 +113,46 @@ namespace AT2
 
         IFrameBuffer() = default;
         virtual ~IFrameBuffer() = default;
+        
+        struct ColorAttachment
+        {
+            ColorAttachment(std::shared_ptr<ITexture> texture, std::optional<glm::vec4> clearColor = {}) :
+                Texture {texture}, ClearColor {clearColor}
+            {}
+
+            std::shared_ptr<ITexture> Texture;
+            std::optional<glm::vec4> ClearColor;
+        };
+
+        struct DepthAttachment
+        {
+            DepthAttachment(std::shared_ptr<ITexture> texture = nullptr, std::optional<double> clearDepth = {}) :
+                Texture {texture}, ClearDepth {clearDepth}
+            {}
+
+            std::shared_ptr<ITexture> Texture;
+            std::optional<double> ClearDepth;
+        };
+
+        using RenderFunc = std::function<void(IRenderer&)>;
 
     public:
-        [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
+        //TODO: the Builder pattern, or encapsulate params in special descriptor class?
 
-        virtual void SetColorAttachment(unsigned int attachmentNumber, const std::shared_ptr<ITexture>& texture) = 0;
-        [[nodiscard]] virtual std::shared_ptr<ITexture> GetColorAttachment(unsigned int attachmentNumber) const = 0;
-        virtual void SetDepthAttachment(const std::shared_ptr<ITexture>& texture) = 0;
-        [[nodiscard]] virtual std::shared_ptr<ITexture> GetDepthAttachment() const = 0;
+        virtual void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) = 0;
+        [[nodiscard]] virtual const ColorAttachment* GetColorAttachment(unsigned int attachmentNumber) const = 0;
+        virtual void SetDepthAttachment(DepthAttachment attachment) = 0;
+        [[nodiscard]] virtual const DepthAttachment* GetDepthAttachment() const = 0;
+
+        // set clear color for all attachments
+        virtual void SetClearColor(std::optional<glm::vec4> color) = 0;
+        virtual void SetClearDepth(std::optional<float> depth) = 0;
+
+        //TODO: support stencil attachment
 
         [[nodiscard]] virtual glm::ivec2 GetActualSize() const = 0;
+
+        virtual void Render(RenderFunc renderFunc) = 0;
     };
 
     class IVertexArray
@@ -262,14 +293,13 @@ namespace AT2
 
     public:
         virtual void BindTextures(const TextureSet& textures) = 0; //TODO: more flexible interface with possibility to add textures one-by-one + something like UnbindTextures() 
-        virtual void BindFramebuffer(const std::shared_ptr<IFrameBuffer>& framebuffer) = 0;
         virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
         virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 
         virtual void ApplyState(RenderState state) = 0;
 
         //virtual TextureSet& GetActiveTextures() const = 0;
-        [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
+        //[[nodiscard]] virtual std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
         [[nodiscard]] virtual std::shared_ptr<IShaderProgram> GetActiveShader() const = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> GetActiveVertexArray() const = 0;
 
@@ -324,12 +354,9 @@ namespace AT2
 
         virtual void DispatchCompute(glm::uvec3 threadGroupSize) = 0;
         //Draws count vertices connected by primitive type.
-        virtual void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1,
-                          int baseVertex = 0) = 0;
+        virtual void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1, int baseVertex = 0) = 0;
 
-        virtual void SetViewport(const AABB2d& viewport) = 0;
-        virtual void ClearBuffer(const glm::vec4& color) = 0;
-        virtual void ClearDepth(float depth) = 0;
+        virtual void SetViewport(const AABB2d& viewport) = 0; //TODO: move out
         virtual void BeginFrame() = 0;
         virtual void FinishFrame() = 0;
 

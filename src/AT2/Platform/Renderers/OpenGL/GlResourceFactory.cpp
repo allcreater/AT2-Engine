@@ -121,7 +121,7 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declar
 
 std::shared_ptr<IFrameBuffer> GlResourceFactory::CreateFrameBuffer() const
 {
-    return std::make_shared<GlFrameBuffer>(m_renderer.GetRendererCapabilities());
+    return std::make_shared<GlFrameBuffer>(m_renderer);
 }
 
 std::shared_ptr<IVertexArray> GlResourceFactory::CreateVertexArray() const

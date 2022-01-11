@@ -34,16 +34,6 @@ void StateManager::BindTextures(const TextureSet& _textures)
         m_activeTextures.put(texture, texturesMapper, textureUnmapper);
 }
 
-void StateManager::BindFramebuffer(const std::shared_ptr<IFrameBuffer>& _framebuffer)
-{
-    if (m_activeFramebuffer == _framebuffer)
-        return;
-
-    DoBind(_framebuffer ? *_framebuffer : m_renderer.GetDefaultFramebuffer());
-
-    m_activeFramebuffer = _framebuffer;
-}
-
 void StateManager::BindShader(const std::shared_ptr<IShaderProgram>& _shader)
 {
     assert(_shader);
@@ -74,11 +64,6 @@ void StateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexA
 //{
 //	throw AT2::AT2Exception("Not implemented yet :(");
 //}
-
-std::shared_ptr<IFrameBuffer> StateManager::GetActiveFrameBuffer() const
-{
-    return m_activeFramebuffer;
-}
 
 std::shared_ptr<IShaderProgram> StateManager::GetActiveShader() const
 {

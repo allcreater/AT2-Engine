@@ -192,31 +192,31 @@ namespace AT2::Scene
             auto& rf = renderer->GetResourceFactory();
 
             gBufferFBO = renderer->GetResourceFactory().CreateFrameBuffer();
-            gBufferFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8));   //FragColor
-            gBufferFBO->SetColorAttachment(1, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F)); //FragNormal
-            gBufferFBO->SetColorAttachment(2, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8));   //RoughnessMetallic
-            gBufferFBO->SetDepthAttachment(   rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::DEPTH32F));
+            gBufferFBO->SetColorAttachment(0,{ rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8   ), glm::vec4{0.0, 0.0, 1.0, 0.0}});   //FragColor
+            gBufferFBO->SetColorAttachment(1,  rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F ) );                                  //FragNormal
+            gBufferFBO->SetColorAttachment(2,  rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8   ) );                                  //RoughnessMetallic
+            gBufferFBO->SetDepthAttachment(  { rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::DEPTH32F), 1.0f});
 
             postProcessFBO = renderer->GetResourceFactory().CreateFrameBuffer();
-            postProcessFBO->SetColorAttachment(0, rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F));
-            postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()); //depth is common with previous stage
+            postProcessFBO->SetColorAttachment(0, {rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F), glm::vec4{}});
+            postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment()->Texture); //depth is common with previous stage
 
             {
                 sphereLightsUniforms = resources.sphereLightsShader->CreateAssociatedUniformStorage();
                 //sphereLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
-                sphereLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
-                sphereLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
-                sphereLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
-                sphereLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
+                sphereLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0)->Texture);
+                sphereLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1)->Texture);
+                sphereLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2)->Texture);
+                sphereLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment()->Texture);
             }
 
             {
                 skyLightsUniforms = resources.skyLightsShader->CreateAssociatedUniformStorage();
                 //skyLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
-                skyLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0));
-                skyLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1));
-                skyLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2));
-                skyLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment());
+                skyLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0)->Texture);
+                skyLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1)->Texture);
+                skyLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2)->Texture);
+                skyLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment()->Texture);
                 //skyLightsUniforms->SetUniform("u_environmentMap", 0);
             }
 
@@ -224,8 +224,8 @@ namespace AT2::Scene
             {
                 postprocessUniforms = resources.postprocessShader->CreateAssociatedUniformStorage();
                 //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-                postprocessUniforms->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0));
-                postprocessUniforms->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment());
+                postprocessUniforms->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0)->Texture);
+                postprocessUniforms->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment()->Texture);
             }
 
             dirtyFramebuffers = false;
@@ -241,44 +241,40 @@ namespace AT2::Scene
 
 
         // G-buffer pass
-        stateManager.BindFramebuffer(gBufferFBO);
-        renderer->ClearBuffer({0.0, 0.0, 1.0, 0.0});
-        renderer->ClearDepth(1.0);
+        gBufferFBO->Render([&](IRenderer& renderer) {
+            stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
+            stateManager.ApplyState(params.Wireframe ? PolygonRasterizationMode::Lines : PolygonRasterizationMode::Fill);
+            stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
+            stateManager.ApplyState(FaceCullMode {false, true});
 
-        stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
-        stateManager.ApplyState(params.Wireframe ? PolygonRasterizationMode::Lines : PolygonRasterizationMode::Fill);
-        stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
-        stateManager.ApplyState(FaceCullMode {false, true});
-
-        RenderVisitor rv {*this, *params.Camera};
-        params.Scene->GetRoot().Accept(rv);
+            RenderVisitor rv {*this, *params.Camera};
+            params.Scene->GetRoot().Accept(rv);
+        });
 
         // Lighting pass
-        stateManager.BindFramebuffer(postProcessFBO);
-        renderer->ClearBuffer({0.0, 0.0, 0.0, 0.0});
+        postProcessFBO->Render([&](IRenderer& renderer) {
+            stateManager.ApplyState(PolygonRasterizationMode::Fill);
+            stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::One});
+            stateManager.ApplyState(DepthState {CompareFunction::Greater, true, false});
+            stateManager.ApplyState(FaceCullMode {false, true});
 
-        stateManager.ApplyState(PolygonRasterizationMode::Fill);
-        stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::One});
-        stateManager.ApplyState(DepthState {CompareFunction::Greater, true, false});
-        stateManager.ApplyState(FaceCullMode {false, true});
+            LightRenderVisitor lrv {*this};
+            params.Scene->GetRoot().Accept(lrv);
 
-        LightRenderVisitor lrv {*this};
-        params.Scene->GetRoot().Accept(lrv);
+            DrawPointLights(lrv);
 
-        DrawPointLights(lrv);
-
-        stateManager.ApplyState(DepthState {CompareFunction::Greater, false, false});
-        DrawSkyLight(lrv, *params.Camera);
-
+            stateManager.ApplyState(DepthState {CompareFunction::Greater, false, false});
+            DrawSkyLight(lrv, *params.Camera);
+        });
 
         // Postprocess pass
-        stateManager.BindFramebuffer(params.TargetFramebuffer);
-        stateManager.ApplyState(DepthState {CompareFunction::Greater, false, true});
-        renderer->ClearBuffer({0.0, 0.0, 0.0, 0.0});
-        renderer->ClearDepth(0);
+        params.TargetFramebuffer->Render([&](IRenderer& renderer) {
+            stateManager.ApplyState(BlendMode {});
+            stateManager.ApplyState(DepthState {});
 
-        postprocessUniforms->SetUniform("u_tmExposure", params.Exposure);
-        DrawQuad(resources.postprocessShader, *postprocessUniforms);
+            postprocessUniforms->SetUniform("u_tmExposure", params.Exposure);
+            DrawQuad(resources.postprocessShader, *postprocessUniforms);
+        });
     }
 
     void SceneRenderer::SetupCamera(const Camera& camera, const ITime& time)

@@ -43,16 +43,6 @@ void OpenGL::GlStateManager::DoBind(const ITexture& texture, unsigned index)
     glBindTextureUnit(index, texture.GetId());
 }
 
-void OpenGL::GlStateManager::DoBind( IFrameBuffer& framebuffer )
-{
-    //TODO: error if not Gl framebuffer and remove dynamic_cast
-
-    if (auto* regularFramebuffer = dynamic_cast<GlFrameBuffer*>(&framebuffer))
-        regularFramebuffer->Bind();
-    else if (auto* defaultFramebuffer = dynamic_cast<GlScreenFrameBuffer*>(&framebuffer)) 
-        defaultFramebuffer->Bind();
-}
-
 void OpenGL::GlStateManager::DoBind( IShaderProgram& shader )
 {
     shader.Bind();

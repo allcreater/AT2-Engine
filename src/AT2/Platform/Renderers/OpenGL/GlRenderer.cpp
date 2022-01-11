@@ -61,6 +61,7 @@ GlRenderer::GlRenderer(GLADloadproc glFunctionsBinder)
     m_rendererCapabilities = std::make_unique<GlRendererCapabilities>();
     m_resourceFactory = std::make_unique<GlResourceFactory>(*this);
     m_stateManager = std::make_unique<GlStateManager>(*this);
+    m_defaultFramebuffer = std::make_unique<GlScreenFrameBuffer>(*this);
 }
 
 void GlRenderer::BeginFrame()
@@ -74,19 +75,7 @@ void GlRenderer::FinishFrame()
 
 IFrameBuffer& GlRenderer::GetDefaultFramebuffer() const
 {
-    return GlScreenFrameBuffer::Get();
-}
-
-void GlRenderer::ClearBuffer(const glm::vec4& color)
-{
-    glClearColor(color.r, color.g, color.b, color.a);
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-void GlRenderer::ClearDepth(float depth)
-{
-    glClearDepth(depth);
-    glClear(GL_DEPTH_BUFFER_BIT);
+    return *m_defaultFramebuffer;
 }
 
 void GlRenderer::DispatchCompute(glm::uvec3 threadGroupSize)
