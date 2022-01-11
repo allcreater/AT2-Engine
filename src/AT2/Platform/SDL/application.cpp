@@ -111,7 +111,7 @@ void ConcreteApplication::run()
             {
             case SDL_WINDOWEVENT:
 
-                switch (sdlEvent.window.type)
+                switch (sdlEvent.window.event)
                 {
                 case SDL_WINDOWEVENT_SIZE_CHANGED:
                 case SDL_WINDOWEVENT_RESIZED: 
@@ -121,6 +121,13 @@ void ConcreteApplication::run()
 	            case SDL_WINDOWEVENT_EXPOSED: 
                     DoOnWindow(sdlEvent.window.windowID, [](Window& wnd) { wnd.OnWindowRefreshing(); });
                 	break;
+
+                case SDL_WINDOWEVENT_CLOSE:
+                    DoOnWindow(sdlEvent.window.windowID, [](Window& wnd) {
+                        wnd.setCloseFlag(true);
+                        wnd.OnClosing();
+                    });
+                    break;
 
                 default: 
                     break;

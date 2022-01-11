@@ -237,14 +237,9 @@ void Window::SetupCallbacks()
     });
 }
 
-void Window::Close()
+void Window::PlatformClose()
 {
     std::lock_guard lock {mutex};
 
-    assert(window_impl);
-
-    graphicsContext = nullptr; // must be deinitialized before window itself
-    glfwDestroyWindow(window_impl);
-
-    window_impl = nullptr;
+    glfwDestroyWindow(std::exchange(window_impl, nullptr));
 }

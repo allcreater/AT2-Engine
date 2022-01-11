@@ -110,13 +110,12 @@ Window& Window::setSize(glm::ivec2 size)
     return *this;
 }
 
-void Window::Close()
+void Window::PlatformClose()
 {
     std::lock_guard lock {mutex};
 
     assert(window_impl);
 
-    OnClosing();
-    SDL_DestroyWindow(window_impl);
-    window_impl = nullptr;
+    SDL_DestroyWindow(std::exchange(window_impl, nullptr));
+
 }

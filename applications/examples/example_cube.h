@@ -113,10 +113,6 @@ private:
         m_cubeRotation = glm::normalize(m_cubeRotation * glm::quat {angularSpeed});
     }
 
-    void OnClosing() override
-    {
-    }
-
     void OnUpdate(AT2::Seconds dt) override
     {
         if (getWindow().isKeyDown(AT2::Keys::Key_Escape))

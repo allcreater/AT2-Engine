@@ -210,6 +210,18 @@ namespace AT2
             graphicsContext->swapBuffers();
         }
 
+        virtual void PlatformClose() = 0;
+
+        void Close() 
+        {
+            graphicsContext->makeCurrent();
+
+            windowContext.reset();
+            graphicsContext.reset();
+
+            PlatformClose();
+        }
+
     protected:
         std::string window_label {"New window"};
 

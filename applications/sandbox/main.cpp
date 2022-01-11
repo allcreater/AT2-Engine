@@ -223,10 +223,6 @@ private:
                                             glm::vec3 {1.0, 0.0, 0.0}));
     }
 
-    void OnClosing() override
-    { 
-    }
-
     void OnUpdate(AT2::Seconds dt) override
     {
         m_time.Update(dt);

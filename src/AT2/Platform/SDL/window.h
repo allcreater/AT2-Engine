@@ -42,9 +42,9 @@ namespace AT2::SDL
         Window(const ContextParameters& contextParameters, glm::ivec2 initialSize);
 
         ///@thread_safety main thread
-        void Close();
-        ///@thread_safety any thread
+        void PlatformClose() override;
 
+        ///@thread_safety any thread
         static Window* FromNativeWindow(SDL_Window* window);
 
     private:

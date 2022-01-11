@@ -47,7 +47,7 @@ namespace AT2::GLFW
         void MakeContextCurrent();
 
         ///@thread_safety main thread
-        void Close();
+        void PlatformClose() override;
 
         static Window* FromNativeWindow(const GLFWwindow* window);
 
