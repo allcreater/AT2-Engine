@@ -9,8 +9,8 @@ environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
   matrix:
-  - cmake_options: -DUSE_SDL_INSTEADOF_SFML=OFF
-  - cmake_options: -DUSE_SDL_INSTEADOF_SFML=ON
+  - cmake_options: -DUSE_SDL_INSTEADOF_GLFW=OFF
+  - cmake_options: -DUSE_SDL_INSTEADOF_GLFW=ON
 
 for:
 -

@@ -4,7 +4,7 @@ project (AT2_all)
 
 option(BUILD_TESTING "Use GTest" OFF)
 option(USE_ASSIMP "Use ASSIMP library" ON)
-option(USE_SDL_INSTEADOF_SFML "When enabled, SDL will be used instead of SFML" OFF)
+option(USE_SDL_INSTEADOF_GLFW "When enabled, SDL will be used instead of SFML" OFF)
 option(USE_PLATFORM_HACKS "speed-up execution in exchange for some non-portable code" OFF)
 
 # Setup conan packet manager
@@ -22,7 +22,7 @@ include (${CMAKE_BINARY_DIR}/conan.cmake)
 conan_cmake_run (   CONANFILE conanfile.py 
                     BUILD missing BASIC_SETUP
                     OPTIONS
-                        "use_sdl = ${USE_SDL_INSTEADOF_SFML}"
+                        "use_sdl = ${USE_SDL_INSTEADOF_GLFW}"
                         "use_gtest = ${BUILD_TESTING}"
 )
 

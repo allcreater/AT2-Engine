@@ -3,7 +3,7 @@
 #include <Renderers/Metal/Renderer.h>
 
 using namespace AT2;
-#ifdef USE_SDL_INSTEADOF_SFML
+#ifdef USE_SDL_INSTEADOF_GLFW
 	#include "SDL/application.h"
 	using namespace AT2::SDL;
 #else
