@@ -90,137 +90,39 @@ namespace AT2
         std::function<void(glm::dvec2)> MouseScrollCallback {};
 
     protected:
-        void OnInitialize() const
-        {
-            if (InitializeCallback)
-                InitializeCallback();
-        }
+        void OnInitialize() const;
 
-        void OnUpdate(Seconds deltaTime) const
-        {
-            if (UpdateCallback)
-                UpdateCallback(deltaTime);
-        }
+        void OnUpdate(Seconds deltaTime) const;
 
-        void OnRender(Seconds deltaTime) const
-        {
-            if (RenderCallback)
-                RenderCallback(deltaTime);
-        }
+        void OnRender(Seconds deltaTime) const;
 
-        void OnWindowRefreshing() const
-        {
-            if (RefreshingCallback)
-                RefreshingCallback();
-        }
+        void OnWindowRefreshing() const;
 
-        void OnKeyDown(int key) const
-        {
-            if (KeyDownCallback)
-                KeyDownCallback(key);
-        }
+        void OnKeyDown(int key) const;
 
-        void OnKeyUp(int key) const
-        {
-            if (KeyUpCallback)
-                KeyUpCallback(key);
-        }
+        void OnKeyUp(int key) const;
 
-        void OnKeyRepeat(int key) const
-        {
-            if (KeyRepeatCallback)
-                KeyRepeatCallback(key);
-        }
+        void OnKeyRepeat(int key) const;
 
-        void OnResize(glm::ivec2 newSize) const
-        {
-            if (ResizeCallback)
-                ResizeCallback(newSize);
+        void OnResize(glm::ivec2 newSize) const;
+        void OnClosing() const;
 
-            window_size = newSize;
-        }
-        void OnClosing() const
-        {
-            if (ClosingCallback)
-                ClosingCallback();
-        }
+        void OnMouseMove(glm::dvec2 mousePosition) const;
 
-        void OnMouseMove(glm::dvec2 mousePosition) const
-        {
-            mousePosition.y = window_size.y - mousePosition.y; //WTF?
+        void OnMouseDown(int button) const;
 
-            if (MouseMoveCallback)
-                MouseMoveCallback(MousePos {mousePosition, previous_mouse_pos});
+        void OnMouseUp(int button) const;
 
-            previous_mouse_pos = mousePosition;
-        }
-
-        void OnMouseDown(int button) const
-        {
-            if (MouseDownCallback)
-                MouseDownCallback(button);
-        }
-
-        void OnMouseUp(int button) const
-        {
-            if (MouseUpCallback)
-                MouseUpCallback(button);
-        }
-
-        void OnMouseScroll(const glm::dvec2& scrollDirection) const
-        {
-            if (MouseScrollCallback)
-                MouseScrollCallback(scrollDirection);
-        }
+        void OnMouseScroll(const glm::dvec2& scrollDirection) const;
 
         // Produces MouseMove event by relative mouse position
-        void MoveMouse(const glm::vec2& mouseMove) const
-        {
-            const auto mousePosition = previous_mouse_pos + mouseMove;
+        void MoveMouse(const glm::vec2& mouseMove) const;
 
-            if (MouseMoveCallback)
-                MouseMoveCallback(MousePos {mousePosition, previous_mouse_pos});
-
-            previous_mouse_pos = mousePosition;
-        }
-
-        void UpdateAndRender()
-        {
-            graphicsContext->makeCurrent();
-
-            {
-                if (firstUpdate)
-                {
-                    firstUpdate = false;
-                    previous_render_time = std::chrono::steady_clock::now();
-
-                    OnInitialize();
-                    OnResize(getSize());
-                }
-
-                //TODO: encapsulate time in ITime
-                const auto currentTime = std::chrono::steady_clock::now();
-                OnUpdate(currentTime - previous_render_time);
-                if (getSize().x > 0 && getSize().y > 0)
-                    OnRender(currentTime - previous_render_time);
-
-                previous_render_time = currentTime;
-            }
-
-            graphicsContext->swapBuffers();
-        }
+        void UpdateAndRender();
 
         virtual void PlatformClose() = 0;
 
-        void Close() 
-        {
-            graphicsContext->makeCurrent();
-
-            windowContext.reset();
-            graphicsContext.reset();
-
-            PlatformClose();
-        }
+        void Close();
 
     protected:
         std::string window_label {"New window"};

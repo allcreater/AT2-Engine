@@ -75,6 +75,7 @@ set(COMMON_SOURCES_LIST
     "callback_types.cpp"
     "Common.h"
     "Foundation.h"
+    "Foundation.cpp"
 )
 
 if (USE_SDL_INSTEADOF_SFML)
