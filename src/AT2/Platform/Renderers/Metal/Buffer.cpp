@@ -24,14 +24,16 @@ void Buffer::SetDataRaw(std::span<const std::byte> data)
     if (data.empty())
         buffer.reset();
     else
-        buffer = renderer.getDevice()->newBuffer(data.data(), data.size(), MTL::ResourceOptionCPUCacheModeDefault);
+        buffer = Own(renderer.getDevice()->newBuffer(data.data(), data.size(), MTL::ResourceOptionCPUCacheModeDefault));
 }
 
 std::span<std::byte> Buffer::Map(BufferUsage usage)
 {
     if (!buffer)
         throw AT2BufferException("buffer is empty");
-
+    //auto sem = dispatch_semaphore_create(1);
+    //dispatch_semaphore_wait()
+    //dispatch_semaphore_signal(sem);
     return {static_cast<std::byte*>(buffer->contents()), buffer->length()};
 }
 

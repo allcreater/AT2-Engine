@@ -31,14 +31,7 @@ public:
 
     [[nodiscard]] IFrameBuffer& GetDefaultFramebuffer() const override;
 
-public: // for internal use only
-    struct FrameContext
-    {
-        MtlPtr<CA::MetalDrawable> drawable;
-        MtlPtr<MTL::CommandBuffer> commandBuffer;
-        MtlPtr<MTL::RenderCommandEncoder> renderEncoder;
-    };
-    
+public: // for internal use only    
     MTL::Device* getDevice() noexcept { return device.get(); }
     MTL::CommandQueue* getCommandQueue() noexcept { return commandQueue.get(); }
     
@@ -65,7 +58,6 @@ private:
     MtlPtr<MTL::RenderPipelineDescriptor> m_buildingState;
     bool m_needNewState = true;
     
-    std::optional<FrameContext> frameContext;
 };
 
 }

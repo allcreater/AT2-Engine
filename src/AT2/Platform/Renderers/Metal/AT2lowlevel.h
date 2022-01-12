@@ -58,7 +58,7 @@ public:
     void reset(T* newPtr = nullptr) noexcept { MtlPtr{newPtr}.swap(*this); }
     void swap(MtlPtr& other) noexcept { std::swap(ptr, other.ptr); }
     
-    static MtlPtr adopt(T* ptr)
+    static MtlPtr capture_ptr(T* ptr)
     {
         MtlPtr wrapper;
         wrapper.ptr = ptr;
@@ -83,9 +83,15 @@ private:
 };
 
 template <typename T>
+auto Own(T* ptr)
+{
+    return MtlPtr<T>::capture_ptr(ptr);
+}
+
+template <typename T>
 auto ConstructMetalObject()
 {
-    return MtlPtr<T>::adopt(T::alloc()->init());
+    return Own(T::alloc()->init());
 }
 
 inline MtlPtr<NS::String> MakeMetalString(std::string_view view)

@@ -64,7 +64,7 @@ constexpr size_t GetRowLength(ExternalTextureFormat format, size_t width)
 
 MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format) : m_flavor(flavor)
 {
-    auto* descriptor = MTL::TextureDescriptor::alloc()->init();
+    auto descriptor = ConstructMetalObject<MTL::TextureDescriptor>();
     descriptor->setPixelFormat(format);
     descriptor->setMipmapLevelCount(1);
     descriptor->setHeight(1);
@@ -195,18 +195,14 @@ MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat form
             }},
         flavor);
     
-    m_texture = renderer.getDevice()->newTexture(descriptor);
-    descriptor->release();
+    m_texture = Own(renderer.getDevice()->newTexture(descriptor.get()));
 }
 
-MtlTexture::~MtlTexture()
-{
-	
-}
+MtlTexture::~MtlTexture() = default;
 
 void MtlTexture::BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
 {
-	
+
 }
 
 void MtlTexture::BuildMipmaps()

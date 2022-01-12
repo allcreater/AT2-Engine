@@ -57,7 +57,7 @@ Renderer::Renderer(void* metalLayer)
     m_stateManager = std::make_unique<MtlStateManager>(*this);
     m_defaultFramebuffer = std::make_unique<MetalScreenFrameBuffer>(*this, swapchain);
     
-    commandQueue.reset(device->newCommandQueue());
+    commandQueue = Own(device->newCommandQueue());
 }
 
 void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)
@@ -67,11 +67,11 @@ void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)
 
 void Renderer::Draw(Primitives::Primitive type, size_t first, long int count, int numInstances, int baseVertex)
 {
-    /*
-    assert(frameContext);
-    
     if (std::holds_alternative<Primitives::Patches>(type))
         throw AT2Exception("patches rendering is not implemented yet");
+    
+    /*
+    assert(frameContext);
     
     //TODO: to function
     if (m_needNewState || !m_activeState)

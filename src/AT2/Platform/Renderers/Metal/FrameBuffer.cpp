@@ -4,52 +4,54 @@
 using namespace AT2;
 using namespace AT2::Metal;
 
-namespace
+
+void FrameBuffer::SetAttachmentTexture(MTL::RenderPassAttachmentDescriptor* attachment, MTL::Texture* nativeTexture)
 {
-    void SetAttachmentTexture(auto* attachment, MTL::Texture* nativeTexture)
+    if (nativeTexture)
     {
-        if (nativeTexture)
-        {
-            attachment->setTexture(nativeTexture);
-            attachment->setStoreAction(MTL::StoreActionStore);
-        }
-        else
-        {
-            attachment->setStoreAction(MTL::StoreActionDontCare);
-        }
+        attachment->setTexture(nativeTexture);
+        attachment->setStoreAction(MTL::StoreActionStore);
     }
-
-    void SetAttachmentTexture(auto* attachment, ITexture* texture)
+    else
     {
-        auto* mtlTexture = dynamic_cast<MtlTexture*>(texture);
-        if (!mtlTexture && texture)
-            throw AT2Exception("texture is not MtlTexture");
-        
-        SetAttachmentTexture(attachment, mtlTexture->getNativeHandle());
+        attachment->setStoreAction(MTL::StoreActionDontCare);
     }
-
-    void SetAttachmentClearColor(MTL::RenderPassColorAttachmentDescriptor* attachment, const std::optional<glm::vec4>& clearColor)
-    {
-        if (clearColor)
-        {
-            attachment->setClearColor(MTL::ClearColor(clearColor->r, clearColor->g, clearColor->b, clearColor->a));
-            attachment->setLoadAction(MTL::LoadActionClear);
-        }
-        else
-            attachment->setLoadAction(MTL::LoadActionDontCare);
-    }
-
-    void SetAttachmentClearDepth(MTL::RenderPassDepthAttachmentDescriptor* attachment, const std::optional<float>& clearDepth)
-    {
-        if (clearDepth)
-        {
-            attachment->setClearDepth(clearDepth.value());
-            attachment->setLoadAction(MTL::LoadActionClear);
-        }
-        else
-            attachment->setLoadAction(MTL::LoadActionDontCare);
-    }
+    
+    //TODO what if size different from attachment to attachment?
+    m_size = {nativeTexture->width(), nativeTexture->height()};
 }
+
+void FrameBuffer::SetAttachmentTexture(MTL::RenderPassAttachmentDescriptor* attachment, ITexture* texture)
+{
+    auto* mtlTexture = dynamic_cast<MtlTexture*>(texture);
+    if (!mtlTexture && texture)
+        throw AT2Exception("texture is not MtlTexture");
+    
+    SetAttachmentTexture(attachment, mtlTexture->getNativeHandle());
+}
+
+void FrameBuffer::SetAttachmentClearColor(MTL::RenderPassColorAttachmentDescriptor* attachment, const std::optional<glm::vec4>& clearColor)
+{
+    if (clearColor)
+    {
+        attachment->setClearColor(MTL::ClearColor(clearColor->r, clearColor->g, clearColor->b, clearColor->a));
+        attachment->setLoadAction(MTL::LoadActionClear);
+    }
+    else
+        attachment->setLoadAction(MTL::LoadActionDontCare);
+}
+
+void FrameBuffer::SetAttachmentClearDepth(MTL::RenderPassDepthAttachmentDescriptor* attachment, const std::optional<float>& clearDepth)
+{
+    if (clearDepth)
+    {
+        attachment->setClearDepth(clearDepth.value());
+        attachment->setLoadAction(MTL::LoadActionClear);
+    }
+    else
+        attachment->setLoadAction(MTL::LoadActionDontCare);
+}
+
 
 FrameBuffer::FrameBuffer(Renderer& renderer, size_t maxAttachments)
 : m_renderer{renderer}
@@ -78,7 +80,6 @@ IFrameBuffer::ColorAttachment FrameBuffer::GetColorAttachment(unsigned int attac
 void FrameBuffer::SetDepthAttachment(DepthAttachment attachment)
 {
     auto* depthAttachment = m_renderPassDescriptor->depthAttachment();
-
     SetAttachmentTexture(depthAttachment, attachment.Texture.get());
     SetAttachmentClearDepth(depthAttachment, attachment.ClearDepth);
 
@@ -103,23 +104,18 @@ void FrameBuffer::SetClearDepth(std::optional<float> depth)
 
 void FrameBuffer::Render(RenderFunc renderFunc) 
 {
-    auto* commandBuffer = m_renderer.getCommandQueue()->commandBuffer();
-    auto* renderEncoder = commandBuffer->renderCommandEncoder(m_renderPassDescriptor.get());
-    
+    auto commandBuffer = Own(m_renderer.getCommandQueue()->commandBuffer());
+    auto renderEncoder = Own(commandBuffer->renderCommandEncoder(m_renderPassDescriptor.get()));
+ 
     renderFunc(m_renderer);
     
     renderEncoder->endEncoding();
-    OnCommit(commandBuffer);
+    OnCommit(commandBuffer.get());
     commandBuffer->commit();
 }
 
 
 // MetalScreenFrameBuffer
-
-glm::ivec2 MetalScreenFrameBuffer::GetActualSize() const noexcept
-{
-    return {};
-}
 
 void MetalScreenFrameBuffer::Render(RenderFunc renderFunc)
 {

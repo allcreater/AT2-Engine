@@ -33,6 +33,11 @@ namespace AT2::Metal
         
         MtlPtr<MTL::RenderPassDescriptor> m_renderPassDescriptor;
         
+        void SetAttachmentTexture(MTL::RenderPassAttachmentDescriptor* attachment, MTL::Texture* nativeTexture);
+        void SetAttachmentTexture(MTL::RenderPassAttachmentDescriptor* attachment, ITexture* texture);
+        static void SetAttachmentClearColor(MTL::RenderPassColorAttachmentDescriptor* attachment, const std::optional<glm::vec4>& clearColor);
+        static void SetAttachmentClearDepth(MTL::RenderPassDepthAttachmentDescriptor* attachment, const std::optional<float>& clearDepth);
+        
     private:
         Renderer& m_renderer;
         glm::ivec2 m_size {0, 0};
@@ -47,8 +52,6 @@ namespace AT2::Metal
         NON_COPYABLE_OR_MOVABLE(MetalScreenFrameBuffer)
         
         MetalScreenFrameBuffer(Renderer& renderer, CA::MetalLayer* swapChain) : FrameBuffer{renderer, 1}, m_swapChain{swapChain} {}
-
-        [[nodiscard]] glm::ivec2 GetActualSize() const noexcept override;
         
         void Render(RenderFunc renderFunc) override;
         
