@@ -10,8 +10,8 @@ namespace AT2::Resources
     public:
         //TODO: make async
         //TODO: caching!!!
-        static TextureRef LoadTexture(const std::shared_ptr<IRenderer>& renderer, const std::filesystem::path& path);
-        static TextureRef LoadTexture(const std::shared_ptr<IRenderer>& renderer, std::span<const std::byte> data);
+        static TextureRef LoadTexture(IVisualizationSystem& renderer, const std::filesystem::path& path);
+        static TextureRef LoadTexture(IVisualizationSystem& renderer, std::span<const std::byte> data);
     };
 
 } // namespace AT2

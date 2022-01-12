@@ -35,7 +35,7 @@ namespace AT2::OpenGL
         mutable std::vector<std::weak_ptr<IReloadable>> m_reloadableResourcesList;
     };
 
-    class GlRenderer : public IRenderer
+    class GlRenderer : public IVisualizationSystem, public IRenderer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(GlRenderer)
@@ -60,6 +60,8 @@ namespace AT2::OpenGL
         void FinishFrame() override;
 
         [[nodiscard]] IFrameBuffer& GetDefaultFramebuffer() const override;
+
+        IVisualizationSystem& GetVisualizationSystem() override { return *this; }
 
     private:
         static void __stdcall GlErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,

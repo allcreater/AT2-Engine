@@ -5,7 +5,7 @@
 
 using namespace AT2;
 
-StateManager::StateManager(IRenderer& renderer)
+StateManager::StateManager(IVisualizationSystem& renderer)
     : m_renderer(renderer)
 	, m_freeTextureSlots(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
     , m_activeTextures(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())

@@ -15,11 +15,11 @@ namespace AT2
         const IWindow& getWindow() const override { return *m_window; }
 
         //Renderer and resources should not be exposed outside of the WindowContextBase
-        const std::shared_ptr<IRenderer>& getRenderer() const noexcept { return m_renderer; }
+        //It triggers resource loaders refactoring, but it's okay
 
-        virtual void OnInitialized() {}
+        virtual void OnInitialized(IVisualizationSystem& visualizationSystem) {}
         virtual void OnUpdate(Seconds deltaTime) = 0;
-        virtual void OnRender(Seconds deltaTime) = 0;
+        virtual void OnRender(Seconds deltaTime, IVisualizationSystem& visualizationSystem) = 0;
         virtual void OnWindowRefreshing() {}
         virtual void OnKeyDown(int key) {}
         virtual void OnKeyUp(int key) {}
@@ -34,7 +34,7 @@ namespace AT2
 
     private:
         IWindow* m_window = nullptr; // guaranteed to be not null after initialization
-        std::shared_ptr<IRenderer> m_renderer;
+        std::unique_ptr<IVisualizationSystem> m_visualizationSystem;
     };
 
 	class SingleWindowApplication final

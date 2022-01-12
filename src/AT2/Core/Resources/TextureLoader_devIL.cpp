@@ -94,7 +94,7 @@ namespace
     }
 
 
-    static std::shared_ptr<ITexture> Load(const std::shared_ptr<IRenderer>& renderer,
+    static std::shared_ptr<ITexture> Load(IVisualizationSystem& renderer,
                                           const std::function<bool()>& imageLoader)
     {
         const bool enableAutomipmaps = true;
@@ -133,7 +133,7 @@ namespace
 
         if (imageInfo.Depth > 1)
         {
-            auto texture = renderer->GetResourceFactory().CreateTexture(
+            auto texture = renderer.GetResourceFactory().CreateTexture(
                 Texture3D {size, storageLevels}, GetExternalFormat(imageInfo.Format, imageInfo.Type));
 
             for (unsigned int level = 0; level < mipmapLevels; ++level)
@@ -155,7 +155,7 @@ namespace
         }
 
         //Texture 2d
-        auto texture = renderer->GetResourceFactory().CreateTexture(
+        auto texture = renderer.GetResourceFactory().CreateTexture(
             Texture2D {glm::xy(size), storageLevels}, GetExternalFormat(imageInfo.Format, imageInfo.Type));
 
         for (unsigned int level = 0; level < mipmapLevels; ++level)
@@ -176,12 +176,12 @@ namespace
     }
 }; // namespace
 
-TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, const std::filesystem::path& path)
+TextureRef TextureLoader::LoadTexture(IVisualizationSystem& renderer, const std::filesystem::path& path)
 {
     return Load(renderer, [filename = path.generic_u8string()] { return ilLoadImage(reinterpret_cast<const char*>(filename.c_str())) == IL_TRUE; });
 }
 
-TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, std::span<const std::byte> data)
+TextureRef TextureLoader::LoadTexture(IVisualizationSystem& renderer, std::span<const std::byte> data)
 {
     if (data.size() > std::numeric_limits<ILuint>::max())
         throw AT2TextureException( "DevIL does not support images more than 4GB");

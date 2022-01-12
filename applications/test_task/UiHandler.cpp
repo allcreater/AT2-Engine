@@ -76,14 +76,13 @@ private:
     std::string m_hidingCurveName, m_appearingCurveName;
 };
 
-UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_ptr<Node> node) :
-    m_renderer(renderer), m_uiRoot(std::move(node))
+UiRenderer::UiRenderer(IVisualizationSystem& renderer, std::shared_ptr<Node> node) : m_uiRoot(std::move(node))
 {
-    auto postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+    auto postprocessShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
         {R"(resources/shaders/background.vs.glsl)", R"(resources/shaders/background.fs.glsl)"});
 
     const auto texture = Resources::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
-    m_quadDrawable = Utils::MakeFullscreenQuadMesh(*renderer);
+    m_quadDrawable = Utils::MakeFullscreenQuadMesh(renderer);
     m_quadDrawable->Shader = postprocessShader;
     {
         auto& uniformStorage = m_quadDrawable->GetOrCreateDefaultMaterial();
@@ -91,31 +90,25 @@ UiRenderer::UiRenderer(const std::shared_ptr<IRenderer>& renderer, std::shared_p
     }
 }
 
-void UiRenderer::Draw()
+void UiRenderer::Draw(IRenderer& renderer)
 {
-    if (auto renderer = m_renderer.lock())
-    {
-        renderer->SetViewport(AABB2d {{}, m_windowSize});
-        m_quadDrawable->GetOrCreateDefaultMaterial().SetUniform("u_Color", glm::vec4(1.0f));
-        Utils::MeshRenderer::DrawMesh(*renderer, *m_quadDrawable, m_quadDrawable->Shader);
+    renderer.SetViewport(AABB2d {{}, m_windowSize});
+    m_quadDrawable->GetOrCreateDefaultMaterial().SetUniform("u_Color", glm::vec4(1.0f));
+    Utils::MeshRenderer::DrawMesh(renderer, *m_quadDrawable, m_quadDrawable->Shader);
 
-        m_uiRoot->TraverseBreadthFirst([this](const std::shared_ptr<Node>& node) { RenderNode(*node); });
-    }
+    m_uiRoot->TraverseBreadthFirst([&](const std::shared_ptr<Node>& node) { RenderNode(renderer, * node); });
 }
 
-void UiRenderer::RenderNode(const Node& node)
+void UiRenderer::RenderNode(IRenderer& renderer, const Node& node)
 {
-    if (auto renderer = m_renderer.lock())
-    {
-        const auto aabb = node.GetScreenPosition();
-        renderer->SetViewport(aabb);
+    const auto aabb = node.GetScreenPosition();
+    renderer.SetViewport(aabb);
 
-        //m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
-        //m_quadDrawable->Draw(m_renderer.lock());
+    //m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
+    //m_quadDrawable->Draw(m_renderer.lock());
 
-        if (auto nr = node.GetNodeRenderer().lock())
-            nr->Draw(*renderer);
-    }
+    if (auto nr = node.GetNodeRenderer().lock())
+        nr->Draw(renderer);
 }
 
 glm::vec4 UiRenderer::DebugColor(const Node& node)
@@ -125,7 +118,7 @@ glm::vec4 UiRenderer::DebugColor(const Node& node)
     return glm::vec4((h % 317) / 317.0, (h % 413) / 413.0, (h % 511) / 511.0, 1.0);
 }
 
-void UiHub::Init(const std::shared_ptr<AT2::IRenderer>& renderer)
+void UiHub::Init(AT2::IVisualizationSystem& renderer)
 {
     std::shared_ptr<Node> panel, button1, button2;
 
@@ -148,8 +141,8 @@ void UiHub::Init(const std::shared_ptr<AT2::IRenderer>& renderer)
         curve.SetData(GenerateCurve(20000, 3.0, 40));
         curve.SetColor(glm::vec4(0.0, 0.0, 1.0, 1.0));
     }
-    auto mesh = MeshRef {Utils::MakeFullscreenQuadMesh(*renderer)};
-    mesh->Shader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+    auto mesh = MeshRef {Utils::MakeFullscreenQuadMesh(renderer)};
+    mesh->Shader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
         {R"(resources/shaders/window.vs.glsl)", R"(resources/shaders/window.fs.glsl)"});
 
     m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
@@ -222,7 +215,7 @@ void UiHub::Init(const std::shared_ptr<AT2::IRenderer>& renderer)
     };
 }
 
-void UiHub::Render(const std::shared_ptr<IRenderer>& renderer, AT2::Seconds dt)
+void UiHub::Render(IRenderer& renderer, AT2::Seconds dt)
 {
     for (auto& animation : m_animationsList)
         animation->Animate(dt);
@@ -230,7 +223,7 @@ void UiHub::Render(const std::shared_ptr<IRenderer>& renderer, AT2::Seconds dt)
     m_animationsList.remove_if([](std::unique_ptr<IAnimation>& animation) { return animation->IsFinished(); });
 
     m_uiRenderer->SetWindowSize(m_windowSize);
-    m_uiRenderer->Draw();
+    m_uiRenderer->Draw(renderer);
 }
 
 void UiHub::Resize(const glm::ivec2& newSize)

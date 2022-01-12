@@ -1,9 +1,10 @@
 #include "GlFrameBuffer.h"
+#include "GlRenderer.h"
 
 using namespace AT2;
 using namespace AT2::OpenGL;
 
-GlFrameBuffer::GlFrameBuffer(IRenderer& renderer)
+GlFrameBuffer::GlFrameBuffer(GlRenderer& renderer)
     : m_renderer(renderer)
     , m_colorAttachments(renderer.GetRendererCapabilities().GetMaxNumberOfColorAttachments())
 {
@@ -83,14 +84,14 @@ IFrameBuffer::DepthAttachment GlFrameBuffer::GetDepthAttachment() const
     return m_depthAttachment;
 }
 
-void AT2::OpenGL::GlFrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
+void GlFrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
 {
     for (auto& attachment : m_colorAttachments)
         attachment.ClearColor = color;
 
 }
 
-void AT2::OpenGL::GlFrameBuffer::SetClearDepth(std::optional<float> depth) 
+void GlFrameBuffer::SetClearDepth(std::optional<float> depth) 
 {
     m_depthAttachment.ClearDepth = depth;
 }
@@ -135,7 +136,7 @@ void GlFrameBuffer::Render(RenderFunc renderFunc)
 
 // GlScreenFrameBuffer
 
-GlScreenFrameBuffer::GlScreenFrameBuffer(IRenderer& renderer) : m_renderer(renderer) {}
+GlScreenFrameBuffer::GlScreenFrameBuffer(GlRenderer& renderer) : m_renderer(renderer) {}
 
 void GlScreenFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment)
 {

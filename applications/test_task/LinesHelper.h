@@ -14,8 +14,8 @@ public:
     void Clear();
 
 private:
-    void Init(const AT2::IRenderer& renderer);
-    void UpdateVAO(const AT2::IRenderer& renderer);
+    void Init(const AT2::IVisualizationSystem& renderer);
+    void UpdateVAO(const AT2::IVisualizationSystem& renderer);
 
 private:
     std::shared_ptr<AT2::IVertexArray> m_VAO;

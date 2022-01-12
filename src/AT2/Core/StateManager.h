@@ -10,7 +10,7 @@ namespace AT2
     class StateManager : public IStateManager
     {
     public:
-        StateManager(IRenderer& renderer);
+        StateManager(IVisualizationSystem& renderer);
 
     public:
         void BindTextures(const TextureSet& _textures) override;
@@ -30,14 +30,14 @@ namespace AT2
         [[nodiscard]] std::optional<unsigned> GetActiveTextureIndex(std::shared_ptr<const ITexture> texture) const noexcept override;
 
     protected:
-        IRenderer& GetRenderer() const { return m_renderer; }
+        IVisualizationSystem& GetRenderer() const { return m_renderer; }
 
         virtual void DoBind(const ITexture& texture, unsigned index) = 0;
         virtual void DoBind(IShaderProgram& shader) = 0;
         virtual void DoBind(IVertexArray& vertexArray) = 0;
 
     private:
-        IRenderer& m_renderer;
+        IVisualizationSystem& m_renderer;
 
         std::vector<unsigned int> m_freeTextureSlots;
         lru_cache<std::shared_ptr<const ITexture>, unsigned int> m_activeTextures;

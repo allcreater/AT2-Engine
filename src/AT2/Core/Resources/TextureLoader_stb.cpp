@@ -56,7 +56,7 @@ namespace
     }
 }; // namespace
 
-TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, const std::filesystem::path& path)
+TextureRef TextureLoader::LoadTexture(IVisualizationSystem& renderer, const std::filesystem::path& path)
 {
 #ifdef USE_PLATFORM_HACKS
     // not so gracefully as with iostream, but much faster under debugger
@@ -83,7 +83,7 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
 #endif
 }
 
-TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer, std::span<const std::byte> rawData)
+TextureRef TextureLoader::LoadTexture(IVisualizationSystem& renderer, std::span<const std::byte> rawData)
 {
     auto data = Utils::reinterpret_span_cast<const stbi_uc>(rawData);
     auto [format, size] = DetermineExternalFormat(data);
@@ -115,7 +115,7 @@ TextureRef TextureLoader::LoadTexture(const std::shared_ptr<IRenderer>& renderer
     {
         const auto numMipmaps = static_cast<unsigned>(log(std::max(size.x, size.y)) / log(2));
 
-        result = renderer->GetResourceFactory().CreateTexture(Texture2D {size, numMipmaps}, format);
+        result = renderer.GetResourceFactory().CreateTexture(Texture2D {size, numMipmaps}, format);
         result->SubImage2D({0, 0}, glm::xy(size), 0, format, parsedData);
         result->BuildMipmaps();
         stbi_image_free(parsedData);

@@ -32,41 +32,41 @@ public:
     Sandbox() = default;
 
 private:
-    std::shared_ptr<AT2::ITexture> ComputeHeightmap(glm::uvec2 resolution) const
+    std::shared_ptr<AT2::ITexture> ComputeHeightmap(AT2::IVisualizationSystem& visualizationSystem, glm::uvec2 resolution) const
     {
         constexpr auto localGroupSize = glm::uvec3 {32, 32, 1};
 
         auto resultTex =
-            getRenderer()->GetResourceFactory().CreateTexture(Texture2D {resolution}, AT2::TextureFormats::RGBA16F);
+            visualizationSystem.GetResourceFactory().CreateTexture(Texture2D {resolution}, AT2::TextureFormats::RGBA16F);
         resultTex->SetWrapMode(AT2::TextureWrapParams::Uniform(AT2::TextureWrapMode::ClampToBorder));
         auto shader =
-            getRenderer()->GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
+            visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 
-        getRenderer()->GetStateManager().BindShader(shader);
+        visualizationSystem.GetStateManager().BindShader(shader);
 
         shader->SetUniform("u_result", 0);
 
         resultTex->BindAsImage(0, 0, 0, false);
-        getRenderer()->DispatchCompute(glm::uvec3 {resolution, 1} / localGroupSize);
+        visualizationSystem.DispatchCompute(glm::uvec3 {resolution, 1} / localGroupSize);
 //        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
         return resultTex;
     }
 
-    void OnInitialized() override
+    void OnInitialized( AT2::IVisualizationSystem& visualizationSystem ) override
     {
         getWindow().setVSyncInterval(1).setCursorMode(CursorMode::Disabled);
 
-        TerrainShader = getRenderer()->GetResourceFactory().CreateShaderProgramFromFiles(
+        TerrainShader = visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/shaders/terrain.vs.glsl", "resources/shaders/terrain.tcs.glsl",
              "resources/shaders/terrain.tes.glsl", "resources/shaders/terrain.fs.glsl"});
 
 
-        MeshShader = getRenderer()->GetResourceFactory().CreateShaderProgramFromFiles(
+        MeshShader = visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/shaders/mesh.vs.glsl", "resources/shaders/mesh.fs.glsl"});
 
 
-        Noise3Tex = getRenderer()->GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, AT2::TextureFormats::RGBA8);
+        Noise3Tex = visualizationSystem.GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, AT2::TextureFormats::RGBA8);
         {
             const auto arr = std::make_unique<std::uint8_t[]>(Noise3Tex->GetDataLength());
             
@@ -78,14 +78,14 @@ private:
             Noise3Tex->SubImage3D({}, Noise3Tex->GetSize(), 0, AT2::TextureFormats::RGBA8, arr.get());
         }
 
-        auto GrassTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
-        auto NormalMapTex = TextureLoader::LoadTexture(getRenderer(), "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
-        //auto RockTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Color.jpg");
-        //auto RockNormalTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Normal.jpg");
-        //auto RockDisplacementTex = TextureLoader::LoadTexture(getRenderer(), "resources/Rock035_2K-JPG/Rock035_2K_Displacement.jpg");
+        auto GrassTex = TextureLoader::LoadTexture(visualizationSystem, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
+        auto NormalMapTex = TextureLoader::LoadTexture(visualizationSystem, "resources/Ground037_2K-JPG/Ground037_2K_Normal.jpg");
+        //auto RockTex = TextureLoader::LoadTexture(visualizationSystem, "resources/Rock035_2K-JPG/Rock035_2K_Color.jpg");
+        //auto RockNormalTex = TextureLoader::LoadTexture(visualizationSystem, "resources/Rock035_2K-JPG/Rock035_2K_Normal.jpg");
+        //auto RockDisplacementTex = TextureLoader::LoadTexture(visualizationSystem, "resources/Rock035_2K-JPG/Rock035_2K_Displacement.jpg");
 
-        HeightMapTex = ComputeHeightmap(glm::uvec2 {8192});
-        EnvironmentMapTex = TextureLoader::LoadTexture(getRenderer(), "resources/04-23_Day_D.hdr");
+        HeightMapTex = ComputeHeightmap(visualizationSystem, glm::uvec2 {8192});
+        EnvironmentMapTex = TextureLoader::LoadTexture(visualizationSystem, "resources/04-23_Day_D.hdr");
 
         auto lightsRoot = std::make_shared<AT2::Scene::Node>("lights"s);
         m_scene.GetRoot().AddChild(lightsRoot);
@@ -105,29 +105,29 @@ private:
                                                                      glm::vec3(500.0f), "SkyLight"));
 
         //m_scene
-        auto matBallNode = MeshLoader::LoadNode(getRenderer(), "resources/matball.glb");
+        auto matBallNode = MeshLoader::LoadNode(visualizationSystem, "resources/matball.glb");
         matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform().asMatrix(), {100, 50, 0}), {100, 100, 100}));
         m_scene.GetRoot().AddChild(std::move(matBallNode));
 
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\RiggedFigure\glTF\RiggedFigure.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\CesiumMan\glTF\CesiumMan.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(C:\Users\allcr\Downloads\GLTF\amazing_player_female\scene.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(C:\Users\allcr\Downloads\GLTF\marika\scene.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BrainStem\glTF\BrainStem.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\MetalRoughSpheres\glTF\MetalRoughSpheres.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\SciFiHelmet\glTF\SciFiHelmet.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\RiggedFigure\glTF\RiggedFigure.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\CesiumMan\glTF\CesiumMan.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(C:\Users\allcr\Downloads\GLTF\amazing_player_female\scene.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(C:\Users\allcr\Downloads\GLTF\marika\scene.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BrainStem\glTF\BrainStem.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\MetalRoughSpheres\glTF\MetalRoughSpheres.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\SciFiHelmet\glTF\SciFiHelmet.gltf)"s);
 
         //castle
         //{
         //    auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
-        //        getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
+        //        visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
         //    scene->GetTransform().setScale({20.0, 20.0, 20.0}).setPosition({1000, 300, 0});
         //    m_scene.GetRoot().AddChild(scene);
         //}
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\InterpolationTest\glTF\InterpolationTest.gltf)"s);
-        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(getRenderer(), R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\InterpolationTest\glTF\InterpolationTest.gltf)"s);
+        //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\TriangleWithoutIndices\glTF\TriangleWithoutIndices.gltf)"s);
 
         //scene->GetTransform().setPosition({0, -20.0, 0});
         //m_scene.GetRoot().AddChild(scene);
@@ -140,7 +140,7 @@ private:
         m_scene.GetRoot().Accept(shaderSetter);
 
 
-        auto terrainNode = AT2::Utils::MakeTerrain(*getRenderer(), glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
+        auto terrainNode = AT2::Utils::MakeTerrain(visualizationSystem, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
         {
             terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
 
@@ -157,24 +157,21 @@ private:
 
         m_renderParameters.Scene = &m_scene;
         m_renderParameters.Camera = &m_camera;
-        m_renderParameters.TargetFramebuffer = &getRenderer()->GetDefaultFramebuffer();
+        m_renderParameters.TargetFramebuffer = &visualizationSystem.GetDefaultFramebuffer();
 
-        sr.Initialize(getRenderer());
+        sr.Initialize(visualizationSystem);
     }
 
-    void OnRender(AT2::Seconds dt)
+    void OnRender( AT2::Seconds dt, AT2::IVisualizationSystem& visualizationSystem )
     {
         if (NeedResourceReload)
         {
             std::cout << "Reloading shaders... " << std::endl;
-            getRenderer()->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
+            visualizationSystem.GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
             NeedResourceReload = false;
         }
 
-//        AT2::OpenGL::GlTimerQuery glTimer;
-//        glTimer.Begin();
-        sr.RenderScene(m_renderParameters, m_time);
-//        glTimer.End();
+        visualizationSystem.GetDefaultFramebuffer().Render([this](AT2::IRenderer& renderer){ sr.RenderScene(renderer, m_renderParameters, m_time);});
 
 //        const double frameTime = glTimer.WaitForResult() * 0.000001; // in ms
 //        getWindow().setLabel("Frame time = " + std::to_string(frameTime));

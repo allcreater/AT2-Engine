@@ -7,12 +7,14 @@
 
 namespace AT2::OpenGL
 {
+    class GlRenderer;
+
     class GlFrameBuffer : public IFrameBuffer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(GlFrameBuffer)
 
-        GlFrameBuffer(IRenderer& renderer);
+        GlFrameBuffer(GlRenderer& renderer);
         ~GlFrameBuffer() override;
 
     public:
@@ -29,7 +31,7 @@ namespace AT2::OpenGL
         void Render(RenderFunc renderFunc) override;
 
     private:
-        IRenderer& m_renderer;
+        GlRenderer& m_renderer;
         GLuint m_id;
 
         glm::ivec2 m_size {0, 0};
@@ -46,7 +48,7 @@ namespace AT2::OpenGL
     public:
         NON_COPYABLE_OR_MOVABLE(GlScreenFrameBuffer)
 
-        GlScreenFrameBuffer(IRenderer& renderer);
+        GlScreenFrameBuffer(GlRenderer &renderer);
 
         void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) override;
         [[nodiscard]] ColorAttachment GetColorAttachment(unsigned int attachmentNumber) const override;
@@ -61,7 +63,7 @@ namespace AT2::OpenGL
         void Render(RenderFunc renderFunc) override;
 
     private:
-        IRenderer& m_renderer;
+        GlRenderer& m_renderer;
         std::optional<glm::vec4> m_clearColor;
         std::optional<float> m_clearDepth;
     };

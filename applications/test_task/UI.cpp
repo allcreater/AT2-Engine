@@ -25,7 +25,7 @@ public:
         renderer.Draw(Primitives::LineStrip {}, 0, static_cast<long>(m_VAO->GetVertexBuffer(0)->GetLength()));
     }
 
-    void RebuildFromData(const IRenderer& renderer, const Plot::CurveData& data)
+    void RebuildFromData(const IVisualizationSystem& renderer, const Plot::CurveData& data)
     {
         if (m_VAO == nullptr)
             Init(renderer);
@@ -39,7 +39,7 @@ public:
         m_uniforms->SetUniform("u_Color", data.GetColor());
     }
 
-    void RefreshFromData(const IRenderer& renderer, const Plot::CurveData& data)
+    void RefreshFromData(const IVisualizationSystem& renderer, const Plot::CurveData& data)
     {
         if (m_VAO == nullptr)
             throw AT2::AT2Exception("AT2::UI::CurveDrawable should be created before refreshing!");
@@ -52,7 +52,7 @@ public:
     void SetProjectionMatrix(const glm::mat4& matProj) { m_projectionMatrix = matProj; }
 
 private:
-    void Init(const IRenderer& renderer)
+    void Init(const IVisualizationSystem& renderer)
     {
         auto& rf = renderer.GetResourceFactory();
 
@@ -89,7 +89,7 @@ void PlotRenderer::Draw(IRenderer& renderer)
         pair.second->Draw(renderer);
 }
 
-void PlotRenderer::PrepareData(const IRenderer& renderer)
+void PlotRenderer::PrepareData(const IVisualizationSystem& renderer)
 {
     if (auto controlPtr = m_Control.lock())
     {
@@ -140,7 +140,7 @@ void PlotRenderer::UpdateCanvasGeometry(const AABB2d& observingRange)
                 glm::vec4(1.0, 1.0, 1.0, 0.3));
 }
 
-void PlotRenderer::Init(const IRenderer& renderer)
+void PlotRenderer::Init(const IVisualizationSystem& renderer)
 {
     m_uiShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
         {"resources//shaders//simple.vs.glsl", "resources//shaders//simple.fs.glsl"});

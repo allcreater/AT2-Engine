@@ -3,7 +3,7 @@
 
 namespace AT2::Utils
 {
-    std::unique_ptr<Scene::Node> MakeTerrain(const IRenderer& renderer, glm::uvec2 numPatches)
+    std::unique_ptr<Scene::Node> MakeTerrain(const IVisualizationSystem& renderer, glm::uvec2 numPatches)
     {
         assert(numPatches.x < 1024 && numPatches.y < 1024);
 
@@ -41,7 +41,7 @@ namespace AT2::Utils
         return node;
     }
 
-    std::unique_ptr<Mesh> MakeSphere(const IRenderer& renderer, glm::uvec2 numPatches)
+    std::unique_ptr<Mesh> MakeSphere(const IVisualizationSystem& renderer, glm::uvec2 numPatches)
     {
         assert(numPatches.x <= 1024 && numPatches.y <= 512);
 
@@ -94,7 +94,7 @@ namespace AT2::Utils
         return mesh;
     }
 
-    std::unique_ptr<Mesh> MakeFullscreenQuadMesh(const IRenderer& renderer)
+    std::unique_ptr<Mesh> MakeFullscreenQuadMesh(const IVisualizationSystem& renderer)
     {
         constexpr std::array positions = {glm::vec3(-1.0, -1.0, -1.0), glm::vec3(1.0, -1.0, -1.0),
                                         glm::vec3(1.0, 1.0, -1.0), glm::vec3(-1.0, 1.0, -1.0)};

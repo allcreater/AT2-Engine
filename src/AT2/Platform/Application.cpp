@@ -32,14 +32,14 @@ void AT2::SingleWindowApplication::Run(std::unique_ptr<WindowContextBase> window
 
     window->InitializeCallback = [window = window.get(), windowContext = windowContext.get()] {
         windowContext->m_window = window;
-        windowContext->m_renderer = std::make_unique<OpenGL::GlRenderer>(openglFunctionsBinder);
-        windowContext->OnInitialized();
+        windowContext->m_visualizationSystem = std::make_unique<OpenGL::GlRenderer>(openglFunctionsBinder);
+        windowContext->OnInitialized(*windowContext->m_visualizationSystem);
     };
 
     window->RenderCallback = [windowContext = windowContext.get()](Seconds dt) {
-        windowContext->getRenderer()->BeginFrame();
-        windowContext->OnRender(dt);
-        windowContext->getRenderer()->FinishFrame();
+        windowContext->m_visualizationSystem->BeginFrame();
+        windowContext->OnRender(dt, *windowContext->m_visualizationSystem);
+        windowContext->m_visualizationSystem->FinishFrame();
     };
 
     window->UpdateCallback = std::bind_front(&WindowContextBase::OnUpdate, windowContext.get());

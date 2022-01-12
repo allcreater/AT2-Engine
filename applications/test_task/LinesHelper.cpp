@@ -36,7 +36,7 @@ void LinesHelper::Clear()
     m_vertexBufferNeedUpdate = true;
 }
 
-void LinesHelper::Init(const IRenderer& renderer)
+void LinesHelper::Init(const IVisualizationSystem& renderer)
 {
     auto& rf = renderer.GetResourceFactory();
 
@@ -46,7 +46,7 @@ void LinesHelper::Init(const IRenderer& renderer)
     //m_VAO->SetIndexBuffer(rf.CreateBuffer(AT2vbt::IndexBuffer, 0, nullptr), BufferDataTypes::UInt);
 }
 
-void LinesHelper::UpdateVAO(const IRenderer& renderer)
+void LinesHelper::UpdateVAO(const IVisualizationSystem& renderer)
 {
     if (m_VAO == nullptr)
         Init(renderer);

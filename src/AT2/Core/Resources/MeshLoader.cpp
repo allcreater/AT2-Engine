@@ -23,8 +23,8 @@ namespace
     class MeshBuilder
     {
     public:
-        MeshBuilder(std::shared_ptr<IRenderer> _renderer, const aiScene* scene) :
-            m_scene(scene), m_renderer(std::move(_renderer))
+        MeshBuilder(IVisualizationSystem& _renderer, const aiScene* scene) :
+            m_scene(scene), m_renderer(_renderer)
         {
         }
 
@@ -49,7 +49,7 @@ namespace
         std::filesystem::path m_scenePath;
         Assimp::Importer m_importer;
         const aiScene* m_scene;
-        std::shared_ptr<IRenderer> m_renderer;
+        IVisualizationSystem& m_renderer;
 
 
         std::vector<glm::vec3> m_verticesVec;
@@ -90,7 +90,7 @@ namespace
             for (unsigned i = 0; i < m_scene->mNumMeshes; ++i)
                 AddMesh(m_scene->mMeshes[i]);
 
-            auto& rf = m_renderer->GetResourceFactory();
+            auto& rf = m_renderer.GetResourceFactory();
 
             auto vao = MakeVertexArray(rf, std::make_pair(1u, std::cref(m_verticesVec)),
                                        std::make_pair(2u, std::cref(m_texCoordVec)),
@@ -181,11 +181,11 @@ namespace
 
 }; // namespace
 
-std::shared_ptr<Node> MeshLoader::LoadNode(std::shared_ptr<IRenderer> renderer, const str& filename)
+std::shared_ptr<Node> MeshLoader::LoadNode(IVisualizationSystem& renderer, const str& filename)
 {
     Assimp::Importer importer;
     const auto* scene = importer.ReadFile(filename, flags);
 
-    MeshBuilder builder {std::move(renderer), scene};
+    MeshBuilder builder {renderer, scene};
     return builder.Build();
 }

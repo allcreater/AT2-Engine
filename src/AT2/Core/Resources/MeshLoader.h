@@ -7,6 +7,6 @@ namespace AT2::Resources
     class MeshLoader
     {
     public:
-        static std::shared_ptr<Scene::Node> LoadNode(std::shared_ptr<IRenderer> renderer, const str& sv);
+        static std::shared_ptr<Scene::Node> LoadNode(IVisualizationSystem& renderer, const str& sv);
     };
 } // namespace AT2

@@ -5,7 +5,7 @@
 namespace AT2::Metal
 {
 
-class Renderer : public IRenderer
+class Renderer : public IVisualizationSystem
 {
 public:
     NON_COPYABLE_OR_MOVABLE(Renderer)

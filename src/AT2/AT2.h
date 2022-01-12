@@ -46,6 +46,7 @@ namespace AT2
     class IRendererCapabilities;
     class IStateManager;
     class IResourceFactory;
+    class IVisualizationSystem;
     class IRenderer;
 
     class ITime
@@ -337,6 +338,27 @@ namespace AT2
         virtual void ReloadResources(ReloadableGroup group) = 0;
     };
 
+    class IVisualizationSystem
+    {
+    public:
+        NON_COPYABLE_OR_MOVABLE(IVisualizationSystem)
+
+        IVisualizationSystem() = default;
+        virtual ~IVisualizationSystem() = default;
+
+    public:
+        [[nodiscard]] virtual IResourceFactory& GetResourceFactory() const = 0;
+        [[nodiscard]] virtual IStateManager& GetStateManager() const = 0;
+        [[nodiscard]] virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
+
+        virtual void DispatchCompute(glm::uvec3 threadGroupSize) = 0;
+
+        virtual void BeginFrame() = 0;
+        virtual void FinishFrame() = 0;
+
+        [[nodiscard]] virtual IFrameBuffer& GetDefaultFramebuffer() const = 0;
+    };
+
     class IRenderer
     {
     public:
@@ -346,19 +368,18 @@ namespace AT2
         virtual ~IRenderer() = default;
 
     public:
-        [[nodiscard]] virtual IResourceFactory& GetResourceFactory() const = 0;
-        [[nodiscard]] virtual IStateManager& GetStateManager() const = 0;
-        [[nodiscard]] virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
-        virtual void DispatchCompute(glm::uvec3 threadGroupSize) = 0;
         //Draws count vertices connected by primitive type.
         virtual void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1, int baseVertex = 0) = 0;
 
         virtual void SetViewport(const AABB2d& viewport) = 0; //TODO: move out
-        virtual void BeginFrame() = 0;
-        virtual void FinishFrame() = 0;
 
-        [[nodiscard]] virtual IFrameBuffer& GetDefaultFramebuffer() const = 0;
+        virtual IVisualizationSystem& GetVisualizationSystem() = 0;
+
+    	operator IVisualizationSystem&() { return GetVisualizationSystem(); }
+    	[[nodiscard]] IResourceFactory& GetResourceFactory() { return GetVisualizationSystem().GetResourceFactory(); }
+        [[nodiscard]] IStateManager& GetStateManager() { return GetVisualizationSystem().GetStateManager(); }
+        [[nodiscard]] IRendererCapabilities& GetRendererCapabilities() { return GetVisualizationSystem().GetRendererCapabilities(); }
     };
 
 

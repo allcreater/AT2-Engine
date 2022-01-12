@@ -138,11 +138,11 @@ namespace
 
     class PlaceholderTextureCash
     {
-        std::shared_ptr<IRenderer> m_renderer;
+        IVisualizationSystem& m_renderer;
         std::unordered_map<glm::u32, std::shared_ptr<ITexture>> m_textures;
 
     public:
-        explicit PlaceholderTextureCash(std::shared_ptr<IRenderer> renderer) : m_renderer(std::move(renderer)) {}
+        explicit PlaceholderTextureCash(IVisualizationSystem& renderer) : m_renderer(renderer) {}
 
         //TODO: move to resource managing system and generalize for different texture formats
         std::shared_ptr<ITexture> GetTextureRGBA8(const glm::vec4& color)
@@ -152,7 +152,7 @@ namespace
             if (auto it = m_textures.find(packedColor); it != m_textures.end())
                 return it->second;
 
-            auto texture = m_renderer->GetResourceFactory().CreateTexture(Texture2D {{1, 1}}, AT2::TextureFormats::RGBA8);
+            auto texture = m_renderer.GetResourceFactory().CreateTexture(Texture2D {{1, 1}}, AT2::TextureFormats::RGBA8);
             texture->SubImage2D({}, {1, 1}, 0, TextureFormats::RGBA8, &packedColor);
 
             m_textures.emplace(packedColor, texture);
@@ -163,7 +163,7 @@ namespace
 
     class Loader
     {
-        std::shared_ptr<IRenderer> m_renderer;
+        IVisualizationSystem& m_renderer;
         fx::gltf::Document m_document;
 
         using SubmeshGroup = std::vector<MeshRef>;
@@ -176,8 +176,8 @@ namespace
         PlaceholderTextureCash m_placeholderTextureCash;
 
     public:
-        Loader(std::shared_ptr<IRenderer> renderer, const str& sv)
-        : m_renderer(std::move(renderer))
+        Loader(IVisualizationSystem& renderer, const str& sv)
+        : m_renderer(renderer)
         , m_document(fx::gltf::LoadFromText(sv, fx::gltf::ReadQuotas {64, 64 * 1024 * 1024, 64 * 1024 * 1024}))
         , m_currentPath(sv)
         , m_nodes(m_document.nodes.size())
@@ -497,7 +497,7 @@ namespace
             SubmeshGroup result {gltfMesh.primitives.size()};
             for (size_t index = 0; const auto& primitive : gltfMesh.primitives)
             {
-                const auto& rf = m_renderer->GetResourceFactory();
+                const auto& rf = m_renderer.GetResourceFactory();
                 auto vao = rf.CreateVertexArray();
                 auto vb = rf.CreateBuffer(VertexBufferType::ArrayBuffer);
 
@@ -554,10 +554,10 @@ namespace
     };
 } // namespace
 
-NodeRef GltfMeshLoader::LoadScene(std::shared_ptr<IRenderer> renderer, const str& sv)
+NodeRef GltfMeshLoader::LoadScene(IVisualizationSystem& renderer, const str& sv)
 {
     Log::Info() << "Loading model from '" << sv << "'." << std::endl;
 
-    Loader loader {std::move(renderer), sv};
+    Loader loader {renderer, sv};
     return loader.BuildScene();
 }

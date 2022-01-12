@@ -24,8 +24,8 @@ namespace
 
 namespace AT2::Scene
 {
-    RenderVisitor::RenderVisitor(SceneRenderer& renderer, const Camera& camera) :
-        camera(camera), scene_renderer(renderer)
+    RenderVisitor::RenderVisitor(IRenderer& renderer, SceneRenderer& sceneRenderer, const Camera& camera) :
+        renderer {renderer}, camera {camera}, scene_renderer {sceneRenderer}
     {
     }
 
@@ -33,7 +33,7 @@ namespace AT2::Scene
     {
         transforms.pushModelView(node.GetTransform());
 
-        auto& stateManager = scene_renderer.renderer->GetStateManager();
+        auto& stateManager = renderer.GetStateManager();
 
         for (auto* meshComponent: node.getComponents<MeshComponent>())
         {
@@ -67,7 +67,7 @@ namespace AT2::Scene
                 stateManager.GetActiveShader()->SetUniform(
                     "u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
 
-                Utils::MeshRenderer::DrawSubmesh(*scene_renderer.renderer, *active_mesh,
+                Utils::MeshRenderer::DrawSubmesh(renderer, *active_mesh,
                                                  active_mesh->SubMeshes[submeshIndex]);
             }
         }
@@ -108,12 +108,12 @@ namespace AT2::Scene
 
     void LightRenderVisitor::UnVisit(Node&) { transforms.popModelView(); }
 
-    void SceneRenderer::DrawPointLights(const LightRenderVisitor& lrv) const
+    void SceneRenderer::DrawPointLights(IRenderer& renderer, const LightRenderVisitor& lrv) const
     {
         using LightAttribs = LightRenderVisitor::LightAttribs;
 
         //update our vertex buffer...
-        auto& rf = renderer->GetResourceFactory();
+        auto& rf = renderer.GetResourceFactory();
         auto& vao = lightMesh->VertexArray;
 
 
@@ -130,15 +130,15 @@ namespace AT2::Scene
             BufferBindingParams {BufferDataType::Float, 1, sizeof(LightAttribs), offsetof(LightAttribs, effective_radius), false, 1});
 
 
-        auto& stateManager = renderer->GetStateManager();
+        auto& stateManager = renderer.GetStateManager();
         stateManager.BindShader(resources.sphereLightsShader);
         stateManager.BindVertexArray(lightMesh->VertexArray);
         sphereLightsUniforms->Bind(stateManager);
 
-        Utils::MeshRenderer::DrawSubmesh(*renderer, *lightMesh, lightMesh->SubMeshes.front(), lrv.collectedLights.size());
+        Utils::MeshRenderer::DrawSubmesh(renderer, *lightMesh, lightMesh->SubMeshes.front(), lrv.collectedLights.size());
     }
 
-    void SceneRenderer::DrawSkyLight(const LightRenderVisitor& lrv, const Camera& camera) const
+    void SceneRenderer::DrawSkyLight( IRenderer& renderer, const LightRenderVisitor& lrv, const Camera& camera ) const
     {
         using LightAttribs = LightRenderVisitor::DirectionalLightAttribs;
 
@@ -154,28 +154,26 @@ namespace AT2::Scene
             skyLightsUniforms->SetUniform("u_lightIntensity", nearestLightIt->intensity);
             skyLightsUniforms->SetUniform("u_environmentMap", nearestLightIt->environment_map);
 
-            DrawQuad(resources.skyLightsShader, *skyLightsUniforms);
+            DrawQuad(renderer, resources.skyLightsShader, *skyLightsUniforms);
         }
     }
 
-    void SceneRenderer::Initialize(std::shared_ptr<IRenderer> _renderer)
+    void SceneRenderer::Initialize(IVisualizationSystem& renderer)
     {
-        this->renderer = std::move(_renderer);
-
-        resources.postprocessShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        resources.postprocessShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/shaders/postprocess.vs.glsl", "resources/shaders/postprocess.fs.glsl"});
 
-        resources.sphereLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        resources.sphereLightsShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/shaders/spherelight2.vs.glsl", "resources/shaders/pbr.fs.glsl",
              "resources/shaders/spherelight2.fs.glsl"});
 
-        resources.skyLightsShader = renderer->GetResourceFactory().CreateShaderProgramFromFiles(
+        resources.skyLightsShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/shaders/skylight.vs.glsl", "resources/shaders/pbr.fs.glsl",
              "resources/shaders/skylight.fs.glsl"});
 
 
-        lightMesh = Utils::MakeSphere(*renderer, {32, 16});
-        quadMesh = Utils::MakeFullscreenQuadMesh(*renderer);
+        lightMesh = Utils::MakeSphere(renderer, {32, 16});
+        quadMesh = Utils::MakeFullscreenQuadMesh(renderer);
     }
 
     void SceneRenderer::ResizeFramebuffers(glm::ivec2 newSize)
@@ -185,19 +183,19 @@ namespace AT2::Scene
     }
 
     //TODO: render context class
-    void SceneRenderer::RenderScene(const RenderParameters& params, const ITime& time)
+    void SceneRenderer::RenderScene(IRenderer& renderer, const RenderParameters& params, const ITime& time)
     {
         if (dirtyFramebuffers)
         {
-            auto& rf = renderer->GetResourceFactory();
+            auto& rf = renderer.GetResourceFactory();
 
-            gBufferFBO = renderer->GetResourceFactory().CreateFrameBuffer();
+            gBufferFBO = renderer.GetResourceFactory().CreateFrameBuffer();
             gBufferFBO->SetColorAttachment(0,{ rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8   ), glm::vec4{0.0, 0.0, 1.0, 0.0}});   //FragColor
             gBufferFBO->SetColorAttachment(1,  rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F ) );                                  //FragNormal
             gBufferFBO->SetColorAttachment(2,  rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8   ) );                                  //RoughnessMetallic
             gBufferFBO->SetDepthAttachment(  { rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::DEPTH32F), 1.0f});
 
-            postProcessFBO = renderer->GetResourceFactory().CreateFrameBuffer();
+            postProcessFBO = renderer.GetResourceFactory().CreateFrameBuffer();
             postProcessFBO->SetColorAttachment(0, {rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F), glm::vec4{}});
             postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment().Texture); //depth is common with previous stage
 
@@ -234,10 +232,10 @@ namespace AT2::Scene
         if (!params.Camera || !params.Scene)
             return;
 
-        SetupCamera(*params.Camera, time);
-        renderer->SetViewport(AABB2d {{0, 0}, framebuffer_size});
+        SetupCamera(renderer, *params.Camera, time);
+        renderer.SetViewport(AABB2d {{0, 0}, framebuffer_size});
 
-        auto& stateManager = renderer->GetStateManager();
+        auto& stateManager = renderer.GetStateManager();
 
 
         // G-buffer pass
@@ -247,7 +245,7 @@ namespace AT2::Scene
             stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
             stateManager.ApplyState(FaceCullMode {false, true});
 
-            RenderVisitor rv {*this, *params.Camera};
+            RenderVisitor rv {renderer, *this, *params.Camera};
             params.Scene->GetRoot().Accept(rv);
         });
 
@@ -261,10 +259,10 @@ namespace AT2::Scene
             LightRenderVisitor lrv {*this};
             params.Scene->GetRoot().Accept(lrv);
 
-            DrawPointLights(lrv);
+            DrawPointLights(renderer, lrv);
 
             stateManager.ApplyState(DepthState {CompareFunction::Greater, false, false});
-            DrawSkyLight(lrv, *params.Camera);
+            DrawSkyLight(renderer, lrv, *params.Camera );
         });
 
         // Postprocess pass
@@ -273,11 +271,11 @@ namespace AT2::Scene
             stateManager.ApplyState(DepthState {});
 
             postprocessUniforms->SetUniform("u_tmExposure", params.Exposure);
-            DrawQuad(resources.postprocessShader, *postprocessUniforms);
+            DrawQuad(renderer, resources.postprocessShader, *postprocessUniforms);
         });
     }
 
-    void SceneRenderer::SetupCamera(const Camera& camera, const ITime& time)
+    void SceneRenderer::SetupCamera(IRenderer& renderer, const Camera& camera, const ITime& time)
     {
         if (!cameraUniformBuffer)
         {
@@ -291,20 +289,19 @@ namespace AT2::Scene
         cameraUniformBuffer->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
         cameraUniformBuffer->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
         cameraUniformBuffer->SetUniform("u_time", time.getTime().count());
-        cameraUniformBuffer->Bind(renderer->GetStateManager());
+        cameraUniformBuffer->Bind(renderer.GetStateManager());
     }
 
-    void SceneRenderer::DrawQuad(const std::shared_ptr<IShaderProgram>& program,
-                                 const IUniformContainer& uniformBuffer) const noexcept
+    void SceneRenderer::DrawQuad(IRenderer& renderer, const std::shared_ptr<IShaderProgram>& program, const IUniformContainer& uniformBuffer) const noexcept
     {
         assert(program);
 
-        auto& stateManager = renderer->GetStateManager();
+        auto& stateManager = renderer.GetStateManager();
         stateManager.BindShader(program);
         uniformBuffer.Bind(stateManager);
         stateManager.BindVertexArray(quadMesh->VertexArray);
         const auto& primitive = quadMesh->SubMeshes.front().Primitives.front();
-        renderer->Draw(primitive.Type, primitive.StartElement, primitive.Count, 1, primitive.BaseVertex);
+        renderer.Draw(primitive.Type, primitive.StartElement, primitive.Count, 1, primitive.BaseVertex);
     }
 
 } // namespace AT2

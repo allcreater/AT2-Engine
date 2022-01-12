@@ -13,17 +13,16 @@ namespace AT2::UI
     class UiRenderer
     {
     public:
-        UiRenderer(const std::shared_ptr<AT2::IRenderer>& renderer, std::shared_ptr<AT2::UI::Node> node);
-        void Draw();
+        UiRenderer(AT2::IVisualizationSystem& renderer, std::shared_ptr<AT2::UI::Node> node);
+        void Draw(IRenderer& renderer);
         void SetWindowSize(const glm::uvec2& windowSize) { m_windowSize = windowSize; }
 
     private:
-        void RenderNode(const Node& node);
+        void RenderNode(IRenderer& renderer, const Node& node);
         glm::vec4 DebugColor(const Node& node);
 
     private:
         std::shared_ptr<AT2::Mesh> m_quadDrawable;
-        std::weak_ptr<AT2::IRenderer> m_renderer;
         std::shared_ptr<AT2::UI::Node> m_uiRoot;
         glm::uvec2 m_windowSize;
     };
@@ -45,8 +44,8 @@ struct UiHub
 
     AT2::UI::UiInputHandler& GetInputHandler() { return *m_uiInputHandler; }
 
-    void Init(const std::shared_ptr<AT2::IRenderer>& renderer);
-    void Render(const std::shared_ptr<AT2::IRenderer>& renderer, AT2::Seconds dt);
+    void Init(AT2::IVisualizationSystem& renderer);
+    void Render(AT2::IRenderer& renderer, AT2::Seconds dt);
     void Resize(const glm::ivec2& newSize);
 
 private:

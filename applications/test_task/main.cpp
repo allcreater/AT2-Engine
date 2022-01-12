@@ -8,36 +8,32 @@ public:
     UITest() = default;
 
 private:
-    void OnInitialized() override
+    void OnInitialized( AT2::IVisualizationSystem& visualizationSystem ) override
     {
-        getWindow().setLabel("Graph control demo").setCursorMode(CursorMode::Normal);
+        getWindow().setLabel("Graph control demo").setCursorMode(CursorMode::Normal).setVSyncInterval(1);
 
         m_uiHub = std::make_unique<UiHub>();
-        m_uiHub->Init(getRenderer());
+        m_uiHub->Init(visualizationSystem);
         m_uiHub->Resize(getWindow().getSize());
 
-
-        getWindow().setVSyncInterval(1);
-
-		getRenderer()->GetStateManager().ApplyState(
-		AT2::BlendMode {AT2::BlendFactor::SourceAlpha, AT2::BlendFactor::OneMinusSourceAlpha, glm::vec4 {1}});
-		getRenderer()->GetStateManager().ApplyState(AT2::FaceCullMode {});
-
-        getRenderer()->GetDefaultFramebuffer().SetClearColor(glm::vec4{});
-        getRenderer()->GetDefaultFramebuffer().SetClearDepth(0.0f);
-
+        visualizationSystem.GetDefaultFramebuffer().SetClearColor(glm::vec4{});
+        visualizationSystem.GetDefaultFramebuffer().SetClearDepth(0.0f);
     }
 
     void OnUpdate(const AT2::Seconds dt) override 
     {
     }
 
-    void OnRender(const AT2::Seconds dt) override
+    void OnRender( const AT2::Seconds dt, AT2::IVisualizationSystem& visualizationSystem ) override
     {
-        getRenderer()->GetDefaultFramebuffer().Render([&](AT2::IRenderer& renderer) {
-            getRenderer()->SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
+        visualizationSystem.GetDefaultFramebuffer().Render([&](AT2::IRenderer& renderer) {
+            renderer.GetStateManager().ApplyState(
+                AT2::BlendMode {AT2::BlendFactor::SourceAlpha, AT2::BlendFactor::OneMinusSourceAlpha, glm::vec4 {1}});
+            renderer.GetStateManager().ApplyState(AT2::FaceCullMode {});
 
-            m_uiHub->Render(getRenderer(), dt);
+            renderer.SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
+
+            m_uiHub->Render(renderer, dt);
         });
     }
 
@@ -47,11 +43,8 @@ private:
     {
         std::cout << "Key " << key << " down" << std::endl;
 
-    	if (key == AT2::Keys::Key_R)
-            getRenderer()->GetResourceFactory().ReloadResources(AT2::ReloadableGroup::Shaders);
-        else if (key == AT2::Keys::Key_Escape)
+    	if (key == AT2::Keys::Key_Escape)
             getWindow().setCloseFlag(true);
-
 
         OnKeyPress(key);
     }

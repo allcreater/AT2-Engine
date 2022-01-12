@@ -10,13 +10,14 @@ namespace AT2::Scene
 
     struct RenderVisitor : NodeVisitor
     {
-        RenderVisitor(SceneRenderer&, const Camera& camera);
+        RenderVisitor(IRenderer&, SceneRenderer&, const Camera& camera);
 
         bool Visit(Node& node) override;
 
         void UnVisit(Node& node) override;
 
     private:
+        IRenderer& renderer;
         const Camera& camera;
 
         MatrixStack transforms;
@@ -76,20 +77,18 @@ namespace AT2::Scene
     public:
         SceneRenderer() = default;
 
-        void Initialize(std::shared_ptr<IRenderer> renderer);
+        void Initialize(IVisualizationSystem& renderer);
         void ResizeFramebuffers(glm::ivec2 newSize);
-        void RenderScene(const RenderParameters& params, const ITime& time);
+        void RenderScene(IRenderer& renderer, const RenderParameters& params, const ITime& time);
 
     private:
-        void DrawPointLights(const LightRenderVisitor& lrv) const;
-        void DrawSkyLight(const LightRenderVisitor& lrv, const Camera& camera) const;
+        void DrawPointLights(IRenderer& renderer, const LightRenderVisitor& lrv) const;
+        void DrawSkyLight( IRenderer& renderer, const LightRenderVisitor& lrv, const Camera& camera ) const;
 
-        void SetupCamera(const Camera& camera, const ITime& time);
-        void DrawQuad(const std::shared_ptr<IShaderProgram>&, const IUniformContainer&) const noexcept;
+        void SetupCamera(IRenderer& renderer, const Camera& camera, const ITime& time);
+        void DrawQuad(IRenderer& renderer, const std::shared_ptr<IShaderProgram>&, const IUniformContainer&) const noexcept;
 
     private:
-        std::shared_ptr<IRenderer> renderer;
-
         struct Resources
         {
             std::shared_ptr<IShaderProgram> sphereLightsShader, skyLightsShader, postprocessShader;
