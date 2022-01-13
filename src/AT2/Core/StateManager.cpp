@@ -18,7 +18,7 @@ void StateManager::BindTextures(const TextureSet& _textures)
 {
     //TODO: use Strategy pattern
     //TODO: release textures with reference count == 1
-    const auto texturesMapper = [this](const std::shared_ptr<const ITexture>& texture) {
+    const auto texturesMapper = [this](const std::shared_ptr<ITexture>& texture) {
         assert(!m_freeTextureSlots.empty());
 
         const auto textureIndex = m_freeTextureSlots.back();
@@ -75,7 +75,7 @@ std::shared_ptr<IVertexArray> StateManager::GetActiveVertexArray() const
     return m_activeVertexArray;
 }
 
-std::optional<unsigned> StateManager::GetActiveTextureIndex(std::shared_ptr<const ITexture> texture) const noexcept
+std::optional<unsigned> StateManager::GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept
 {
     return m_activeTextures.find(texture);
 }

@@ -1,5 +1,7 @@
 #include "FrameBuffer.h"
 #include "Renderer.h"
+#include "Mappings.h"
+#include "MtlStateManager.h"
 
 using namespace AT2;
 using namespace AT2::Metal;
@@ -102,12 +104,48 @@ void FrameBuffer::SetClearDepth(std::optional<float> depth)
     SetAttachmentClearDepth(m_renderPassDescriptor->depthAttachment(), depth);
 }
 
+namespace {
+
+class PassRenderer : public IRenderer
+{
+public:
+    PassRenderer(Renderer& renderer, MTL::RenderCommandEncoder* encoder) : m_renderer{renderer}, m_renderEncoder{encoder} {}
+
+public:
+    void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances, int baseVertex) override
+    {
+        auto state = Utils::safe_dereference_cast<MtlStateManager&>(&m_renderer.GetStateManager()).GetOrBuildState();
+        m_renderEncoder->setRenderPipelineState(state.get());
+        
+        m_renderEncoder->drawPrimitives(Mappings::TranslatePrimitiveType(type), first, count, numInstances);
+    }
+
+    void SetViewport(const AABB2d& viewport) override
+    {
+        m_renderEncoder->setViewport(MTL::Viewport{viewport.MinBound.x, viewport.MinBound.y, viewport.GetWidth(), viewport.GetHeight(), 0.0f, 1.0f});
+    }
+
+    IVisualizationSystem& GetVisualizationSystem() override { return m_renderer; }
+    
+private:
+    Renderer& m_renderer;
+    MTL::RenderCommandEncoder* m_renderEncoder;
+};
+
+}
+
 void FrameBuffer::Render(RenderFunc renderFunc) 
 {
+    auto& mtlStateManager = dynamic_cast<MtlStateManager&>(m_renderer.GetStateManager());
+    
     auto commandBuffer = Own(m_renderer.getCommandQueue()->commandBuffer());
     auto renderEncoder = Own(commandBuffer->renderCommandEncoder(m_renderPassDescriptor.get()));
  
-    renderFunc(m_renderer);
+    PassRenderer renderer{m_renderer, renderEncoder.get()};
+    
+    mtlStateManager.OnStartRendering(renderEncoder.get());
+    renderFunc(renderer);
+    mtlStateManager.OnFinishRendering();
     
     renderEncoder->endEncoding();
     OnCommit(commandBuffer.get());
@@ -122,6 +160,7 @@ void MetalScreenFrameBuffer::Render(RenderFunc renderFunc)
     m_drawable = m_swapChain->nextDrawable();
     
     //TODO: is it a crutch or a feature?
+    //colorAttachmentDescriptor->setPixelFormat(swapchain->pixelFormat());
     SetAttachmentTexture(m_renderPassDescriptor->colorAttachments()->object(0), m_drawable->texture());
     
     FrameBuffer::Render(std::move(renderFunc));

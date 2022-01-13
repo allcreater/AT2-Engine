@@ -65,48 +65,6 @@ void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)
     
 }
 
-void Renderer::Draw(Primitives::Primitive type, size_t first, long int count, int numInstances, int baseVertex)
-{
-    if (std::holds_alternative<Primitives::Patches>(type))
-        throw AT2Exception("patches rendering is not implemented yet");
-    
-    /*
-    assert(frameContext);
-    
-    //TODO: to function
-    if (m_needNewState || !m_activeState)
-    {
-        auto* colorAttachmentDescriptor = m_buildingState->colorAttachments()->object(0);
-        colorAttachmentDescriptor->setPixelFormat(swapchain->pixelFormat());
-        
-        NS::Error* error = nullptr;
-        MtlPtr<MTL::RenderPipelineState> newState = device->newRenderPipelineState(m_buildingState.get(), &error);
-        CheckErrors(error);
-        
-        frameContext->renderEncoder->setRenderPipelineState(newState.get());
-        m_activeState = std::move(newState);
-    }
-    
-    frameContext->renderEncoder->drawPrimitives(Mappings::TranslatePrimitiveType(type), first, count, numInstances);
-     */
-}
-
-void Renderer::SetViewport(const AABB2d& viewport)
-{
-//    assert(frameContext);
-    
-//    frameContext->renderEncoder->setViewport(MTL::Viewport{viewport.MinBound.x, viewport.MinBound.y, viewport.GetWidth(), viewport.GetHeight(), 0.0f, 1.0f});
-}
-
-void Renderer::BeginFrame()
-{
-}
-
-void Renderer::FinishFrame()
-{
-}
-
-
 AT2::IFrameBuffer& Renderer::GetDefaultFramebuffer() const
 {
     return *m_defaultFramebuffer;

@@ -19,7 +19,7 @@ namespace AT2
 
     private:
         Utils::UnorderedStringMap<Uniform> m_uniformsMap;
-        Utils::UnorderedStringMap<std::shared_ptr<const ITexture>> m_texturesMap;
+        Utils::UnorderedStringMap<std::shared_ptr<ITexture>> m_texturesMap;
     };
 
 } // namespace AT2

@@ -40,7 +40,7 @@ void OpenGL::GlStateManager::ApplyState(RenderState state)
     }, state);
 }
 
-void OpenGL::GlStateManager::DoBind(const ITexture& texture, unsigned index)
+void OpenGL::GlStateManager::DoBind(ITexture& texture, unsigned index)
 {
     const auto& glTexture = Utils::safe_dereference_cast<const GlTexture&>(&texture);
     glBindTextureUnit(index, glTexture.GetId());

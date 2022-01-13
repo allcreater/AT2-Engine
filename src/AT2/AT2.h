@@ -172,9 +172,10 @@ namespace AT2
         [[nodiscard]] virtual std::optional<BufferDataType> GetIndexBufferType() const = 0;
 
         //TODO GetOrCreateVertexBuffer ?
-        virtual void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IBuffer> buffer,
-                                     const BufferBindingParams& bindingParams) = 0;
+        //TODO: unified array interface
+        virtual void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IBuffer> buffer, const BufferBindingParams& bindingParams) = 0;
         [[nodiscard]] virtual std::shared_ptr<IBuffer> GetVertexBuffer(unsigned int index) const = 0;
+        [[nodiscard]] virtual std::optional<size_t> GetLastAttributeIndex() const noexcept = 0;
         [[nodiscard]] virtual std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const = 0;
     };
 
@@ -280,7 +281,7 @@ namespace AT2
         [[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachments() const = 0;
     };
 
-    typedef std::set<std::shared_ptr<const ITexture>> TextureSet;
+    typedef std::set<std::shared_ptr<ITexture>> TextureSet;
 
     class IStateManager
     {
@@ -304,7 +305,7 @@ namespace AT2
 
         [[nodiscard]] virtual std::optional<BufferDataType> GetIndexDataType() const noexcept = 0;
 
-    	[[nodiscard]] virtual std::optional<unsigned int> GetActiveTextureIndex(std::shared_ptr<const ITexture> texture) const noexcept = 0;
+    	[[nodiscard]] virtual std::optional<unsigned int> GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept = 0;
     };
 
     class IResourceFactory

@@ -25,6 +25,9 @@ namespace AT2::Metal
         std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) override;
         void Unmap() override;
 
+        //for internal usage
+        MTL::Buffer* getNativeHandle() { return buffer.get(); }
+        
     private:
         Renderer& renderer;
         VertexBufferType type;

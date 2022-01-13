@@ -24,6 +24,7 @@ namespace AT2::OpenGL
         void SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IBuffer> buffer,
                              const BufferBindingParams& binding) override;
         [[nodiscard]] std::shared_ptr<IBuffer> GetVertexBuffer(unsigned int index) const override;
+        [[nodiscard]] std::optional<size_t> GetLastAttributeIndex() const noexcept override;
         [[nodiscard]] std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const override;
 
     private:

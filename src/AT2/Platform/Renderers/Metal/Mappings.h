@@ -265,25 +265,24 @@ namespace AT2::Mappings
                 [](const auto&) -> MTL::PrimitiveType { throw AT2Exception("This primitive type is not supported by Metal"); }
             }, primitive);
     }
-/*
-    constexpr GLenum TranslateCompareFunction(CompareFunction function)
+
+    constexpr MTL::CompareFunction TranslateCompareFunction(CompareFunction function)
     {
         switch (function)
         {
-        case CompareFunction::Always: return GL_ALWAYS;
-        case CompareFunction::Equal: return GL_EQUAL;
-        case CompareFunction::NotEqual: return GL_NOTEQUAL;
-        case CompareFunction::Greater: return GL_GREATER;
-        case CompareFunction::GreaterEqual: return GL_GEQUAL;
-        case CompareFunction::Less: return GL_LESS;
-        case CompareFunction::LessEqual: return GL_LEQUAL;
-        case CompareFunction::Never: return GL_NEVER;
+            case CompareFunction::Always: return MTL::CompareFunctionAlways;
+            case CompareFunction::Equal: return MTL::CompareFunctionEqual;
+            case CompareFunction::NotEqual: return MTL::CompareFunctionNotEqual;
+            case CompareFunction::Greater: return MTL::CompareFunctionGreater;
+            case CompareFunction::GreaterEqual: return MTL::CompareFunctionGreaterEqual;
+            case CompareFunction::Less: return MTL::CompareFunctionLess;
+            case CompareFunction::LessEqual: return MTL::CompareFunctionLessEqual;
+            case CompareFunction::Never: return MTL::CompareFunctionNever;
+            default:
+                throw AT2Exception("Wrong CompareFunction value");
         }
-
-        assert(false);
-        return 0;
     }
-
+/*
     constexpr GLenum TranslateBlendFactor(BlendFactor factor)
     {
         switch (factor)

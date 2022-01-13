@@ -87,6 +87,15 @@ std::shared_ptr<IBuffer> GlVertexArray::GetVertexBuffer(unsigned int index) cons
     return m_buffers.at(index).first;
 }
 
+std::optional<size_t> GlVertexArray::GetLastAttributeIndex() const noexcept
+{
+    const auto it = std::find_if(m_buffers.crbegin(), m_buffers.crend(), [](const std::pair<std::shared_ptr<IBuffer>, BufferBindingParams>& pair){ return pair.first != nullptr; });
+    if (it != m_buffers.crend())
+        return m_buffers.size() - std::distance(m_buffers.crbegin(), it) - 1;
+    else
+        return std::nullopt;
+}
+
 std::optional<BufferBindingParams> GlVertexArray::GetVertexBufferBinding(unsigned index) const
 {
     const auto& [buffer, binding] = m_buffers.at(index);

@@ -16,33 +16,18 @@ public:
 public:
     [[nodiscard]] IResourceFactory& GetResourceFactory() const override { return *m_resourceFactory; }
     [[nodiscard]] IStateManager& GetStateManager() const override { return *m_stateManager; }
-    [[nodiscard]] IRendererCapabilities& GetRendererCapabilities() const override
-    {
-        return *m_rendererCapabilities;
-    }
+    [[nodiscard]] IRendererCapabilities& GetRendererCapabilities() const override { return *m_rendererCapabilities; }
 
     void DispatchCompute(glm::uvec3 threadGroupSize) override;
-    void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1,
-              int baseVertex = 0) override;
-
-    void SetViewport(const AABB2d& viewport) override;
-    void BeginFrame() override;
-    void FinishFrame() override;
 
     [[nodiscard]] IFrameBuffer& GetDefaultFramebuffer() const override;
 
+    void BeginFrame() override {}
+    void FinishFrame() override {}
+    
 public: // for internal use only    
     MTL::Device* getDevice() noexcept { return device.get(); }
     MTL::CommandQueue* getCommandQueue() noexcept { return commandQueue.get(); }
-    
-    void UpdateStateParams(const std::function<void(MTL::RenderPipelineDescriptor&)>& command)
-    {
-        if (!m_buildingState)
-            m_buildingState = ConstructMetalObject<MTL::RenderPipelineDescriptor>();
-        
-        command(*m_buildingState);
-        m_needNewState = true;
-    }
     
 private:
     std::unique_ptr<IStateManager> m_stateManager;
@@ -53,10 +38,6 @@ private:
     CA::MetalLayer* swapchain;
     MtlPtr<MTL::Device> device;
     MtlPtr<MTL::CommandQueue> commandQueue;
-    
-    MtlPtr<MTL::RenderPipelineState> m_activeState;
-    MtlPtr<MTL::RenderPipelineDescriptor> m_buildingState;
-    bool m_needNewState = true;
     
 };
 

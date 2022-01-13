@@ -3,16 +3,18 @@
 #include "Renderer.h"
 #include "ShaderProgram.h"
 #include "Mappings.h"
+#include "Texture.h"
 
 using namespace AT2::Metal;
 
 void MtlStateManager::ApplyState(RenderState state)
 {
     std::visit(Utils::overloaded {
-        [](const DepthState& state){
-            //SetGlState(GL_DEPTH_TEST, state.TestEnabled);
-            //glDepthMask(state.WriteEnabled);
-            //glDepthFunc(AT2::Mappings::TranslateCompareFunction(state.CompareFunc));
+        [this](const DepthState& state){
+            m_buildingDepthStencilState->setDepthWriteEnabled(state.WriteEnabled);
+            m_buildingDepthStencilState->setDepthCompareFunction( state.TestEnabled ? Mappings::TranslateCompareFunction(state.CompareFunc) : MTL::CompareFunctionAlways);
+            
+            m_buildingDepthStencilStateInvalidated = true;
         },
         [](const BlendMode& state){
             //SetGlState(GL_BLEND, state.Enabled);
@@ -22,8 +24,6 @@ void MtlStateManager::ApplyState(RenderState state)
             //glBlendFunc(Mappings::TranslateBlendFactor(state.SourceFactor),
             //          Mappings::TranslateBlendFactor(state.DestinationFactor));
             //glBlendColor(state.BlendColor.r, state.BlendColor.g, state.BlendColor.b, state.BlendColor.a);
-            
-
         },
         [this](const FaceCullMode& state){
             auto cullMode = Mappings::TranslateFaceCullMode(state);
@@ -45,44 +45,71 @@ Renderer& MtlStateManager::GetRenderer() const
     return static_cast<Renderer&>(StateManager::GetRenderer());
 }
 
-void MtlStateManager::DoBind(const ITexture& texture, unsigned index)
+MtlPtr<MTL::RenderPipelineState> MtlStateManager::GetOrBuildState()
+{
+    if (m_currentState || m_stateInvalidated)
+    {
+        NS::Error* error;
+        auto newState = Own(GetRenderer().getDevice()->newRenderPipelineState(m_buildingState.get(), &error));
+        CheckErrors(error);
+        
+        m_currentState = std::move(newState);
+    }
+    
+    return m_currentState;
+}
+
+void MtlStateManager::DoBind(ITexture& texture, unsigned index)
 {
     
-    //GetRenderer().getFrameContext()->renderEncoder->setVertexTexture(<#const MTL::Texture *texture#>, <#NS::UInteger index#>)
+    if (!m_renderEncoder)
+        return;
+    
+    m_renderEncoder->setVertexTexture(Utils::safe_dereference_cast<MtlTexture&>(&texture).getNativeHandle(), index);
 }
 
 void MtlStateManager::DoBind(IShaderProgram& shaderProgram)
 {
     auto& mtlVertexArray = Utils::safe_dereference_cast<ShaderProgram&>(&shaderProgram);
 
-    GetRenderer().UpdateStateParams([&](MTL::RenderPipelineDescriptor& params){
-        auto* funcVS = mtlVertexArray.GetLibrary()->newFunction(NS::String::string("vertex_main", NS::ASCIIStringEncoding));
-        auto* funcFS = mtlVertexArray.GetLibrary()->newFunction(NS::String::string("fragment_main", NS::ASCIIStringEncoding));
-        
-        MTL::Argument* reflection;
-        funcVS->newArgumentEncoder(0, &reflection);
-        auto name = reflection->name()->cString(NS::ASCIIStringEncoding);
-        auto* members = reflection->bufferStructType()->members();
-        for (int i = 0; i < members->count(); ++i)
-        {
-            const auto* member = static_cast<MTL::StructMember*>(members->object(i));
-            auto name = member->name()->cString(NS::UTF8StringEncoding);
-            auto dataType = member->dataType();
-        }
-        
-        params.setVertexFunction(funcVS);
-        params.setFragmentFunction(funcFS);
-    });
+    
+    auto* funcVS = mtlVertexArray.GetLibrary()->newFunction(NS::String::string("vertex_main", NS::ASCIIStringEncoding));
+    auto* funcFS = mtlVertexArray.GetLibrary()->newFunction(NS::String::string("fragment_main", NS::ASCIIStringEncoding));
+    
+    MTL::Argument* reflection;
+    funcVS->newArgumentEncoder(0, &reflection);
+    auto name = reflection->name()->cString(NS::ASCIIStringEncoding);
+    auto* members = reflection->bufferStructType()->members();
+    for (int i = 0; i < members->count(); ++i)
+    {
+        const auto* member = static_cast<MTL::StructMember*>(members->object(i));
+        auto name = member->name()->cString(NS::UTF8StringEncoding);
+        auto dataType = member->dataType();
+    }
+    
+    m_buildingState->setVertexFunction(funcVS);
+    m_buildingState->setFragmentFunction(funcFS);
+    
+    m_buildingState->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
+    
+    m_stateInvalidated = true;
+
 }
 
 void MtlStateManager::DoBind(IVertexArray& vertexArray)
 {
     auto& mtlVertexArray = Utils::safe_dereference_cast<VertexArray&>(&vertexArray);
  
-    GetRenderer().UpdateStateParams([&](MTL::RenderPipelineDescriptor& params){
-        params.setVertexDescriptor(mtlVertexArray.GetVertexDescriptor().get());
-    });
+    m_buildingState->setVertexDescriptor(mtlVertexArray.GetVertexDescriptor().get());
+    m_stateInvalidated = true;
     
-    
-    //GetRenderer().getFrameContext()->renderEncoder->setVertexBuffer(<#const MTL::Buffer *buffer#>, <#NS::UInteger offset#>, <#NS::UInteger index#>)
+    auto lastIndex = vertexArray.GetLastAttributeIndex();
+    if (m_renderEncoder && lastIndex)
+    {
+        for (size_t index = 0; index <= *lastIndex; ++index)
+        {
+            if (auto buffer = mtlVertexArray.GetVertexBuffer(index))
+                m_renderEncoder->setVertexBuffer(Utils::safe_dereference_cast<Buffer&>(buffer).getNativeHandle(), 0, index);
+        }
+    }
 }

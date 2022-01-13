@@ -27,12 +27,12 @@ namespace AT2
 	        return m_activeIndexBufferType;
         }
 
-        [[nodiscard]] std::optional<unsigned> GetActiveTextureIndex(std::shared_ptr<const ITexture> texture) const noexcept override;
+        [[nodiscard]] std::optional<unsigned> GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept override;
 
     protected:
         IVisualizationSystem& GetRenderer() const { return m_renderer; }
 
-        virtual void DoBind(const ITexture& texture, unsigned index) = 0;
+        virtual void DoBind(ITexture& texture, unsigned index) = 0;
         virtual void DoBind(IShaderProgram& shader) = 0;
         virtual void DoBind(IVertexArray& vertexArray) = 0;
 
@@ -40,7 +40,7 @@ namespace AT2
         IVisualizationSystem& m_renderer;
 
         std::vector<unsigned int> m_freeTextureSlots;
-        lru_cache<std::shared_ptr<const ITexture>, unsigned int> m_activeTextures;
+        lru_cache<std::shared_ptr<ITexture>, unsigned int> m_activeTextures;
 
         std::shared_ptr<IShaderProgram> m_activeShader;
         std::shared_ptr<IVertexArray> m_activeVertexArray;
