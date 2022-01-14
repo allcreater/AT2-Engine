@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "GlRenderer.h"
 #include "GlShaderProgram.h"
 #include "GlTexture.h"
@@ -7,7 +9,6 @@
 
 #include <fstream>
 #include <optional>
-
 #include "GlFrameBuffer.h"
 
 using namespace std::literals;
@@ -142,72 +143,85 @@ std::shared_ptr<IBuffer> GlResourceFactory::CreateBuffer(VertexBufferType type,
     return buffer;
 }
 
-//TODO: detach file as a shader source from specific implementation, remove inheritance
+//TODO: Resource system!
 std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(std::initializer_list<str> files) const
 {
-
-    class GlShaderProgramFromFileImpl : public GlShaderProgram, public virtual IReloadable
+    class GlShaderProgramFromFileImpl : public IReloadable
     {
     public:
-        GlShaderProgramFromFileImpl(std::initializer_list<str> _shaders) : GlShaderProgram()
+        GlShaderProgramFromFileImpl(std::initializer_list<str> filenames) :
+            m_filenames {ClassifyFilenames(filenames)}, m_shader {MakeShaderDescriptor(m_filenames)}
         {
-            for (const auto& filename : _shaders)
-            {
-                if (GetName().empty())
-                    SetName(filename);
-
-                if (filename.substr(filename.length() - 8) == ".vs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::Vertex);
-                else if (filename.substr(filename.length() - 9) == ".tcs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::TesselationControl);
-                else if (filename.substr(filename.length() - 9) == ".tes.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::TesselationEvaluation);
-                else if (filename.substr(filename.length() - 8) == ".gs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::Geometry);
-                else if (filename.substr(filename.length() - 8) == ".fs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::Fragment);
-                else if (filename.substr(filename.length() - 8) == ".cs.glsl")
-                    m_filenames.emplace_back(filename, AT2::ShaderType::Computational);
-                else
-                    throw AT2ShaderException( "unrecognized shader type"s);
-            }
-
-            Reload();
         }
 
-        void Reload() override
-        {
-            CleanUp();
-
-            for (const auto& shader : m_filenames)
-            {
-                GlShaderProgram::AttachShader(LoadShader(shader.first), shader.second);
-            }
-        }
+        void Reload() override { m_shader = GlShaderProgram {MakeShaderDescriptor(m_filenames)}; }
 
         ReloadableGroup getReloadableClass() const override { return ReloadableGroup::Shaders; }
 
+        GlShaderProgram& GetShader() { return m_shader; }
+
     private:
-        std::string LoadShader(const str& _filename)
+        using ShaderType = GlShaderProgram::ShaderType;
+        using ClassifiedFilenameList = std::vector<std::pair<std::string, ShaderType>>;
+
+        static std::string LoadFile(std::filesystem::path _filename)
         {
             if (_filename.empty())
                 return "";
 
             std::ifstream t(_filename);
             if (!t.is_open())
-                throw AT2IOException("file '"s + _filename + "' not found.");
+                throw AT2IOException(Utils::ConcatStrings("file '"sv, _filename.string(), "' not found."sv));
 
 
             return std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
         }
 
+        static ShaderType GetShaderTypeFromExtension(std::string_view filename)
+        {
+            using namespace std::string_literals;
+            using ExtTypePair = std::pair<std::string_view, ShaderType>;
+            static constexpr std::array knownExtensions {ExtTypePair {".vs.glsl"sv, ShaderType::Vertex},
+                                                         ExtTypePair {".tcs.glsl"sv, ShaderType::TesselationControl},
+                                                         ExtTypePair {".tes.glsl"sv, ShaderType::TesselationEvaluation},
+                                                         ExtTypePair {".gs.glsl"sv, ShaderType::Geometry},
+                                                         ExtTypePair {".fs.glsl"sv, ShaderType::Fragment},
+                                                         ExtTypePair {".cs.glsl"sv, ShaderType::Computational}};
+
+            auto it = std::find_if(std::begin(knownExtensions), std::end(knownExtensions),
+                                   [filename](const ExtTypePair& pair) { return filename.ends_with(pair.first); });
+            return it != knownExtensions.end() ? it->second : throw AT2Exception(Utils::ConcatStrings("Couldn't deduce shader type from filename: "sv, filename));
+        }
+
+        static ClassifiedFilenameList ClassifyFilenames(std::initializer_list<str> filenames)
+        {
+            ClassifiedFilenameList classifiedFilenames {filenames.size()};
+            std::transform(filenames.begin(), filenames.end(), classifiedFilenames.begin(), [](const std::string& filename) {
+                return ClassifiedFilenameList::value_type {filename, GetShaderTypeFromExtension(filename)};
+            });
+
+            return classifiedFilenames;
+        }
+
+        static GlShaderProgram::ShaderDescriptor MakeShaderDescriptor(const ClassifiedFilenameList& filesList)
+        {
+            GlShaderProgram::ShaderDescriptor descriptor;
+            std::transform(filesList.begin(), filesList.end(), std::inserter(descriptor, descriptor.end()),
+                           [](ClassifiedFilenameList::const_reference classifiedPath) {
+                               return GlShaderProgram::ShaderDescriptor::value_type {classifiedPath.second, LoadFile(classifiedPath.first)};
+                           });
+            return descriptor;
+        }
+
     private:
-        std::vector<std::pair<str, AT2::ShaderType>> m_filenames;
+        ClassifiedFilenameList m_filenames;
+        GlShaderProgram m_shader;
     };
 
     auto resource = std::make_shared<GlShaderProgramFromFileImpl>(files);
     m_reloadableResourcesList.push_back(std::weak_ptr<IReloadable>(resource));
-    return resource;
+
+    return {resource, &resource->GetShader()};
 }
 
 void GlResourceFactory::ReloadResources(ReloadableGroup group)

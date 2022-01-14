@@ -1,7 +1,7 @@
 #pragma once
 
 #include <functional>
-#include <unordered_map>
+#include <unordered_map>//TODO: move specific functions to specific headers, no need to include them all over all project
 #include <optional>
 
 //TODO: include GSL?
@@ -15,7 +15,6 @@ bool is_uninitialized(std::weak_ptr<T> const& weak) {
 	using wt = std::weak_ptr<T>;
 	return !weak.owner_before(wt{}) && !wt{}.owner_before(weak);
 }
-
 
 //TODO: is it lawful even at C+++20?
 template <typename T>
@@ -281,3 +280,33 @@ void transform(R&& range, It dst, F&& transformer)
 
 }
 #endif
+
+namespace AT2::Utils
+{
+    template <typename FirstArg, typename CharType = typename FirstArg::value_type, typename ... Views>
+    requires std::is_constructible_v <std::basic_string_view<CharType>, FirstArg> &&
+        (std::is_constructible_v<std::basic_string_view<CharType>, Views>&&...)
+		std::basic_string<CharType> ConcatStrings(FirstArg firstView, Views&&... views)
+    {
+        std::array viewsList {std::basic_string_view<CharType> {firstView}, std::basic_string_view<CharType> {std::forward<Views>(views)} ...};
+
+        const auto totalLength = [&viewsList] { // poor man's accumulate, but I don't want to bring even more additional dependencies into utility header
+            size_t totalLength = 0;
+            for ( const auto& view : viewsList)
+                totalLength += view.length();
+
+            return totalLength;
+        }();
+
+
+        std::string newString;
+        newString.reserve(totalLength);
+
+	    for (const auto& view : viewsList)
+            newString.append(view);
+
+        assert(newString.capacity() == totalLength);
+
+        return newString;
+    }
+}

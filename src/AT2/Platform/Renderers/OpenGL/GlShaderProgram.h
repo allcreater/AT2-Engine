@@ -1,27 +1,43 @@
 #ifndef AT2_GL_SHADERPROGRAM_H
 #define AT2_GL_SHADERPROGRAM_H
 
-#include <map>
+#include <unordered_map>
 #include "AT2lowlevel.h"
 #include "GlProgramIntrospection.h"
 
 namespace AT2::OpenGL
 {
+
+    //TODO: complete immutabilization
     class GlShaderProgram : public IShaderProgram, public std::enable_shared_from_this<GlShaderProgram>
     {
     public:
-        NON_COPYABLE_OR_MOVABLE(GlShaderProgram)
+        
+        enum class ShaderType : GLenum
+        {
+            Vertex = GL_VERTEX_SHADER,
+        	TesselationControl = GL_TESS_CONTROL_SHADER,
+            TesselationEvaluation = GL_TESS_EVALUATION_SHADER,
+            Geometry = GL_GEOMETRY_SHADER,
+            Fragment = GL_FRAGMENT_SHADER,
+            Computational =  GL_COMPUTE_SHADER
+        };
+        using ShaderDescriptor = std::unordered_multimap<ShaderType, std::string>;
 
-        GlShaderProgram();
+        GlShaderProgram(const ShaderDescriptor& descriptor);
         ~GlShaderProgram() override;
 
-    public:
-        void Bind();
-        unsigned int GetId() const noexcept override { return m_programId; }
-        bool IsActive() const noexcept override;
-        std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName) override;
+        GlShaderProgram(const GlShaderProgram&) = delete;
+        GlShaderProgram& operator=(const GlShaderProgram&) = delete;
+        GlShaderProgram(GlShaderProgram&& rhv) noexcept { swap(rhv); }
+        GlShaderProgram& operator=(GlShaderProgram&& rhv) noexcept
+        {
+            swap(rhv);
+            return *this;
+        }
 
-        void AttachShader(std::string_view data, ShaderType type) override;
+    public:
+        std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName) override;
 
         //Warning: Shader reloading/relinking will invalidate that state
         void SetUBO(std::string_view blockName, unsigned int index) override;
@@ -31,9 +47,22 @@ namespace AT2::OpenGL
         virtual const str& GetName() { return m_name; }
         virtual void SetName(const str& name) { m_name = name; }
 
+        void swap(GlShaderProgram& rhv) noexcept
+        {
+            std::swap(m_programId, rhv.m_programId);
+            std::swap(m_shaderIds, rhv.m_shaderIds);
+            std::swap(m_uniformsInfo, rhv.m_uniformsInfo);
+            std::swap(m_name, rhv.m_name);
+            std::swap(m_currentState, rhv.m_currentState);
+        }
+
+    //for internal usage
+        void Bind();
+        unsigned int GetId() const noexcept { return m_programId; }
+        bool IsActive() const noexcept;
+
     protected:
-        bool TryCompile();
-        void CleanUp();
+        bool TryLinkProgram();
 
     private:
         GLuint m_programId {0};

@@ -238,14 +238,10 @@ namespace AT2
         virtual ~IShaderProgram() = default;
 
     public:
-        [[nodiscard]] virtual unsigned int GetId() const noexcept = 0;
-        [[nodiscard]] virtual bool IsActive() const noexcept = 0;
-
         virtual std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName = "") = 0;
-        virtual void AttachShader( std::string_view code, ShaderType type) = 0;
 
         //Warning: Shader reloading/relinking will invalidate that state
-        //TODO: make uniform buffers binding same as textures binding via StateManager
+        //TODO: make uniform buffers and uniforms binding same as textures binding via StateManager
         virtual void SetUBO(std::string_view blockName, unsigned int index) = 0;
         virtual void SetUniform(std::string_view name, Uniform value) = 0;
         virtual void SetUniformArray(std::string_view name, UniformArray value) = 0;
@@ -316,6 +312,7 @@ namespace AT2
         IResourceFactory() = default;
         virtual ~IResourceFactory() = default;
 
+        //TODO::ShaderSource or something like this
     public:
         template <std::ranges::contiguous_range T>
         std::shared_ptr<IBuffer> MakeBufferFrom(VertexBufferType type, const T& data)

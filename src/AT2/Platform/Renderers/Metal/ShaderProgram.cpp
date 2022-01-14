@@ -59,19 +59,11 @@ ShaderProgram::~ShaderProgram()
 	
 }
 
-bool ShaderProgram::IsActive() const noexcept
-{
-    return false;
-}
-
 std::unique_ptr<IUniformContainer> ShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
 {
     return std::make_unique<UniformBuffer>(m_renderer);
 }
 
-void ShaderProgram::AttachShader(std::string_view data, ShaderType type)
-{
-}
 
 void ShaderProgram::SetUBO(std::string_view blockName, unsigned int index)
 {

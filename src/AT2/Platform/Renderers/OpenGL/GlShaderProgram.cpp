@@ -37,8 +37,9 @@ namespace
         return shader;
     }
 
-    constexpr std::string_view ShaderTypeName(ShaderType type)
+    constexpr std::string_view ShaderTypeName(GlShaderProgram::ShaderType type)
     {
+        using ShaderType = GlShaderProgram::ShaderType;
         using namespace std::literals;
         switch (type)
         {
@@ -92,32 +93,36 @@ namespace
 } // namespace
 
 
-GlShaderProgram::GlShaderProgram()
+GlShaderProgram::GlShaderProgram(const ShaderDescriptor& descriptor)
+	: m_programId( glCreateProgram() )
 {
-    m_programId = glCreateProgram();
-    assert(m_programId);
+    auto tryAttachShader = [this](ShaderType shaderType, std::string_view shaderSource)
+    {
+        if (shaderSource.empty())
+            return;
+
+        const GLuint shaderId = LoadShader(static_cast<GLenum>(shaderType), shaderSource);
+        glAttachShader(m_programId, shaderId);
+
+        m_shaderIds.emplace_back(shaderType, shaderId);
+    };
+
+    for (const auto& [shaderType, shaderSource] : descriptor)
+        tryAttachShader(shaderType, shaderSource);
 }
 
 GlShaderProgram::~GlShaderProgram()
 {
-    CleanUp();
+    for (const auto& [type, shaderId] : m_shaderIds)
+    {
+        glDetachShader(m_programId, shaderId);
+        glDeleteShader(shaderId);
+    }
+
     glDeleteProgram(m_programId);
 }
 
-void GlShaderProgram::AttachShader(std::string_view _code, ShaderType _type)
-{
-    if (_code.empty())
-        throw AT2ShaderException( "GlShaderProgram: trying to attach empty shader");
-
-    const GLuint shaderId = LoadShader(Mappings::TranslateShaderType(_type), _code);
-    glAttachShader(m_programId, shaderId);
-
-    m_shaderIds.emplace_back(_type, shaderId);
-
-    m_currentState = State::Dirty;
-}
-
-bool GlShaderProgram::TryCompile()
+bool GlShaderProgram::TryLinkProgram()
 {
     if (m_currentState == State::Dirty)
     {
@@ -176,7 +181,7 @@ std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStora
     if (blockName.empty())
         return std::make_unique<AT2::UniformContainer>();
 
-    if (!TryCompile())
+    if (!TryLinkProgram())
         return nullptr;
     assert(m_uniformsInfo);
 
@@ -192,23 +197,9 @@ std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStora
     return uniformBuffer;
 }
 
-void GlShaderProgram::CleanUp()
-{
-    for (const auto& [type, shaderId] : m_shaderIds)
-    {
-        glDetachShader(m_programId, shaderId);
-        glDeleteShader(shaderId);
-    }
-
-    m_shaderIds.clear();
-    m_uniformsInfo.reset();
-
-    m_currentState = State::Dirty;
-}
-
 void GlShaderProgram::Bind()
 {
-    if (TryCompile())
+    if (TryLinkProgram())
         glUseProgram(m_programId);
 }
 
@@ -222,7 +213,7 @@ bool GlShaderProgram::IsActive() const noexcept
 
 void GlShaderProgram::SetUBO(std::string_view blockName, unsigned int index)
 {
-    if (!TryCompile())
+    if (!TryLinkProgram())
         return;
     assert(m_uniformsInfo);
 
@@ -236,7 +227,7 @@ void GlShaderProgram::SetUBO(std::string_view blockName, unsigned int index)
 
 void GlShaderProgram::SetUniform(std::string_view name, Uniform value)
 {
-    if (!TryCompile())
+    if (!TryLinkProgram())
         return;
     assert(m_uniformsInfo);
 
@@ -247,7 +238,7 @@ void GlShaderProgram::SetUniform(std::string_view name, Uniform value)
 
 void GlShaderProgram::SetUniformArray(std::string_view name, UniformArray value)
 {
-    if (!TryCompile())
+    if (!TryLinkProgram())
         return;
     assert(m_uniformsInfo);
 

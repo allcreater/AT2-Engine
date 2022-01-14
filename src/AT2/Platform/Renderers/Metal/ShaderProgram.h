@@ -16,13 +16,8 @@ namespace AT2::Metal
         ~ShaderProgram() override;
 
     public:
-        unsigned int GetId() const noexcept override { return 0; }
-        bool IsActive() const noexcept override;
         std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName) override;
 
-        void AttachShader(std::string_view data, ShaderType type) override;
-
-        //Warning: Shader reloading/relinking will invalidate that state
         void SetUBO(std::string_view blockName, unsigned int index) override;
         void SetUniform(std::string_view name, Uniform value) override;
         void SetUniformArray(std::string_view name, UniformArray value) override;
