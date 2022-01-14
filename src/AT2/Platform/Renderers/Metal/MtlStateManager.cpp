@@ -16,22 +16,33 @@ void MtlStateManager::ApplyState(RenderState state)
             
             m_buildingDepthStencilStateInvalidated = true;
         },
-        [](const BlendMode& state){
-            //SetGlState(GL_BLEND, state.Enabled);
-            //if (!state.Enabled)
-            //    return;
-
-            //glBlendFunc(Mappings::TranslateBlendFactor(state.SourceFactor),
-            //          Mappings::TranslateBlendFactor(state.DestinationFactor));
-            //glBlendColor(state.BlendColor.r, state.BlendColor.g, state.BlendColor.b, state.BlendColor.a);
+        [this](const BlendMode& state){
+            auto* attachment = m_buildingState->colorAttachments()->object(0);
+            
+            attachment->setBlendingEnabled(state.Enabled);
+            attachment->setSourceRGBBlendFactor(Mappings::TranslateBlendFactor(state.SourceFactor));
+            attachment->setSourceAlphaBlendFactor(Mappings::TranslateBlendFactor(state.SourceFactor));
+            attachment->setDestinationRGBBlendFactor(Mappings::TranslateBlendFactor(state.DestinationFactor));
+            attachment->setDestinationAlphaBlendFactor(Mappings::TranslateBlendFactor(state.DestinationFactor));
+            
+            m_stateInvalidated = true;
+            
+            if (m_renderEncoder)
+                m_renderEncoder->setBlendColorRed(state.BlendColor.r, state.BlendColor.g, state.BlendColor.b, state.BlendColor.a);
         },
         [this](const FaceCullMode& state){
             auto cullMode = Mappings::TranslateFaceCullMode(state);
-//            if (cullMode)
-//                GetRenderer().getFrameContext()->renderEncoder->setCullMode(*cullMode);
+            
+            if (!m_renderEncoder)
+                return;
+            
+            if (cullMode)
+                m_renderEncoder->setCullMode(*cullMode);
+            
         },
         [this](const PolygonRasterizationMode& state){
-//            GetRenderer().getFrameContext()->renderEncoder->setTriangleFillMode(Mappings::TranslatePolygonRasterizationMode(state));
+            if (m_renderEncoder)
+                m_renderEncoder->setTriangleFillMode(Mappings::TranslatePolygonRasterizationMode(state));
             
         },
         [](const LineRasterizationMode& state){
@@ -54,6 +65,7 @@ MtlPtr<MTL::RenderPipelineState> MtlStateManager::GetOrBuildState()
         CheckErrors(error);
         
         m_currentState = std::move(newState);
+        m_stateInvalidated = false;
     }
     
     return m_currentState;
@@ -90,6 +102,7 @@ void MtlStateManager::DoBind(IShaderProgram& shaderProgram)
     m_buildingState->setVertexFunction(funcVS);
     m_buildingState->setFragmentFunction(funcFS);
     
+    //TODO take actual attachment layout from active render stage?
     m_buildingState->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
     
     m_stateInvalidated = true;

@@ -10,6 +10,52 @@ namespace {
 }
 
 
+ShaderLibrary::ShaderLibrary(Renderer& renderer, std::string_view source)
+: m_renderer{renderer}
+{
+    auto sourceString = MakeMetalString(source);
+    assert(sourceString.use_count() == 1); // SUDDENOUS "unit" test about reference counting
+    
+    const auto compileOptions = ConstructMetalObject<MTL::CompileOptions>();
+    //compileOptions->setLibraryType(MTL::LibraryTypeDynamic);
+    //compileOptions->setLanguageVersion(MTL::LanguageVersion2_0);
+    
+    NS::Error* errorOutput = nullptr;
+    m_library = renderer.getDevice()->newLibrary(sourceString.get(), compileOptions.get(), &errorOutput);
+    CheckErrors(errorOutput);
+}
+
+MtlPtr<MTL::Function> ShaderLibrary::GetOrCreateFunction(std::string_view name, MtlPtr<MTL::FunctionConstantValues> constantValues, const FunctionSpecializeErrorHandler& errorHandler)
+{
+    auto getFunction = [this, &constantValues, &errorHandler, name = MakeMetalString(name)](){
+        NS::Error* error = nullptr;
+        Utils::final_action { [error, &errorHandler]{ if (error && errorHandler) errorHandler(error); }};
+        
+        if (constantValues)
+            return m_library->newFunction(name.get(), constantValues.get(), &error);
+        
+        return m_library->newFunction(name.get());
+    };
+    
+    return getFunction();
+}
+
+void ShaderLibrary::SetLabel(std::string_view name)
+{
+    m_library->setLabel(MakeMetalString(name).release());
+}
+
+std::string_view ShaderLibrary::GetLabel() const
+{
+    return m_library->label()->cString(NS::UTF8StringEncoding);
+}
+
+std::string_view ShaderLibrary::GetName() const
+{
+    return m_library->label()->cString(NS::UTF8StringEncoding);
+}
+
+
 ShaderProgram::ShaderProgram(Renderer& renderer) : m_renderer(renderer)
 {
 constexpr char source[] = R"(
@@ -43,15 +89,7 @@ constexpr char source[] = R"(
     }
 )";
     
-    auto sourceString = NS::String::string(source, NS::UTF8StringEncoding);
-    
-    const auto compileOptions = ConstructMetalObject<MTL::CompileOptions>();
-    //compileOptions->setLibraryType(MTL::LibraryTypeDynamic);
-    //compileOptions->setLanguageVersion(MTL::LanguageVersion2_0);
-    
-    NS::Error* errorOutput = nullptr;
-    m_library = renderer.getDevice()->newLibrary(sourceString, compileOptions.get(), &errorOutput);
-    CheckErrors(errorOutput);
+
 }
 
 ShaderProgram::~ShaderProgram()

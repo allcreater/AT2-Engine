@@ -57,6 +57,8 @@ public:
     
     void reset(T* newPtr = nullptr) noexcept { MtlPtr{newPtr}.swap(*this); }
     void swap(MtlPtr& other) noexcept { std::swap(ptr, other.ptr); }
+    // "release" in terms of STL: transfer ownership to external object without changing it's reference counter
+    pointer release() noexcept { return std::exchange(ptr, nullptr); }
     
     static MtlPtr capture_ptr(T* ptr)
     {
@@ -88,16 +90,21 @@ auto Own(T* ptr)
     return MtlPtr<T>::capture_ptr(ptr);
 }
 
-template <typename T>
-auto ConstructMetalObject()
+template <typename T, typename... Args>
+auto ConstructMetalObject(Args&&... args)
 {
-    return Own(T::alloc()->init());
+    return Own(T::alloc()->init( std::forward<Args>(args)... ));
 }
 
-inline MtlPtr<NS::String> MakeMetalString(std::string_view view)
+inline MtlPtr<NS::String> MakeMetalString(std::string_view view, NS::StringEncoding encoding = NS::UTF8StringEncoding)
 {
-    std::string viewCopy { view };
-    return NS::String::string(viewCopy.data(), NS::UTF8StringEncoding);
+    auto string = Own(NS::String::alloc());
+ 
+    //TODO: is there are better way?
+    char* cstring = static_cast<char*>(std::malloc(view.size()));
+    std::strncpy(cstring, view.data(), view.length());
+
+    return Own(string->init(cstring, view.length(), encoding, true));
 }
 
 inline void CheckErrors(NS::Error* error)

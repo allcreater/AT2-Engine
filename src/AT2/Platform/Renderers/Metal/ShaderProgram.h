@@ -7,6 +7,28 @@ namespace AT2::Metal
 {
     class Renderer;
 
+    class ShaderLibrary final
+    {
+    public:
+        //using LazyFunctionGetter = std::function<MtlPtr<MTL::Function>()>;
+        using FunctionSpecializeErrorHandler = std::function<void(NS::Error*)>;
+        
+        ShaderLibrary(Renderer& renderer, std::string_view source);
+        
+        //TODO: make asynchonous and caching, if it could be useful
+        MtlPtr<MTL::Function> GetOrCreateFunction(std::string_view name, MtlPtr<MTL::FunctionConstantValues> constantValues = nullptr, const FunctionSpecializeErrorHandler& errorHandle = {} );
+        
+        void SetLabel(std::string_view name);
+        std::string_view GetLabel() const;
+        std::string_view GetName() const;
+        
+        const MtlPtr<MTL::Library>& GetLibrary();
+        
+    private:
+        Renderer& m_renderer;
+        MtlPtr<MTL::Library> m_library;
+    };
+
     class ShaderProgram : public IShaderProgram, public std::enable_shared_from_this<ShaderProgram>
     {
     public:

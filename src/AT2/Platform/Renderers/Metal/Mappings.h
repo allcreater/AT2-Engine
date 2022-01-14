@@ -282,31 +282,30 @@ namespace AT2::Mappings
                 throw AT2Exception("Wrong CompareFunction value");
         }
     }
-/*
-    constexpr GLenum TranslateBlendFactor(BlendFactor factor)
+
+    constexpr MTL::BlendFactor TranslateBlendFactor(BlendFactor factor)
     {
         switch (factor)
         {
-        case BlendFactor::Zero: return GL_ZERO;
-        case BlendFactor::One: return GL_ONE;
-        case BlendFactor::SourceColor: return GL_SRC_COLOR;
-        case BlendFactor::OneMinusSourceColor: return GL_ONE_MINUS_SRC_COLOR;
-        case BlendFactor::DestinationColor: return GL_DST_COLOR;
-        case BlendFactor::OneMinusDestinationColor: return GL_ONE_MINUS_DST_COLOR;
-        case BlendFactor::SourceAlpha: return GL_SRC_ALPHA;
-        case BlendFactor::OneMinusSourceAlpha: return GL_ONE_MINUS_SRC_ALPHA;
-        case BlendFactor::DestinationAlpha: return GL_DST_ALPHA;
-        case BlendFactor::OneMinusDestinationAlpha: return GL_ONE_MINUS_DST_ALPHA;
-        case BlendFactor::ConstantColor: return GL_CONSTANT_COLOR;
-        case BlendFactor::OneMinusConstantColor: return GL_ONE_MINUS_CONSTANT_COLOR;
-        case BlendFactor::ConstantAlpha: return GL_CONSTANT_ALPHA;
-        case BlendFactor::OneMinusConstantAlpha: return GL_ONE_MINUS_CONSTANT_ALPHA;
+            case BlendFactor::Zero: return MTL::BlendFactorZero;
+            case BlendFactor::One: return MTL::BlendFactorOne;
+            case BlendFactor::SourceColor: return MTL::BlendFactorSourceColor;
+            case BlendFactor::OneMinusSourceColor: return MTL::BlendFactorOneMinusSourceColor;
+            case BlendFactor::DestinationColor: return MTL::BlendFactorDestinationColor;
+            case BlendFactor::OneMinusDestinationColor: return MTL::BlendFactorOneMinusDestinationColor;
+            case BlendFactor::SourceAlpha: return MTL::BlendFactorSourceAlpha;
+            case BlendFactor::OneMinusSourceAlpha: return MTL::BlendFactorOneMinusSourceAlpha;
+            case BlendFactor::DestinationAlpha: return MTL::BlendFactorDestinationAlpha;
+            case BlendFactor::OneMinusDestinationAlpha: return MTL::BlendFactorOneMinusDestinationAlpha;
+            case BlendFactor::ConstantColor: return MTL::BlendFactorBlendColor;
+            case BlendFactor::OneMinusConstantColor: return MTL::BlendFactorOneMinusBlendColor;
+            case BlendFactor::ConstantAlpha: return MTL::BlendFactorBlendAlpha;
+            case BlendFactor::OneMinusConstantAlpha: return MTL::BlendFactorOneMinusBlendAlpha;
+            default:
+                throw AT2Exception("Wrong BlendFactor value");
         }
-
-        assert(false);
-        return 0;
     }
-*/
+
     constexpr std::optional<MTL::CullMode> TranslateFaceCullMode(FaceCullMode mode)
     {
         switch ((mode.CullFront ? 0b10 : 0) | (mode.CullBack ? 0b01 : 0))
