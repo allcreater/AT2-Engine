@@ -51,9 +51,8 @@ namespace AT2::OpenGL
             return *m_rendererCapabilities;
         }
 
-        void DispatchCompute(glm::uvec3 threadGroupSize) override;
-        void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1,
-                  int baseVertex = 0) override;
+        void DispatchCompute(const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize) override;
+        void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1, int baseVertex = 0) override;
 
         void SetViewport(const AABB2d& viewport) override;
         void BeginFrame() override;

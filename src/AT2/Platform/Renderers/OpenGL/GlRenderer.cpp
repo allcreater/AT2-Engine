@@ -78,9 +78,13 @@ IFrameBuffer& GlRenderer::GetDefaultFramebuffer() const
     return *m_defaultFramebuffer;
 }
 
-void GlRenderer::DispatchCompute(glm::uvec3 threadGroupSize)
+void GlRenderer::DispatchCompute(const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize)
 {
+    GetStateManager().BindShader(computeProgram);
+
     glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
+
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); //TODO: more smart barriers
 }
 
 //sub-optimal but abstract :)

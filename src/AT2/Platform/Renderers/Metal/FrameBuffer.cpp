@@ -125,6 +125,8 @@ public:
         m_renderEncoder->setViewport(MTL::Viewport{viewport.MinBound.x, viewport.MinBound.y, viewport.GetWidth(), viewport.GetHeight(), 0.0f, 1.0f});
     }
 
+    [[nodiscard]] IStateManager& GetStateManager() const override { return *renderer.GetStateManager();//TODO }
+
     IVisualizationSystem& GetVisualizationSystem() override { return m_renderer; }
     
 private:

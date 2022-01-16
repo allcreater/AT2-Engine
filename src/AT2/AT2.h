@@ -346,10 +346,9 @@ namespace AT2
 
     public:
         [[nodiscard]] virtual IResourceFactory& GetResourceFactory() const = 0;
-        [[nodiscard]] virtual IStateManager& GetStateManager() const = 0;
         [[nodiscard]] virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
-        virtual void DispatchCompute(glm::uvec3 threadGroupSize) = 0;
+        virtual void DispatchCompute( const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize ) = 0;
 
         virtual void BeginFrame() = 0;
         virtual void FinishFrame() = 0;
@@ -369,14 +368,14 @@ namespace AT2
 
         //Draws count vertices connected by primitive type.
         virtual void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1, int baseVertex = 0) = 0;
-
         virtual void SetViewport(const AABB2d& viewport) = 0; //TODO: move out
 
-        virtual IVisualizationSystem& GetVisualizationSystem() = 0;
+        [[nodiscard]] virtual IVisualizationSystem& GetVisualizationSystem() = 0;
+        [[nodiscard]] virtual IStateManager& GetStateManager() const = 0;
 
+    public:
     	operator IVisualizationSystem&() { return GetVisualizationSystem(); }
     	[[nodiscard]] IResourceFactory& GetResourceFactory() { return GetVisualizationSystem().GetResourceFactory(); }
-        [[nodiscard]] IStateManager& GetStateManager() { return GetVisualizationSystem().GetStateManager(); }
         [[nodiscard]] IRendererCapabilities& GetRendererCapabilities() { return GetVisualizationSystem().GetRendererCapabilities(); }
     };
 

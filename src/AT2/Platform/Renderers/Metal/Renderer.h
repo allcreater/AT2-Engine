@@ -15,10 +15,10 @@ public:
 
 public:
     [[nodiscard]] IResourceFactory& GetResourceFactory() const override { return *m_resourceFactory; }
-    [[nodiscard]] IStateManager& GetStateManager() const override { return *m_stateManager; }
+    [[nodiscard]] IStateManager& GetStateManager() const { return *m_stateManager; }
     [[nodiscard]] IRendererCapabilities& GetRendererCapabilities() const override { return *m_rendererCapabilities; }
 
-    void DispatchCompute(glm::uvec3 threadGroupSize) override;
+    void DispatchCompute(const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize) override;
 
     [[nodiscard]] IFrameBuffer& GetDefaultFramebuffer() const override;
 

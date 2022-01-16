@@ -25,34 +25,24 @@ public:
         renderer.Draw(Primitives::LineStrip {}, 0, static_cast<long>(m_VAO->GetVertexBuffer(0)->GetLength()));
     }
 
-    void RebuildFromData(const IVisualizationSystem& renderer, const Plot::CurveData& data)
+    void RebuildFromData( IRenderer& renderer, const Plot::CurveData& data, bool doBufferReload )
     {
         if (m_VAO == nullptr)
             Init(renderer);
 
-        const auto& vector = data.GetData();
-        m_VAO->GetVertexBuffer(0)->SetData(vector);
+        if (doBufferReload)
+			m_VAO->GetVertexBuffer(0)->SetData(data.GetData());
 
         m_uniforms->SetUniform("u_BoundsX",
                                glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
-        m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)vector.size());
-        m_uniforms->SetUniform("u_Color", data.GetColor());
-    }
-
-    void RefreshFromData(const IVisualizationSystem& renderer, const Plot::CurveData& data)
-    {
-        if (m_VAO == nullptr)
-            throw AT2::AT2Exception("AT2::UI::CurveDrawable should be created before refreshing!");
-
-        m_uniforms->SetUniform("u_BoundsX",
-                               glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
+        m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)data.GetData().size());
         m_uniforms->SetUniform("u_Color", data.GetColor());
     }
 
     void SetProjectionMatrix(const glm::mat4& matProj) { m_projectionMatrix = matProj; }
 
 private:
-    void Init(const IVisualizationSystem& renderer)
+    void Init(IRenderer& renderer)
     {
         auto& rf = renderer.GetResourceFactory();
 
@@ -89,7 +79,7 @@ void PlotRenderer::Draw(IRenderer& renderer)
         pair.second->Draw(renderer);
 }
 
-void PlotRenderer::PrepareData(const IVisualizationSystem& renderer)
+void PlotRenderer::PrepareData( IRenderer& renderer )
 {
     if (auto controlPtr = m_Control.lock())
     {
@@ -98,11 +88,8 @@ void PlotRenderer::PrepareData(const IVisualizationSystem& renderer)
                                         observingRange.MaxBound.y);
 
         controlPtr->EnumerateCurves([&](const std::string_view name, const Plot::CurveData& data, bool isInvalidated) {
-            auto emplaceResult = m_curves.try_emplace(std::string(name), std::make_shared<CurveDrawable>());
-            if (isInvalidated || emplaceResult.second)
-                emplaceResult.first->second->RebuildFromData(renderer, data);
-            else
-                emplaceResult.first->second->RefreshFromData(renderer, data);
+            const auto [drawableIt, wasInserted] = m_curves.try_emplace(std::string(name), std::make_shared<CurveDrawable>());
+            drawableIt->second->RebuildFromData(renderer, data, isInvalidated || wasInserted);
 
             return true;
         });

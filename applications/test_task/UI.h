@@ -21,7 +21,7 @@ namespace AT2::UI
         void Draw(IRenderer& renderer) override;
 
     protected:
-        void PrepareData(const IVisualizationSystem& renderer);
+        void PrepareData(IRenderer& renderer);
         void Init(const IVisualizationSystem& renderer);
         void UpdateCanvasGeometry(const AABB2d& observingRange);
 

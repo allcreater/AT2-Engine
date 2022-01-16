@@ -42,13 +42,10 @@ private:
         auto shader =
             visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 
-        visualizationSystem.GetStateManager().BindShader(shader);
-
         shader->SetUniform("u_result", 0);
 
         resultTex->BindAsImage(0, 0, 0, false);
-        visualizationSystem.DispatchCompute(glm::uvec3 {resolution, 1} / localGroupSize);
-//        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        visualizationSystem.DispatchCompute(shader, glm::uvec3 {resolution, 1} / localGroupSize);
 
         return resultTex;
     }

@@ -60,8 +60,7 @@ Renderer::Renderer(void* metalLayer)
     commandQueue = Own(device->newCommandQueue());
 }
 
-void Renderer::DispatchCompute(glm::uvec3 threadGroupSize)
-{
+void Renderer::DispatchCompute(const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize) {
     
 }
 
