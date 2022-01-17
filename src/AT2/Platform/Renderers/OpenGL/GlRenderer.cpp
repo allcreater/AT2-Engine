@@ -132,6 +132,13 @@ void GlRenderer::SetViewport(const AABB2d& viewport)
                static_cast<GLint>(viewport.GetWidth()), static_cast<GLint>(viewport.GetHeight()));
 }
 
+void GlRenderer::SetScissorWindow(const AABB2d& window)
+{
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(static_cast<GLint>(window.MinBound.x), static_cast<GLint>(window.MinBound.y),
+               static_cast<GLint>(window.GetWidth()), static_cast<GLint>(window.GetHeight()));
+}
+
 void GlRenderer::GlErrorCallback(GLenum _source, GLenum _type, GLuint _id, GLenum _severity, GLsizei _length,
                                  const GLchar* _message, const GLvoid* _userParam)
 {

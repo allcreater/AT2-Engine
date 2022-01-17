@@ -22,19 +22,27 @@ namespace AT2::Metal
         std::string_view GetLabel() const;
         std::string_view GetName() const;
         
-        const MtlPtr<MTL::Library>& GetLibrary();
+        const MtlPtr<MTL::Library>& GetLibrary() { return m_library; }
+        Renderer& GetVisualizationSystem() const { return m_renderer; }
         
     private:
         Renderer& m_renderer;
         MtlPtr<MTL::Library> m_library;
     };
 
-    class ShaderProgram : public IShaderProgram, public std::enable_shared_from_this<ShaderProgram>
+    class ShaderProgram : public IShaderProgram//, public std::enable_shared_from_this<ShaderProgram>
     {
     public:
         NON_COPYABLE_OR_MOVABLE(ShaderProgram)
 
-        ShaderProgram(Renderer& renderer);
+        struct Descriptor
+        {
+            std::shared_ptr<ShaderLibrary> Library;
+            std::string VertexFunc;
+            std::string FragmentFunc;
+        };
+        
+        ShaderProgram( const Descriptor& descriptor );
         ~ShaderProgram() override;
 
     public:
@@ -47,17 +55,15 @@ namespace AT2::Metal
         virtual const str& GetName() { return m_name; }
         virtual void SetName(const str& name) { m_name = name; }
 
-        MtlPtr<MTL::Library> GetLibrary() { return m_library; }
+    // for internal usage
+        MtlPtr<MTL::Library> GetLibrary() { return m_library->GetLibrary(); }
+        void Apply(MTL::RenderPipelineDescriptor& pipelineDescriptor) const;
+        void OnStateCreated(MTL::RenderPipelineReflection* reflection);
         
-    protected:
-        bool TryCompile();
-        void CleanUp();
-
     private:
-        Renderer& m_renderer;
+        std::shared_ptr<ShaderLibrary> m_library;
+        MtlPtr<MTL::Function> m_functionVertex, m_functionFragment;
+        
         str m_name;
-        
-        
-        MtlPtr<MTL::Library> m_library;
     };
 } // namespace AT2::Metal

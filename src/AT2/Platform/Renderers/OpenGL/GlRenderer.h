@@ -45,7 +45,7 @@ namespace AT2::OpenGL
 
     public:
         [[nodiscard]] IResourceFactory& GetResourceFactory() const override { return *m_resourceFactory; }
-        [[nodiscard]] IStateManager& GetStateManager() const override { return *m_stateManager; }
+        [[nodiscard]] IStateManager& GetStateManager() override { return *m_stateManager; }
         [[nodiscard]] IRendererCapabilities& GetRendererCapabilities() const override
         {
             return *m_rendererCapabilities;
@@ -55,6 +55,7 @@ namespace AT2::OpenGL
         void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1, int baseVertex = 0) override;
 
         void SetViewport(const AABB2d& viewport) override;
+        void SetScissorWindow(const AABB2d& viewport) override;
         void BeginFrame() override;
         void FinishFrame() override;
 

@@ -98,6 +98,8 @@ void GlFrameBuffer::SetClearDepth(std::optional<float> depth)
 
 void GlFrameBuffer::Render(RenderFunc renderFunc) 
 {
+    glDisable(GL_SCISSOR_TEST); //TODO: apply via StateManager?
+    
     glBindFramebuffer(GL_FRAMEBUFFER, m_id);
 
     //validating

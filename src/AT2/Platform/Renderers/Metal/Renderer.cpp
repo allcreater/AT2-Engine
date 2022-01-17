@@ -54,7 +54,6 @@ Renderer::Renderer(void* metalLayer)
     
     m_rendererCapabilities = std::make_unique<MtlRendererCapabilities>(*this);
     m_resourceFactory = std::make_unique<ResourceFactory>(*this);
-    m_stateManager = std::make_unique<MtlStateManager>(*this);
     m_defaultFramebuffer = std::make_unique<MetalScreenFrameBuffer>(*this, swapchain);
     
     commandQueue = Own(device->newCommandQueue());

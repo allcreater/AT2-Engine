@@ -15,7 +15,6 @@ public:
 
 public:
     [[nodiscard]] IResourceFactory& GetResourceFactory() const override { return *m_resourceFactory; }
-    [[nodiscard]] IStateManager& GetStateManager() const { return *m_stateManager; }
     [[nodiscard]] IRendererCapabilities& GetRendererCapabilities() const override { return *m_rendererCapabilities; }
 
     void DispatchCompute(const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize) override;
@@ -30,7 +29,6 @@ public: // for internal use only
     MTL::CommandQueue* getCommandQueue() noexcept { return commandQueue.get(); }
     
 private:
-    std::unique_ptr<IStateManager> m_stateManager;
     std::unique_ptr<IResourceFactory> m_resourceFactory;
     std::unique_ptr<IRendererCapabilities> m_rendererCapabilities;
     std::unique_ptr<IFrameBuffer> m_defaultFramebuffer;

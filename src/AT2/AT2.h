@@ -368,10 +368,11 @@ namespace AT2
 
         //Draws count vertices connected by primitive type.
         virtual void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances = 1, int baseVertex = 0) = 0;
-        virtual void SetViewport(const AABB2d& viewport) = 0; //TODO: move out
-
+        virtual void SetViewport(const AABB2d& viewport) = 0;
+        virtual void SetScissorWindow(const AABB2d& viewport) = 0;
+        
         [[nodiscard]] virtual IVisualizationSystem& GetVisualizationSystem() = 0;
-        [[nodiscard]] virtual IStateManager& GetStateManager() const = 0;
+        [[nodiscard]] virtual IStateManager& GetStateManager() = 0;
 
     public:
     	operator IVisualizationSystem&() { return GetVisualizationSystem(); }

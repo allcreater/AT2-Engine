@@ -56,40 +56,14 @@ std::string_view ShaderLibrary::GetName() const
 }
 
 
-ShaderProgram::ShaderProgram(Renderer& renderer) : m_renderer(renderer)
+ShaderProgram::ShaderProgram(const Descriptor& descriptor)
+: m_library(descriptor.Library)
 {
-constexpr char source[] = R"(
-    #include <metal_stdlib>
-    using namespace metal;
+    if (!m_library)
+        throw AT2ShaderException("Metal::ShaderProgram: no library specified");    
 
-    struct VertexIn
-    {
-        float3 position [[ attribute(1) ]];
-        float2 texCoord [[ attribute(2) ]];
-    };
-
-    struct VertexUniforms
-    {
-        float4x4 u_matModelView [[id(0)]];
-        float4x4 u_matProjection;
-    };
-
-    vertex float4 vertex_main(
-        const VertexIn vertex_in        [[ stage_in ]],
-        constant VertexUniforms& params [[ buffer(0) ]]
-    )
-    {
-        const auto viewSpacePos = params.u_matModelView * float4(vertex_in.position, 1);
-        return params.u_matProjection * viewSpacePos;
-    }
-
-    fragment float4 fragment_main(texture2d<float, access::sample> texAlbedo [[texture(0)]])
-    {
-        return float4(1, 0, 0, 1);
-    }
-)";
-    
-
+    m_functionVertex = m_library->GetOrCreateFunction(descriptor.VertexFunc);
+    m_functionFragment = m_library->GetOrCreateFunction(descriptor.FragmentFunc);
 }
 
 ShaderProgram::~ShaderProgram()
@@ -99,7 +73,7 @@ ShaderProgram::~ShaderProgram()
 
 std::unique_ptr<IUniformContainer> ShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
 {
-    return std::make_unique<UniformBuffer>(m_renderer);
+    return std::make_unique<UniformBuffer>(m_library->GetVisualizationSystem());
 }
 
 
@@ -118,9 +92,53 @@ void ShaderProgram::SetUniformArray(std::string_view name, UniformArray value)
 	
 }
 
-bool ShaderProgram::TryCompile()
+void ShaderProgram::Apply(MTL::RenderPipelineDescriptor& pipelineDescriptor) const
 {
-    return false;
+    pipelineDescriptor.setVertexFunction(m_functionVertex.get());
+    pipelineDescriptor.setFragmentFunction(m_functionFragment.get());
 }
 
-void ShaderProgram::CleanUp() {}
+namespace
+{
+    void VisitArgument(const MTL::Argument* argument)
+    {
+        if (!argument)
+            return;
+        
+        auto argumentName = argument->name()->cString(NS::ASCIIStringEncoding);
+        
+        switch (argument->type())
+        {
+            case MTL::ArgumentTypeBuffer:
+            {
+                auto* members = argument->bufferStructType()->members();
+                for (int i = 0; i < members->count(); ++i)
+                {
+                    const auto* member = static_cast<MTL::StructMember*>(members->object(i));
+                    auto name = member->name()->cString(NS::UTF8StringEncoding);
+                    auto dataType = member->dataType();
+                }
+            } break;
+                
+            case MTL::ArgumentTypeTexture:
+            {
+                
+            } break;
+        };
+    }
+
+    void VisitArgumentArray(const NS::Array* argumentsArray)
+    {
+        for (int i = 0; i < argumentsArray->count(); ++i)
+        {
+            VisitArgument(static_cast<MTL::Argument*>(argumentsArray->object(i)));
+        }
+    }
+
+}
+
+void ShaderProgram::OnStateCreated(MTL::RenderPipelineReflection* reflection)
+{
+    VisitArgumentArray(reflection->vertexArguments());
+    VisitArgumentArray(reflection->fragmentArguments());
+}

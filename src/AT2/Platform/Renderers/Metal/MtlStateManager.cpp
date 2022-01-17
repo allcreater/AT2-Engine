@@ -5,6 +5,7 @@
 #include "Mappings.h"
 #include "Texture.h"
 
+using namespace AT2;
 using namespace AT2::Metal;
 
 void MtlStateManager::ApplyState(RenderState state)
@@ -51,18 +52,72 @@ void MtlStateManager::ApplyState(RenderState state)
     }, state);
 }
 
-Renderer& MtlStateManager::GetRenderer() const
+[[nodiscard]] std::shared_ptr<IShaderProgram> MtlStateManager::GetActiveShader() const
 {
-    return static_cast<Renderer&>(StateManager::GetRenderer());
+    return m_activeShader;
 }
+[[nodiscard]] std::shared_ptr<IVertexArray> MtlStateManager::GetActiveVertexArray() const
+{
+    return m_activeVertexArray;
+}
+
+[[nodiscard]] std::optional<BufferDataType> MtlStateManager::GetIndexDataType() const noexcept
+{
+    return m_activeVertexArray ? m_activeVertexArray->GetIndexBufferType() : std::nullopt;
+}
+
+void MtlStateManager::Draw(Primitives::Primitive type, size_t first, long int count, int numInstances, int baseVertex)
+{
+    auto state = GetOrBuildState();
+    m_renderEncoder->setRenderPipelineState(state.get());
+    
+    const auto platformPrimitiveType = Mappings::TranslatePrimitiveType(type);
+    
+    if (auto indexBufferDataType = m_activeVertexArray->GetIndexBufferType())
+    {
+        auto& mtlIndexBuffer = Utils::safe_dereference_cast<Buffer>(m_activeVertexArray->GetIndexBuffer());
+        m_renderEncoder->drawIndexedPrimitives(platformPrimitiveType, count, Mappings::TranslateIndexBufferType(*indexBufferDataType), mtlIndexBuffer.getNativeHandle(), 0, numInstances, baseVertex, 0);
+    }
+    else
+        m_renderEncoder->drawPrimitives(platformPrimitiveType, first, count, numInstances);
+}
+
+void MtlStateManager::SetViewport(const AABB2d& viewport)
+{
+    m_renderEncoder->setViewport(MTL::Viewport{viewport.MinBound.x, viewport.MinBound.y, viewport.GetWidth(), viewport.GetHeight(), 0.0f, 1.0f});
+}
+
+void MtlStateManager::SetScissorWindow(const AABB2d& window)
+{
+    MTL::ScissorRect rect{
+        window.MinBound.x >= 0.0f ? static_cast<NS::UInteger>(window.MinBound.x) : 0,
+        window.MinBound.y >= 0.0f ? static_cast<NS::UInteger>(window.MinBound.y) : 0,
+        static_cast<NS::UInteger>(window.GetWidth()),
+        static_cast<NS::UInteger>(window.GetHeight())
+        
+    };
+    
+    m_renderEncoder->setScissorRect(rect);
+}
+
+IVisualizationSystem& MtlStateManager::GetVisualizationSystem()
+{
+    return m_renderer;
+}
+
 
 MtlPtr<MTL::RenderPipelineState> MtlStateManager::GetOrBuildState()
 {
     if (m_currentState || m_stateInvalidated)
     {
         NS::Error* error;
-        auto newState = Own(GetRenderer().getDevice()->newRenderPipelineState(m_buildingState.get(), &error));
+        MTL::RenderPipelineReflection* reflection;
+        auto newState = Own(m_renderer.getDevice()->newRenderPipelineState(m_buildingState.get(),MTL::PipelineOptionArgumentInfo | MTL::PipelineOptionBufferTypeInfo, &reflection, &error));
+        
         CheckErrors(error);
+        
+        if (m_activeShader)
+            m_activeShader->OnStateCreated(reflection);
         
         m_currentState = std::move(newState);
         m_stateInvalidated = false;
@@ -71,58 +126,42 @@ MtlPtr<MTL::RenderPipelineState> MtlStateManager::GetOrBuildState()
     return m_currentState;
 }
 
-void MtlStateManager::DoBind(ITexture& texture, unsigned index)
+
+void MtlStateManager::BindTextures(const TextureSet& textures)
 {
     
     if (!m_renderEncoder)
         return;
     
-    m_renderEncoder->setVertexTexture(Utils::safe_dereference_cast<MtlTexture&>(&texture).getNativeHandle(), index);
+    //m_renderEncoder->setVertexTexture(Utils::safe_dereference_cast<MtlTexture&>(&texture).getNativeHandle(), index);
 }
 
-void MtlStateManager::DoBind(IShaderProgram& shaderProgram)
+void MtlStateManager::BindShader(const std::shared_ptr<IShaderProgram>& shaderProgram)
 {
-    auto& mtlVertexArray = Utils::safe_dereference_cast<ShaderProgram&>(&shaderProgram);
-
+    m_activeShader = std::dynamic_pointer_cast<ShaderProgram>(shaderProgram);
     
-    auto* funcVS = mtlVertexArray.GetLibrary()->newFunction(NS::String::string("vertex_main", NS::ASCIIStringEncoding));
-    auto* funcFS = mtlVertexArray.GetLibrary()->newFunction(NS::String::string("fragment_main", NS::ASCIIStringEncoding));
-    
-    MTL::Argument* reflection;
-    funcVS->newArgumentEncoder(0, &reflection);
-    auto name = reflection->name()->cString(NS::ASCIIStringEncoding);
-    auto* members = reflection->bufferStructType()->members();
-    for (int i = 0; i < members->count(); ++i)
-    {
-        const auto* member = static_cast<MTL::StructMember*>(members->object(i));
-        auto name = member->name()->cString(NS::UTF8StringEncoding);
-        auto dataType = member->dataType();
-    }
-    
-    m_buildingState->setVertexFunction(funcVS);
-    m_buildingState->setFragmentFunction(funcFS);
+    m_activeShader->Apply(*m_buildingState);
     
     //TODO take actual attachment layout from active render stage?
     m_buildingState->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-    
     m_stateInvalidated = true;
-
 }
 
-void MtlStateManager::DoBind(IVertexArray& vertexArray)
+void MtlStateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray)
 {
-    auto& mtlVertexArray = Utils::safe_dereference_cast<VertexArray&>(&vertexArray);
- 
-    m_buildingState->setVertexDescriptor(mtlVertexArray.GetVertexDescriptor().get());
+    m_activeVertexArray = std::dynamic_pointer_cast<VertexArray>(vertexArray);
+    
+    m_buildingState->setVertexDescriptor(m_activeVertexArray->GetVertexDescriptor().get());
     m_stateInvalidated = true;
     
-    auto lastIndex = vertexArray.GetLastAttributeIndex();
+    auto lastIndex = m_activeVertexArray->GetLastAttributeIndex();
     if (m_renderEncoder && lastIndex)
     {
         for (size_t index = 0; index <= *lastIndex; ++index)
         {
-            if (auto buffer = mtlVertexArray.GetVertexBuffer(index))
+            if (auto buffer = m_activeVertexArray->GetVertexBuffer(index))
                 m_renderEncoder->setVertexBuffer(Utils::safe_dereference_cast<Buffer&>(buffer).getNativeHandle(), 0, index);
         }
     }
 }
+

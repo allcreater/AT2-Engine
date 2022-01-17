@@ -160,6 +160,17 @@ namespace AT2::Mappings
         }
     }
 
+constexpr MTL::IndexType TranslateIndexBufferType(BufferDataType type)
+{
+    switch (type)
+    {
+        case BufferDataType::UShort: return MTL::IndexTypeUInt16;
+        case BufferDataType::UInt: return MTL::IndexTypeUInt32;
+        default:
+            throw AT2Exception("Metal supports only UInt16 and UInt32 index buffer types");
+    }
+}
+
 /*
     constexpr GLenum TranslateExternalFormat(TextureLayout layout)
     {

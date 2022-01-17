@@ -50,7 +50,42 @@ std::shared_ptr<IBuffer> ResourceFactory::CreateBuffer(VertexBufferType type, st
 
 std::shared_ptr<IShaderProgram> ResourceFactory::CreateShaderProgramFromFiles(std::initializer_list<str> files) const
 {
-    return std::make_shared<ShaderProgram>(m_renderer);
+    constexpr char source[] = R"(
+        #include <metal_stdlib>
+        using namespace metal;
+
+        struct VertexIn
+        {
+            float3 position [[ attribute(1) ]];
+            float2 texCoord [[ attribute(2) ]];
+        };
+
+        struct VertexUniforms
+        {
+            float4x4 u_matModelView [[id(0)]];
+            float4x4 u_matProjection;
+        };
+
+        vertex float4 vertex_main(
+            const VertexIn vertex_in        [[ stage_in ]],
+            constant VertexUniforms& params [[ buffer(0) ]]
+        )
+        {
+            const auto viewSpacePos = params.u_matModelView * float4(vertex_in.position, 1);
+            return params.u_matProjection * viewSpacePos;
+        }
+
+        fragment float4 fragment_main(texture2d<float, access::sample> texAlbedo [[texture(0)]])
+        {
+            return float4(1, 0, 0, 1);
+        }
+    )";
+    
+    static std::shared_ptr<ShaderLibrary> library = std::make_shared<ShaderLibrary>(m_renderer, source);
+    
+    ShaderProgram::Descriptor descriptor {library, "vertex_main", "fragment_main"};
+    
+    return std::make_shared<ShaderProgram>(descriptor);
 }
 
 void AT2::Metal::ResourceFactory::ReloadResources(ReloadableGroup group)

@@ -1,35 +1,53 @@
 #pragma once
 
-#include <StateManager.h>
 #include "AT2lowlevel.h"
 
 namespace AT2::Metal
 {
 
 class Renderer;
+class ShaderProgram;
+class VertexArray;
 
-class MtlStateManager : public StateManager
+class MtlStateManager : public IStateManager, public IRenderer
 {
 public:
-    using StateManager::StateManager;
+    MtlStateManager(Renderer& renderer, MTL::RenderCommandEncoder* encoder) : m_renderer{renderer}, m_renderEncoder{encoder} {}
+    ~MtlStateManager() override = default;
+    
+//IStateManager interface
+    void BindTextures(const TextureSet& textures) override;
+    void BindShader(const std::shared_ptr<IShaderProgram>& shader) override;
+    void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) override;
 
     void ApplyState(RenderState state) override;
+
+    [[nodiscard]] std::shared_ptr<IShaderProgram> GetActiveShader() const override;
+    [[nodiscard]] std::shared_ptr<IVertexArray> GetActiveVertexArray() const override;
+
+    [[nodiscard]] std::optional<BufferDataType> GetIndexDataType() const noexcept override;
+
+        [[nodiscard]] std::optional<unsigned int> GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept override { return std::nullopt; }
     
-    // for internal usage
-    void OnStartRendering(MTL::RenderCommandEncoder* renderEncoder) {m_renderEncoder = renderEncoder; }
-    void OnFinishRendering(){ m_renderEncoder = nullptr; }
-    
-    MtlPtr<MTL::RenderPipelineState> GetOrBuildState();
-    
-protected:
-    Renderer& GetRenderer() const;
-    
-    void DoBind(ITexture& texture, unsigned index) override;
-    void DoBind(IShaderProgram& shaderProgram) override;
-    void DoBind(IVertexArray& vertexArray) override;
+//IRenderer interface
+    void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances, int baseVertex) override;
+
+    void SetViewport(const AABB2d& viewport) override;
+    void SetScissorWindow(const AABB2d& viewport) override;
+    [[nodiscard]] IStateManager& GetStateManager() override { return *this; }
+
+    IVisualizationSystem& GetVisualizationSystem() override;
     
 private:
+    MtlPtr<MTL::RenderPipelineState> GetOrBuildState();
+    
+private:
+    Renderer& m_renderer;
     MTL::RenderCommandEncoder* m_renderEncoder;
+    
+    std::shared_ptr<ShaderProgram> m_activeShader;
+    std::shared_ptr<VertexArray> m_activeVertexArray;
+    
     MtlPtr<MTL::RenderPipelineDescriptor> m_buildingState = ConstructMetalObject<MTL::RenderPipelineDescriptor>();
     MtlPtr<MTL::DepthStencilDescriptor> m_buildingDepthStencilState;
     MtlPtr<MTL::RenderPipelineState> m_currentState;
