@@ -84,7 +84,19 @@ void ShaderProgram::SetUBO(std::string_view blockName, unsigned int index)
 
 void ShaderProgram::SetUniform(std::string_view name, Uniform value)
 {
-	
+    using namespace std::literals;
+
+    const auto* mat = std::get_if<glm::mat4>(&value);
+    if (!mat)
+        return;
+    
+    if (name == "u_matModelView"sv)
+        m_crutchBuffer.u_matModelView = *mat;
+    else if (name == "u_matProjection"sv)
+        m_crutchBuffer.u_matProjection = *mat;
+    
+    
+    //m_reflection->vertexArguments();
 }
 
 void ShaderProgram::SetUniformArray(std::string_view name, UniformArray value)
@@ -111,13 +123,10 @@ namespace
         {
             case MTL::ArgumentTypeBuffer:
             {
-                auto* members = argument->bufferStructType()->members();
-                for (int i = 0; i < members->count(); ++i)
-                {
-                    const auto* member = static_cast<MTL::StructMember*>(members->object(i));
+                VisitArray<MTL::StructMember*>(argument->bufferStructType()->members(), [](const MTL::StructMember* member){
                     auto name = member->name()->cString(NS::UTF8StringEncoding);
                     auto dataType = member->dataType();
-                }
+                });
             } break;
                 
             case MTL::ArgumentTypeTexture:
@@ -129,16 +138,20 @@ namespace
 
     void VisitArgumentArray(const NS::Array* argumentsArray)
     {
-        for (int i = 0; i < argumentsArray->count(); ++i)
-        {
-            VisitArgument(static_cast<MTL::Argument*>(argumentsArray->object(i)));
-        }
+        VisitArray<const MTL::Argument*>(argumentsArray, VisitArgument);
     }
 
 }
 
-void ShaderProgram::OnStateCreated(MTL::RenderPipelineReflection* reflection)
+void ShaderProgram::OnStateCreated(MtlPtr<MTL::RenderPipelineReflection> reflection)
 {
     VisitArgumentArray(reflection->vertexArguments());
     VisitArgumentArray(reflection->fragmentArguments());
+    
+    m_reflection = std::move(reflection);
+}
+
+void ShaderProgram::OnDrawCall(MTL::RenderCommandEncoder* renderEncoder)
+{
+    renderEncoder->setVertexBytes(&m_crutchBuffer, sizeof(m_crutchBuffer), 0);
 }

@@ -29,13 +29,15 @@ namespace AT2::Mappings
         if (format.DataType == BufferDataType::Double || format.DataType == BufferDataType::Fixed)
             throw AT2NotImplementedException("double and fixed-point buffer layout support not implemented");
 
+        // TODO: support both normalized and int textures
+
         switch (format.ChannelsLayout)
         {
         case TextureLayout::Red:
             switch (format.DataType)
             {
-                case BufferDataType::Byte: return MTL::PixelFormatR8Sint;
-                case BufferDataType::UByte: return MTL::PixelFormatR8Uint;
+                case BufferDataType::Byte: return MTL::PixelFormatR8Snorm;
+                case BufferDataType::UByte: return MTL::PixelFormatR8Unorm;
                 case BufferDataType::Short: return MTL::PixelFormatR16Sint;
                 case BufferDataType::UShort: return MTL::PixelFormatR16Uint;
                 case BufferDataType::Int: return MTL::PixelFormatR32Sint;
@@ -48,8 +50,8 @@ namespace AT2::Mappings
         case TextureLayout::RG:
             switch (format.DataType)
             {
-                case BufferDataType::Byte: return MTL::PixelFormatRG8Sint;
-                case BufferDataType::UByte: return MTL::PixelFormatRG8Uint;
+                case BufferDataType::Byte: return MTL::PixelFormatRG8Snorm;
+                case BufferDataType::UByte: return MTL::PixelFormatRG8Unorm;
                 case BufferDataType::Short: return MTL::PixelFormatRG16Sint;
                 case BufferDataType::UShort: return MTL::PixelFormatRG16Uint;
                 case BufferDataType::Int: return MTL::PixelFormatRG32Sint;
@@ -70,8 +72,8 @@ namespace AT2::Mappings
         case TextureLayout::BGRA: //TODO: own branch
             switch (format.DataType)
             {
-                case BufferDataType::Byte: return MTL::PixelFormatRGBA8Sint;
-                case BufferDataType::UByte: return MTL::PixelFormatRGBA8Uint;
+                case BufferDataType::Byte: return MTL::PixelFormatRGBA8Snorm;//MTL::PixelFormatRGBA8Sint;
+                case BufferDataType::UByte: return MTL::PixelFormatRGBA8Unorm;//MTL::PixelFormatRGBA8Uint;
                 case BufferDataType::Short: return MTL::PixelFormatRGBA16Sint;
                 case BufferDataType::UShort: return MTL::PixelFormatRGBA16Uint;
                 case BufferDataType::Int: return MTL::PixelFormatRGBA32Sint;

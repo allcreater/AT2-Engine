@@ -8,6 +8,9 @@
 #include "ShaderProgram.h"
 #include "Mappings.h"
 
+#include <filesystem>
+#include <fstream>
+
 using namespace AT2;
 using namespace AT2::Metal;
 
@@ -50,42 +53,51 @@ std::shared_ptr<IBuffer> ResourceFactory::CreateBuffer(VertexBufferType type, st
 
 std::shared_ptr<IShaderProgram> ResourceFactory::CreateShaderProgramFromFiles(std::initializer_list<str> files) const
 {
-    constexpr char source[] = R"(
-        #include <metal_stdlib>
-        using namespace metal;
-
-        struct VertexIn
+    class LibrariesRegistry
+    {
+    public:
+        std::shared_ptr<ShaderLibrary> FindOrOpen(Renderer& renderer, std::filesystem::path path)
         {
-            float3 position [[ attribute(1) ]];
-            float2 texCoord [[ attribute(2) ]];
-        };
-
-        struct VertexUniforms
-        {
-            float4x4 u_matModelView [[id(0)]];
-            float4x4 u_matProjection;
-        };
-
-        vertex float4 vertex_main(
-            const VertexIn vertex_in        [[ stage_in ]],
-            constant VertexUniforms& params [[ buffer(0) ]]
-        )
-        {
-            const auto viewSpacePos = params.u_matModelView * float4(vertex_in.position, 1);
-            return params.u_matProjection * viewSpacePos;
+            auto [it, inserted] = m_libraries.emplace(path, std::shared_ptr<ShaderLibrary>{});
+            if (inserted)
+                it->second = std::make_shared<ShaderLibrary>(renderer, LoadSource(path));
+            
+            return it->second;
         }
-
-        fragment float4 fragment_main(texture2d<float, access::sample> texAlbedo [[texture(0)]])
+        
+    private:
+        std::string LoadSource(std::filesystem::path path)
         {
-            return float4(1, 0, 0, 1);
+            std::ifstream in(path);
+            in.exceptions(std::ifstream::failbit);
+            return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
         }
-    )";
+        
+    private:
+        std::map<std::filesystem::path, std::shared_ptr<ShaderLibrary>> m_libraries;
+    };
+    static LibrariesRegistry s_registry {};
     
-    static std::shared_ptr<ShaderLibrary> library = std::make_shared<ShaderLibrary>(m_renderer, source);
     
-    ShaderProgram::Descriptor descriptor {library, "vertex_main", "fragment_main"};
+    std::vector<std::filesystem::path> filenames;
+    std::transform(files.begin(), files.end(), std::back_inserter(filenames), [](std::filesystem::path path){
+        return path.extension() == ".glsl" ? path.replace_extension().replace_extension(".metal") : path;
+    });
     
-    return std::make_shared<ShaderProgram>(descriptor);
+    std::sort(filenames.begin(), filenames.end());
+    filenames.erase(std::unique(filenames.begin(), filenames.end()), filenames.end());
+    
+    for (const auto& path : filenames)
+    {
+        if (auto library = s_registry.FindOrOpen(m_renderer, path))
+        {
+            ShaderProgram::Descriptor descriptor {library, "vertex_main", "fragment_main"};
+            
+            return std::make_shared<ShaderProgram>(descriptor);
+        }
+    }
+    
+    return nullptr;
 }
 
 void AT2::Metal::ResourceFactory::ReloadResources(ReloadableGroup group)

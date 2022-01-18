@@ -58,11 +58,19 @@ namespace AT2::Metal
     // for internal usage
         MtlPtr<MTL::Library> GetLibrary() { return m_library->GetLibrary(); }
         void Apply(MTL::RenderPipelineDescriptor& pipelineDescriptor) const;
-        void OnStateCreated(MTL::RenderPipelineReflection* reflection);
+        void OnStateCreated(MtlPtr<MTL::RenderPipelineReflection> reflection);
+        void OnDrawCall(MTL::RenderCommandEncoder* renderEncoder);
         
     private:
         std::shared_ptr<ShaderLibrary> m_library;
         MtlPtr<MTL::Function> m_functionVertex, m_functionFragment;
+        MtlPtr<MTL::RenderPipelineReflection> m_reflection;
+        
+        struct CrutchBuffer
+        {
+            glm::mat4 u_matModelView;
+            glm::mat4 u_matProjection;
+        } m_crutchBuffer;
         
         str m_name;
     };

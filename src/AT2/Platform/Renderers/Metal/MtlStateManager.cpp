@@ -71,8 +71,9 @@ void MtlStateManager::Draw(Primitives::Primitive type, size_t first, long int co
     auto state = GetOrBuildState();
     m_renderEncoder->setRenderPipelineState(state.get());
     
-    const auto platformPrimitiveType = Mappings::TranslatePrimitiveType(type);
+    m_activeShader->OnDrawCall(m_renderEncoder);
     
+    const auto platformPrimitiveType = Mappings::TranslatePrimitiveType(type);
     if (auto indexBufferDataType = m_activeVertexArray->GetIndexBufferType())
     {
         auto& mtlIndexBuffer = Utils::safe_dereference_cast<Buffer>(m_activeVertexArray->GetIndexBuffer());
@@ -133,7 +134,8 @@ void MtlStateManager::BindTextures(const TextureSet& textures)
     if (!m_renderEncoder)
         return;
     
-    //m_renderEncoder->setVertexTexture(Utils::safe_dereference_cast<MtlTexture&>(&texture).getNativeHandle(), index);
+    assert(textures.size() == 1);
+    m_renderEncoder->setFragmentTexture(Utils::safe_dereference_cast<MtlTexture&>(&(**textures.begin())).getNativeHandle(), 0); //TODO!
 }
 
 void MtlStateManager::BindShader(const std::shared_ptr<IShaderProgram>& shaderProgram)

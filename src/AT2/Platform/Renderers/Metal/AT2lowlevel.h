@@ -114,6 +114,15 @@ inline void CheckErrors(NS::Error* error)
     
     const auto* description = error->description()->cString(NS::UTF8StringEncoding);
     throw AT2Exception( description );
-};
+}
+
+template <typename T, typename F>
+void VisitArray(const NS::Array* array, F&& action)
+{
+    for (NS::UInteger i = 0; i < array->count(); ++i)
+    {
+        action(static_cast<std::remove_pointer_t<T>*>(array->object(i)));
+    }
+}
 
 } //AT2::Metal
