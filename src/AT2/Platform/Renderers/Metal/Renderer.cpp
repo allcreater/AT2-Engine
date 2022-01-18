@@ -44,9 +44,9 @@ private:
 };
 }
 
-Renderer::Renderer(void* metalLayer)
+Renderer::Renderer(IPlatformGraphicsContext& graphicsContext)
 {
-    swapchain = reinterpret_cast<CA::MetalLayer*>(metalLayer);
+    swapchain = reinterpret_cast<CA::MetalLayer*>(graphicsContext.getPlatformSwapchain());
     device.reset(swapchain->device());
     
     Log::Info() << "AT2 Metal renderer initialized"sv
