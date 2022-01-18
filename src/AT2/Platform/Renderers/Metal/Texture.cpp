@@ -62,7 +62,9 @@ constexpr size_t GetRowLength(ExternalTextureFormat format, size_t width)
 
 }
 
-MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format) : m_flavor(flavor)
+MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format)
+: m_renderer{renderer}
+, m_flavor{std::move(flavor)}
 {
     auto descriptor = ConstructMetalObject<MTL::TextureDescriptor>();
     descriptor->setPixelFormat(format);
@@ -207,7 +209,14 @@ void MtlTexture::BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, 
 
 void MtlTexture::BuildMipmaps()
 {
-	
+    //TODO: commit to existing command buffer
+    auto commandBuffer = Own(m_renderer.getCommandQueue()->commandBuffer());
+    auto blitEncoder = Own(commandBuffer->blitCommandEncoder());
+    
+    blitEncoder->generateMipmaps(m_texture.get());
+    
+    blitEncoder->endEncoding();
+    commandBuffer->commit();
 }
 
 void MtlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, const void* data)

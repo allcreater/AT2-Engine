@@ -12,7 +12,7 @@ class VertexArray;
 class MtlStateManager : public IStateManager, public IRenderer
 {
 public:
-    MtlStateManager(Renderer& renderer, MTL::RenderCommandEncoder* encoder) : m_renderer{renderer}, m_renderEncoder{encoder} {}
+    MtlStateManager(Renderer& renderer, MTL::RenderCommandEncoder* encoder);
     ~MtlStateManager() override = default;
     
 //IStateManager interface

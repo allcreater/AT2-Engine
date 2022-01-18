@@ -47,6 +47,7 @@ namespace AT2::Metal
 
 
     protected:
+        Renderer& m_renderer;
         Texture m_flavor;
         TextureWrapParams m_wrapParams;
         TextureSamplingParams m_sampling_params;

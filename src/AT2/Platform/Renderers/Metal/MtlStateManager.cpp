@@ -8,6 +8,13 @@
 using namespace AT2;
 using namespace AT2::Metal;
 
+MtlStateManager::MtlStateManager(Renderer& renderer, MTL::RenderCommandEncoder* encoder)
+: m_renderer{renderer}
+, m_renderEncoder{encoder}
+{
+    m_renderEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise); //as in OpenGLMtlStateManager
+}
+
 void MtlStateManager::ApplyState(RenderState state)
 {
     std::visit(Utils::overloaded {

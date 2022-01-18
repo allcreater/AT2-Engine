@@ -90,10 +90,17 @@ void ShaderProgram::SetUniform(std::string_view name, Uniform value)
     if (!mat)
         return;
     
+    constexpr glm::mat4 metalProjectionModifier {
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 0.5, 0.5,
+        0.0, 0.0, 0.0, 1.0
+    };
+    
     if (name == "u_matModelView"sv)
         m_crutchBuffer.u_matModelView = *mat;
     else if (name == "u_matProjection"sv)
-        m_crutchBuffer.u_matProjection = *mat;
+        m_crutchBuffer.u_matProjection = metalProjectionModifier * *mat;
     
     
     //m_reflection->vertexArguments();
