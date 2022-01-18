@@ -80,8 +80,6 @@ private:
     void OnRender( AT2::Seconds dt, AT2::IVisualizationSystem& visualizationSystem ) override
     {
         visualizationSystem.GetDefaultFramebuffer().Render([&](AT2::IRenderer& renderer){
-            renderer.SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
-
             auto& stateManager = renderer.GetStateManager();
     	    stateManager.ApplyState(AT2::DepthState { AT2::CompareFunction::Less, true, true});
             stateManager.ApplyState(AT2::FaceCullMode {false, true});

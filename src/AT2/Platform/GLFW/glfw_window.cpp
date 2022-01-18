@@ -40,6 +40,12 @@ namespace
 
         void setVSyncInterval(int interval) override { glfwSwapInterval(interval); }
         void* getPlatformSwapchain() const override { return nullptr; }
+        [[nodiscard]] glm::ivec2 getPhysicalViewportSize() const override
+        {
+            glm::ivec2 frameBufferSize;
+            glfwGetFramebufferSize(window, &frameBufferSize.x, &frameBufferSize.y);
+            return frameBufferSize;
+        }
         void makeCurrent() override
         {
             GLFWwindow* actualContext = glfwGetCurrentContext();

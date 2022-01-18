@@ -233,8 +233,6 @@ namespace AT2::Scene
             return;
 
         SetupCamera(renderer, *params.Camera, time);
-        renderer.SetViewport(AABB2d {{0, 0}, framebuffer_size});
-
         auto& stateManager = renderer.GetStateManager();
 
 

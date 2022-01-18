@@ -23,7 +23,7 @@ Window* Window::FromNativeWindow(SDL_Window* window)
 Window::Window(const ContextParameters& contextParameters, glm::ivec2 initialSize)
 	: WindowBase{ initialSize}
 {
-    const auto windowFlags = SDL_WINDOW_ALLOW_HIGHDPI | GetContextSpecificWindowFlags(contextParameters);
+    const auto windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | GetContextSpecificWindowFlags(contextParameters);
     window_impl = SDL_CreateWindow(window_label.c_str(), 100, 100, window_size.x, window_size.y, windowFlags);
     if (!window_impl)
         throw Exception("Window creation failed");

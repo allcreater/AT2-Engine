@@ -4,6 +4,17 @@
 using namespace AT2;
 using namespace AT2::OpenGL;
 
+namespace
+{
+    void ResetViewport(IFrameBuffer& self)
+    {
+        glDisable(GL_SCISSOR_TEST); //TODO: apply via StateManager?
+
+        const auto actualViewportSize = self.GetActualSize();
+        glViewport(0, 0, actualViewportSize.x, actualViewportSize.y);
+    }
+}
+
 GlFrameBuffer::GlFrameBuffer(GlRenderer& renderer)
     : m_renderer(renderer)
     , m_colorAttachments(renderer.GetRendererCapabilities().GetMaxNumberOfColorAttachments())
@@ -98,7 +109,7 @@ void GlFrameBuffer::SetClearDepth(std::optional<float> depth)
 
 void GlFrameBuffer::Render(RenderFunc renderFunc) 
 {
-    glDisable(GL_SCISSOR_TEST); //TODO: apply via StateManager?
+    ResetViewport(*this);
     
     glBindFramebuffer(GL_FRAMEBUFFER, m_id);
 
@@ -171,14 +182,13 @@ void AT2::OpenGL::GlScreenFrameBuffer::SetClearDepth(std::optional<float> depth)
 
 [[nodiscard]] glm::ivec2 GlScreenFrameBuffer::GetActualSize() const
 {
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-
-    return {viewport[2] - viewport[0], viewport[3] - viewport[1]};
+    return m_renderer.GetGraphicsContext().getPhysicalViewportSize();
 }
 
 void GlScreenFrameBuffer::Render(RenderFunc renderFunc) 
 {
+    ResetViewport(*this);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     if (m_clearColor)

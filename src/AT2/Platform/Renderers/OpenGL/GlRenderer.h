@@ -2,6 +2,7 @@
 #define AT2_GL_RENDERER_H
 
 #include "AT2lowlevel.h"
+#include <GraphicsContextInterface.h>
 
 namespace AT2::OpenGL
 {
@@ -40,7 +41,7 @@ namespace AT2::OpenGL
     public:
         NON_COPYABLE_OR_MOVABLE(GlRenderer)
 
-        GlRenderer(GLADloadproc glFunctionsBinder);
+        GlRenderer(IPlatformGraphicsContext& graphicsContext, GLADloadproc glFunctionsBinder);
         ~GlRenderer() override = default;
 
     public:
@@ -63,11 +64,14 @@ namespace AT2::OpenGL
 
         IVisualizationSystem& GetVisualizationSystem() override { return *this; }
 
+        const IPlatformGraphicsContext& GetGraphicsContext() const { return m_graphicsContext; }
+
     private:
         static void __stdcall GlErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
                                     const GLchar* message, const GLvoid* userParam);
 
     private:
+        IPlatformGraphicsContext& m_graphicsContext;
         std::unique_ptr<IStateManager> m_stateManager;
         std::unique_ptr<IResourceFactory> m_resourceFactory;
         std::unique_ptr<IRendererCapabilities> m_rendererCapabilities;

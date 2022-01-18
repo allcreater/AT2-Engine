@@ -56,6 +56,12 @@ std::unique_ptr<IPlatformGraphicsContext> MakeOpenglContext(SDL_Window* window, 
 
         void setVSyncInterval(int interval) override { SDL_GL_SetSwapInterval(interval); }
         void* getPlatformSwapchain() const override { return nullptr; }
+        glm::ivec2 getPhysicalViewportSize() const override
+        {
+            glm::ivec2 physicalSize;
+            SDL_GL_GetDrawableSize(window, &physicalSize.x, &physicalSize.y);
+            return physicalSize;
+        }
         void makeCurrent() override { SDL_GL_MakeCurrent(window, context); }
         void swapBuffers() override { SDL_GL_SwapWindow(window); }
     };
@@ -81,6 +87,12 @@ std::unique_ptr<IPlatformGraphicsContext> MakeMetalContext(SDL_Window* window, c
 
         void setVSyncInterval(int interval) override { }
         void* getPlatformSwapchain() const override { return SDL_RenderGetMetalLayer(renderer); }
+        glm::ivec2 getPhysicalViewportSize() const override
+        {
+            glm::ivec2 physicalSize;
+            SDL_Metal_GetDrawableSize(window, &physicalSize.x, &physicalSize.y);
+            return physicalSize;
+        }
         void makeCurrent() override {}
         void swapBuffers() override {}
     };
@@ -99,6 +111,7 @@ std::unique_ptr<IPlatformGraphicsContext> MakeDummyContext(SDL_Window* window, c
     private:
         void setVSyncInterval(int interval) override {}
         void* getPlatformSwapchain() const override { return nullptr; }
+        glm::ivec2 getPhysicalViewportSize() const override { return {}; }
         void makeCurrent() override {}
         void swapBuffers() override {}
     };

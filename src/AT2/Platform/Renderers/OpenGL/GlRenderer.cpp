@@ -46,7 +46,7 @@ namespace
     }
 } // namespace
 
-GlRenderer::GlRenderer(GLADloadproc glFunctionsBinder)
+GlRenderer::GlRenderer(IPlatformGraphicsContext& graphicsContext, GLADloadproc glFunctionsBinder) : m_graphicsContext {graphicsContext}
 {
     if (!gladLoadGLLoader(glFunctionsBinder))
         throw AT2RendererException("Failed to initialize GLAD");

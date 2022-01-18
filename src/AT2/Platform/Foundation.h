@@ -4,71 +4,25 @@
 #include <mutex>
 #include <variant>
 
-#include <AT2_types.hpp>
+#include "GraphicsContextInterface.h"
 
 #include "callback_types.h"
 
 namespace AT2
 {
-    //TODO: move to separate file
-    enum class OpenglProfile
-    {
-        Core,
-        Compat
-    };
-
-    struct OpenGLContextParams
-    {
-        OpenglProfile profile = OpenglProfile::Core;
-        int context_major_version = 4;
-        int context_minor_version = 5;
-
-        bool debug_context = false;
-    };
-
-    struct MetalContextParams
-    {
-        
-    };
-
-    using ConcreteContextParams = std::variant<std::monostate, OpenGLContextParams, MetalContextParams>;
-
-    struct ContextParameters
-    {
-        ConcreteContextParams contextType;
-
-        int msaa_samples = 0;
-        int refresh_rate = 0;
-
-        int framebuffer_bits_red = 8;
-        int framebuffer_bits_green = 8;
-        int framebuffer_bits_blue = 8;
-        int framebuffer_bits_depth = 24;
-
-        bool srgb_capable = true;
-    };
-
-	struct IPlatformGraphicsContext
-    {
-        virtual ~IPlatformGraphicsContext() = default;
-
-        virtual void setVSyncInterval(int interval) = 0;
-        virtual void* getPlatformSwapchain() const = 0;
-        virtual void makeCurrent() = 0;
-        virtual void swapBuffers() = 0;
-        
-    };
-
     class WindowBase : public IWindow
     {
     public:
-        WindowBase(glm::ivec2 windowSize = {}, std::string label = {}) : window_size(windowSize), window_label(std::move(label)) {}
+        WindowBase(glm::ivec2 windowSize = {}, std::string label = {}) : window_label(std::move(label)), window_size {windowSize} {}
         //void* get() const noexcept { return window_impl; }
 
     	IPlatformGraphicsContext& getGraphicsContext() { return *graphicsContext; }
     	const IPlatformGraphicsContext& getGraphicsContext() const { return *graphicsContext; }
 
         void setWindowContext(std::unique_ptr<IWindowContext> newWindowContext) override { windowContext = std::move(newWindowContext); }
+
+    	const std::string& getLabel() const final { return window_label; }
+        glm::ivec2 getSize() const final { return window_size; }
 
         //event callbacks
         //Render context available only at InitializeCallback and RenderCallback
@@ -93,31 +47,25 @@ namespace AT2
         void OnInitialize() const;
 
         void OnUpdate(Seconds deltaTime) const;
-
         void OnRender(Seconds deltaTime) const;
 
         void OnWindowRefreshing() const;
 
         void OnKeyDown(int key) const;
-
         void OnKeyUp(int key) const;
-
         void OnKeyRepeat(int key) const;
 
         void OnResize(glm::ivec2 newSize) const;
         void OnClosing() const;
 
         void OnMouseMove(glm::dvec2 mousePosition) const;
-
         void OnMouseDown(int button) const;
-
         void OnMouseUp(int button) const;
-
         void OnMouseScroll(const glm::dvec2& scrollDirection) const;
+
 
         // Produces MouseMove event by relative mouse position
         void MoveMouse(const glm::vec2& mouseMove) const;
-
         void UpdateAndRender();
 
         virtual void PlatformClose() = 0;
@@ -128,7 +76,7 @@ namespace AT2
         std::string window_label {"New window"};
 
         //mutables is just for track some parameters in callbacks
-        mutable glm::ivec2 window_size {800, 600};
+        mutable glm::ivec2 window_size {0};
         mutable glm::vec2 previous_mouse_pos {};
 
         mutable std::mutex mutex;

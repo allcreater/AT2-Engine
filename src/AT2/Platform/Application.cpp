@@ -32,7 +32,7 @@ void AT2::SingleWindowApplication::Run(std::unique_ptr<WindowContextBase> window
 
     window->InitializeCallback = [window = window.get(), windowContext = windowContext.get()] {
         windowContext->m_window = window;
-        windowContext->m_visualizationSystem = std::make_unique<OpenGL::GlRenderer>(openglFunctionsBinder);
+        windowContext->m_visualizationSystem = std::make_unique<OpenGL::GlRenderer>(window->getGraphicsContext(), openglFunctionsBinder);
         windowContext->OnInitialized(*windowContext->m_visualizationSystem);
     };
 

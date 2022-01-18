@@ -31,8 +31,6 @@ private:
                 AT2::BlendMode {AT2::BlendFactor::SourceAlpha, AT2::BlendFactor::OneMinusSourceAlpha, glm::vec4 {1}});
             renderer.GetStateManager().ApplyState(AT2::FaceCullMode {});
 
-            renderer.SetViewport(AABB2d {{0, 0}, getWindow().getSize()});
-
             m_uiHub->Render(renderer, dt);
         });
     }

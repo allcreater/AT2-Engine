@@ -76,6 +76,7 @@ set(COMMON_SOURCES_LIST
     "Common.h"
     "Foundation.h"
     "Foundation.cpp"
+    "GraphicsContextInterface.h"
 )
 
 if (USE_SDL_INSTEADOF_GLFW)

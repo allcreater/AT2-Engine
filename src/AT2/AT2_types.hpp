@@ -351,7 +351,7 @@ public:
 
     ///@thread_safety safe
     virtual IWindow& setSize(glm::ivec2 size) = 0;
-    virtual const glm::ivec2& getSize() const = 0;
+    virtual glm::ivec2 getSize() const = 0;
 
     ///@thread_safety safe
     virtual void requestAttention() = 0;

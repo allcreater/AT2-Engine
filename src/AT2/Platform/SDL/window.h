@@ -19,11 +19,9 @@ namespace AT2::SDL
 
         ///@thread_safety safe
         Window& setLabel(std::string label) override;
-        const std::string& getLabel() const override { return window_label; }
 
         ///@thread_safety safe
         Window& setSize(glm::ivec2 size) override;
-        const glm::ivec2& getSize() const override { return window_size; }
 
         ///@thread_safety safe
         void requestAttention() override;

@@ -101,8 +101,7 @@ void UiRenderer::Draw(IRenderer& renderer)
 
 void UiRenderer::RenderNode(IRenderer& renderer, const Node& node)
 {
-    const auto aabb = node.GetScreenPosition();
-    renderer.SetViewport(aabb);
+    renderer.SetViewport(node.GetScreenPosition());
 
     //m_quadDrawable->UniformBuffer->SetUniform("u_Color", DebugColor(node));
     //m_quadDrawable->Draw(m_renderer.lock());
