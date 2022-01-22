@@ -276,10 +276,7 @@ namespace AT2::Scene
     void SceneRenderer::SetupCamera(IRenderer& renderer, const Camera& camera, const ITime& time)
     {
         if (!cameraUniformBuffer)
-        {
-            auto buffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
-            cameraUniformBuffer = std::move(buffer);
-        }
+            cameraUniformBuffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
 
         cameraUniformBuffer->SetUniform("u_matView", camera.getView());
         cameraUniformBuffer->SetUniform("u_matInverseView", camera.getViewInverse());

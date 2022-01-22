@@ -1,5 +1,5 @@
 #include "GlUniformBuffer.h"
-#include <BufferMapperGuard.h>
+#include <DataLayout/IO.hpp>
 
 #include <utility>
 
@@ -15,46 +15,20 @@ GlUniformBuffer::GlUniformBuffer(std::shared_ptr<const UniformBlockInfo> ubi) :
     SetDataRaw(std::span{emptyData, m_uniformBlockInfo->DataSize});
 }
 
-namespace
-{
-    template <typename T>
-    const GLvoid* value_ptr(const T& value)
-    {
-        return static_cast<const GLvoid*>(&value);
-    }
-
-
-    template <typename T>
-    void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, std::string_view name, const T& value)
-    {
-        const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
-        if (!ui)
-            return;
-
-        //Unfortunately high-level methods are slowly than direct API calls :( But it could be inlined or something like that if we need it.
-        BufferMapperGuard mapping {buffer, static_cast<size_t>(ui->Offset), sizeof(T), BufferUsage::Write};
-        mapping.Set(value);
-    }
-
-
-    template <typename T, length_t C, length_t R, qualifier Q>
-    void SetUniformInternal(GlUniformBuffer& buffer, const UniformBlockInfo& ubi, std::string_view name, const glm::mat<C, R, T, Q>& value)
-    {
-        const auto* ui = AT2::Utils::find(ubi.Uniforms, name);
-        if (!ui)
-            return;
-
-        BufferMapperGuard mapping {buffer, static_cast<size_t>(ui->Offset), static_cast<size_t>(C) * ui->MatrixStride, BufferUsage::Write};
-        for (decltype(C) i = 0; i < C; ++i)
-            mapping.Set(value[i], static_cast<size_t>(i) * ui->MatrixStride);
-    }
-} // namespace
-
 void GlUniformBuffer::SetUniform(std::string_view name, const Uniform& value)
 {
     using namespace glm;
 
-    std::visit([&](const auto& x) { SetUniformInternal(*this, *m_uniformBlockInfo, name, x); }, value);
+    std::visit([&](const auto& x)
+    {
+        if (auto* field = m_uniformBlockInfo->Layout[name])
+        {
+            // All buffer is mapping just for one variable - very inefficient, but only writer knows real field size.
+            // Besides, this code will be removed very soon
+            DataIO::Write(*field, Map(AT2::BufferUsage::ReadWrite).subspan(field->GetOffset()), x); 
+            Unmap();
+        }
+    }, value);
 }
 
 void GlUniformBuffer::Bind(IStateManager&) const

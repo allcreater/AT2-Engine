@@ -30,6 +30,8 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
 
     auto programInfo = std::unique_ptr<ProgramInfo> { new ProgramInfo() };
 
+    std::unordered_map<int, std::vector<Field>> layoutsData;
+
     for (GLuint uniformIndex = 0; uniformIndex < static_cast<GLuint>(numUniforms); ++uniformIndex)
     {
         const auto [nameLength, location, type, arraySize, blockIndex, offset, arrayStride, matrixStride] =
@@ -50,35 +52,33 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
         }
         else //it's uniform from uniform block
         {
-            const auto& [iterator, firstTime] = programInfo->uniformBlocks.try_emplace(blockIndex);
-            auto& block = iterator->second;
-
-            if (firstTime)
-            {
-                const auto [blockNameLength, dataSize, binding] = getProgramResource(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex),
-                                       std::array<GLenum, 3> {GL_NAME_LENGTH, GL_BUFFER_DATA_SIZE, GL_BUFFER_BINDING});
-
-                assert(blockNameLength > 0);
-                std::string blockName(static_cast<size_t>(blockNameLength)-1, '\0'); //because nameLength includes \0
-                glGetProgramResourceName(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex), blockNameLength, nullptr,
-                                         blockName.data());
-
-                block.Name = std::move(blockName);
-                block.BlockIndex = blockIndex;
-
-                assert(dataSize > 0 && binding > 0);
-                block.DataSize = static_cast<GLuint>(dataSize);
-                block.InitialBinding = static_cast<GLuint>(binding);
-
-                //add it to lookup
-                programInfo->uniformBlocksByName.try_emplace(block.Name, &block);
-            }
-
-            
-            block.Uniforms.try_emplace(
-                std::move(uniformName),
-                BufferedUniformInfo {{location, arraySize, static_cast<UniformInfo::UniformType>(type)}, offset, arrayStride, matrixStride});
+            assert(arraySize >= 0 && arrayStride >= 0);
+            layoutsData[blockIndex].emplace_back(
+                std::move(uniformName), offset,
+                ArrayAttributes {static_cast<unsigned int>(arraySize), static_cast<unsigned int>(arrayStride)}, matrixStride);
         }
+    }
+
+    for (auto& [blockIndex, blockDescriptor] : layoutsData)
+    {
+        const auto [blockNameLength, dataSize, binding] =
+            getProgramResource(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex),
+                               std::array<GLenum, 3> {GL_NAME_LENGTH, GL_BUFFER_DATA_SIZE, GL_BUFFER_BINDING});
+
+        assert(blockNameLength > 0);
+        std::string blockName(static_cast<size_t>(blockNameLength) - 1, '\0'); //because nameLength includes \0
+        glGetProgramResourceName(program, GL_UNIFORM_BLOCK, static_cast<GLuint>(blockIndex), blockNameLength, nullptr, blockName.data());
+
+
+        //add it to lookup
+        auto [blockIt, _] = programInfo->uniformBlocks.emplace(blockIndex, UniformBlockInfo {
+        	std::move(blockName),
+            blockIndex,
+        	static_cast<GLuint>(dataSize),
+        	static_cast<GLuint>(binding),
+        	BufferLayout {std::move(blockDescriptor)}
+        });
+        programInfo->uniformBlocksByName.try_emplace(blockIt->second.Name, &blockIt->second);
     }
 
     return programInfo;

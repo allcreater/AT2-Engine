@@ -3,6 +3,10 @@ cmake_minimum_required (VERSION 3.8 FATAL_ERROR)
 project (AT2_Engine_Core)
 
 set (${PROJECT_NAME}_SOURCES
+    "DataLayout/BufferLayout.h"
+    "DataLayout/BufferLayout.cpp"
+    "DataLayout/IO.hpp"
+
     "Resources/GltfSceneLoader.h"
     "Resources/GltfSceneLoader.cpp"
     "Resources/MeshLoader.h"

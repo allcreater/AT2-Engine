@@ -3,7 +3,7 @@
 
 #include "AT2lowlevel.h"
 
-#include <unordered_map>
+#include <DataLayout/BufferLayout.h>
 
 namespace AT2::OpenGL::Introspection
 {
@@ -19,17 +19,6 @@ namespace AT2::OpenGL::Introspection
 
     using UniformMap = Utils::UnorderedStringMap<UniformInfo>;
 
-
-    struct BufferedUniformInfo : UniformInfo
-    {
-        GLint Offset = 0;
-        GLint ArrayStride = 0;
-        GLint MatrixStride = 0;
-    };
-
-    using BufferedUniformMap = Utils::UnorderedStringMap<BufferedUniformInfo>;
-
-
     struct UniformBlockInfo
     {
         std::string Name;
@@ -37,7 +26,7 @@ namespace AT2::OpenGL::Introspection
         GLuint DataSize = 0;
         GLuint InitialBinding = 0;
 
-        BufferedUniformMap Uniforms;
+        BufferLayout Layout;
     };
 
     using UniformBlockMap = std::unordered_map<GLint, UniformBlockInfo>;

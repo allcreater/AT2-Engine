@@ -96,7 +96,7 @@ std::optional<size_t> GlVertexArray::GetLastAttributeIndex() const noexcept
         return std::nullopt;
 }
 
-std::optional<BufferBindingParams> GlVertexArray::GetVertexBufferBinding(unsigned index) const
+std::optional<BufferBindingParams> GlVertexArray::GetVertexBufferBinding(unsigned int index) const
 {
     const auto& [buffer, binding] = m_buffers.at(index);
     return buffer ? binding : std::optional<BufferBindingParams> {};

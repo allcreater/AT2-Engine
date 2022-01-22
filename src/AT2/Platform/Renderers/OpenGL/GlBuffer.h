@@ -5,7 +5,6 @@
 
 namespace AT2::OpenGL
 {
-    //TODO: incorrect class and interface name. It's any buffer, not just vertex one
     class GlBuffer : public IBuffer
     {
     public:
