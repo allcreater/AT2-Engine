@@ -2,6 +2,8 @@
 
 #include "AT2lowlevel.h"
 
+#include <GraphicsContextInterface.h>
+
 namespace AT2::Metal
 {
 
@@ -10,7 +12,7 @@ class Renderer : public IVisualizationSystem
 public:
     NON_COPYABLE_OR_MOVABLE(Renderer)
 
-    explicit Renderer( void* nsWindow );
+    explicit Renderer( IPlatformGraphicsContext& graphicsContext );
     ~Renderer() override = default;
 
 public:

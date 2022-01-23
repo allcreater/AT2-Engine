@@ -28,7 +28,7 @@ void AT2::SingleWindowApplication::Run(std::unique_ptr<WindowContextBase> window
 
     window->InitializeCallback = [window = window.get(), windowContext = windowContext.get()] {
         windowContext->m_window = window;
-        windowContext->m_visualizationSystem = std::make_unique<Metal::Renderer>(window->getGraphicsContext().getPlatformSwapchain());
+        windowContext->m_visualizationSystem = std::make_unique<Metal::Renderer>(window->getGraphicsContext());
         windowContext->OnInitialized(*windowContext->m_visualizationSystem);
     };
 
