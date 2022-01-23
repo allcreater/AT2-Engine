@@ -10,15 +10,15 @@ namespace AT2
     {
     public:
         ArrayAttributes() = default;
-        ArrayAttributes(unsigned int arraySize, unsigned int arrayStride) : m_arraySize {arraySize}, m_arrayStride {arrayStride} {}
+        ArrayAttributes(unsigned int elementsCount, unsigned int arrayStride) : elementsCount {elementsCount}, m_arrayStride {arrayStride} {}
 
-        [[nodiscard]] unsigned int GetSize() const noexcept { return m_arraySize; }
+        [[nodiscard]] unsigned int GetLength() const noexcept { return elementsCount; }
         [[nodiscard]] unsigned int GetStride() const noexcept { return m_arrayStride; }
 
-        [[nodiscard]] operator bool() const { return m_arraySize != 0 && m_arrayStride != 0; }
+        [[nodiscard]] operator bool() const { return elementsCount != 0 && m_arrayStride != 0; }
 
     private:
-        unsigned int m_arraySize = 0, m_arrayStride = 0;
+        unsigned int elementsCount = 0, m_arrayStride = 0;
     };
 
 
@@ -56,18 +56,12 @@ namespace AT2
     public:
         BufferLayout(std::vector<Field> fields);
 
-        const Field* operator[](std::string_view name) const
-        {
-        	const auto it = m_fieldsByName.find(name);
-            return it != m_fieldsByName.end() ? it->second : nullptr;
-        }
-        std::optional<size_t> GetFieldNumber(std::string_view name) const 
-        {
-            const auto it = m_fieldsByName.find(name);
-            return it != m_fieldsByName.end() ? std::optional {std::distance(m_fields.data(), it->second)} : std::nullopt;
-        }
+        const Field*          operator[](std::string_view name) const;
+
+        std::optional<size_t> GetFieldNumber(std::string_view name) const;
 
         std::span<const Field> GetFields() const { return m_fields; }
+        size_t GetSufficientSize() const;
 
     private:
         std::vector<Field> m_fields;
@@ -75,32 +69,23 @@ namespace AT2
     };
 
     // Just a container for pair "buffer + layout", could be replaced just to free function IBuffer::Commit or like this
-    class StructuredBuffer
+    class StructuredBuffer : public IUniformContainer
     {
     public:
-        //TODO: read is possible too
-        class IStructuredDataWriter
-        {
-        public:
-            virtual ~IStructuredDataWriter() = default;
-            virtual void Write(std::string_view name, Uniform value) = 0;
-            virtual void Write(std::string_view name, UniformArray value) = 0;
-        };
-
-    public:
-        StructuredBuffer(std::shared_ptr<IBuffer> buffer, std::shared_ptr<BufferLayout> bufferLayout) :
-            m_buffer {std::move(buffer)}, m_bufferLayout {std::move(bufferLayout)}
-        {
-        }
+        StructuredBuffer(std::shared_ptr<IBuffer> buffer, std::shared_ptr<const BufferLayout> bufferLayout);
 
         operator IBuffer&() const { return *m_buffer; }
         std::shared_ptr<IBuffer> GetBuffer() const { return m_buffer; }
 
-        void Commit(const std::function<void(IStructuredDataWriter&)>& operation);
+        void Commit(const std::function<void(IUniformsWriter&)>& operation) override;
+        void Bind(IStateManager& stateManager) const override;
+
+        void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
 
     private:
         std::shared_ptr<IBuffer> m_buffer;
-        std::shared_ptr<BufferLayout> m_bufferLayout;
+        std::shared_ptr<const BufferLayout> m_bufferLayout;
+        unsigned int m_bindingPoint = 0;
     };
 
 }

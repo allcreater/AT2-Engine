@@ -95,6 +95,7 @@ namespace AT2
 
         [[nodiscard]] virtual size_t GetLength() const noexcept = 0;
         virtual void SetDataRaw(std::span<const std::byte> data) = 0;
+        virtual void ReserveSpace(size_t size) = 0;
 
         virtual std::span<std::byte> Map(BufferUsage usage) = 0;
         virtual std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) = 0;
@@ -247,8 +248,20 @@ namespace AT2
         virtual void SetUniformArray(std::string_view name, UniformArray value) = 0;
     };
 
+    // Abstract container that stores shaders parameters and knows how to apply all them to render state at Bind method
     class IUniformContainer
     {
+    public:
+        //TODO: in some contexts read is possible too
+        class IUniformsWriter
+        {
+        public:
+            virtual ~IUniformsWriter() = default;
+            virtual void Write(std::string_view name, Uniform value) = 0;
+            virtual void Write(std::string_view name, UniformArray value) = 0;
+            virtual void Write(std::string_view name, std::shared_ptr<ITexture> value) = 0;
+        };
+
     public:
         NON_COPYABLE_OR_MOVABLE(IUniformContainer)
 
@@ -256,10 +269,17 @@ namespace AT2
         virtual ~IUniformContainer() = default;
 
     public:
-        virtual void SetUniform(std::string_view name, const Uniform& value) = 0;
-        virtual void SetUniform(std::string_view name, const std::shared_ptr<ITexture>& value) = 0;
-
+        virtual void Commit(const std::function<void(IUniformsWriter&)>& writer) = 0;
         virtual void Bind(IStateManager& stateManager) const = 0;
+
+        // for backward compatibility
+        template <typename T>
+        requires std::is_constructible_v<Uniform, T> || std::is_constructible_v<UniformArray, T> ||
+            std::is_constructible_v<std::shared_ptr<ITexture>, T>
+        void SetUniform(std::string_view name, T&& value)
+        {
+            Commit([&](IUniformsWriter& writer) { writer.Write(name, std::forward<T>(value)); });
+        }
     };
 
     class IRendererCapabilities
@@ -288,8 +308,12 @@ namespace AT2
         virtual ~IStateManager() = default;
 
     public:
-        virtual void BindTextures(const TextureSet& textures) = 0; //TODO: more flexible interface with possibility to add textures one-by-one + something like UnbindTextures() 
+        //TODO: more flexible interface with possibility to add textures one-by-one + something like UnbindTextures() 
+        //or... probably binding by index will be thriumphally returned
+        //In common, need to unificate binding
+        virtual void BindTextures(const TextureSet& textures) = 0;
         virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
+        virtual void BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer) = 0;
         virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 
         virtual void ApplyState(RenderState state) = 0;

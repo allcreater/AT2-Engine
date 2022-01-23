@@ -72,7 +72,7 @@ namespace AT2::DataIO
             if (arrayAttributes.GetStride() < sizeof(T))
                 throw std::length_error("Array stride is less than actual element size");
 
-            if (arrayAttributes.GetSize() != span.size())
+            if (arrayAttributes.GetLength() != span.size())
                 throw std::length_error("Array size doesn't match input array's size");
 
             Writer<T> writer;

@@ -28,6 +28,15 @@ void GlBuffer::SetDataRaw(std::span<const std::byte> data)
     m_length = data.size();
 }
 
+void GlBuffer::ReserveSpace( size_t size )
+{
+    if (m_length >= size)
+        return;
+
+    constexpr std::byte* emptyData = nullptr;
+    SetDataRaw(std::span {emptyData, size});
+}
+
 std::span<std::byte> GlBuffer::Map(BufferUsage usage)
 {
     if (m_mapped)

@@ -12,8 +12,7 @@ namespace AT2
         UniformContainer() = default;
 
     public:
-        void SetUniform(std::string_view name, const Uniform& value) override;
-        void SetUniform(std::string_view name, const std::shared_ptr<ITexture>& value) override;
+        void Commit(const std::function<void(IUniformsWriter&)>& writer) override;
 
         void Bind(IStateManager& stateManager) const override;
 

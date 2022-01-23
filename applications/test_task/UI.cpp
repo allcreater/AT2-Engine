@@ -33,10 +33,11 @@ public:
         if (doBufferReload)
 			m_VAO->GetVertexBuffer(0)->SetData(data.GetData());
 
-        m_uniforms->SetUniform("u_BoundsX",
-                               glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
-        m_uniforms->SetUniform("u_NumberOfPoints", (glm::uint32_t)data.GetData().size());
-        m_uniforms->SetUniform("u_Color", data.GetColor());
+        m_uniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+            writer.Write("u_BoundsX", glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
+            writer.Write("u_NumberOfPoints", (glm::uint32_t)data.GetData().size());
+            writer.Write("u_Color", data.GetColor());
+        });
     }
 
     void SetProjectionMatrix(const glm::mat4& matProj) { m_projectionMatrix = matProj; }
@@ -149,14 +150,13 @@ void WindowRenderer::Draw(IRenderer& renderer)
         const auto texture =
             renderer.GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
 
-        auto& material = m_Mesh->GetOrCreateDefaultMaterial();
-        material.SetUniform("u_BackgroundTexture", texture);
-        material.SetUniform("u_ScreenAABB", glm::vec4(screenAABB.MinBound, screenAABB.MaxBound));
-
-        material.SetUniform("u_Color", m_Color);
-        material.SetUniform("u_BorderThickness", m_borderThickness);
-        material.SetUniform("u_BlurDirection", m_blurDirection);
-
+        m_Mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+            writer.Write("u_BackgroundTexture", texture);
+            writer.Write("u_ScreenAABB", glm::vec4(screenAABB.MinBound, screenAABB.MaxBound));
+            writer.Write("u_Color", m_Color);
+            writer.Write("u_BorderThickness", m_borderThickness);
+            writer.Write("u_BlurDirection", m_blurDirection);
+        });
         Utils::MeshRenderer::DrawMesh(renderer, *m_Mesh, m_Mesh->Shader);
     }
 }

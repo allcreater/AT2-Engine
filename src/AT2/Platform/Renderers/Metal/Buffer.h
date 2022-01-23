@@ -20,6 +20,7 @@ namespace AT2::Metal
         [[nodiscard]] size_t GetLength() const noexcept override;
 
         void SetDataRaw(std::span<const std::byte> data) override;
+        void ReserveSpace(size_t size) override;
 
         std::span<std::byte> Map(BufferUsage usage) override;
         std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) override;

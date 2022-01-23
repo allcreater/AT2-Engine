@@ -150,9 +150,11 @@ namespace AT2::Scene
 
         if (nearestLightIt != lrv.collectedDirectionalLights.end())
         {
-            skyLightsUniforms->SetUniform("u_lightDirection", nearestLightIt->direction);
-            skyLightsUniforms->SetUniform("u_lightIntensity", nearestLightIt->intensity);
-            skyLightsUniforms->SetUniform("u_environmentMap", nearestLightIt->environment_map);
+            skyLightsUniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+                writer.Write("u_lightDirection", nearestLightIt->direction);
+                writer.Write("u_lightIntensity", nearestLightIt->intensity);
+                writer.Write("u_environmentMap", nearestLightIt->environment_map);
+            });
 
             DrawQuad(renderer, resources.skyLightsShader, *skyLightsUniforms);
         }
@@ -201,29 +203,34 @@ namespace AT2::Scene
 
             {
                 sphereLightsUniforms = resources.sphereLightsShader->CreateAssociatedUniformStorage();
-                //sphereLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
-                sphereLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0).Texture);
-                sphereLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1).Texture);
-                sphereLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2).Texture);
-                sphereLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment().Texture);
+
+                sphereLightsUniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+                    writer.Write("u_colorMap", gBufferFBO->GetColorAttachment(0).Texture);
+                    writer.Write("u_normalMap", gBufferFBO->GetColorAttachment(1).Texture);
+                    writer.Write("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2).Texture);
+                    writer.Write("u_depthMap", gBufferFBO->GetDepthAttachment().Texture);
+                });
             }
 
             {
                 skyLightsUniforms = resources.skyLightsShader->CreateAssociatedUniformStorage();
-                //skyLightsUniforms->SetUniform("u_texNoise", Noise3Tex);
-                skyLightsUniforms->SetUniform("u_colorMap", gBufferFBO->GetColorAttachment(0).Texture);
-                skyLightsUniforms->SetUniform("u_normalMap", gBufferFBO->GetColorAttachment(1).Texture);
-                skyLightsUniforms->SetUniform("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2).Texture);
-                skyLightsUniforms->SetUniform("u_depthMap", gBufferFBO->GetDepthAttachment().Texture);
+
+                skyLightsUniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+                    writer.Write("u_colorMap", gBufferFBO->GetColorAttachment(0).Texture);
+                    writer.Write("u_normalMap", gBufferFBO->GetColorAttachment(1).Texture);
+                    writer.Write("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2).Texture);
+                    writer.Write("u_depthMap", gBufferFBO->GetDepthAttachment().Texture);
+                });
                 //skyLightsUniforms->SetUniform("u_environmentMap", 0);
             }
 
             //Postprocess quad
             {
                 postprocessUniforms = resources.postprocessShader->CreateAssociatedUniformStorage();
-                //uniformStorage->SetUniform("u_texNoise", Noise3Tex);
-                postprocessUniforms->SetUniform("u_colorMap", postProcessFBO->GetColorAttachment(0).Texture);
-                postprocessUniforms->SetUniform("u_depthMap", postProcessFBO->GetDepthAttachment().Texture);
+                postprocessUniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+                    writer.Write("u_colorMap", postProcessFBO->GetColorAttachment(0).Texture);
+                    writer.Write("u_depthMap", postProcessFBO->GetDepthAttachment().Texture);
+                });
             }
 
             dirtyFramebuffers = false;
@@ -278,12 +285,14 @@ namespace AT2::Scene
         if (!cameraUniformBuffer)
             cameraUniformBuffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
 
-        cameraUniformBuffer->SetUniform("u_matView", camera.getView());
-        cameraUniformBuffer->SetUniform("u_matInverseView", camera.getViewInverse());
-        cameraUniformBuffer->SetUniform("u_matProjection", camera.getProjection());
-        cameraUniformBuffer->SetUniform("u_matInverseProjection", camera.getProjectionInverse());
-        cameraUniformBuffer->SetUniform("u_matViewProjection", camera.getProjection() * camera.getView());
-        cameraUniformBuffer->SetUniform("u_time", time.getTime().count());
+        cameraUniformBuffer->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+            writer.Write("u_matView", camera.getView());
+            writer.Write("u_matInverseView", camera.getViewInverse());
+            writer.Write("u_matProjection", camera.getProjection());
+            writer.Write("u_matInverseProjection", camera.getProjectionInverse());
+            writer.Write("u_matViewProjection", camera.getProjection() * camera.getView());
+            writer.Write("u_time", time.getTime().count());
+        });
         cameraUniformBuffer->Bind(renderer.GetStateManager());
     }
 

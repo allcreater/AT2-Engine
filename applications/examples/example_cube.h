@@ -121,8 +121,10 @@ private:
         m_cubeRotation = glm::normalize(m_cubeRotation * glm::quat {angularSpeed});
 
 
-    	m_cubeMesh.GetOrCreateDefaultMaterial().SetUniform("u_matModelView", m_camera.getView() * glm::mat4 {m_cubeRotation});
-        m_cubeMesh.GetOrCreateDefaultMaterial().SetUniform("u_matProjection", m_camera.getProjection());
+    	m_cubeMesh.GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+            writer.Write("u_matModelView", m_camera.getView() * glm::mat4 {m_cubeRotation});
+            writer.Write("u_matProjection", m_camera.getProjection());
+        });
     }
 
 private:

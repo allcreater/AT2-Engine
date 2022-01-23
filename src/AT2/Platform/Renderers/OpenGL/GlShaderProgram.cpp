@@ -1,7 +1,7 @@
 #include "GlShaderProgram.h"
 
 #include <UniformContainer.h>
-#include "GlUniformBuffer.h"
+#include <DataLayout/BufferLayout.h>
 #include "Mappings.h"
 
 using namespace AT2;
@@ -93,8 +93,9 @@ namespace
 } // namespace
 
 
-GlShaderProgram::GlShaderProgram(const ShaderDescriptor& descriptor)
-	: m_programId( glCreateProgram() )
+GlShaderProgram::GlShaderProgram(IRenderer& renderer, const ShaderDescriptor& descriptor)
+	: m_renderer {&renderer}
+	, m_programId{ glCreateProgram() }
 {
     auto tryAttachShader = [this](ShaderType shaderType, std::string_view shaderSource)
     {
@@ -185,11 +186,12 @@ std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStora
         return nullptr;
     assert(m_uniformsInfo);
 
-    const auto uniformBlockInfo = m_uniformsInfo->getUniformBlock(blockName);
+    const auto* uniformBlockInfo = m_uniformsInfo->getUniformBlock(blockName);
     if (!uniformBlockInfo)
         return nullptr;
 
-    auto uniformBuffer = std::make_unique<GlUniformBuffer>(std::shared_ptr<const UniformBlockInfo>(m_uniformsInfo, uniformBlockInfo));
+    auto uniformBuffer = std::make_unique<StructuredBuffer>(m_renderer->GetResourceFactory().CreateBuffer(VertexBufferType::UniformBuffer),
+                                                            std::shared_ptr<const BufferLayout>{m_uniformsInfo, &uniformBlockInfo->Layout});
 
     //just initial binding to make buffer usable "out of box". External code could rebind it or remap as user wants.
     uniformBuffer->SetBindingPoint(uniformBlockInfo->InitialBinding);

@@ -11,6 +11,7 @@ class GlStateManager : public StateManager
     using StateManager::StateManager;
 
     void ApplyState(RenderState state) override;
+    void BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer) override;
 
 protected:
     void DoBind(ITexture& texture, unsigned index) override;

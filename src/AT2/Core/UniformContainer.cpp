@@ -5,19 +5,43 @@
 using namespace AT2;
 using namespace glm;
 
-
-void UniformContainer::SetUniform(std::string_view name, const Uniform& value)
+namespace
 {
-    const auto& [it, isInserted] = m_uniformsMap.emplace(name, value);
-    if (!isInserted)
-        it->second = value;
+    // Technically it should be just insert_or_assign(name, std::move(value)); but seems that C++20's authors just forgot about heterohenous lookup :(
+    const auto insert_or_assign = []<typename T>(auto& map, const auto& name, T&& value) {
+        const auto& [it, isInserted] = map.emplace(name, value); //try_replace is not works too, so that we could not move =(
+        if (!isInserted)
+            it->second = std::forward<T>(value);
+    };
 }
 
-void UniformContainer::SetUniform(std::string_view name, const std::shared_ptr<ITexture>& value)
+void UniformContainer::Commit(const std::function<void(IUniformsWriter&)>& commitFunc) 
 {
-    const auto& [it, isInserted] = m_texturesMap.emplace(name, value);
-    if (!isInserted)
-        it->second = value;
+    class UniformContainerWriter : public IUniformContainer::IUniformsWriter
+    {
+    public:
+        UniformContainerWriter(UniformContainer& uniformContainer) : m_container {uniformContainer} {}
+
+        void Write(std::string_view name, Uniform value) override
+        {
+            insert_or_assign(m_container.m_uniformsMap, name, std::move(value));
+        }
+
+        void Write(std::string_view name, UniformArray value) override 
+        {
+        	throw AT2NotImplementedException("UniformContainerWriter::Write(UniformArray)");
+        }
+
+        void Write(std::string_view name, std::shared_ptr<ITexture> value) override
+        {
+            insert_or_assign(m_container.m_texturesMap, name, std::move(value));
+        }
+
+    private:
+        UniformContainer& m_container;
+    } writer {*this};
+
+    commitFunc(writer);
 }
 
 void UniformContainer::Bind(IStateManager& stateManager) const

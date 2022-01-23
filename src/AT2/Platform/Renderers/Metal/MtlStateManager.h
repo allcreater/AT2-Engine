@@ -18,6 +18,7 @@ public:
 //IStateManager interface
     void BindTextures(const TextureSet& textures) override;
     void BindShader(const std::shared_ptr<IShaderProgram>& shader) override;
+    void BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer) override;
     void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) override;
 
     void ApplyState(RenderState state) override;
@@ -27,7 +28,7 @@ public:
 
     [[nodiscard]] std::optional<BufferDataType> GetIndexDataType() const noexcept override;
 
-        [[nodiscard]] std::optional<unsigned int> GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept override { return std::nullopt; }
+	[[nodiscard]] std::optional<unsigned int> GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept override { return std::nullopt; }
     
 //IRenderer interface
     void Draw(Primitives::Primitive type, size_t first, long int count, int numInstances, int baseVertex) override;

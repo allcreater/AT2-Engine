@@ -27,6 +27,15 @@ void Buffer::SetDataRaw(std::span<const std::byte> data)
         buffer = Own(renderer.getDevice()->newBuffer(data.data(), data.size(), MTL::ResourceOptionCPUCacheModeDefault));
 }
 
+void Buffer::ReserveSpace(size_t size)
+{
+    if (m_length >= size)
+        return;
+
+    constexpr std::byte* emptyData = nullptr;
+    SetDataRaw(std::span {emptyData, size});
+}
+
 std::span<std::byte> Buffer::Map(BufferUsage usage)
 {
     if (!buffer)

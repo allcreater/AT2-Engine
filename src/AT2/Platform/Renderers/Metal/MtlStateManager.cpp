@@ -137,7 +137,6 @@ MtlPtr<MTL::RenderPipelineState> MtlStateManager::GetOrBuildState()
 
 void MtlStateManager::BindTextures(const TextureSet& textures)
 {
-    
     if (!m_renderEncoder)
         return;
     
@@ -154,6 +153,13 @@ void MtlStateManager::BindShader(const std::shared_ptr<IShaderProgram>& shaderPr
     //TODO take actual attachment layout from active render stage?
     m_buildingState->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
     m_stateInvalidated = true;
+}
+
+void MtlStateManager::BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer)
+{
+    const auto& mtlBuffer = Utils::safe_dereference_cast<Buffer&>(buffer);
+    m_renderEncoder->setVertexBuffer(mtlBuffer.getNativeHandle(), 0, index);
+    m_renderEncoder->setFragmentBuffer(mtlBuffer.getNativeHandle(), 0, index);
 }
 
 void MtlStateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray)

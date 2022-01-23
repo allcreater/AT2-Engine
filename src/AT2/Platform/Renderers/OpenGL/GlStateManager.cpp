@@ -40,6 +40,15 @@ void OpenGL::GlStateManager::ApplyState(RenderState state)
     }, state);
 }
 
+void OpenGL::GlStateManager::BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer) 
+{
+    const auto& glBuffer = Utils::safe_dereference_cast<const GlBuffer&>(buffer);
+    
+    if (glBuffer.GetType() == VertexBufferType::UniformBuffer)
+        glBindBufferBase(Mappings::TranslateBufferType(glBuffer.GetType()), index, glBuffer.GetId());
+    //TODO: track buffer state, it's OpenGL with global state...
+}
+
 void OpenGL::GlStateManager::DoBind(ITexture& texture, unsigned index)
 {
     const auto& glTexture = Utils::safe_dereference_cast<const GlTexture&>(&texture);

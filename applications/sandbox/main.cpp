@@ -143,12 +143,13 @@ private:
 
             auto mesh = terrainNode->getComponent<AT2::Scene::MeshComponent>()->getMesh();
             mesh->Shader = TerrainShader;
-            auto& uniformStorage = mesh->GetOrCreateDefaultMaterial();
-            uniformStorage.SetUniform("u_texNoise", Noise3Tex);
-            uniformStorage.SetUniform("u_texHeight", HeightMapTex);
-            uniformStorage.SetUniform("u_texNormalMap", NormalMapTex);
-            uniformStorage.SetUniform("u_texGrass", GrassTex);
-            uniformStorage.SetUniform("u_texRock", GrassTex);
+            mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+                writer.Write("u_texNoise", Noise3Tex);
+                writer.Write("u_texHeight", HeightMapTex);
+                writer.Write("u_texNormalMap", NormalMapTex);
+                writer.Write("u_texGrass", GrassTex);
+                writer.Write("u_texRock", GrassTex);
+            });
         }
         m_scene.GetRoot().AddChild(std::move(terrainNode));
 

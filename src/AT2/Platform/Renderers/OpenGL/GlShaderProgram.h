@@ -7,7 +7,6 @@
 
 namespace AT2::OpenGL
 {
-
     //TODO: complete immutabilization
     class GlShaderProgram : public IShaderProgram, public std::enable_shared_from_this<GlShaderProgram>
     {
@@ -24,7 +23,7 @@ namespace AT2::OpenGL
         };
         using ShaderDescriptor = std::unordered_multimap<ShaderType, std::string>;
 
-        GlShaderProgram(const ShaderDescriptor& descriptor);
+        GlShaderProgram(IRenderer& renderer, const ShaderDescriptor& descriptor);
         ~GlShaderProgram() override;
 
         GlShaderProgram(const GlShaderProgram&) = delete;
@@ -49,6 +48,8 @@ namespace AT2::OpenGL
 
         void swap(GlShaderProgram& rhv) noexcept
         {
+            assert(m_renderer == rhv.m_renderer);
+
             std::swap(m_programId, rhv.m_programId);
             std::swap(m_shaderIds, rhv.m_shaderIds);
             std::swap(m_uniformsInfo, rhv.m_uniformsInfo);
@@ -63,8 +64,9 @@ namespace AT2::OpenGL
 
     protected:
         bool TryLinkProgram();
-
+        
     private:
+        IRenderer* m_renderer;
         GLuint m_programId {0};
         std::vector<std::pair<ShaderType, GLuint>> m_shaderIds;
         std::shared_ptr<Introspection::ProgramInfo> m_uniformsInfo;

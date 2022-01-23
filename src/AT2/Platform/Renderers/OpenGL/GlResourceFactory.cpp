@@ -149,12 +149,12 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
     class GlShaderProgramFromFileImpl : public IReloadable
     {
     public:
-        GlShaderProgramFromFileImpl(std::initializer_list<str> filenames) :
-            m_filenames {ClassifyFilenames(filenames)}, m_shader {MakeShaderDescriptor(m_filenames)}
+        GlShaderProgramFromFileImpl(GlRenderer& renderer, std::initializer_list<str> filenames) : m_renderer {renderer},
+        m_filenames {ClassifyFilenames(filenames)}, m_shader {m_renderer, MakeShaderDescriptor(m_filenames)}
         {
         }
 
-        void Reload() override { m_shader = GlShaderProgram {MakeShaderDescriptor(m_filenames)}; }
+        void Reload() override { m_shader = GlShaderProgram {m_renderer, MakeShaderDescriptor(m_filenames)}; }
 
         ReloadableGroup getReloadableClass() const override { return ReloadableGroup::Shaders; }
 
@@ -214,11 +214,12 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
         }
 
     private:
+        GlRenderer& m_renderer;
         ClassifiedFilenameList m_filenames;
         GlShaderProgram m_shader;
     };
 
-    auto resource = std::make_shared<GlShaderProgramFromFileImpl>(files);
+    auto resource = std::make_shared<GlShaderProgramFromFileImpl>(m_renderer, files);
     m_reloadableResourcesList.push_back(std::weak_ptr<IReloadable>(resource));
 
     return {resource, &resource->GetShader()};
