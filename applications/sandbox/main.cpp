@@ -42,7 +42,7 @@ private:
         auto shader =
             visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 
-        shader->SetUniform("u_result", 0);
+        //shader->SetUniform("u_result", 0);
 
         resultTex->BindAsImage(0, 0, 0, false);
         visualizationSystem.DispatchCompute(shader, glm::uvec3 {resolution, 1} / localGroupSize);

@@ -244,8 +244,6 @@ namespace AT2
         //Warning: Shader reloading/relinking will invalidate that state
         //TODO: make uniform buffers and uniforms binding same as textures binding via StateManager
         virtual void SetUBO(std::string_view blockName, unsigned int index) = 0;
-        virtual void SetUniform(std::string_view name, Uniform value) = 0;
-        virtual void SetUniformArray(std::string_view name, UniformArray value) = 0;
     };
 
     // Abstract container that stores shaders parameters and knows how to apply all them to render state at Bind method
@@ -269,8 +267,8 @@ namespace AT2
         virtual ~IUniformContainer() = default;
 
     public:
-        virtual void Commit(const std::function<void(IUniformsWriter&)>& writer) = 0;
-        virtual void Bind(IStateManager& stateManager) const = 0;
+        virtual void Commit(const std::function<void(IUniformsWriter&)>& writeComand) = 0;
+        virtual void Bind(IStateManager& stateManager) const = 0; //TODO: remove
 
         // for backward compatibility
         template <typename T>
@@ -297,9 +295,7 @@ namespace AT2
         [[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachments() const = 0;
     };
 
-    typedef std::set<std::shared_ptr<ITexture>> TextureSet;
-
-    class IStateManager
+    class IStateManager : public IUniformContainer
     {
     public:
         NON_COPYABLE_OR_MOVABLE(IStateManager)
@@ -311,7 +307,6 @@ namespace AT2
         //TODO: more flexible interface with possibility to add textures one-by-one + something like UnbindTextures() 
         //or... probably binding by index will be thriumphally returned
         //In common, need to unificate binding
-        virtual void BindTextures(const TextureSet& textures) = 0;
         virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
         virtual void BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer) = 0;
         virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
@@ -372,6 +367,7 @@ namespace AT2
         [[nodiscard]] virtual IResourceFactory& GetResourceFactory() const = 0;
         [[nodiscard]] virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
+        // TODO: make functional and provide ComputeContext class to set uniforms!
         virtual void DispatchCompute( const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize ) = 0;
 
         virtual void BeginFrame() = 0;

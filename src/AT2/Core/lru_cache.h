@@ -17,7 +17,7 @@ public:
     //TODO: make allocator friendly
 
     template <typename ValueFactoryFunc, typename ValueDroppedFunc>
-    void put(const key_type& key, ValueFactoryFunc&& valueFactory, ValueDroppedFunc&& valueDroppedCallback)
+	std::add_lvalue_reference_t<value_type> put(const key_type& key, ValueFactoryFunc&& valueFactory, ValueDroppedFunc&& valueDroppedCallback)
 	{
     	const auto [iterator, isNew] = m_index.emplace(key, ListIterator{});
         if (isNew)
@@ -37,6 +37,7 @@ public:
             m_cache.splice(m_cache.begin(), m_cache, iterator->second);
 
     	iterator->second = m_cache.begin();
+        return m_cache.front();
     }
 
 

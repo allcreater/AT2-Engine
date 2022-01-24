@@ -46,18 +46,13 @@ void UniformContainer::Commit(const std::function<void(IUniformsWriter&)>& commi
 
 void UniformContainer::Bind(IStateManager& stateManager) const
 {
-    const auto& program = stateManager.GetActiveShader();
-    if (!program)
-        throw AT2ShaderException("GlUniformContainer: try to bind uniform container when parent program is missing");
+    stateManager.Commit([this](IUniformsWriter& writer) 
+    {
+        for (const auto& [name, value] : m_uniformsMap)
+            writer.Write(name, value);
 
-    for (const auto& [name, value] : m_uniformsMap)
-        program->SetUniform(name, value);
+    	for (const auto& [name, value] : m_texturesMap)
+            writer.Write(name, value);
+    });
 
-    TextureSet set; //TODO: just a crutch, make it correct!!!
-    for (const auto& [name, value] : m_texturesMap)
-        set.insert(value);
-    stateManager.BindTextures(set);
-
-    for (const auto& [name, value] : m_texturesMap)
-        program->SetUniform(name, static_cast<int>(*stateManager.GetActiveTextureIndex(value)));
 }

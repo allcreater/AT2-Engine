@@ -52,23 +52,24 @@ namespace AT2::Scene
                     skinRef->getResultJointTransforms(),
                     [mvInverse = transforms.getModelViewInverse()](const glm::mat4& transform) { return mvInverse * transform; });
 
-                stateManager.GetActiveShader()->SetUniformArray("u_skeletonMatrices", skeletonMatrices); 
-                stateManager.GetActiveShader()->SetUniform("u_useSkinning", 1);
+                stateManager.Commit([&](IUniformContainer::IUniformsWriter& writer) {
+                    writer.Write("u_skeletonMatrices", skeletonMatrices);
+                    writer.Write("u_useSkinning", 1);
+                });
             }
             else
             {
-                stateManager.GetActiveShader()->SetUniform("u_useSkinning", 0);
+                stateManager.SetUniform("u_useSkinning", 0);
             }
-
 
             for (const size_t submeshIndex : meshComponent->GetSubmeshIndices())
             {
-                stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
-                stateManager.GetActiveShader()->SetUniform(
-                    "u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
+                stateManager.Commit([&](IUniformContainer::IUniformsWriter& writer) {
+                    writer.Write("u_matModel", transforms.getModelView());
+                    writer.Write("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
+                });
 
-                Utils::MeshRenderer::DrawSubmesh(renderer, *active_mesh,
-                                                 active_mesh->SubMeshes[submeshIndex]);
+                Utils::MeshRenderer::DrawSubmesh(renderer, *active_mesh, active_mesh->SubMeshes[submeshIndex]);
             }
         }
 
