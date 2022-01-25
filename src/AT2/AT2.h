@@ -93,6 +93,9 @@ namespace AT2
             SetDataRaw(std::as_bytes(std::span {data}));
         }
 
+        //virtual void Map(BufferUsage usage, std::function<void(std::span<std::byte>)> fillCallback) = 0;
+        //virtual void Map(BufferUsage usage, size_t offset, size_t length, std::function<void(std::span<std::byte>)> fillCallback) = 0;
+
         [[nodiscard]] virtual size_t GetLength() const noexcept = 0;
         virtual void SetDataRaw(std::span<const std::byte> data) = 0;
         virtual void ReserveSpace(size_t size) = 0;
@@ -230,6 +233,8 @@ namespace AT2
                                 const void* data) = 0;
     };
 
+    class StructuredBuffer;
+
     class IShaderProgram
     {
     public:
@@ -239,29 +244,50 @@ namespace AT2
         virtual ~IShaderProgram() = default;
 
     public:
-        virtual std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName = "") = 0;
+        virtual std::unique_ptr<StructuredBuffer> CreateAssociatedUniformStorage(std::string_view blockName) = 0;
+    };
 
-        //Warning: Shader reloading/relinking will invalidate that state
-        //TODO: make uniform buffers and uniforms binding same as textures binding via StateManager
-        virtual void SetUBO(std::string_view blockName, unsigned int index) = 0;
-        virtual void SetUniform(std::string_view name, Uniform value) = 0;
-        virtual void SetUniformArray(std::string_view name, UniformArray value) = 0;
+    //TODO: in some contexts read is possible too
+    //Also not all writers actually supports textures and buffers, probably they must be setted from extended interface
+    class IUniformsWriter
+    {
+    public:
+        NON_COPYABLE_OR_MOVABLE(IUniformsWriter)
+
+        IUniformsWriter() = default;
+        virtual ~IUniformsWriter() = default;
+
+    public:
+        virtual void Write(std::string_view name, Uniform value) = 0;
+        virtual void Write(std::string_view name, UniformArray value) = 0;
+        virtual void Write(std::string_view name, std::shared_ptr<ITexture> value) = 0;
+        virtual void Write(std::string_view name, std::shared_ptr<IBuffer> value) = 0;
+    };
+
+    //Universal interface to set shader parameters.
+    class IUniformReceiver
+    {
+    public:
+        NON_COPYABLE_OR_MOVABLE(IUniformReceiver)
+
+        IUniformReceiver() = default;
+        virtual ~IUniformReceiver() = default;
+
+    public:
+        virtual void Commit(const std::function<void(IUniformsWriter&)>& writeComand) = 0;
+
+        // for backward compatibility
+        template <typename T>
+        requires requires(IUniformsWriter& writer, T&& t) { writer.Write(std::string_view {}, std::forward<T>(t)); }
+        void SetUniform(std::string_view name, T&& value)
+        {
+            Commit([&](IUniformsWriter& writer) { writer.Write(name, std::forward<T>(value)); });
+        }
     };
 
     // Abstract container that stores shaders parameters and knows how to apply all them to render state at Bind method
-    class IUniformContainer
+    class IUniformContainer : public IUniformReceiver
     {
-    public:
-        //TODO: in some contexts read is possible too
-        class IUniformsWriter
-        {
-        public:
-            virtual ~IUniformsWriter() = default;
-            virtual void Write(std::string_view name, Uniform value) = 0;
-            virtual void Write(std::string_view name, UniformArray value) = 0;
-            virtual void Write(std::string_view name, std::shared_ptr<ITexture> value) = 0;
-        };
-
     public:
         NON_COPYABLE_OR_MOVABLE(IUniformContainer)
 
@@ -269,17 +295,7 @@ namespace AT2
         virtual ~IUniformContainer() = default;
 
     public:
-        virtual void Commit(const std::function<void(IUniformsWriter&)>& writer) = 0;
         virtual void Bind(IStateManager& stateManager) const = 0;
-
-        // for backward compatibility
-        template <typename T>
-        requires std::is_constructible_v<Uniform, T> || std::is_constructible_v<UniformArray, T> ||
-            std::is_constructible_v<std::shared_ptr<ITexture>, T>
-        void SetUniform(std::string_view name, T&& value)
-        {
-            Commit([&](IUniformsWriter& writer) { writer.Write(name, std::forward<T>(value)); });
-        }
     };
 
     class IRendererCapabilities
@@ -297,9 +313,7 @@ namespace AT2
         [[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachments() const = 0;
     };
 
-    typedef std::set<std::shared_ptr<ITexture>> TextureSet;
-
-    class IStateManager
+    class IStateManager : public IUniformReceiver
     {
     public:
         NON_COPYABLE_OR_MOVABLE(IStateManager)
@@ -311,9 +325,7 @@ namespace AT2
         //TODO: more flexible interface with possibility to add textures one-by-one + something like UnbindTextures() 
         //or... probably binding by index will be thriumphally returned
         //In common, need to unificate binding
-        virtual void BindTextures(const TextureSet& textures) = 0;
         virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
-        virtual void BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer) = 0;
         virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 
         virtual void ApplyState(RenderState state) = 0;
@@ -372,6 +384,7 @@ namespace AT2
         [[nodiscard]] virtual IResourceFactory& GetResourceFactory() const = 0;
         [[nodiscard]] virtual IRendererCapabilities& GetRendererCapabilities() const = 0;
 
+        // TODO: make functional and provide ComputeContext class to set uniforms!
         virtual void DispatchCompute( const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize ) = 0;
 
         virtual void BeginFrame() = 0;

@@ -36,12 +36,10 @@ namespace AT2::OpenGL
         }
 
     public:
-        std::unique_ptr<IUniformContainer> CreateAssociatedUniformStorage(std::string_view blockName) override;
+        std::unique_ptr<StructuredBuffer> CreateAssociatedUniformStorage(std::string_view blockName) override;
 
         //Warning: Shader reloading/relinking will invalidate that state
-        void SetUBO(std::string_view blockName, unsigned int index) override;
-        void SetUniform(std::string_view name, Uniform value) override;
-        void SetUniformArray(std::string_view name, UniformArray value) override;
+        void SetUBO(std::string_view blockName, unsigned int index);
 
         virtual const str& GetName() { return m_name; }
         virtual void SetName(const str& name) { m_name = name; }
@@ -61,6 +59,10 @@ namespace AT2::OpenGL
         void Bind();
         unsigned int GetId() const noexcept { return m_programId; }
         bool IsActive() const noexcept;
+
+        void SetUniform(std::string_view name, Uniform value);
+        void SetUniformArray(std::string_view name, UniformArray value);
+        std::optional<unsigned int> GetUniformBufferLocation(std::string_view name);
 
     protected:
         bool TryLinkProgram();

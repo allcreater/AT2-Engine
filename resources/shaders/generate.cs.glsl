@@ -1,6 +1,6 @@
 #version 430
 layout(local_size_x = 32, local_size_y = 32) in;
-layout(rgba16f/*, binding = 0*/) uniform image2D u_result;
+layout(rgba16f, binding = 0) uniform image2D u_result;
 
 
 float rand(vec2 n) { 

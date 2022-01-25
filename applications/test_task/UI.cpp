@@ -33,7 +33,7 @@ public:
         if (doBufferReload)
 			m_VAO->GetVertexBuffer(0)->SetData(data.GetData());
 
-        m_uniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+        m_uniforms->Commit([&](AT2::IUniformsWriter& writer) {
             writer.Write("u_BoundsX", glm::vec2(data.GetCurveBounds().MinBound.x, data.GetCurveBounds().MaxBound.x));
             writer.Write("u_NumberOfPoints", (glm::uint32_t)data.GetData().size());
             writer.Write("u_Color", data.GetColor());
@@ -51,7 +51,7 @@ private:
         m_VAO->SetAttributeBinding(0, rf.CreateBuffer(VertexBufferType::ArrayBuffer), AT2::BufferDataTypes::Float);
 
 
-        m_uniforms = renderer.GetStateManager().GetActiveShader()->CreateAssociatedUniformStorage();
+        m_uniforms = std::make_shared<UniformContainer>();
     }
 
 private:
@@ -137,7 +137,7 @@ void PlotRenderer::Init(const IVisualizationSystem& renderer)
         {"resources//shaders//curve.vs.glsl", "resources//shaders//curve.fs.glsl"});
 
 
-    m_uniformBuffer = m_uiShader->CreateAssociatedUniformStorage();
+    m_uniformBuffer = std::make_shared<UniformContainer>();
 }
 
 void WindowRenderer::Draw(IRenderer& renderer)
@@ -150,7 +150,7 @@ void WindowRenderer::Draw(IRenderer& renderer)
         const auto texture =
             renderer.GetResourceFactory().CreateTextureFromFramebuffer(screenAABB.MinBound, screenAABB.GetSize());
 
-        m_Mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+        m_Mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformsWriter& writer) {
             writer.Write("u_BackgroundTexture", texture);
             writer.Write("u_ScreenAABB", glm::vec4(screenAABB.MinBound, screenAABB.MaxBound));
             writer.Write("u_Color", m_Color);

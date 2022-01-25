@@ -17,8 +17,8 @@ namespace AT2
         void Bind(IStateManager& stateManager) const override;
 
     private:
-        Utils::UnorderedStringMap<Uniform> m_uniformsMap;
-        Utils::UnorderedStringMap<std::shared_ptr<ITexture>> m_texturesMap;
+        using UniformVariant = std::variant<Uniform, UniformArray, std::shared_ptr<IBuffer>, std::shared_ptr<ITexture>>;
+        Utils::UnorderedStringMap<UniformVariant> m_uniformsMap;
     };
 
 } // namespace AT2

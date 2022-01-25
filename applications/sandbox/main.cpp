@@ -42,7 +42,7 @@ private:
         auto shader =
             visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
 
-        shader->SetUniform("u_result", 0);
+        //shader->SetUniform("u_result", 0);
 
         resultTex->BindAsImage(0, 0, 0, false);
         visualizationSystem.DispatchCompute(shader, glm::uvec3 {resolution, 1} / localGroupSize);
@@ -143,7 +143,7 @@ private:
 
             auto mesh = terrainNode->getComponent<AT2::Scene::MeshComponent>()->getMesh();
             mesh->Shader = TerrainShader;
-            mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+            mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformsWriter& writer) {
                 writer.Write("u_texNoise", Noise3Tex);
                 writer.Write("u_texHeight", HeightMapTex);
                 writer.Write("u_texNormalMap", NormalMapTex);

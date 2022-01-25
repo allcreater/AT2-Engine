@@ -2,6 +2,7 @@
 
 #include <Scene/Scene.h>
 #include <matrix_stack.h>
+#include <DataLayout/StructuredBuffer.h>
 
 namespace AT2::Scene
 {
@@ -95,7 +96,7 @@ namespace AT2::Scene
         } resources;
 
         std::unique_ptr<Mesh> lightMesh, quadMesh;
-        std::unique_ptr<IUniformContainer> cameraUniformBuffer;
+        std::unique_ptr<StructuredBuffer> cameraUniformBuffer;
         std::shared_ptr<AT2::IFrameBuffer> gBufferFBO, postProcessFBO;
 
         std::shared_ptr<IUniformContainer> sphereLightsUniforms, skyLightsUniforms, postprocessUniforms;

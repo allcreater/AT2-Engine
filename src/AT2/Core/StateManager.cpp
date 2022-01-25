@@ -1,37 +1,12 @@
 #include "StateManager.h"
-#include <algorithm>
+
 #include <cassert>
-#include <numeric>
 
 using namespace AT2;
 
 StateManager::StateManager(IVisualizationSystem& renderer)
     : m_renderer(renderer)
-	, m_freeTextureSlots(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
-    , m_activeTextures(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
 {
-    std::iota(m_freeTextureSlots.begin(), m_freeTextureSlots.end(), 0);
-    std::reverse(m_freeTextureSlots.begin(), m_freeTextureSlots.end());
-}
-
-void StateManager::BindTextures(const TextureSet& _textures)
-{
-    //TODO: use Strategy pattern
-    //TODO: release textures with reference count == 1
-    const auto texturesMapper = [this](const std::shared_ptr<ITexture>& texture) {
-        assert(!m_freeTextureSlots.empty());
-
-        const auto textureIndex = m_freeTextureSlots.back();
-        DoBind(*texture, textureIndex);
-
-        m_freeTextureSlots.pop_back();
-        return std::tuple {textureIndex};
-    };
-
-    const auto textureUnmapper = [this](auto&& kv) { m_freeTextureSlots.push_back(kv.second); };
-
-    for (const auto& texture : _textures)
-        m_activeTextures.put(texture, texturesMapper, textureUnmapper);
 }
 
 void StateManager::BindShader(const std::shared_ptr<IShaderProgram>& _shader)
@@ -73,9 +48,4 @@ std::shared_ptr<IShaderProgram> StateManager::GetActiveShader() const
 std::shared_ptr<IVertexArray> StateManager::GetActiveVertexArray() const
 {
     return m_activeVertexArray;
-}
-
-std::optional<unsigned> StateManager::GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept
-{
-    return m_activeTextures.find(texture);
 }

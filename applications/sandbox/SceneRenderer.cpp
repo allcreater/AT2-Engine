@@ -7,6 +7,8 @@
 
 #include <Scene/Animation.h>
 
+#include "DataLayout/BufferLayout.h"
+
 namespace
 {
 
@@ -52,23 +54,24 @@ namespace AT2::Scene
                     skinRef->getResultJointTransforms(),
                     [mvInverse = transforms.getModelViewInverse()](const glm::mat4& transform) { return mvInverse * transform; });
 
-                stateManager.GetActiveShader()->SetUniformArray("u_skeletonMatrices", skeletonMatrices); 
-                stateManager.GetActiveShader()->SetUniform("u_useSkinning", 1);
+                stateManager.Commit([&](IUniformsWriter& writer) {
+                    writer.Write("u_skeletonMatrices", skeletonMatrices);
+                    writer.Write("u_useSkinning", 1);
+                });
             }
             else
             {
-                stateManager.GetActiveShader()->SetUniform("u_useSkinning", 0);
+                stateManager.SetUniform("u_useSkinning", 0);
             }
-
 
             for (const size_t submeshIndex : meshComponent->GetSubmeshIndices())
             {
-                stateManager.GetActiveShader()->SetUniform("u_matModel", transforms.getModelView());
-                stateManager.GetActiveShader()->SetUniform(
-                    "u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
+                stateManager.Commit([&](IUniformsWriter& writer) {
+                    writer.Write("u_matModel", transforms.getModelView());
+                    writer.Write("u_matNormal", glm::mat3(transpose(inverse(camera.getView() * transforms.getModelView()))));
+                });
 
-                Utils::MeshRenderer::DrawSubmesh(renderer, *active_mesh,
-                                                 active_mesh->SubMeshes[submeshIndex]);
+                Utils::MeshRenderer::DrawSubmesh(renderer, *active_mesh, active_mesh->SubMeshes[submeshIndex]);
             }
         }
 
@@ -150,7 +153,7 @@ namespace AT2::Scene
 
         if (nearestLightIt != lrv.collectedDirectionalLights.end())
         {
-            skyLightsUniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+            skyLightsUniforms->Commit([&](AT2::IUniformsWriter& writer) {
                 writer.Write("u_lightDirection", nearestLightIt->direction);
                 writer.Write("u_lightIntensity", nearestLightIt->intensity);
                 writer.Write("u_environmentMap", nearestLightIt->environment_map);
@@ -189,7 +192,7 @@ namespace AT2::Scene
     {
         if (dirtyFramebuffers)
         {
-            auto& rf = renderer.GetResourceFactory();
+            const auto& rf = renderer.GetResourceFactory();
 
             gBufferFBO = renderer.GetResourceFactory().CreateFrameBuffer();
             gBufferFBO->SetColorAttachment(0,{ rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8   ), glm::vec4{0.0, 0.0, 1.0, 0.0}});   //FragColor
@@ -202,9 +205,9 @@ namespace AT2::Scene
             postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment().Texture); //depth is common with previous stage
 
             {
-                sphereLightsUniforms = resources.sphereLightsShader->CreateAssociatedUniformStorage();
+                sphereLightsUniforms = std::make_shared<UniformContainer>();
 
-                sphereLightsUniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+                sphereLightsUniforms->Commit([&](AT2::IUniformsWriter& writer) {
                     writer.Write("u_colorMap", gBufferFBO->GetColorAttachment(0).Texture);
                     writer.Write("u_normalMap", gBufferFBO->GetColorAttachment(1).Texture);
                     writer.Write("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2).Texture);
@@ -213,9 +216,9 @@ namespace AT2::Scene
             }
 
             {
-                skyLightsUniforms = resources.skyLightsShader->CreateAssociatedUniformStorage();
+                skyLightsUniforms = std::make_shared<UniformContainer>();
 
-                skyLightsUniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+                skyLightsUniforms->Commit([&](AT2::IUniformsWriter& writer) {
                     writer.Write("u_colorMap", gBufferFBO->GetColorAttachment(0).Texture);
                     writer.Write("u_normalMap", gBufferFBO->GetColorAttachment(1).Texture);
                     writer.Write("u_roughnessMetallicMap", gBufferFBO->GetColorAttachment(2).Texture);
@@ -226,8 +229,8 @@ namespace AT2::Scene
 
             //Postprocess quad
             {
-                postprocessUniforms = resources.postprocessShader->CreateAssociatedUniformStorage();
-                postprocessUniforms->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+                postprocessUniforms = std::make_shared<UniformContainer>();
+                postprocessUniforms->Commit([&](AT2::IUniformsWriter& writer) {
                     writer.Write("u_colorMap", postProcessFBO->GetColorAttachment(0).Texture);
                     writer.Write("u_depthMap", postProcessFBO->GetDepthAttachment().Texture);
                 });
@@ -240,11 +243,11 @@ namespace AT2::Scene
             return;
 
         SetupCamera(renderer, *params.Camera, time);
-        auto& stateManager = renderer.GetStateManager();
 
 
         // G-buffer pass
         gBufferFBO->Render([&](IRenderer& renderer) {
+			auto& stateManager = renderer.GetStateManager();
             stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
             stateManager.ApplyState(params.Wireframe ? PolygonRasterizationMode::Lines : PolygonRasterizationMode::Fill);
             stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
@@ -256,6 +259,7 @@ namespace AT2::Scene
 
         // Lighting pass
         postProcessFBO->Render([&](IRenderer& renderer) {
+            auto& stateManager = renderer.GetStateManager();
             stateManager.ApplyState(PolygonRasterizationMode::Fill);
             stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::One});
             stateManager.ApplyState(DepthState {CompareFunction::Greater, true, false});
@@ -272,6 +276,7 @@ namespace AT2::Scene
 
         // Postprocess pass
         params.TargetFramebuffer->Render([&](IRenderer& renderer) {
+            auto& stateManager = renderer.GetStateManager();
             stateManager.ApplyState(BlendMode {});
             stateManager.ApplyState(DepthState {});
 
@@ -285,7 +290,7 @@ namespace AT2::Scene
         if (!cameraUniformBuffer)
             cameraUniformBuffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
 
-        cameraUniformBuffer->Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+        cameraUniformBuffer->Commit([&](AT2::IUniformsWriter& writer) {
             writer.Write("u_matView", camera.getView());
             writer.Write("u_matInverseView", camera.getViewInverse());
             writer.Write("u_matProjection", camera.getProjection());
@@ -293,7 +298,7 @@ namespace AT2::Scene
             writer.Write("u_matViewProjection", camera.getProjection() * camera.getView());
             writer.Write("u_time", time.getTime().count());
         });
-        cameraUniformBuffer->Bind(renderer.GetStateManager());
+        renderer.GetStateManager().SetUniform("CameraBlock", cameraUniformBuffer->GetBuffer());
     }
 
     void SceneRenderer::DrawQuad(IRenderer& renderer, const std::shared_ptr<IShaderProgram>& program, const IUniformContainer& uniformBuffer) const noexcept
