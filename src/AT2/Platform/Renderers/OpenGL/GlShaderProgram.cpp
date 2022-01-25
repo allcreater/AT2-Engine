@@ -1,7 +1,7 @@
 #include "GlShaderProgram.h"
 
 #include <UniformContainer.h>
-#include <DataLayout/BufferLayout.h>
+#include <DataLayout/StructuredBuffer.h>
 #include "Mappings.h"
 
 using namespace AT2;
@@ -177,11 +177,8 @@ bool GlShaderProgram::TryLinkProgram()
     return m_currentState == State::Ready;
 }
 
-std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
+std::unique_ptr<StructuredBuffer> GlShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
 {
-    if (blockName.empty())
-        return std::make_unique<AT2::UniformContainer>();
-
     if (!TryLinkProgram())
         return nullptr;
     assert(m_uniformsInfo);
@@ -192,9 +189,6 @@ std::unique_ptr<IUniformContainer> GlShaderProgram::CreateAssociatedUniformStora
 
     auto uniformBuffer = std::make_unique<StructuredBuffer>(m_renderer->GetResourceFactory().CreateBuffer(VertexBufferType::UniformBuffer),
                                                             std::shared_ptr<const BufferLayout>{m_uniformsInfo, &uniformBlockInfo->Layout});
-
-    //just initial binding to make buffer usable "out of box". External code could rebind it or remap as user wants.
-    uniformBuffer->SetBindingPoint(uniformBlockInfo->InitialBinding);
 
     return uniformBuffer;
 }
@@ -246,4 +240,20 @@ void GlShaderProgram::SetUniformArray(std::string_view name, UniformArray value)
 
     if (const auto location = GetUniformLocation(*m_uniformsInfo, name))
         std::visit([&](const auto& valueSpan) { SetProgramUniformArray(m_programId, *location, valueSpan); }, value);
+}
+
+std::optional<unsigned int> GlShaderProgram::GetUniformBufferLocation(std::string_view blockName)
+{
+    if (!TryLinkProgram())
+        return std::nullopt;
+    assert(m_uniformsInfo);
+
+    const auto* blockInfo = m_uniformsInfo->getUniformBlock(blockName); 
+    if (!blockInfo || blockInfo->BlockIndex == GL_INVALID_INDEX)
+        return std::nullopt;
+
+    GLint bindingIndex;
+    glGetActiveUniformBlockiv(m_programId, blockInfo->BlockIndex, GL_UNIFORM_BLOCK_BINDING, &bindingIndex);
+
+    return bindingIndex;
 }

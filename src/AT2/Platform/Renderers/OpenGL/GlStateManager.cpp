@@ -54,18 +54,10 @@ void OpenGL::GlStateManager::ApplyState(RenderState state)
     }, state);
 }
 
-void OpenGL::GlStateManager::BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer) 
-{
-    const auto& glBuffer = Utils::safe_dereference_cast<const GlBuffer&>(buffer);
-    
-    if (glBuffer.GetType() == VertexBufferType::UniformBuffer)
-        glBindBufferBase(Mappings::TranslateBufferType(glBuffer.GetType()), index, glBuffer.GetId());
-    //TODO: track buffer state, it's OpenGL with global state...
-}
 
 void OpenGL::GlStateManager::Commit(const std::function<void(IUniformsWriter&)>& writeCommand)
 {
-    class ImmediateUniformWriter : public IUniformContainer::IUniformsWriter
+    class ImmediateUniformWriter : public IUniformsWriter
     {
     public:
         explicit ImmediateUniformWriter(GlStateManager& stateManager)
@@ -78,6 +70,12 @@ void OpenGL::GlStateManager::Commit(const std::function<void(IUniformsWriter&)>&
         void Write(std::string_view name, std::shared_ptr<ITexture> texture) override
         {
 	        m_activeProgram.SetUniform(name, static_cast<int>(m_stateManager.DoBind(std::move(texture))));
+        }
+
+        void Write(std::string_view name, std::shared_ptr<IBuffer> value) override
+        {
+            if (const auto location = m_activeProgram.GetUniformBufferLocation(name))
+                m_stateManager.DoBind(*location, std::move(value));
         }
 
     private:
@@ -106,6 +104,15 @@ GlStateManager::TextureId OpenGL::GlStateManager::DoBind(std::shared_ptr<ITextur
     const auto textureUnmapper = [this](auto&& kv) { m_freeTextureSlots.push_back(kv.second); };
 
 	return m_activeTextures.put(texture, texturesMapper, textureUnmapper).second;
+}
+
+void OpenGL::GlStateManager::DoBind(unsigned int index, const std::shared_ptr<IBuffer>& buffer) 
+{
+    const auto& glBuffer = Utils::safe_dereference_cast<const GlBuffer&>(buffer);
+    
+    if (glBuffer.GetType() == VertexBufferType::UniformBuffer)
+        glBindBufferBase(Mappings::TranslateBufferType(glBuffer.GetType()), index, glBuffer.GetId());
+    //TODO: track buffer state, it's OpenGL with global state...
 }
 
 void OpenGL::GlStateManager::DoBind( IShaderProgram& shader )

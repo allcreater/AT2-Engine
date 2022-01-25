@@ -17,24 +17,26 @@ namespace
 
 void UniformContainer::Commit(const std::function<void(IUniformsWriter&)>& commitFunc) 
 {
-    class UniformContainerWriter : public IUniformContainer::IUniformsWriter
+    class UniformContainerWriter : public IUniformsWriter
     {
     public:
         UniformContainerWriter(UniformContainer& uniformContainer) : m_container {uniformContainer} {}
 
-        void Write(std::string_view name, Uniform value) override
+        void Write(std::string_view name, Uniform value) override { insert_or_assign(m_container.m_uniformsMap, name, std::move(value)); }
+
+        void Write(std::string_view name, UniformArray value) override
         {
             insert_or_assign(m_container.m_uniformsMap, name, std::move(value));
         }
 
-        void Write(std::string_view name, UniformArray value) override 
-        {
-        	throw AT2NotImplementedException("UniformContainerWriter::Write(UniformArray)");
-        }
-
         void Write(std::string_view name, std::shared_ptr<ITexture> value) override
         {
-            insert_or_assign(m_container.m_texturesMap, name, std::move(value));
+            insert_or_assign(m_container.m_uniformsMap, name, std::move(value));
+        }
+
+        void Write(std::string_view name, std::shared_ptr<IBuffer> value) override
+        {
+            insert_or_assign(m_container.m_uniformsMap, name, std::move(value));
         }
 
     private:
@@ -48,11 +50,8 @@ void UniformContainer::Bind(IStateManager& stateManager) const
 {
     stateManager.Commit([this](IUniformsWriter& writer) 
     {
-        for (const auto& [name, value] : m_uniformsMap)
-            writer.Write(name, value);
-
-    	for (const auto& [name, value] : m_texturesMap)
-            writer.Write(name, value);
+        for (const auto& [name, valueVariant] : m_uniformsMap)
+            std::visit([&](const auto& value) { writer.Write(name, value); }, valueVariant);
     });
 
 }

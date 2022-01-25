@@ -143,7 +143,7 @@ private:
 
             auto mesh = terrainNode->getComponent<AT2::Scene::MeshComponent>()->getMesh();
             mesh->Shader = TerrainShader;
-            mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformContainer::IUniformsWriter& writer) {
+            mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformsWriter& writer) {
                 writer.Write("u_texNoise", Noise3Tex);
                 writer.Write("u_texHeight", HeightMapTex);
                 writer.Write("u_texNormalMap", NormalMapTex);

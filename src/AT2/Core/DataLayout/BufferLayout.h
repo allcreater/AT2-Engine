@@ -68,24 +68,4 @@ namespace AT2
         std::unordered_map<std::string_view, const Field*> m_fieldsByName;
     };
 
-    // Just a container for pair "buffer + layout", could be replaced just to free function IBuffer::Commit or like this
-    class StructuredBuffer : public IUniformContainer
-    {
-    public:
-        StructuredBuffer(std::shared_ptr<IBuffer> buffer, std::shared_ptr<const BufferLayout> bufferLayout);
-
-        operator IBuffer&() const { return *m_buffer; }
-        std::shared_ptr<IBuffer> GetBuffer() const { return m_buffer; }
-
-        void Commit(const std::function<void(IUniformsWriter&)>& operation) override;
-        void Bind(IStateManager& stateManager) const override;
-
-        void SetBindingPoint(unsigned int index) { m_bindingPoint = index; }
-
-    private:
-        std::shared_ptr<IBuffer> m_buffer;
-        std::shared_ptr<const BufferLayout> m_bufferLayout;
-        unsigned int m_bindingPoint = 0;
-    };
-
 }

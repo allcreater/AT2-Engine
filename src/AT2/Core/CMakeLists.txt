@@ -5,6 +5,8 @@ project (AT2_Engine_Core)
 set (${PROJECT_NAME}_SOURCES
     "DataLayout/BufferLayout.h"
     "DataLayout/BufferLayout.cpp"
+    "DataLayout/StructuredBuffer.h"
+    "DataLayout/StructuredBuffer.cpp"
     "DataLayout/IO.hpp"
 
     "Resources/GltfSceneLoader.h"
