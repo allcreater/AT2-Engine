@@ -1,5 +1,5 @@
 #include "ShaderProgram.h"
-#include "UniformBuffer.h"
+#include <DataLayout/StructuredBuffer.h>
 #include "Renderer.h"
 
 using namespace AT2;
@@ -71,9 +71,12 @@ ShaderProgram::~ShaderProgram()
 	
 }
 
-std::unique_ptr<IUniformContainer> ShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
+std::unique_ptr<StructuredBuffer> ShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
 {
-    return std::make_unique<UniformBuffer>(m_library->GetVisualizationSystem());
+    auto buffer = m_library->GetVisualizationSystem().GetResourceFactory().CreateBuffer(VertexBufferType::UniformBuffer);
+    auto container = std::make_unique<StructuredBuffer>(std::move(buffer), nullptr);
+    
+    return container;
 }
 
 
@@ -117,48 +120,13 @@ void ShaderProgram::Apply(MTL::RenderPipelineDescriptor& pipelineDescriptor) con
     pipelineDescriptor.setFragmentFunction(m_functionFragment.get());
 }
 
-namespace
-{
-    void VisitArgument(const MTL::Argument* argument)
-    {
-        if (!argument)
-            return;
-        
-        auto argumentName = argument->name()->cString(NS::ASCIIStringEncoding);
-        
-        switch (argument->type())
-        {
-            case MTL::ArgumentTypeBuffer:
-            {
-                VisitArray<MTL::StructMember*>(argument->bufferStructType()->members(), [](const MTL::StructMember* member){
-                    auto name = member->name()->cString(NS::UTF8StringEncoding);
-                    auto dataType = member->dataType();
-                });
-            } break;
-                
-            case MTL::ArgumentTypeTexture:
-            {
-                
-            } break;
-        };
-    }
-
-    void VisitArgumentArray(const NS::Array* argumentsArray)
-    {
-        VisitArray<const MTL::Argument*>(argumentsArray, VisitArgument);
-    }
-
-}
-
-void ShaderProgram::OnStateCreated(MtlPtr<MTL::RenderPipelineReflection> reflection)
-{
-    VisitArgumentArray(reflection->vertexArguments());
-    VisitArgumentArray(reflection->fragmentArguments());
-    
-    m_reflection = std::move(reflection);
-}
-
 void ShaderProgram::OnDrawCall(MTL::RenderCommandEncoder* renderEncoder)
 {
     renderEncoder->setVertexBytes(&m_crutchBuffer, sizeof(m_crutchBuffer), 0);
+}
+
+
+void ShaderProgram::OnStateCreated(MtlPtr<MTL::RenderPipelineReflection> reflection)
+{
+    m_introspection = std::make_shared<Introspection::ProgramIntrospection>(reflection);
 }

@@ -57,6 +57,8 @@ set(METAL_SOURCES_LIST
     "Renderers/Metal/MetalCpp.cpp"
     "Renderers/Metal/MtlStateManager.h"
     "Renderers/Metal/MtlStateManager.cpp"
+    "Renderers/Metal/ProgramIntrospection.h"
+    "Renderers/Metal/ProgramIntrospection.cpp"
     "Renderers/Metal/Texture.h"
     "Renderers/Metal/Texture.cpp"
     "Renderers/Metal/VertexArray.h"

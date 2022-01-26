@@ -32,10 +32,10 @@ vertex FragmentIn vertex_main (
 
 fragment float4 fragment_main (
     const FragmentIn input                      [[stage_in]], 
-    texture2d<float, access::sample> texAlbedo  [[texture(0)]] )
+    texture2d<float, access::sample> u_texAlbedo  [[texture(0)]] )
 {
     constexpr sampler sampler(min_filter::linear, mag_filter::linear, mip_filter::linear, address::repeat);
 
-    const auto color = texAlbedo.sample(sampler, input.texCoord);
+    const auto color = u_texAlbedo.sample(sampler, input.texCoord);
     return color;
 }

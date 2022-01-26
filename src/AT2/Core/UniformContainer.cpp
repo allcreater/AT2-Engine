@@ -51,7 +51,7 @@ void UniformContainer::Bind(IStateManager& stateManager) const
     stateManager.Commit([this](IUniformsWriter& writer) 
     {
         for (const auto& [name, valueVariant] : m_uniformsMap)
-            std::visit([&](const auto& value) { writer.Write(name, value); }, valueVariant);
+            std::visit([name = name, &writer](const auto& value) { writer.Write(name, value); }, valueVariant);
     });
 
 }

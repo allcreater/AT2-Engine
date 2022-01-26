@@ -135,13 +135,70 @@ MtlPtr<MTL::RenderPipelineState> MtlStateManager::GetOrBuildState()
 }
 
 
-void MtlStateManager::BindTextures(const TextureSet& textures)
+void MtlStateManager::Commit(const std::function<void(IUniformsWriter&)>& writeCommand)
 {
-    if (!m_renderEncoder)
-        return;
-    
-    assert(textures.size() == 1);
-    m_renderEncoder->setFragmentTexture(Utils::safe_dereference_cast<MtlTexture&>(&(**textures.begin())).getNativeHandle(), 0); //TODO!
+    class ImmediateUniformWriter : public IUniformsWriter
+    {
+    public:
+        explicit ImmediateUniformWriter(MtlStateManager& stateManager)
+        : m_stateManager {stateManager}
+        , m_activeProgram {Utils::safe_dereference_cast<ShaderProgram&>(m_stateManager.GetActiveShader()) }
+        {}
+
+        void Write(std::string_view name, Uniform value) override { m_activeProgram.SetUniform(name, value); }
+        void Write(std::string_view name, UniformArray value) override { m_activeProgram.SetUniformArray(name, value); }
+        void Write(std::string_view name, std::shared_ptr<ITexture> texture) override
+        {
+            auto& mtlTexture = Utils::safe_dereference_cast<MtlTexture&>(texture);
+            if (!m_stateManager.m_activeShader->GetIntrospection())
+                return;
+            
+            m_stateManager.m_activeShader->GetIntrospection()->FindTexture(name, [&](const Introspection::ArgumentInfo& paramInfo){
+                switch (paramInfo.Shader)
+                {
+                    case Introspection::ShaderType::Vertex:
+                        m_stateManager.m_renderEncoder->setVertexTexture(mtlTexture.getNativeHandle(), paramInfo.BindingIndex);
+                        break;
+                    case Introspection::ShaderType::Fragment:
+                        m_stateManager.m_renderEncoder->setFragmentTexture(mtlTexture.getNativeHandle(), paramInfo.BindingIndex);
+                        break;
+                    case Introspection::ShaderType::Tile:
+                        m_stateManager.m_renderEncoder->setTileTexture(mtlTexture.getNativeHandle(), paramInfo.BindingIndex);
+                        break;
+                }
+            });
+        }
+
+        void Write(std::string_view name, std::shared_ptr<IBuffer> buffer) override
+        {
+            //TODO: move to state manager itself, track active textures
+            auto& mtlBuffer = Utils::safe_dereference_cast<Buffer&>(buffer);
+            if (!m_stateManager.m_activeShader->GetIntrospection())
+                return;
+            
+            m_stateManager.m_activeShader->GetIntrospection()->FindBuffer(name, [&](const Introspection::BufferInfo& paramInfo){
+                switch (paramInfo.Shader)
+                {
+                    case Introspection::ShaderType::Vertex:
+                        m_stateManager.m_renderEncoder->setVertexBuffer(mtlBuffer.getNativeHandle(), 0, paramInfo.BindingIndex);
+                        break;
+                    case Introspection::ShaderType::Fragment:
+                        m_stateManager.m_renderEncoder->setFragmentBuffer(mtlBuffer.getNativeHandle(), 0, paramInfo.BindingIndex);
+                        break;
+                    case Introspection::ShaderType::Tile:
+                        m_stateManager.m_renderEncoder->setTileBuffer(mtlBuffer.getNativeHandle(), 0, paramInfo.BindingIndex);
+                        break;
+                }
+            });
+        }
+
+    private:
+        MtlStateManager& m_stateManager;
+        ShaderProgram& m_activeProgram;
+    };
+
+    ImmediateUniformWriter writer {*this};
+    writeCommand(writer);
 }
 
 void MtlStateManager::BindShader(const std::shared_ptr<IShaderProgram>& shaderProgram)
@@ -153,13 +210,6 @@ void MtlStateManager::BindShader(const std::shared_ptr<IShaderProgram>& shaderPr
     //TODO take actual attachment layout from active render stage?
     m_buildingState->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
     m_stateInvalidated = true;
-}
-
-void MtlStateManager::BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer)
-{
-    const auto& mtlBuffer = Utils::safe_dereference_cast<Buffer&>(buffer);
-    m_renderEncoder->setVertexBuffer(mtlBuffer.getNativeHandle(), 0, index);
-    m_renderEncoder->setFragmentBuffer(mtlBuffer.getNativeHandle(), 0, index);
 }
 
 void MtlStateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray)

@@ -47,6 +47,9 @@ private:
 Renderer::Renderer(IPlatformGraphicsContext& graphicsContext)
 {
     swapchain = reinterpret_cast<CA::MetalLayer*>(graphicsContext.getPlatformSwapchain());
+    if (!swapchain)
+        throw AT2RendererException("MetalVisualizationSystem gets CAMetalLayer* == nullptr");
+    
     device.reset(swapchain->device());
     
     Log::Info() << "AT2 Metal renderer initialized"sv

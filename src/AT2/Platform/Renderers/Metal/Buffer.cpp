@@ -29,7 +29,7 @@ void Buffer::SetDataRaw(std::span<const std::byte> data)
 
 void Buffer::ReserveSpace(size_t size)
 {
-    if (m_length >= size)
+    if (GetLength() >= size)
         return;
 
     constexpr std::byte* emptyData = nullptr;

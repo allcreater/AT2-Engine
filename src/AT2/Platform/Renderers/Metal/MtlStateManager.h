@@ -15,10 +15,10 @@ public:
     MtlStateManager(Renderer& renderer, MTL::RenderCommandEncoder* encoder);
     ~MtlStateManager() override = default;
     
+    void Commit(const std::function<void(IUniformsWriter&)>& writeComand) override;
+    
 //IStateManager interface
-    void BindTextures(const TextureSet& textures) override;
     void BindShader(const std::shared_ptr<IShaderProgram>& shader) override;
-    void BindBuffer(unsigned int index, const std::shared_ptr<IBuffer>& buffer) override;
     void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) override;
 
     void ApplyState(RenderState state) override;
