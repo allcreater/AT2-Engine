@@ -73,45 +73,21 @@ ShaderProgram::~ShaderProgram()
 
 std::unique_ptr<StructuredBuffer> ShaderProgram::CreateAssociatedUniformStorage(std::string_view blockName)
 {
+    if (!m_introspection)
+        return nullptr;
+    
     auto buffer = m_library->GetVisualizationSystem().GetResourceFactory().CreateBuffer(VertexBufferType::UniformBuffer);
-    auto container = std::make_unique<StructuredBuffer>(std::move(buffer), nullptr);
     
-    return container;
-}
-
-
-void ShaderProgram::SetUBO(std::string_view blockName, unsigned int index)
-{
-	
-}
-
-void ShaderProgram::SetUniform(std::string_view name, Uniform value)
-{
-    using namespace std::literals;
-
-    const auto* mat = std::get_if<glm::mat4>(&value);
-    if (!mat)
-        return;
+    //TODO: handle multiple layouts?
+    std::vector<BufferLayout> layouts;
+    m_introspection->FindBuffer(blockName, [&](const Introspection::BufferInfo& bufferInfo){
+        layouts.push_back(bufferInfo.Layout);
+    });
     
-    constexpr glm::mat4 metalProjectionModifier {
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 0.5, 0.5,
-        0.0, 0.0, 0.0, 1.0
-    };
-    
-    if (name == "u_matModelView"sv)
-        m_crutchBuffer.u_matModelView = *mat;
-    else if (name == "u_matProjection"sv)
-        m_crutchBuffer.u_matProjection = metalProjectionModifier * *mat;
-    
-    
-    //m_reflection->vertexArguments();
-}
-
-void ShaderProgram::SetUniformArray(std::string_view name, UniformArray value)
-{
-	
+    if (layouts.empty())
+        return nullptr;
+        
+    return std::make_unique<StructuredBuffer>(std::move(buffer), std::make_shared<BufferLayout>(std::move(layouts.front())));
 }
 
 void ShaderProgram::Apply(MTL::RenderPipelineDescriptor& pipelineDescriptor) const
@@ -120,13 +96,8 @@ void ShaderProgram::Apply(MTL::RenderPipelineDescriptor& pipelineDescriptor) con
     pipelineDescriptor.setFragmentFunction(m_functionFragment.get());
 }
 
-void ShaderProgram::OnDrawCall(MTL::RenderCommandEncoder* renderEncoder)
-{
-    renderEncoder->setVertexBytes(&m_crutchBuffer, sizeof(m_crutchBuffer), 0);
-}
-
-
 void ShaderProgram::OnStateCreated(MtlPtr<MTL::RenderPipelineReflection> reflection)
 {
     m_introspection = std::make_shared<Introspection::ProgramIntrospection>(reflection);
+    m_defaultUniformBlock = CreateAssociatedUniformStorage(DefaultUniformBlockName);
 }

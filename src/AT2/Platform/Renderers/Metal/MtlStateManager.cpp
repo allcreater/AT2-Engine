@@ -2,6 +2,7 @@
 #include "VertexArray.h"
 #include "Renderer.h"
 #include "ShaderProgram.h"
+#include <DataLayout/StructuredBuffer.h>
 #include "Mappings.h"
 #include "Texture.h"
 
@@ -78,8 +79,6 @@ void MtlStateManager::Draw(Primitives::Primitive type, size_t first, long int co
     auto state = GetOrBuildState();
     m_renderEncoder->setRenderPipelineState(state.get());
     
-    m_activeShader->OnDrawCall(m_renderEncoder);
-    
     const auto platformPrimitiveType = Mappings::TranslatePrimitiveType(type);
     if (auto indexBufferDataType = m_activeVertexArray->GetIndexBufferType())
     {
@@ -125,7 +124,11 @@ MtlPtr<MTL::RenderPipelineState> MtlStateManager::GetOrBuildState()
         CheckErrors(error);
         
         if (m_activeShader)
+        {
             m_activeShader->OnStateCreated(reflection);
+            if (auto uniformBuffer = m_activeShader->GetDefaultUniformBlock())
+                SetUniform(DefaultUniformBlockName, uniformBuffer->GetBuffer());
+        }
         
         m_currentState = std::move(newState);
         m_stateInvalidated = false;
@@ -140,19 +143,27 @@ void MtlStateManager::Commit(const std::function<void(IUniformsWriter&)>& writeC
     class ImmediateUniformWriter : public IUniformsWriter
     {
     public:
-        explicit ImmediateUniformWriter(MtlStateManager& stateManager)
+        explicit ImmediateUniformWriter(MtlStateManager& stateManager, IUniformsWriter* defaultStorageWriter)
         : m_stateManager {stateManager}
         , m_activeProgram {Utils::safe_dereference_cast<ShaderProgram&>(m_stateManager.GetActiveShader()) }
+        , m_defaultUniformStorageWriter {defaultStorageWriter}
         {}
-
-        void Write(std::string_view name, Uniform value) override { m_activeProgram.SetUniform(name, value); }
-        void Write(std::string_view name, UniformArray value) override { m_activeProgram.SetUniformArray(name, value); }
+        
+        void Write(std::string_view name, Uniform value) override
+        {
+            if (m_defaultUniformStorageWriter)
+                m_defaultUniformStorageWriter->Write(name, value);
+        }
+        
+        void Write(std::string_view name, UniformArray value) override
+        {
+            if (m_defaultUniformStorageWriter)
+                m_defaultUniformStorageWriter->Write(name, value);
+        }
+        
         void Write(std::string_view name, std::shared_ptr<ITexture> texture) override
         {
             auto& mtlTexture = Utils::safe_dereference_cast<MtlTexture&>(texture);
-            if (!m_stateManager.m_activeShader->GetIntrospection())
-                return;
-            
             m_stateManager.m_activeShader->GetIntrospection()->FindTexture(name, [&](const Introspection::ArgumentInfo& paramInfo){
                 switch (paramInfo.Shader)
                 {
@@ -173,9 +184,6 @@ void MtlStateManager::Commit(const std::function<void(IUniformsWriter&)>& writeC
         {
             //TODO: move to state manager itself, track active textures
             auto& mtlBuffer = Utils::safe_dereference_cast<Buffer&>(buffer);
-            if (!m_stateManager.m_activeShader->GetIntrospection())
-                return;
-            
             m_stateManager.m_activeShader->GetIntrospection()->FindBuffer(name, [&](const Introspection::BufferInfo& paramInfo){
                 switch (paramInfo.Shader)
                 {
@@ -195,10 +203,24 @@ void MtlStateManager::Commit(const std::function<void(IUniformsWriter&)>& writeC
     private:
         MtlStateManager& m_stateManager;
         ShaderProgram& m_activeProgram;
+        IUniformsWriter* m_defaultUniformStorageWriter;
     };
 
-    ImmediateUniformWriter writer {*this};
-    writeCommand(writer);
+    if (!m_activeShader || !m_activeShader->GetIntrospection())
+        return;
+    
+    auto doWrite = [this, &writeCommand](IUniformsWriter* defaultStorageWriter)
+    {
+        ImmediateUniformWriter writer {*this, defaultStorageWriter};
+        writeCommand(writer);
+    };
+    
+    // if default buffer is present, "usual" parameters will be redirected to it
+    if (auto defaultUniformBlock = m_activeShader->GetDefaultUniformBlock())
+        defaultUniformBlock->Commit([doWrite](IUniformsWriter& writer){ doWrite(&writer); });
+    else
+        doWrite(nullptr);
+    
 }
 
 void MtlStateManager::BindShader(const std::shared_ptr<IShaderProgram>& shaderProgram)

@@ -4,6 +4,39 @@ using namespace AT2;
 using namespace Metal;
 using namespace Introspection;
 
+namespace
+{
+std::pair<unsigned int, unsigned int> GetMatrixSizeAndAStride(MTL::DataType dataType)
+{
+    switch (dataType)
+    {
+        case MTL::DataTypeHalf2x2: return {8, 4};
+        case MTL::DataTypeHalf2x3: return {16, 8};
+        case MTL::DataTypeHalf2x4: return {16, 8};
+        case MTL::DataTypeHalf3x2: return {12, 4};
+        case MTL::DataTypeHalf3x3: return {24, 8};
+        case MTL::DataTypeHalf3x4: return {24, 8};
+        case MTL::DataTypeHalf4x2: return {16, 4};
+        case MTL::DataTypeHalf4x3: return {32, 8};
+        case MTL::DataTypeHalf4x4: return {32, 8};
+            
+        case MTL::DataTypeFloat2x2: return {16, 8};
+        case MTL::DataTypeFloat2x3: return {32, 16};
+        case MTL::DataTypeFloat2x4: return {32, 16};
+        case MTL::DataTypeFloat3x2: return {24, 8};
+        case MTL::DataTypeFloat3x3: return {48, 16};
+        case MTL::DataTypeFloat3x4: return {48, 16};
+        case MTL::DataTypeFloat4x2: return {32, 8};
+        case MTL::DataTypeFloat4x3: return {64, 16};
+        case MTL::DataTypeFloat4x4: return {64, 16};
+        default: //not matrix
+            return {0, 0};
+    }
+}
+
+}
+
+
 ProgramIntrospection::ProgramIntrospection(MtlPtr<MTL::RenderPipelineReflection> reflection)
 : m_reflection{std::move(reflection)}
 {
@@ -38,7 +71,8 @@ void ProgramIntrospection::VisitArgument(ShaderType shaderType, const MTL::Argum
                         static_cast<unsigned int>(member->arrayType()->stride())};
                 }();
                 
-                knownFields.emplace_back(name, member->offset(), arrayAttribs, 0 );
+                auto [matrixSize, matrixStride] = GetMatrixSizeAndAStride(member->dataType()); //zeroes if not matrix, fine too
+                knownFields.emplace_back(name, member->offset(), arrayAttribs, matrixStride, matrixSize );
             });
             
             m_inputBuffers.emplace(argumentName, BufferInfo{shaderType, static_cast<unsigned int>(argument->index()), BufferLayout{std::move(knownFields)}});
