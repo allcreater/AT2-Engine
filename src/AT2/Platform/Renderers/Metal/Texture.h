@@ -13,6 +13,7 @@ namespace AT2::Metal
         NON_COPYABLE_OR_MOVABLE(MtlTexture)
 
         MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format);
+        MtlTexture(Renderer& renderer, MtlPtr<MTL::Texture> texture);
         ~MtlTexture() override;
 
         void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,

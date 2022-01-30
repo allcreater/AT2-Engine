@@ -60,6 +60,33 @@ constexpr size_t GetRowLength(ExternalTextureFormat format, size_t width)
     return width * GetSizeofType(format.DataType)*GetNumberOfChannelsInLayout(format.ChannelsLayout);
 }
 
+Texture DetermineNativeTexureType(MTL::Texture* texture)
+{
+    switch (texture->textureType())
+    {
+        case MTL::TextureType1D:
+            return Texture1D{glm::uvec1{static_cast<unsigned int>(texture->width())}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+        case MTL::TextureType1DArray:
+            return Texture1DArray{glm::uvec2{texture->width(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+        case MTL::TextureType2D:
+            return Texture2D{glm::uvec2{texture->width(), texture->height()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+        case MTL::TextureType2DArray:
+            return Texture2DArray{glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+        case MTL::TextureType2DMultisample:
+            return Texture2DMultisample{glm::uvec2{texture->width(), texture->height()}, static_cast<uint8_t>(texture->sampleCount()), false};
+        case MTL::TextureTypeCube:
+            return TextureCube{glm::uvec2{texture->width(), texture->height()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+        case MTL::TextureTypeCubeArray:
+            return TextureCubeArray{glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+        case MTL::TextureType3D:
+            return Texture3D{glm::uvec3{texture->width(), texture->height(), texture->depth()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+        case MTL::TextureType2DMultisampleArray:
+            return Texture2DMultisampleArray{glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<uint8_t>(texture->sampleCount())};
+        case MTL::TextureTypeTextureBuffer:
+            throw AT2NotImplementedException("TextureTypeTextureBuffer is not supported");
+    }
+}
+
 }
 
 MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format)
@@ -198,6 +225,13 @@ MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat form
         flavor);
     
     m_texture = Own(renderer.getDevice()->newTexture(descriptor.get()));
+}
+
+MtlTexture::MtlTexture(Renderer& renderer, MtlPtr<MTL::Texture> texture)
+: m_renderer{renderer}
+, m_flavor{DetermineNativeTexureType(texture.get())}
+, m_texture{std::move(texture)}
+{
 }
 
 MtlTexture::~MtlTexture() = default;

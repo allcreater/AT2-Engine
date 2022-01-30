@@ -1,6 +1,7 @@
 #ifndef AT2_MAIN_HEADER_H
 #define AT2_MAIN_HEADER_H
 
+//#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 //#define GLM_FORCE_SWIZZLE
 #include <glm/gtx/vec_swizzle.hpp>
 
@@ -122,7 +123,7 @@ namespace AT2
         struct ColorAttachment
         {
             ColorAttachment(std::shared_ptr<ITexture> texture = nullptr, std::optional<glm::vec4> clearColor = {}) :
-                Texture {texture}, ClearColor {clearColor}
+                Texture {std::move(texture)}, ClearColor {clearColor}
             {}
 
             std::shared_ptr<ITexture> Texture;
@@ -132,7 +133,7 @@ namespace AT2
         struct DepthAttachment
         {
             DepthAttachment(std::shared_ptr<ITexture> texture = nullptr, std::optional<double> clearDepth = {}) :
-                Texture {texture}, ClearDepth {clearDepth}
+                Texture {std::move(texture)}, ClearDepth {clearDepth}
             {}
 
             std::shared_ptr<ITexture> Texture;

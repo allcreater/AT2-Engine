@@ -38,6 +38,8 @@ namespace AT2::Metal
         static void SetAttachmentClearColor(MTL::RenderPassColorAttachmentDescriptor* attachment, const std::optional<glm::vec4>& clearColor);
         static void SetAttachmentClearDepth(MTL::RenderPassDepthAttachmentDescriptor* attachment, const std::optional<float>& clearDepth);
         
+        Renderer& GetVisualisationSystem() const noexcept { return m_renderer; }
+        
     private:
         Renderer& m_renderer;
         glm::ivec2 m_size {0, 0};

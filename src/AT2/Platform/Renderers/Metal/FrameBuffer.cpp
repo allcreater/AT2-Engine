@@ -76,7 +76,7 @@ void FrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttachm
 
 IFrameBuffer::ColorAttachment FrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
 {
-    m_colorAttachments.at(attachmentNumber);
+    return m_colorAttachments.at(attachmentNumber);
 }
 
 void FrameBuffer::SetDepthAttachment(DepthAttachment attachment)
@@ -96,7 +96,10 @@ IFrameBuffer::DepthAttachment FrameBuffer::GetDepthAttachment() const
 void FrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
 {
     for (size_t i = 0; i < m_renderer.GetRendererCapabilities().GetMaxNumberOfColorAttachments(); ++i)
+    {
         SetAttachmentClearColor(m_renderPassDescriptor->colorAttachments()->object(i), color);
+        m_colorAttachments[i].ClearColor = color;
+    }
 }
 
 void FrameBuffer::SetClearDepth(std::optional<float> depth) 
