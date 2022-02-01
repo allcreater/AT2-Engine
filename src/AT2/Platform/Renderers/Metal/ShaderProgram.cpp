@@ -98,6 +98,6 @@ void ShaderProgram::Apply(MTL::RenderPipelineDescriptor& pipelineDescriptor) con
 
 void ShaderProgram::OnStateCreated(MtlPtr<MTL::RenderPipelineReflection> reflection)
 {
-    m_introspection = std::make_shared<Introspection::ProgramIntrospection>(reflection);
+    m_introspection = std::make_shared<Introspection::ProgramIntrospection>(std::move(reflection));
     m_defaultUniformBlock = CreateAssociatedUniformStorage(DefaultUniformBlockName);
 }

@@ -244,8 +244,8 @@ void MtlTexture::BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, 
 void MtlTexture::BuildMipmaps()
 {
     //TODO: commit to existing command buffer
-    auto commandBuffer = Own(m_renderer.getCommandQueue()->commandBuffer());
-    auto blitEncoder = Own(commandBuffer->blitCommandEncoder());
+    auto commandBuffer = m_renderer.getCommandQueue()->commandBuffer();
+    auto blitEncoder = commandBuffer->blitCommandEncoder();
     
     blitEncoder->generateMipmaps(m_texture.get());
     

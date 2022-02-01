@@ -95,7 +95,7 @@ IFrameBuffer::DepthAttachment FrameBuffer::GetDepthAttachment() const
 
 void FrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
 {
-    for (size_t i = 0; i < m_renderer.GetRendererCapabilities().GetMaxNumberOfColorAttachments(); ++i)
+    for (size_t i = 0; i < m_colorAttachments.size(); ++i)
     {
         SetAttachmentClearColor(m_renderPassDescriptor->colorAttachments()->object(i), color);
         m_colorAttachments[i].ClearColor = color;
@@ -109,16 +109,15 @@ void FrameBuffer::SetClearDepth(std::optional<float> depth)
 
 void FrameBuffer::Render(RenderFunc renderFunc) 
 {
-    auto commandBuffer = Own(m_renderer.getCommandQueue()->commandBuffer());
-    auto renderEncoder = Own(commandBuffer->renderCommandEncoder(m_renderPassDescriptor.get()));
- 
+    auto commandBuffer = m_renderer.getCommandQueue()->commandBuffer();
+    auto renderEncoder = commandBuffer->renderCommandEncoder(m_renderPassDescriptor.get());
     {
-        MtlStateManager renderer{m_renderer, renderEncoder.get()};
+        MtlStateManager renderer{m_renderer, renderEncoder};
         renderFunc(renderer);
     }
     
     renderEncoder->endEncoding();
-    OnCommit(commandBuffer.get());
+    OnCommit(commandBuffer);
     commandBuffer->commit();
 }
 
@@ -131,14 +130,19 @@ void MetalScreenFrameBuffer::Render(RenderFunc renderFunc)
     
     //TODO: is it a crutch or a feature?
     //colorAttachmentDescriptor->setPixelFormat(swapchain->pixelFormat());
-    SetAttachmentTexture(m_renderPassDescriptor->colorAttachments()->object(0), m_drawable->texture());
+    //SetAttachmentTexture(m_renderPassDescriptor->colorAttachments()->object(0), m_drawable->texture());
+    
+    {
+        auto texture = std::make_shared<MtlTexture>(GetVisualisationSystem(), m_drawable->texture());
+        auto oldAttachment = GetColorAttachment(0);
+        SetColorAttachment(0, ColorAttachment{std::move(texture), oldAttachment.ClearColor});
+    }
     
     FrameBuffer::Render(std::move(renderFunc));
-    
-    m_drawable->release();
 }
 
 void MetalScreenFrameBuffer::OnCommit(MTL::CommandBuffer* commandBuffer)
 {
     commandBuffer->presentDrawable(m_drawable);
+    m_drawable = nullptr;
 }
