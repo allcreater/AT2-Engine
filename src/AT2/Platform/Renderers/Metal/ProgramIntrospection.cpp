@@ -75,7 +75,7 @@ void ProgramIntrospection::VisitArgument(ShaderType shaderType, const MTL::Argum
                 knownFields.emplace_back(name, member->offset(), arrayAttribs, matrixStride, matrixSize );
             });
             
-            m_inputBuffers.emplace(argumentName, BufferInfo{shaderType, static_cast<unsigned int>(argument->index()), BufferLayout{std::move(knownFields)}});
+            m_inputBuffers.emplace(argumentName, BufferInfo{shaderType, static_cast<unsigned int>(argument->index()), BufferLayout{std::move(knownFields), argument->bufferAlignment()}});
         } break;
             
         case MTL::ArgumentTypeTexture:

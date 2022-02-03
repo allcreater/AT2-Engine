@@ -54,16 +54,23 @@ namespace AT2
     class BufferLayout
     {
     public:
-        BufferLayout(std::vector<Field> fields);
+        BufferLayout(std::vector<Field> fields, size_t alignment = 0);
 
         const Field*          operator[](std::string_view name) const;
 
+        size_t GetAlignment() const noexcept { return m_alignment; }
+        
         std::optional<size_t> GetFieldNumber(std::string_view name) const;
 
-        std::span<const Field> GetFields() const { return m_fields; }
+        std::span<const Field> GetFields() const noexcept { return m_fields; }
+        
         size_t GetSufficientSize() const;
+        
+    private:
+        size_t GetSufficientSizeInternal() const;
 
     private:
+        size_t m_alignment;
         std::vector<Field> m_fields;
         std::unordered_map<std::string_view, const Field*> m_fieldsByName;
     };

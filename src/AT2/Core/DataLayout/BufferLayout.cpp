@@ -2,8 +2,21 @@
 
 using namespace AT2;
 
-BufferLayout::BufferLayout(std::vector<Field> fields)
-: m_fields {std::move(fields)}
+namespace
+{
+    size_t alignSize(size_t size, size_t alignment )
+    {
+        const auto error = size % alignment;
+        if (error == 0)
+            return size;
+        
+        return size + (alignment - error);
+    }
+}
+
+BufferLayout::BufferLayout(std::vector<Field> fields, size_t alignment)
+: m_alignment {alignment}
+, m_fields {std::move(fields)}
 , m_fieldsByName {m_fields.size()}
 {
     std::sort(m_fields.begin(), m_fields.end(), [](const Field& lhs, const Field& rhs) { return rhs.GetOffset() > lhs.GetOffset(); });
@@ -37,6 +50,12 @@ std::optional<size_t> BufferLayout::GetFieldNumber( std::string_view name ) cons
 
 size_t BufferLayout::GetSufficientSize() const
 {
+    const auto size = GetSufficientSizeInternal();
+    return m_alignment > 0 ? alignSize(size, m_alignment) : size;
+}
+
+size_t BufferLayout::GetSufficientSizeInternal() const
+{
     if (m_fields.empty())
         return 0;
 
@@ -44,7 +63,7 @@ size_t BufferLayout::GetSufficientSize() const
     if (lastField.GetSize())
 		return m_fields.back().GetOffset() + m_fields.back().GetSize();
 
-	//TODO: precious calculation. Unfortunately reflection APIs don't report actual size so that we must guess :(
+	//TODO: precious calculation. Unfortunately reflection APssIs don't report actual size so that we must guess :(
     return m_fields.back().GetOffset() + [&]() -> size_t {
         if (lastField.GetArrayAttributes())
             return static_cast<size_t>(lastField.GetArrayAttributes().GetLength()) * lastField.GetArrayAttributes().GetStride();
