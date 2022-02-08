@@ -6,18 +6,7 @@
 namespace AT2::Metal::Introspection
 {
 
-enum class ShaderType
-{
-    Vertex      = 0,
-    Fragment    = 1,
-    Tile        = 2
-};
-
-struct ArgumentInfo
-{
-    ShaderType Shader;
-    unsigned int BindingIndex;
-};
+using ArgumentInfo = ResourceBindingPoint;
 
 struct BufferInfo : ArgumentInfo
 {
@@ -34,7 +23,7 @@ public:
     void FindBuffer(std::string_view name, std::function<void(const BufferInfo& info)> callback) const ;
     
 private:
-    void VisitArgument(ShaderType shaderType, const MTL::Argument* argument);
+    void VisitArgument(AttachmentTarget shaderType, const MTL::Argument* argument);
     
 private:
     MtlPtr<MTL::RenderPipelineReflection> m_reflection;

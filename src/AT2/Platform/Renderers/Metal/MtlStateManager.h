@@ -5,6 +5,8 @@
 namespace AT2::Metal
 {
 
+class Buffer;
+class MtlTexture;
 class Renderer;
 class ShaderProgram;
 class VertexArray;
@@ -40,6 +42,9 @@ public:
     IVisualizationSystem& GetVisualizationSystem() override;
     
 private:
+    void BindBuffer(std::shared_ptr<Buffer>, ResourceBindingPoint bindingPoint);
+    void BindTexture(std::shared_ptr<MtlTexture>, ResourceBindingPoint bindingPoint);
+    
     MtlPtr<MTL::RenderPipelineState> GetOrBuildState();
     
 private:

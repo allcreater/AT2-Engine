@@ -40,12 +40,12 @@ std::pair<unsigned int, unsigned int> GetMatrixSizeAndAStride(MTL::DataType data
 ProgramIntrospection::ProgramIntrospection(MtlPtr<MTL::RenderPipelineReflection> reflection)
 : m_reflection{std::move(reflection)}
 {
-    VisitArray<const MTL::Argument*>(m_reflection->vertexArguments(), [this](const MTL::Argument* argument){ VisitArgument(ShaderType::Vertex, argument);});
-    VisitArray<const MTL::Argument*>(m_reflection->fragmentArguments(), [this](const MTL::Argument* argument){ VisitArgument(ShaderType::Fragment, argument);});
-    VisitArray<const MTL::Argument*>(m_reflection->tileArguments(), [this](const MTL::Argument* argument){ VisitArgument(ShaderType::Tile, argument);});
+    VisitArray<const MTL::Argument*>(m_reflection->vertexArguments(), [this](const MTL::Argument* argument){ VisitArgument(AttachmentTarget::Vertex, argument);});
+    VisitArray<const MTL::Argument*>(m_reflection->fragmentArguments(), [this](const MTL::Argument* argument){ VisitArgument(AttachmentTarget::Fragment, argument);});
+    VisitArray<const MTL::Argument*>(m_reflection->tileArguments(), [this](const MTL::Argument* argument){ VisitArgument(AttachmentTarget::Tile, argument);});
 }
 
-void ProgramIntrospection::VisitArgument(ShaderType shaderType, const MTL::Argument* argument)
+void ProgramIntrospection::VisitArgument(AttachmentTarget shaderType, const MTL::Argument* argument)
 {
     if (!argument)
         return;

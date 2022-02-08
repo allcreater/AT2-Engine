@@ -27,13 +27,13 @@ namespace AT2::Metal
         void Unmap() override;
 
         //for internal usage
-        MTL::Buffer* getNativeHandle() { return buffer.get(); }
+        MTL::Buffer* getNativeHandle() { return m_buffer.get(); }
         
     private:
-        Renderer& renderer;
-        VertexBufferType type;
+        Renderer& m_renderer;
+        VertexBufferType m_type;
 
-        MtlPtr<MTL::Buffer> buffer;
+        MtlPtr<MTL::Buffer> m_buffer;
         
         bool m_mapped = false;
     };

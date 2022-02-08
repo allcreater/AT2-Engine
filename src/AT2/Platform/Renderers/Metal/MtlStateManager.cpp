@@ -163,40 +163,21 @@ void MtlStateManager::Commit(const std::function<void(IUniformsWriter&)>& writeC
         
         void Write(std::string_view name, std::shared_ptr<ITexture> texture) override
         {
-            auto& mtlTexture = Utils::safe_dereference_cast<MtlTexture&>(texture);
+            auto mtlTexture = std::dynamic_pointer_cast<MtlTexture>(texture);
+            assert(mtlTexture);
+            
             m_stateManager.m_activeShader->GetIntrospection()->FindTexture(name, [&](const Introspection::ArgumentInfo& paramInfo){
-                switch (paramInfo.Shader)
-                {
-                    case Introspection::ShaderType::Vertex:
-                        m_stateManager.m_renderEncoder->setVertexTexture(mtlTexture.getNativeHandle(), paramInfo.BindingIndex);
-                        break;
-                    case Introspection::ShaderType::Fragment:
-                        m_stateManager.m_renderEncoder->setFragmentTexture(mtlTexture.getNativeHandle(), paramInfo.BindingIndex);
-                        break;
-                    case Introspection::ShaderType::Tile:
-                        m_stateManager.m_renderEncoder->setTileTexture(mtlTexture.getNativeHandle(), paramInfo.BindingIndex);
-                        break;
-                }
+                m_stateManager.BindTexture(mtlTexture, paramInfo);
             });
         }
 
         void Write(std::string_view name, std::shared_ptr<IBuffer> buffer) override
         {
-            //TODO: move to state manager itself, track active textures
-            auto& mtlBuffer = Utils::safe_dereference_cast<Buffer&>(buffer);
+            auto mtlBuffer = std::dynamic_pointer_cast<Buffer>(buffer);
+            assert(mtlBuffer);
+            
             m_stateManager.m_activeShader->GetIntrospection()->FindBuffer(name, [&](const Introspection::BufferInfo& paramInfo){
-                switch (paramInfo.Shader)
-                {
-                    case Introspection::ShaderType::Vertex:
-                        m_stateManager.m_renderEncoder->setVertexBuffer(mtlBuffer.getNativeHandle(), 0, paramInfo.BindingIndex);
-                        break;
-                    case Introspection::ShaderType::Fragment:
-                        m_stateManager.m_renderEncoder->setFragmentBuffer(mtlBuffer.getNativeHandle(), 0, paramInfo.BindingIndex);
-                        break;
-                    case Introspection::ShaderType::Tile:
-                        m_stateManager.m_renderEncoder->setTileBuffer(mtlBuffer.getNativeHandle(), 0, paramInfo.BindingIndex);
-                        break;
-                }
+                m_stateManager.BindBuffer(mtlBuffer, paramInfo);
             });
         }
 
@@ -252,3 +233,35 @@ void MtlStateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& verte
     }
 }
 
+//TODO: track active textures and buffers, are we StateManager or not?
+void MtlStateManager::BindBuffer(std::shared_ptr<Buffer> buffer, ResourceBindingPoint bindingPoint)
+{
+    switch (bindingPoint.Target)
+    {
+        case AttachmentTarget::Vertex:
+            m_renderEncoder->setVertexBuffer(buffer->getNativeHandle(), 0, bindingPoint.Index);
+            break;
+        case AttachmentTarget::Fragment:
+            m_renderEncoder->setFragmentBuffer(buffer->getNativeHandle(), 0, bindingPoint.Index);
+            break;
+        case AttachmentTarget::Tile:
+            m_renderEncoder->setTileBuffer(buffer->getNativeHandle(), 0, bindingPoint.Index);
+            break;
+    }
+}
+
+void MtlStateManager::BindTexture(std::shared_ptr<MtlTexture> texture, ResourceBindingPoint bindingPoint)
+{
+    switch (bindingPoint.Target)
+    {
+        case AttachmentTarget::Vertex:
+            m_renderEncoder->setVertexTexture(texture->getNativeHandle(), bindingPoint.Index);
+            break;
+        case AttachmentTarget::Fragment:
+            m_renderEncoder->setFragmentTexture(texture->getNativeHandle(), bindingPoint.Index);
+            break;
+        case AttachmentTarget::Tile:
+            m_renderEncoder->setTileTexture(texture->getNativeHandle(), bindingPoint.Index);
+            break;
+    }
+}

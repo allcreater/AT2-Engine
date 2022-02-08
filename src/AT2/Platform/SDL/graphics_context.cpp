@@ -132,7 +132,7 @@ Uint32 SDL::GetContextSpecificWindowFlags( const ContextParameters& contextParam
 {
     return std::visit( Utils::overloaded {
     	[](const OpenGLContextParams&) -> Uint32 { return SDL_WINDOW_OPENGL; },
-        [](const MetalContextParams&) -> Uint32 { return 0; }, // SDL_WINDOW_METAL ?
+        [](const MetalContextParams&) -> Uint32 { return SDL_WINDOW_METAL; },
         [](const auto&) -> Uint32 { return 0; }
     }, contextParams.contextType);
 }

@@ -9,6 +9,19 @@
 namespace AT2::Metal
 {
 
+enum class AttachmentTarget
+{
+    Vertex      = 0,
+    Fragment    = 1,
+    Tile        = 2
+};
+
+struct ResourceBindingPoint
+{
+    AttachmentTarget Target;
+    unsigned int Index;
+};
+
 template<typename T>
 //concept MetalObjectPtr = std::is_base_of_v<NS::Referencing<T>, T>;
 concept MetalCppReferencable = requires (T* ptr)
