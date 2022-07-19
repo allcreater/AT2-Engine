@@ -499,7 +499,7 @@ namespace
             {
                 const auto& rf = m_renderer.GetResourceFactory();
                 auto vao = rf.CreateVertexArray();
-                auto vb = rf.CreateBuffer(VertexBufferType::ArrayBuffer);
+                auto vb = rf.CreateBuffer(VertexBufferFlags::ArrayBuffer);
 
 
                 std::vector<std::pair<uint32_t, BufferDataInfo>> buffersData;
@@ -519,7 +519,7 @@ namespace
                 {
                     const size_t currentDataLength = bufferData.data.size_bytes();
                     {
-                        BufferMapperGuard guard {*vb, startPos, currentDataLength, BufferUsage::Write};
+                        BufferMapperGuard guard {*vb, startPos, currentDataLength, BufferOperationFlags::Write};
                         std::memcpy(guard.data(), bufferData.data.data(), currentDataLength);
                     }
                     bufferData.bindingParams.Offset = startPos;
@@ -533,7 +533,7 @@ namespace
                 {
                     const auto indexBufferInfo = GetData(primitive.indices);
 
-                    auto ib = rf.CreateBuffer(VertexBufferType::IndexBuffer, indexBufferInfo.data);
+                    auto ib = rf.CreateBuffer(VertexBufferFlags::IndexBuffer, indexBufferInfo.data);
                     vao->SetIndexBuffer(ib, indexBufferInfo.bindingParams.Type);
 
                     primitivesCount = indexBufferInfo.count;

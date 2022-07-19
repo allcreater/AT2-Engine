@@ -121,7 +121,7 @@ namespace AT2::Scene
 
 
         //TODO: map buffer instead of recreating it
-        auto vertexBuffer = rf.MakeBufferFrom(VertexBufferType::ArrayBuffer, lrv.collectedLights);
+        auto vertexBuffer = rf.MakeBufferFrom(VertexBufferFlags::ArrayBuffer, lrv.collectedLights);
 
         vao->SetAttributeBinding(2, vertexBuffer,
             BufferBindingParams {BufferDataType::Float, 3, sizeof(LightAttribs), offsetof(LightAttribs, position), false, 1} );

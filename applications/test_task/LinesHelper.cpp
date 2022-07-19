@@ -41,8 +41,8 @@ void LinesHelper::Init(const IVisualizationSystem& renderer)
     auto& rf = renderer.GetResourceFactory();
 
     m_VAO = rf.CreateVertexArray();
-    m_VAO->SetAttributeBinding(0, rf.CreateBuffer(VertexBufferType::ArrayBuffer), BufferDataTypes::Vec2);
-    m_VAO->SetAttributeBinding(1, rf.CreateBuffer(VertexBufferType::ArrayBuffer), BufferDataTypes::Vec4);
+    m_VAO->SetAttributeBinding(0, rf.CreateBuffer(VertexBufferFlags::ArrayBuffer), BufferDataTypes::Vec2);
+    m_VAO->SetAttributeBinding(1, rf.CreateBuffer(VertexBufferFlags::ArrayBuffer), BufferDataTypes::Vec4);
     //m_VAO->SetIndexBuffer(rf.CreateBuffer(AT2vbt::IndexBuffer, 0, nullptr), BufferDataTypes::UInt);
 }
 

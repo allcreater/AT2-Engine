@@ -15,7 +15,7 @@ namespace AT2::OpenGL
         ~GlTexture() override;
 
         void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
-                         BufferUsage usage = BufferUsage::ReadWrite) const override;
+                         BufferOperation usage = BufferOperationFlags::ReadWrite) const override;
 
         void BuildMipmaps() override;
         glm::uvec3 GetSize() const noexcept override { return glm::uvec3(m_size); }

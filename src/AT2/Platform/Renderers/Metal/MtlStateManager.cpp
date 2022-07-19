@@ -1,10 +1,12 @@
 #include "MtlStateManager.h"
+#include "ArrayBuffer.h"
 #include "VertexArray.h"
 #include "Renderer.h"
 #include "ShaderProgram.h"
 #include <DataLayout/StructuredBuffer.h>
 #include "Mappings.h"
 #include "Texture.h"
+#include <iomanip>
 
 using namespace AT2;
 using namespace AT2::Metal;
@@ -173,11 +175,8 @@ void MtlStateManager::Commit(const std::function<void(IUniformsWriter&)>& writeC
 
         void Write(std::string_view name, std::shared_ptr<IBuffer> buffer) override
         {
-            auto mtlBuffer = std::dynamic_pointer_cast<Buffer>(buffer);
-            assert(mtlBuffer);
-            
             m_stateManager.m_activeShader->GetIntrospection()->FindBuffer(name, [&](const Introspection::BufferInfo& paramInfo){
-                m_stateManager.BindBuffer(mtlBuffer, paramInfo);
+                m_stateManager.BindBuffer(buffer, paramInfo);
             });
         }
 
@@ -234,19 +233,49 @@ void MtlStateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& verte
 }
 
 //TODO: track active textures and buffers, are we StateManager or not?
-void MtlStateManager::BindBuffer(std::shared_ptr<Buffer> buffer, ResourceBindingPoint bindingPoint)
+void MtlStateManager::BindBuffer(std::shared_ptr<IBuffer> buffer, ResourceBindingPoint bindingPoint)
 {
-    switch (bindingPoint.Target)
+    assert(buffer);
+    auto&& bufferType = typeid(*buffer);
+    
+    if (bufferType == typeid(Buffer))
     {
-        case AttachmentTarget::Vertex:
-            m_renderEncoder->setVertexBuffer(buffer->getNativeHandle(), 0, bindingPoint.Index);
-            break;
-        case AttachmentTarget::Fragment:
-            m_renderEncoder->setFragmentBuffer(buffer->getNativeHandle(), 0, bindingPoint.Index);
-            break;
-        case AttachmentTarget::Tile:
-            m_renderEncoder->setTileBuffer(buffer->getNativeHandle(), 0, bindingPoint.Index);
-            break;
+        auto handle = static_cast<Buffer&>(*buffer).getNativeHandle();
+        switch (bindingPoint.Target)
+        {
+            case AttachmentTarget::Vertex:
+                m_renderEncoder->setVertexBuffer(handle, 0, bindingPoint.Index);
+                break;
+            case AttachmentTarget::Fragment:
+                m_renderEncoder->setFragmentBuffer(handle, 0, bindingPoint.Index);
+                break;
+            case AttachmentTarget::Tile:
+                m_renderEncoder->setTileBuffer(handle, 0, bindingPoint.Index);
+                break;
+        }
+    }
+    else if (bufferType == typeid(ArrayBuffer))
+    {
+        auto range = buffer->Map(BufferOperationFlags::Read);
+        
+        switch (bindingPoint.Target)
+        {
+            case AttachmentTarget::Vertex:
+                m_renderEncoder->setVertexBytes(range.data(), range.size(), bindingPoint.Index);
+                break;
+            case AttachmentTarget::Fragment:
+                m_renderEncoder->setFragmentBytes(range.data(), range.size(), bindingPoint.Index);
+                break;
+            case AttachmentTarget::Tile:
+                m_renderEncoder->setTileBytes(range.data(), range.size(), bindingPoint.Index);
+                break;
+        }
+
+        buffer->Unmap();
+    }
+    else
+    {
+        assert(false);
     }
 }
 

@@ -212,32 +212,32 @@ constexpr MTL::IndexType TranslateIndexBufferType(BufferDataType type)
         return 0;
     }
 
-    constexpr GLenum TranslateBufferType(VertexBufferType bufferType)
-    {
-        switch (bufferType)
-        {
-        case VertexBufferType::ArrayBuffer: return GL_ARRAY_BUFFER;
-        case VertexBufferType::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
-        case VertexBufferType::UniformBuffer: return GL_UNIFORM_BUFFER;
-        }
 
-        assert(false);
-        return 0;
-    }
-
-    constexpr GLenum TranslateBufferUsage(BufferUsage bufferUsage)
-    {
-        switch (bufferUsage)
-        {
-        case BufferUsage::Read: return GL_READ_ONLY;
-        case BufferUsage::ReadWrite: return GL_READ_WRITE;
-        case BufferUsage::Write: return GL_WRITE_ONLY;
-        }
-
-        assert(false);
-        return 0;
-    }
  */
+
+constexpr MTL::ResourceOptions TranslateBufferType(VertexBufferType bufferUsage)
+{
+    //using namespace Flags;
+    assert((bufferUsage & VertexBufferType{VertexBufferFlags::Dynamic, VertexBufferFlags::Stream}).Count() <= 1);
+    
+    if ((bufferUsage & VertexBufferType{VertexBufferFlags::Dynamic, VertexBufferFlags::Stream}).Any())
+    {
+#if defined(TARGET_OS_IPHONE)
+        return MTL::ResourceCPUCacheModeWriteCombined|MTL::ResourceStorageModeManaged;
+#else
+        return MTL::ResourceCPUCacheModeWriteCombined|MTL::ResourceStorageModeShared;
+#endif
+    }
+    else //Immutable
+    {
+#if defined(TARGET_OS_IPHONE)
+        return MTL::ResourceStorageModeManaged;
+#else
+        return MTL::ResourceStorageModeShared;
+#endif
+    }
+}
+
 
     constexpr MTL::TextureType TranslateTextureTarget(const Texture& texture)
     {

@@ -21,16 +21,18 @@
 #include "log.h"
 #include "utils.hpp"
 
+#define NON_COPYABLE_OR_MOVABLE(type)                           \
+    type(const type&) = delete;                                 \
+    type(type&&) = delete;                                      \
+    type& operator=(const type&) = delete;                      \
+    type& operator=(type&&) = delete;
+
+
 #include "AT2_states.hpp"
 #include "AT2_textures.hpp"
 #include "AT2_types.hpp"
 #include "AT2_exceptions.hpp"
 
-#define NON_COPYABLE_OR_MOVABLE(type)                                                                                  \
-    type(const type&) = delete;                                                                                        \
-    type(type&&) = delete;                                                                                             \
-    type& operator=(const type&) = delete;                                                                             \
-    type& operator=(type&&) = delete;
 
 namespace AT2
 {
@@ -94,15 +96,15 @@ namespace AT2
             SetDataRaw(std::as_bytes(std::span {data}));
         }
 
-        //virtual void Map(BufferUsage usage, std::function<void(std::span<std::byte>)> fillCallback) = 0;
-        //virtual void Map(BufferUsage usage, size_t offset, size_t length, std::function<void(std::span<std::byte>)> fillCallback) = 0;
+        //virtual void Map(BufferOperation usage, std::function<void(std::span<std::byte>)> fillCallback) = 0;
+        //virtual void Map(BufferOperation usage, size_t offset, size_t length, std::function<void(std::span<std::byte>)> fillCallback) = 0;
 
         [[nodiscard]] virtual size_t GetLength() const noexcept = 0;
         virtual void SetDataRaw(std::span<const std::byte> data) = 0;
         virtual void ReserveSpace(size_t size) = 0;
 
-        virtual std::span<std::byte> Map(BufferUsage usage) = 0;
-        virtual std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) = 0;
+        virtual std::span<std::byte> Map(BufferOperation usage) = 0;
+        virtual std::span<std::byte> MapRange(BufferOperation usage, size_t offset, size_t length) = 0;
         virtual void Unmap() = 0;
 
 
@@ -214,7 +216,7 @@ namespace AT2
     public:
         //TODO: think about interface
         virtual void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
-                                 BufferUsage usage = BufferUsage::ReadWrite) const = 0;
+                                 BufferOperation usage = BufferOperationFlags::ReadWrite) const = 0;
         virtual void BuildMipmaps() = 0;
 
         [[nodiscard]] virtual glm::uvec3 GetSize() const noexcept = 0;
@@ -430,7 +432,7 @@ namespace AT2
         auto vertexArray = factory.CreateVertexArray();
         static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetAttributeBinding(args.first,
-                                              factory.MakeBufferFrom(VertexBufferType::ArrayBuffer, args.second),
+                                              factory.MakeBufferFrom(VertexBufferFlags::ArrayBuffer, args.second),
                                               BufferDataTypes::BufferTypeOf<std::remove_cvref_t<decltype(args.second[0])>>),
              0)...});
 

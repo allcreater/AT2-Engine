@@ -9,11 +9,11 @@
 #include <variant>
 
 #include "AABB.h"
+#include "flags.hpp"
 
 namespace AT2
 {
     using Seconds = std::chrono::duration<double>;
-
 
     enum class BufferDataType : unsigned char
     {
@@ -29,12 +29,20 @@ namespace AT2
         Fixed
     };
 
-    enum class VertexBufferType : unsigned char//TODO: Not full list of types!
+    enum class VertexBufferFlags : std::uint8_t //TODO: rename to ResourceUsage or something like this
     {
-        ArrayBuffer,
-        IndexBuffer,
-        UniformBuffer
+        // usages
+        Immutable       = 0,
+        Dynamic         = 1 << 0,
+        Stream          = 1 << 1,
+
+        // actual types
+        ArrayBuffer     = 1 << 2,
+        IndexBuffer     = 1 << 3,
+        UniformBuffer   = 1 << 4,
+        
     };
+    using VertexBufferType = EnumFlags<VertexBufferFlags>;
 
     struct BufferBindingParams
     {
@@ -197,19 +205,15 @@ namespace AT2
 
             return {samplingMode, {samplingMode, MipmapSamplingMode::Manual}};
         }
-    };
+    }; 
 
-    enum class BufferUsage : char
+    enum class BufferOperationFlags : std::uint8_t
     {
         Read = 1 << 0,
         Write = 1 << 1,
         ReadWrite = Read | Write
     };
-
-    inline BufferUsage operator|(BufferUsage lhs, BufferUsage rhs)
-    {
-        return static_cast<BufferUsage>(static_cast<char>(lhs) | static_cast<char>(rhs));
-    }
+    using BufferOperation = EnumFlags<BufferOperationFlags>;
 
     namespace TextureFormats
     {

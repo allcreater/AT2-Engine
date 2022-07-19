@@ -42,7 +42,7 @@ public:
     IVisualizationSystem& GetVisualizationSystem() override;
     
 private:
-    void BindBuffer(std::shared_ptr<Buffer>, ResourceBindingPoint bindingPoint);
+    void BindBuffer(std::shared_ptr<IBuffer>, ResourceBindingPoint bindingPoint);
     void BindTexture(std::shared_ptr<MtlTexture>, ResourceBindingPoint bindingPoint);
     
     MtlPtr<MTL::RenderPipelineState> GetOrBuildState();

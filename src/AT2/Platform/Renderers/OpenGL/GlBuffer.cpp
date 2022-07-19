@@ -37,17 +37,17 @@ void GlBuffer::ReserveSpace( size_t size )
     SetDataRaw(std::span {emptyData, size});
 }
 
-std::span<std::byte> GlBuffer::Map(BufferUsage usage)
+std::span<std::byte> GlBuffer::Map(BufferOperation usage)
 {
     if (m_mapped)
         throw AT2BufferException("GlBuffer: you must unmap buffer before you could map it again");
 
     m_mapped = true;
 
-    return {static_cast<std::byte*>(glMapNamedBuffer(m_id, Mappings::TranslateBufferUsage(usage))), m_length};
+    return {static_cast<std::byte*>(glMapNamedBuffer(m_id, Mappings::TranslateBufferOperation(usage))), m_length};
 }
 
-std::span<std::byte> GlBuffer::MapRange(BufferUsage usage, size_t offset, size_t length)
+std::span<std::byte> GlBuffer::MapRange(BufferOperation usage, size_t offset, size_t length)
 {
     if (m_mapped)
         throw AT2BufferException("GlBuffer: you must unmap buffer before you could map it again");
@@ -57,8 +57,8 @@ std::span<std::byte> GlBuffer::MapRange(BufferUsage usage, size_t offset, size_t
     m_mapped = true;
 
     const GLbitfield mapFlags = GL_MAP_INVALIDATE_RANGE_BIT
-        | ((usage | BufferUsage::Read) == BufferUsage::Read ? GL_MAP_READ_BIT : 0)
-        | ((usage | BufferUsage::Write) == BufferUsage::Write ? GL_MAP_WRITE_BIT : 0);
+        | (usage.Contains(BufferOperationFlags::Read) ? GL_MAP_READ_BIT : 0)
+        | (usage.Contains(BufferOperationFlags::Write) ? GL_MAP_WRITE_BIT : 0);
 
     return {static_cast<std::byte*>(glMapNamedBufferRange(m_id, offset, length, mapFlags)), length};
 }

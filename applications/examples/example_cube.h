@@ -47,7 +47,7 @@ private:
 			std::make_pair(2u, std::cref(cubeTexcoords))
         );
 
-        vao->SetIndexBuffer(resourceFactory.MakeBufferFrom(AT2::VertexBufferType::IndexBuffer, cubeIndices), AT2::BufferDataType::UInt);
+        vao->SetIndexBuffer(resourceFactory.MakeBufferFrom(AT2::VertexBufferFlags::IndexBuffer, cubeIndices), AT2::BufferDataType::UInt);
 
         AT2::SubMesh subMesh;
         subMesh.Primitives.push_back({AT2::Primitives::Triangles {}, 0, std::size(cubeIndices)});

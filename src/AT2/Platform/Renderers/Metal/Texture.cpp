@@ -236,7 +236,7 @@ MtlTexture::MtlTexture(Renderer& renderer, MtlPtr<MTL::Texture> texture)
 
 MtlTexture::~MtlTexture() = default;
 
-void MtlTexture::BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
+void MtlTexture::BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferOperation usage) const
 {
 
 }

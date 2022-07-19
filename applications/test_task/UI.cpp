@@ -48,7 +48,7 @@ private:
         auto& rf = renderer.GetResourceFactory();
 
         m_VAO = rf.CreateVertexArray();
-        m_VAO->SetAttributeBinding(0, rf.CreateBuffer(VertexBufferType::ArrayBuffer), AT2::BufferDataTypes::Float);
+        m_VAO->SetAttributeBinding(0, rf.CreateBuffer(VertexBufferFlags::ArrayBuffer), AT2::BufferDataTypes::Float);
 
 
         m_uniforms = std::make_shared<UniformContainer>();

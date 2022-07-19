@@ -187,7 +187,7 @@ std::unique_ptr<StructuredBuffer> GlShaderProgram::CreateAssociatedUniformStorag
     if (!uniformBlockInfo)
         return nullptr;
 
-    auto uniformBuffer = std::make_unique<StructuredBuffer>(m_renderer->GetResourceFactory().CreateBuffer(VertexBufferType::UniformBuffer),
+    auto uniformBuffer = std::make_unique<StructuredBuffer>(m_renderer->GetResourceFactory().CreateBuffer(VertexBufferFlags::UniformBuffer),
                                                             std::shared_ptr<const BufferLayout>{m_uniformsInfo, &uniformBlockInfo->Layout});
 
     return uniformBuffer;

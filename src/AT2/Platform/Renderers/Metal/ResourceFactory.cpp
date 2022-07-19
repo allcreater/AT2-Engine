@@ -1,5 +1,6 @@
 #include "ResourceFactory.h"
 
+#include "ArrayBuffer.h"
 #include "Renderer.h"
 #include "Texture.h"
 #include "FrameBuffer.h"
@@ -41,6 +42,9 @@ std::shared_ptr<IVertexArray> ResourceFactory::CreateVertexArray() const
 
 std::shared_ptr<IBuffer> ResourceFactory::CreateBuffer(VertexBufferType type) const
 {
+    if ((type & VertexBufferType{VertexBufferFlags::Dynamic, VertexBufferFlags::Stream}).Any() ) //TODO: also check size
+        return std::make_shared<ArrayBuffer>();
+
     return std::make_shared<Buffer>(m_renderer, type);
 }
 

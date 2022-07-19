@@ -15,15 +15,15 @@ namespace AT2::OpenGL
 
     public:
         [[nodiscard]] unsigned int GetId() const noexcept { return m_id; }
-        [[nodiscard]] VertexBufferType GetType() const noexcept { return m_publicType; }
+        [[nodiscard]] VertexBufferType GetType() const noexcept { return m_publicType; } //TODO: don't use, binding type shoud be deduced from usage
 
         [[nodiscard]] size_t GetLength() const noexcept override { return m_length; }
 
         void SetDataRaw(std::span<const std::byte> data) override;
         void ReserveSpace(size_t size) override;
 
-        std::span<std::byte> Map(BufferUsage usage) override;
-        std::span<std::byte> MapRange(BufferUsage usage, size_t offset, size_t length) override;
+        std::span<std::byte> Map(BufferOperation usage) override;
+        std::span<std::byte> MapRange(BufferOperation usage, size_t offset, size_t length) override;
         void Unmap() override;
 
     protected:
@@ -45,7 +45,7 @@ namespace AT2::OpenGL
             UniformBuffer = GL_UNIFORM_BUFFER
         };
 
-        enum class GlBufferUsageHint : GLenum
+        enum class GlBufferOperationHint : GLenum
         {
             StreamDraw = GL_STREAM_DRAW,
             StreamRead = GL_STREAM_READ,
@@ -64,7 +64,7 @@ namespace AT2::OpenGL
         size_t m_length {0};
 
         VertexBufferType m_publicType;
-        GlBufferUsageHint m_usageHint = GlBufferUsageHint::StaticDraw;
+        GlBufferOperationHint m_usageHint = GlBufferOperationHint::StaticDraw;
 
         bool m_mapped = false;
     };

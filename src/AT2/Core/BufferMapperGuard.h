@@ -8,12 +8,12 @@ namespace AT2
     class BufferMapperGuard
     {
     public:
-        BufferMapperGuard(IBuffer& buffer, BufferUsage accessRights) :
+        BufferMapperGuard(IBuffer& buffer, BufferOperation accessRights) :
             buffer(buffer), span(buffer.Map(accessRights)), access(accessRights)
         {
         }
 
-        BufferMapperGuard(IBuffer& buffer, size_t offset, size_t length, BufferUsage accessRights) :
+        BufferMapperGuard(IBuffer& buffer, size_t offset, size_t length, BufferOperation accessRights) :
             buffer(buffer), span(buffer.MapRange(accessRights, offset, length)), access(accessRights)
         {
         }
@@ -27,13 +27,13 @@ namespace AT2
 
         const std::byte* data() const noexcept
         {
-            assert(static_cast<int>(access) | static_cast<int>(BufferUsage::Read));
+            assert(access.Contains(BufferOperationFlags::Read));
             return span.data();
         }
 
         std::byte* data() noexcept
         {
-            assert(static_cast<int>(access) | static_cast<int>(BufferUsage::Write));
+            assert(access.Contains(BufferOperationFlags::Write));
             return span.data();
         }
 
@@ -41,7 +41,7 @@ namespace AT2
         T Get(size_t offset = 0) const
         {
             assert(offset + sizeof(T) <= span.size());
-            assert(static_cast<int>(access) | static_cast<int>(BufferUsage::Read));
+            assert(access.Contains(BufferOperationFlags::Read));
 
             T value;
             memcpy(&value, &span[offset], sizeof(T));
@@ -52,7 +52,7 @@ namespace AT2
         void Set(const T& value, size_t offset = 0)
         {
             assert(offset + sizeof(T) <= span.size());
-            assert(static_cast<int>(access) | static_cast<int>(BufferUsage::Write));
+            assert(access.Contains(BufferOperationFlags::Write));
 
             memcpy(&span[offset], &value, sizeof(T));
         }
@@ -60,7 +60,7 @@ namespace AT2
     private:
         IBuffer& buffer;
         std::span<std::byte> span;
-        const BufferUsage access;
+        const BufferOperation access;
     };
 
 } // namespace AT2

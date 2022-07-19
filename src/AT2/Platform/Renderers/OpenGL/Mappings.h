@@ -62,24 +62,24 @@ namespace AT2::Mappings
 
     constexpr GLenum TranslateBufferType(VertexBufferType bufferType)
     {
-        switch (bufferType)
+        switch (static_cast<VertexBufferFlags>(bufferType))
         {
-        case VertexBufferType::ArrayBuffer: return GL_ARRAY_BUFFER;
-        case VertexBufferType::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
-        case VertexBufferType::UniformBuffer: return GL_UNIFORM_BUFFER;
+        case VertexBufferFlags::ArrayBuffer: return GL_ARRAY_BUFFER;
+        case VertexBufferFlags::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
+        case VertexBufferFlags::UniformBuffer: return GL_UNIFORM_BUFFER;
         }
 
         assert(false);
         return 0;
     }
 
-    constexpr GLenum TranslateBufferUsage(BufferUsage bufferUsage)
+    constexpr GLenum TranslateBufferOperation(BufferOperation bufferUsage)
     {
-        switch (bufferUsage)
+        switch (static_cast<BufferOperationFlags>(bufferUsage))
         {
-        case BufferUsage::Read: return GL_READ_ONLY;
-        case BufferUsage::ReadWrite: return GL_READ_WRITE;
-        case BufferUsage::Write: return GL_WRITE_ONLY;
+        case BufferOperationFlags::Read: return GL_READ_ONLY;
+        case BufferOperationFlags::ReadWrite: return GL_READ_WRITE;
+        case BufferOperationFlags::Write: return GL_WRITE_ONLY;
         }
 
         assert(false);

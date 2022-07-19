@@ -128,9 +128,9 @@ GlTexture::~GlTexture()
     glDeleteTextures(1, &m_id);
 }
 
-void GlTexture::BindAsImage(unsigned unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferUsage usage) const
+void GlTexture::BindAsImage(unsigned unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferOperation usage) const
 {
-    glBindImageTexture(unit, GetId(), static_cast<GLint>(level), isLayered, static_cast<GLint>(layer), Mappings::TranslateBufferUsage(usage),
+    glBindImageTexture(unit, GetId(), static_cast<GLint>(level), isLayered, static_cast<GLint>(layer), Mappings::TranslateBufferOperation(usage),
                        m_internalFormat);
 }
 

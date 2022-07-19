@@ -110,7 +110,7 @@ void OpenGL::GlStateManager::DoBind(unsigned int index, const std::shared_ptr<IB
 {
     const auto& glBuffer = Utils::safe_dereference_cast<const GlBuffer&>(buffer);
     
-    if (glBuffer.GetType() == VertexBufferType::UniformBuffer)
+    if (glBuffer.GetType() == VertexBufferFlags::UniformBuffer)
         glBindBufferBase(Mappings::TranslateBufferType(glBuffer.GetType()), index, glBuffer.GetId());
     //TODO: track buffer state, it's OpenGL with global state...
 }

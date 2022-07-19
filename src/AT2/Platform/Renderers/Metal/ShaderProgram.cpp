@@ -76,7 +76,7 @@ std::unique_ptr<StructuredBuffer> ShaderProgram::CreateAssociatedUniformStorage(
     if (!m_introspection)
         return nullptr;
     
-    auto buffer = m_library->GetVisualizationSystem().GetResourceFactory().CreateBuffer(VertexBufferType::UniformBuffer);
+    auto buffer = m_library->GetVisualizationSystem().GetResourceFactory().CreateBuffer(VertexBufferFlags::Stream);
     
     //TODO: handle multiple layouts?
     std::vector<BufferLayout> layouts;
