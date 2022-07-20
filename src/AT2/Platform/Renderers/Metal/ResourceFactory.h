@@ -24,6 +24,8 @@ public:
     std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type) const override;
     std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type, std::span<const std::byte> data) const override;
     std::shared_ptr<IShaderProgram> CreateShaderProgramFromFiles(std::initializer_list<str> files) const override;
+    std::shared_ptr<IPipelineState> CreatePipelineState(const PipelineStateDescriptor& pipelineStateDescriptor) const override;
+    
     void ReloadResources(ReloadableGroup group) override;
 
 private:

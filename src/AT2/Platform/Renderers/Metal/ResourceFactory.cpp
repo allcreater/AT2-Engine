@@ -8,6 +8,7 @@
 #include "Buffer.h"
 #include "ShaderProgram.h"
 #include "Mappings.h"
+#include "PipelineState.h"
 
 #include <filesystem>
 #include <fstream>
@@ -102,6 +103,11 @@ std::shared_ptr<IShaderProgram> ResourceFactory::CreateShaderProgramFromFiles(st
     }
     
     return nullptr;
+}
+
+std::shared_ptr<IPipelineState> AT2::Metal::ResourceFactory::CreatePipelineState(const PipelineStateDescriptor& pipelineStateDescriptor) const
+{
+    return std::make_shared<PipelineState>(m_renderer, pipelineStateDescriptor);
 }
 
 void AT2::Metal::ResourceFactory::ReloadResources(ReloadableGroup group)

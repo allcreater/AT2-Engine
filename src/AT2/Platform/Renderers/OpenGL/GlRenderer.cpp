@@ -80,7 +80,9 @@ IFrameBuffer& GlRenderer::GetDefaultFramebuffer() const
 
 void GlRenderer::DispatchCompute(const std::shared_ptr<IShaderProgram>& computeProgram, glm::uvec3 threadGroupSize)
 {
-    GetStateManager().BindShader(computeProgram);
+    // TODO: special compute pipeline or something else
+    auto temporaryPipeline = GetResourceFactory().CreatePipelineState(PipelineStateDescriptor().SetShader(computeProgram));
+    GetStateManager().ApplyPipelineState(temporaryPipeline);
 
     glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
 

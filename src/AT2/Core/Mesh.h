@@ -44,7 +44,7 @@ namespace AT2
         }
 
         std::string Name;
-        std::shared_ptr<IShaderProgram> Shader;
+        std::shared_ptr<IPipelineState> PipelineState;
         std::shared_ptr<IVertexArray> VertexArray;
 
         std::vector<std::unique_ptr<IUniformContainer>> Materials;

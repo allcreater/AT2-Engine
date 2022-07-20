@@ -70,8 +70,15 @@ private:
         m_camera.setView(lookAt(glm::vec3 {5, 1, 0}, glm::vec3 {0, 0, 0}, glm::vec3 {0, 1, 0}));
 
         m_cubeMesh        = BuildCube(visualizationSystem.GetResourceFactory());
-        m_cubeMesh.Shader = visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles(
+        
+        auto shader = visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles(
             {"resources/simple_mesh.vs.glsl", "resources/simple_mesh.fs.glsl"});
+
+        m_cubeMesh.PipelineState = visualizationSystem.GetResourceFactory().CreatePipelineState(
+            AT2::PipelineStateDescriptor().SetShader(shader)
+                .SetVertexArray(m_cubeMesh.VertexArray)
+                .SetDepthState({ AT2::CompareFunction::Less, true, true})
+        );
 
         auto texture = AT2::Resources::TextureLoader::LoadTexture(visualizationSystem, "../../resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");
         m_cubeMesh.GetOrCreateDefaultMaterial().SetUniform("u_texAlbedo", std::move(texture));
@@ -81,10 +88,9 @@ private:
     {
         visualizationSystem.GetDefaultFramebuffer().Render([&](AT2::IRenderer& renderer){
             auto& stateManager = renderer.GetStateManager();
-    	    stateManager.ApplyState(AT2::DepthState { AT2::CompareFunction::Less, true, true});
             stateManager.ApplyState(AT2::FaceCullMode {false, true});
 
-    	    AT2::Utils::MeshRenderer::DrawMesh(renderer, m_cubeMesh, m_cubeMesh.Shader );
+    	    AT2::Utils::MeshRenderer::DrawMesh(renderer, m_cubeMesh, m_cubeMesh.PipelineState );
         });
     }
 

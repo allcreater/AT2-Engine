@@ -1,5 +1,6 @@
 #include <filesystem>
 
+#include "GlPipelineState.h"
 #include "GlRenderer.h"
 #include "GlShaderProgram.h"
 #include "GlTexture.h"
@@ -223,6 +224,11 @@ std::shared_ptr<IShaderProgram> GlResourceFactory::CreateShaderProgramFromFiles(
     m_reloadableResourcesList.push_back(std::weak_ptr<IReloadable>(resource));
 
     return {resource, &resource->GetShader()};
+}
+
+std::shared_ptr<IPipelineState> GlResourceFactory::CreatePipelineState(const PipelineStateDescriptor& pipelineStateDescriptor) const
+{
+    return std::make_shared<PipelineState>(m_renderer, pipelineStateDescriptor);
 }
 
 void GlResourceFactory::ReloadResources(ReloadableGroup group)

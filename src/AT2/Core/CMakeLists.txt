@@ -38,8 +38,6 @@ set (${PROJECT_NAME}_SOURCES
     "lru_cache.h"
     "matrix_stack.h"
     "Mesh.h"
-    "StateManager.h"
-    "StateManager.cpp"
     "UniformContainer.h"
     "UniformContainer.cpp"
     "utils.hpp"

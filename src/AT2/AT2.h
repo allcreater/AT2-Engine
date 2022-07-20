@@ -316,6 +316,40 @@ namespace AT2
         [[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachments() const = 0;
     };
 
+    //TODO: move to separate header?
+    class PipelineStateDescriptor
+    {
+    public:
+        PipelineStateDescriptor() = default;
+
+        //TODO: think about removing Shader and VAO concepts, probably it should be part of Pipeline itself
+        PipelineStateDescriptor& SetShader(std::shared_ptr<IShaderProgram> shader) { m_shader = std::move(shader); return *this; }
+        PipelineStateDescriptor& SetVertexArray(std::shared_ptr<IVertexArray> vertexArray) { m_vertexArray = std::move(vertexArray); return *this; }
+        PipelineStateDescriptor& SetDepthState(DepthState depthState) { m_depthState = depthState; return *this; }
+        PipelineStateDescriptor& SetBlendMode(BlendMode blendMode) { m_blendMode = blendMode; return *this; }
+
+        std::shared_ptr<IShaderProgram>  GetShader() const { return m_shader; }
+        std::shared_ptr<IVertexArray>  GetVertexArray() const { return m_vertexArray; }
+        DepthState GetDepthState() const { return m_depthState; }
+        BlendMode GetBlendMode() const { return m_blendMode; }
+
+    private:
+        std::shared_ptr<IShaderProgram> m_shader;
+        std::shared_ptr<IVertexArray> m_vertexArray;
+        DepthState m_depthState;
+        BlendMode m_blendMode;
+    };
+
+    //TODO: should not be an interface?
+    class IPipelineState
+    {
+    public:
+        NON_COPYABLE_OR_MOVABLE(IPipelineState)
+
+        IPipelineState() = default;
+        virtual ~IPipelineState() = default;
+    };
+
     class IStateManager : public IUniformReceiver
     {
     public:
@@ -328,10 +362,10 @@ namespace AT2
         //TODO: more flexible interface with possibility to add textures one-by-one + something like UnbindTextures() 
         //or... probably binding by index will be thriumphally returned
         //In common, need to unificate binding
-        virtual void BindShader(const std::shared_ptr<IShaderProgram>& shader) = 0;
         virtual void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) = 0;
 
-        virtual void ApplyState(RenderState state) = 0;
+        virtual void ApplyState(RenderState state) = 0; //TODO: rename to "ApplyDynamicState" or something like this
+        virtual void ApplyPipelineState(const std::shared_ptr<IPipelineState>& state) = 0;
 
         //virtual TextureSet& GetActiveTextures() const = 0;
         //[[nodiscard]] virtual std::shared_ptr<IFrameBuffer> GetActiveFrameBuffer() const = 0;
@@ -370,7 +404,9 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type, std::span<const std::byte> data) const = 0;
         [[nodiscard]] virtual std::shared_ptr<IShaderProgram>
-            CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0;
+            CreateShaderProgramFromFiles(std::initializer_list<str> files) const = 0; //TODO: remove?
+        [[nodiscard]] virtual std::shared_ptr<IPipelineState> 
+            CreatePipelineState(const PipelineStateDescriptor& pipelineStateDescriptor) const = 0;
 
         virtual void ReloadResources(ReloadableGroup group) = 0;
     };

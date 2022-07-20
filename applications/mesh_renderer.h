@@ -14,12 +14,12 @@ namespace AT2::Utils::MeshRenderer
 	                       primitive.BaseVertex);
 	}
 
-	static void DrawMesh(IRenderer& renderer, const Mesh& mesh, const std::shared_ptr<IShaderProgram>& program)
+	static void DrawMesh(IRenderer& renderer, const Mesh& mesh, const std::shared_ptr<IPipelineState>& pipelineState)
 	{
         auto& stateManager = renderer.GetStateManager();
 
-	    if (program)
-	        stateManager.BindShader(program);
+	    if (pipelineState)
+	        stateManager.ApplyPipelineState(pipelineState);
 
 	    stateManager.BindVertexArray(mesh.VertexArray);
 

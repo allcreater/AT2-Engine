@@ -10,6 +10,7 @@ class MtlTexture;
 class Renderer;
 class ShaderProgram;
 class VertexArray;
+class PipelineState;
 
 class MtlStateManager : public IStateManager, public IRenderer
 {
@@ -20,10 +21,10 @@ public:
     void Commit(const std::function<void(IUniformsWriter&)>& writeComand) override;
     
 //IStateManager interface
-    void BindShader(const std::shared_ptr<IShaderProgram>& shader) override;
     void BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray) override;
 
     void ApplyState(RenderState state) override;
+    void ApplyPipelineState(const std::shared_ptr<IPipelineState>& state) override;
 
     [[nodiscard]] std::shared_ptr<IShaderProgram> GetActiveShader() const override;
     [[nodiscard]] std::shared_ptr<IVertexArray> GetActiveVertexArray() const override;
@@ -45,21 +46,14 @@ private:
     void BindBuffer(std::shared_ptr<IBuffer>, ResourceBindingPoint bindingPoint);
     void BindTexture(std::shared_ptr<MtlTexture>, ResourceBindingPoint bindingPoint);
     
-    MtlPtr<MTL::RenderPipelineState> GetOrBuildState();
-    
 private:
     Renderer& m_renderer;
     MTL::RenderCommandEncoder* m_renderEncoder;
     
     std::shared_ptr<ShaderProgram> m_activeShader;
     std::shared_ptr<VertexArray> m_activeVertexArray;
-    
-    MtlPtr<MTL::RenderPipelineDescriptor> m_buildingState = ConstructMetalObject<MTL::RenderPipelineDescriptor>();
-    MtlPtr<MTL::DepthStencilDescriptor> m_buildingDepthStencilState;
-    MtlPtr<MTL::RenderPipelineState> m_currentState;
-    
-    bool m_stateInvalidated = true;
-    bool m_buildingDepthStencilStateInvalidated = true;
+
+    std::shared_ptr<PipelineState> m_currentState;
 };
 
 };

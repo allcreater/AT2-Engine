@@ -48,8 +48,12 @@ namespace AT2
     {
         BlendFactor SourceFactor = BlendFactor::One;
         BlendFactor DestinationFactor = BlendFactor::Zero;
-        glm::vec4 BlendColor {0.0f};
         bool Enabled = true;
+    };
+
+    struct BlendColor
+    {
+        glm::vec4 Color {0.0f};
     };
 
     struct FaceCullMode
@@ -71,7 +75,8 @@ namespace AT2
         Smooth
     };
 
-    using RenderState = std::variant<DepthState, BlendMode, FaceCullMode, PolygonRasterizationMode, LineRasterizationMode>;
+    // TODO: DepthBias, DepthStencilState, FaceWindig...
+    using RenderState = std::variant<BlendColor, FaceCullMode, PolygonRasterizationMode, LineRasterizationMode>;
 
 
 } // namespace AT2

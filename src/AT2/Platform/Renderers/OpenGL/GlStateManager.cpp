@@ -4,6 +4,7 @@
 
 #include "AT2lowlevel.h"
 #include "GlBuffer.h"
+#include "GlPipelineState.h"
 #include "GlFrameBuffer.h"
 #include "GlShaderProgram.h"
 #include "GlTexture.h"
@@ -14,8 +15,7 @@ using namespace AT2::OpenGL;
 
 
 GlStateManager::GlStateManager(IVisualizationSystem& renderer)
-    : StateManager(renderer)
-	, m_freeTextureSlots(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
+	: m_freeTextureSlots(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
     , m_activeTextures(renderer.GetRendererCapabilities().GetMaxNumberOfTextureUnits())
 {
     std::iota(m_freeTextureSlots.begin(), m_freeTextureSlots.end(), 0);
@@ -26,19 +26,8 @@ void OpenGL::GlStateManager::ApplyState(RenderState state)
 {
     //TODO: remember current state or even state stack?
     std::visit(Utils::overloaded {
-        [](const DepthState& state){
-            SetGlState(GL_DEPTH_TEST, state.TestEnabled);
-            glDepthMask(state.WriteEnabled);
-            glDepthFunc(AT2::Mappings::TranslateCompareFunction(state.CompareFunc));
-        },
-        [](const BlendMode& state){
-            SetGlState(GL_BLEND, state.Enabled);
-            if (!state.Enabled)
-                return;
-
-            glBlendFunc(Mappings::TranslateBlendFactor(state.SourceFactor),
-                      Mappings::TranslateBlendFactor(state.DestinationFactor));
-            glBlendColor(state.BlendColor.r, state.BlendColor.g, state.BlendColor.b, state.BlendColor.a);
+        [](const BlendColor& state){
+            glBlendColor(state.Color.r, state.Color.g, state.Color.b, state.Color.a);
         },
         [](const FaceCullMode& state){
             const auto mode = Mappings::TranslateFaceCullMode(state);
@@ -129,6 +118,48 @@ void OpenGL::GlStateManager::DoBind( IVertexArray& vertexArray )
         const auto& glIndexBuffer = Utils::safe_dereference_cast<GlBuffer&>(indexBuffer);
         glBindBuffer( Mappings::TranslateBufferType(glIndexBuffer.GetType()), glIndexBuffer.GetId());
     }
+}
+
+void OpenGL::GlStateManager::ApplyPipelineState(const std::shared_ptr<IPipelineState>& state)
+{
+    auto& stateDescriptor = Utils::safe_dereference_cast<PipelineState&>(state).GetDescriptor();
+
+    if (m_activeShader != stateDescriptor.GetShader())
+    {
+        DoBind(*stateDescriptor.GetShader());
+        m_activeShader = stateDescriptor.GetShader();
+    }
+
+    [state = stateDescriptor.GetDepthState()](){
+        SetGlState(GL_DEPTH_TEST, state.TestEnabled);
+        glDepthMask(state.WriteEnabled);
+        glDepthFunc(AT2::Mappings::TranslateCompareFunction(state.CompareFunc));
+    }();
+    
+    [state = stateDescriptor.GetBlendMode()](){
+        SetGlState(GL_BLEND, state.Enabled);
+        if (!state.Enabled)
+            return;
+
+        glBlendFunc(Mappings::TranslateBlendFactor(state.SourceFactor),
+                Mappings::TranslateBlendFactor(state.DestinationFactor));
+    }();
+
+}
+
+void OpenGL::GlStateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& _vertexArray)
+{
+    if (m_activeVertexArray && m_activeVertexArray == _vertexArray)
+        return;
+
+    if (_vertexArray)
+    {
+        DoBind(*_vertexArray);
+
+        m_activeIndexBufferType = _vertexArray->GetIndexBufferType();
+    }
+
+    m_activeVertexArray = _vertexArray;
 }
 
 std::optional<unsigned> GlStateManager::GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept
