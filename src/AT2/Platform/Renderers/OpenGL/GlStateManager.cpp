@@ -99,8 +99,9 @@ void OpenGL::GlStateManager::DoBind(unsigned int index, const std::shared_ptr<IB
 {
     const auto& glBuffer = Utils::safe_dereference_cast<const GlBuffer&>(buffer);
     
-    if (glBuffer.GetType() == VertexBufferFlags::UniformBuffer)
-        glBindBufferBase(Mappings::TranslateBufferType(glBuffer.GetType()), index, glBuffer.GetId());
+    //TODO: support for GL_SHADER_STORAGE_BUFFER, GL_ATOMIC_COUNTER_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER ?
+    assert(glBuffer.GetType() == VertexBufferFlags::UniformBuffer);
+    glBindBufferBase(Mappings::TranslateBufferType(glBuffer.GetType()), index, glBuffer.GetId());
     //TODO: track buffer state, it's OpenGL with global state...
 }
 
@@ -116,7 +117,7 @@ void OpenGL::GlStateManager::DoBind( IVertexArray& vertexArray )
     if (const auto indexBuffer = vertexArray.GetIndexBuffer())
     {
         const auto& glIndexBuffer = Utils::safe_dereference_cast<GlBuffer&>(indexBuffer);
-        glBindBuffer( Mappings::TranslateBufferType(glIndexBuffer.GetType()), glIndexBuffer.GetId());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glIndexBuffer.GetId());
     }
 }
 

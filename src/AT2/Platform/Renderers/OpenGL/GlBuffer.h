@@ -45,26 +45,11 @@ namespace AT2::OpenGL
             UniformBuffer = GL_UNIFORM_BUFFER
         };
 
-        enum class GlBufferOperationHint : GLenum
-        {
-            StreamDraw = GL_STREAM_DRAW,
-            StreamRead = GL_STREAM_READ,
-            StreamCopy = GL_STREAM_COPY,
-            StaticDraw = GL_STATIC_DRAW,
-            StaticRead = GL_STATIC_READ,
-            StaticCopy = GL_STATIC_COPY,
-            DynamicDraw = GL_DYNAMIC_DRAW,
-            DynamicRead = GL_DYNAMIC_READ,
-            DynamicCopy = GL_DYNAMIC_COPY
-        };
-
-
     private:
         GLuint m_id;
         size_t m_length {0};
 
         VertexBufferType m_publicType;
-        GlBufferOperationHint m_usageHint = GlBufferOperationHint::StaticDraw;
 
         bool m_mapped = false;
     };

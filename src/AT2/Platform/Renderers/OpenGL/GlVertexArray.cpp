@@ -22,9 +22,6 @@ void GlVertexArray::SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataTy
     {
         const auto& glBuffer = Utils::safe_dereference_cast<GlBuffer&>(buffer.get());
 
-        if (glBuffer.GetType() != VertexBufferFlags::IndexBuffer)
-            throw AT2Exception("GlBuffer: must be index buffer!");
-
         if (type != BufferDataType::UByte && type != BufferDataType::UShort && type != BufferDataType::UInt)
             throw AT2Exception("GlBuffer: index buffer must be one of three types: UByte, UShort, UInt");
     }
@@ -45,9 +42,6 @@ void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared
     }
 
     const auto& glBuffer = Utils::safe_dereference_cast<GlBuffer&>(buffer.get());
-
-    if (glBuffer.GetType() != VertexBufferFlags::ArrayBuffer)
-        throw AT2Exception("GlBuffer: trying to attach incorrect type buffer");
 
     const auto platformDataType = Mappings::TranslateExternalType(binding.Type);
     const auto bindingIndex = attributeIndex;

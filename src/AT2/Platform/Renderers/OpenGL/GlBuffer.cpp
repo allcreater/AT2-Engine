@@ -23,7 +23,7 @@ void GlBuffer::SetDataRaw(std::span<const std::byte> data)
 {
     assert(!m_mapped);
 
-    glNamedBufferData(m_id, data.size(), data.data(), static_cast<GLenum>(m_usageHint));
+    glNamedBufferData(m_id, data.size(), data.data(), Mappings::TranslateBufferUsage(m_publicType));
 
     m_length = data.size();
 }

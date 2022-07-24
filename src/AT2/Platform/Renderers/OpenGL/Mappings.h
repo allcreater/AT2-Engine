@@ -73,6 +73,18 @@ namespace AT2::Mappings
         return 0;
     }
 
+    constexpr GLenum TranslateBufferUsage(VertexBufferType bufferUsage)
+    {
+        assert((bufferUsage & VertexBufferType{VertexBufferFlags::Dynamic, VertexBufferFlags::Stream}).Count() <= 1);
+        
+        if ((bufferUsage & VertexBufferFlags::Stream).Any())
+            return GL_STREAM_DRAW;
+        else if ((bufferUsage & VertexBufferFlags::Dynamic).Any())
+            return GL_DYNAMIC_DRAW;
+        
+        return GL_STATIC_DRAW;
+    }
+
     constexpr GLenum TranslateBufferOperation(BufferOperation bufferUsage)
     {
         switch (static_cast<BufferOperationFlags>(bufferUsage))
