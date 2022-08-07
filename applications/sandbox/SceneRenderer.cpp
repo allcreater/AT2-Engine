@@ -26,8 +26,8 @@ namespace
 
 namespace AT2::Scene
 {
-    RenderVisitor::RenderVisitor(IRenderer& renderer, SceneRenderer& sceneRenderer, const Camera& camera) :
-        renderer {renderer}, camera {camera}, scene_renderer {sceneRenderer}
+    RenderVisitor::RenderVisitor(IRenderer& renderer, const Camera& camera) :
+        renderer {renderer}, camera {camera}
     {
     }
 
@@ -44,7 +44,7 @@ namespace AT2::Scene
             {
                 active_mesh = meshComponent->getMesh();
 
-                stateManager.BindShader(active_mesh->Shader);
+                stateManager.ApplyPipelineState(active_mesh->PipelineState);
                 stateManager.BindVertexArray(active_mesh->VertexArray);
             }
 
@@ -134,7 +134,7 @@ namespace AT2::Scene
 
 
         auto& stateManager = renderer.GetStateManager();
-        stateManager.BindShader(resources.sphereLightsShader);
+        stateManager.ApplyPipelineState(resources.sphereLightsPipeline);
         stateManager.BindVertexArray(lightMesh->VertexArray);
         sphereLightsUniforms->Bind(stateManager);
 
@@ -159,26 +159,49 @@ namespace AT2::Scene
                 writer.Write("u_environmentMap", nearestLightIt->environment_map);
             });
 
-            DrawQuad(renderer, resources.skyLightsShader, *skyLightsUniforms);
+            renderer.GetStateManager().ApplyPipelineState(resources.skyLightsPipeline);
+            DrawQuad(renderer, *skyLightsUniforms);
         }
     }
 
-    void SceneRenderer::Initialize(IVisualizationSystem& renderer)
+    void SceneRenderer::Initialize(IVisualizationSystem& visualizationSystem)
     {
-        resources.postprocessShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
+        auto& rf = visualizationSystem.GetResourceFactory();
+
+        resources.postprocessShader = rf.CreateShaderProgramFromFiles(
             {"resources/shaders/postprocess.vs.glsl", "resources/shaders/postprocess.fs.glsl"});
 
-        resources.sphereLightsShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
+        resources.sphereLightsShader = rf.CreateShaderProgramFromFiles(
             {"resources/shaders/spherelight2.vs.glsl", "resources/shaders/pbr.fs.glsl",
              "resources/shaders/spherelight2.fs.glsl"});
 
-        resources.skyLightsShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
+        resources.skyLightsShader = rf.CreateShaderProgramFromFiles(
             {"resources/shaders/skylight.vs.glsl", "resources/shaders/pbr.fs.glsl",
              "resources/shaders/skylight.fs.glsl"});
 
+        lightMesh = Utils::MakeSphere(visualizationSystem, {32, 16});
+        quadMesh = Utils::MakeFullscreenQuadMesh(visualizationSystem);
 
-        lightMesh = Utils::MakeSphere(renderer, {32, 16});
-        quadMesh = Utils::MakeFullscreenQuadMesh(renderer);
+        resources.postprocessPipeline = rf.CreatePipelineState(
+                    AT2::PipelineStateDescriptor()
+                    .SetShader(resources.postprocessShader)
+                    .SetVertexArray(quadMesh->VertexArray)
+                    .SetBlendMode({})
+                    .SetDepthState({}));
+
+        resources.sphereLightsPipeline = rf.CreatePipelineState(
+                    AT2::PipelineStateDescriptor()
+                    .SetShader(resources.sphereLightsShader)
+                    .SetVertexArray(lightMesh->VertexArray)
+                    .SetBlendMode({BlendFactor::SourceAlpha, BlendFactor::One})
+                    .SetDepthState({CompareFunction::Greater, true, false})); //false, false?
+
+        resources.skyLightsPipeline = rf.CreatePipelineState(
+                    AT2::PipelineStateDescriptor()
+                    .SetShader(resources.sphereLightsShader)
+                    .SetVertexArray(quadMesh->VertexArray)
+                    .SetBlendMode({BlendFactor::SourceAlpha, BlendFactor::One})
+                    .SetDepthState({CompareFunction::Greater, false, false}));
     }
 
     void SceneRenderer::ResizeFramebuffers(glm::ivec2 newSize)
@@ -242,18 +265,20 @@ namespace AT2::Scene
         if (!params.Camera || !params.Scene)
             return;
 
-        SetupCamera(renderer, *params.Camera, time);
+        if (!cameraUniformBuffer)
+            cameraUniformBuffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
+
+        SetupCamera(*cameraUniformBuffer, *params.Camera, &time);
+        renderer.GetStateManager().SetUniform("CameraBlock", cameraUniformBuffer->GetBuffer());
 
 
         // G-buffer pass
         gBufferFBO->Render([&](IRenderer& renderer) {
 			auto& stateManager = renderer.GetStateManager();
-            stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::OneMinusSourceAlpha});
             stateManager.ApplyState(params.Wireframe ? PolygonRasterizationMode::Lines : PolygonRasterizationMode::Fill);
-            stateManager.ApplyState(DepthState {CompareFunction::Less, true, true});
             stateManager.ApplyState(FaceCullMode {false, true});
 
-            RenderVisitor rv {renderer, *this, *params.Camera};
+            RenderVisitor rv {renderer, *params.Camera};
             params.Scene->GetRoot().Accept(rv);
         });
 
@@ -261,8 +286,6 @@ namespace AT2::Scene
         postProcessFBO->Render([&](IRenderer& renderer) {
             auto& stateManager = renderer.GetStateManager();
             stateManager.ApplyState(PolygonRasterizationMode::Fill);
-            stateManager.ApplyState(BlendMode {BlendFactor::SourceAlpha, BlendFactor::One});
-            stateManager.ApplyState(DepthState {CompareFunction::Greater, true, false});
             stateManager.ApplyState(FaceCullMode {false, true});
 
             LightRenderVisitor lrv {*this};
@@ -270,43 +293,34 @@ namespace AT2::Scene
 
             DrawPointLights(renderer, lrv);
 
-            stateManager.ApplyState(DepthState {CompareFunction::Greater, false, false});
             DrawSkyLight(renderer, lrv, *params.Camera );
         });
 
         // Postprocess pass
         params.TargetFramebuffer->Render([&](IRenderer& renderer) {
             auto& stateManager = renderer.GetStateManager();
-            stateManager.ApplyState(BlendMode {});
-            stateManager.ApplyState(DepthState {});
 
             postprocessUniforms->SetUniform("u_tmExposure", params.Exposure);
-            DrawQuad(renderer, resources.postprocessShader, *postprocessUniforms);
+            stateManager.ApplyPipelineState(resources.postprocessPipeline);
+            DrawQuad(renderer, *postprocessUniforms);
         });
     }
 
-    void SceneRenderer::SetupCamera(IRenderer& renderer, const Camera& camera, const ITime& time)
+    void SceneRenderer::SetupCamera(StructuredBuffer& cameraUniformBuffer, const Camera& camera, const ITime* time)
     {
-        if (!cameraUniformBuffer)
-            cameraUniformBuffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
-
-        cameraUniformBuffer->Commit([&](AT2::IUniformsWriter& writer) {
+        cameraUniformBuffer.Commit([&](AT2::IUniformsWriter& writer) {
             writer.Write("u_matView", camera.getView());
             writer.Write("u_matInverseView", camera.getViewInverse());
             writer.Write("u_matProjection", camera.getProjection());
             writer.Write("u_matInverseProjection", camera.getProjectionInverse());
             writer.Write("u_matViewProjection", camera.getProjection() * camera.getView());
-            writer.Write("u_time", time.getTime().count());
+            writer.Write("u_time", time ? time->getTime().count() : 0.0 );
         });
-        renderer.GetStateManager().SetUniform("CameraBlock", cameraUniformBuffer->GetBuffer());
     }
 
-    void SceneRenderer::DrawQuad(IRenderer& renderer, const std::shared_ptr<IShaderProgram>& program, const IUniformContainer& uniformBuffer) const noexcept
+    void SceneRenderer::DrawQuad(IRenderer& renderer, const IUniformContainer& uniformBuffer) const noexcept
     {
-        assert(program);
-
         auto& stateManager = renderer.GetStateManager();
-        stateManager.BindShader(program);
         uniformBuffer.Bind(stateManager);
         stateManager.BindVertexArray(quadMesh->VertexArray);
         const auto& primitive = quadMesh->SubMeshes.front().Primitives.front();

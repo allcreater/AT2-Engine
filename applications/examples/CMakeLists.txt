@@ -2,7 +2,10 @@ project (AT2_cube_example)
 
 set (${PROJECT_NAME}_SOURCES
     "example_cube.h"
+    "example_gltf.h"
     "main.cpp"
+    "../sandbox/SceneRenderer.cpp"
+    "../sandbox/SceneRenderer.h"
     "../mesh_renderer.h"
     "../procedural_meshes.cpp"
     "../procedural_meshes.h"

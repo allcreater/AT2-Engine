@@ -11,7 +11,7 @@ namespace AT2::Scene
 
     struct RenderVisitor : NodeVisitor
     {
-        RenderVisitor(IRenderer&, SceneRenderer&, const Camera& camera);
+        RenderVisitor(IRenderer& renderer, const Camera& camera);
 
         bool Visit(Node& node) override;
 
@@ -23,7 +23,6 @@ namespace AT2::Scene
 
         MatrixStack transforms;
         std::shared_ptr<const Mesh> active_mesh;
-        SceneRenderer& scene_renderer;
     };
 
 
@@ -82,17 +81,19 @@ namespace AT2::Scene
         void ResizeFramebuffers(glm::ivec2 newSize);
         void RenderScene(IRenderer& renderer, const RenderParameters& params, const ITime& time);
 
+        static void SetupCamera(StructuredBuffer& cameraUniformBuffer, const Camera& camera, const ITime* time);
+
     private:
         void DrawPointLights(IRenderer& renderer, const LightRenderVisitor& lrv) const;
         void DrawSkyLight( IRenderer& renderer, const LightRenderVisitor& lrv, const Camera& camera ) const;
 
-        void SetupCamera(IRenderer& renderer, const Camera& camera, const ITime& time);
-        void DrawQuad(IRenderer& renderer, const std::shared_ptr<IShaderProgram>&, const IUniformContainer&) const noexcept;
+        void DrawQuad(IRenderer& renderer, const IUniformContainer&) const noexcept;
 
     private:
         struct Resources
         {
             std::shared_ptr<IShaderProgram> sphereLightsShader, skyLightsShader, postprocessShader;
+            std::shared_ptr<IPipelineState> sphereLightsPipeline, skyLightsPipeline, postprocessPipeline;
         } resources;
 
         std::unique_ptr<Mesh> lightMesh, quadMesh;

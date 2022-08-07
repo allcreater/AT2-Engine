@@ -130,6 +130,8 @@ private:
         //m_scene.GetRoot().AddChild(scene);
 
         AT2::Scene::FuncNodeVisitor shaderSetter {[&](AT2::Scene::Node& node) {
+            // DepthState {CompareFunction::Less, true, true}
+            
             for (auto* meshComponent : node.getComponents<AT2::Scene::MeshComponent>())
                 meshComponent->getMesh()->Shader = MeshShader;
             return true;

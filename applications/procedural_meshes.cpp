@@ -116,4 +116,61 @@ namespace AT2::Utils
         return mesh;
     }
 
+    std::unique_ptr<Mesh> MakeCubeMesh(AT2::IResourceFactory& resourceFactory)
+    {
+        // Arrays from the example: https://github.com/glcoder/gl33lessons/blob/wiki/Lesson03.md
+
+        constexpr float s = 1.0f;
+        constexpr float cubePositions[][3] = {
+			{-s, s, s}, { s, s, s}, { s,-s, s}, {-s,-s, s}, // front
+			{ s, s,-s}, {-s, s,-s}, {-s,-s,-s}, { s,-s,-s}, // back
+			{-s, s,-s}, { s, s,-s}, { s, s, s}, {-s, s, s}, // top
+			{ s,-s,-s}, {-s,-s,-s}, {-s,-s, s}, { s,-s, s}, // bottom
+			{-s, s,-s}, {-s, s, s}, {-s,-s, s}, {-s,-s,-s}, // left
+			{ s, s, s}, { s, s,-s}, { s,-s,-s}, { s,-s, s}, // right
+		};
+        constexpr float cubeTexcoords[][2] = {
+            {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f}, // front
+            {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f}, // back
+            {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f}, // top
+            {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f}, // bottom
+            {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f}, // left
+            {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f}, // right
+        };
+        constexpr float cubeNormals[][3] = {
+            { 0, 0, 1}, { 0, 0, 1}, { 0, 0, 1}, { 0, 0, 1},
+            { 0, 0,-1}, { 0, 0,-1}, { 0, 0,-1}, { 0, 0,-1},
+            { 0, 1, 0}, { 0, 1, 0}, { 0, 1, 0}, { 0, 1, 0},
+            { 0,-1, 0}, { 0,-1, 0}, { 0,-1, 0}, { 0,-1, 0},
+            {-1, 0, 0}, {-1, 0, 0}, {-1, 0, 0}, {-1, 0, 0},
+            { 1, 0, 0}, { 1, 0, 0}, { 1, 0, 0}, { 1, 0, 0},
+        };
+
+		constexpr uint32_t cubeIndices[] = {
+			 0, 3, 1,  1, 3, 2, // front
+			 4, 7, 5,  5, 7, 6, // back
+			 8,11, 9,  9,11,10, // top
+			12,15,13, 13,15,14, // bottom
+			16,19,17, 17,19,18, // left
+			20,23,21, 21,23,22  // right
+		};
+
+        auto vao = MakeVertexArray(resourceFactory, 
+			std::make_pair(1u, std::cref(cubePositions)),
+			std::make_pair(2u, std::cref(cubeTexcoords)),
+			std::make_pair(3u, std::cref(cubeNormals))
+        );
+
+        vao->SetIndexBuffer(resourceFactory.MakeBufferFrom(AT2::VertexBufferFlags::IndexBuffer, cubeIndices), AT2::BufferDataType::UInt);
+
+        AT2::SubMesh subMesh;
+        subMesh.Primitives.push_back({AT2::Primitives::Triangles {}, 0, std::size(cubeIndices)});
+
+        auto mesh = std::make_unique<Mesh>();
+        mesh->VertexArray = std::move(vao);
+        mesh->SubMeshes.push_back(std::move(subMesh));
+
+        return mesh;
+    }
+
 } // namespace AT2::Utils
