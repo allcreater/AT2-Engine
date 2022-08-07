@@ -180,7 +180,7 @@ void AT2::OpenGL::GlScreenFrameBuffer::SetClearDepth(std::optional<float> depth)
     m_clearDepth = depth;
 }
 
-[[nodiscard]] glm::ivec2 GlScreenFrameBuffer::GetActualSize() const
+[[nodiscard]] glm::uvec2 GlScreenFrameBuffer::GetActualSize() const
 {
     return m_renderer.GetGraphicsContext().getPhysicalViewportSize();
 }

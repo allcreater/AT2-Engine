@@ -24,7 +24,7 @@ namespace AT2::Metal
         void SetClearColor(std::optional<glm::vec4> color) override;
         void SetClearDepth(std::optional<float> depth) override;
 
-        [[nodiscard]] glm::ivec2 GetActualSize() const noexcept override { return m_size; }
+        [[nodiscard]] glm::uvec2 GetActualSize() const noexcept override { return m_size; }
 
         void Render(RenderFunc renderFunc) override;
 
@@ -42,12 +42,13 @@ namespace AT2::Metal
         
     private:
         Renderer& m_renderer;
-        glm::ivec2 m_size {0, 0};
+        glm::uvec2 m_size {0, 0};
 
         std::vector<ColorAttachment> m_colorAttachments;
         DepthAttachment m_depthAttachment;
     };
 
+    //By default screen frame buffer will create depth texture automatically. It's Float32.
     class MetalScreenFrameBuffer : public FrameBuffer
     {
     public:
@@ -60,6 +61,8 @@ namespace AT2::Metal
     private:
         void OnCommit(MTL::CommandBuffer* commandBuffer) override;
         
+        void PrepareAttachments();
+
     private:
         MtlPtr<CA::MetalLayer> m_swapChain;
         CA::MetalDrawable* m_drawable;

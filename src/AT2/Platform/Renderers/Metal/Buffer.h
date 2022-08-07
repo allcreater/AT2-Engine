@@ -33,7 +33,7 @@ namespace AT2::Metal
 
         MtlPtr<MTL::Buffer> m_buffer;
         
-        bool m_mapped = false;
+        std::optional<NS::Range> m_mappedRange;
     };
 
 } // namespace AT2::Metal

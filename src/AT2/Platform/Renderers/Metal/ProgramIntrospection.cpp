@@ -72,7 +72,7 @@ void ProgramIntrospection::VisitArgument(AttachmentTarget shaderType, const MTL:
                 }();
                 
                 auto [matrixSize, matrixStride] = GetMatrixSizeAndAStride(member->dataType()); //zeroes if not matrix, fine too
-                knownFields.emplace_back(name, member->offset(), arrayAttribs, matrixStride, matrixSize );
+                knownFields.emplace_back(name, member->offset(), arrayAttribs, matrixStride, 0 ); //don't use size, it forbids to use not aligned types
             });
             
             m_inputBuffers.emplace(argumentName, BufferInfo{shaderType, static_cast<unsigned int>(argument->index()), BufferLayout{std::move(knownFields), argument->bufferAlignment()}});

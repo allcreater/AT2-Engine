@@ -26,7 +26,7 @@ namespace AT2::OpenGL
         void SetClearColor(std::optional<glm::vec4> color) override;
         void SetClearDepth(std::optional<float> depth) override;
 
-        [[nodiscard]] glm::ivec2 GetActualSize() const noexcept override { return m_size; }
+        [[nodiscard]] glm::uvec2 GetActualSize() const noexcept override { return m_size; }
 
         void Render(RenderFunc renderFunc) override;
 
@@ -34,7 +34,7 @@ namespace AT2::OpenGL
         GlRenderer& m_renderer;
         GLuint m_id;
 
-        glm::ivec2 m_size {0, 0};
+        glm::uvec2 m_size {0, 0};
 
         std::vector<ColorAttachment> m_colorAttachments;
         DepthAttachment m_depthAttachment;
@@ -58,7 +58,7 @@ namespace AT2::OpenGL
         void SetClearColor(std::optional<glm::vec4> color) override;
         void SetClearDepth(std::optional<float> depth) override;
 
-        [[nodiscard]] glm::ivec2 GetActualSize() const override;
+        [[nodiscard]] glm::uvec2 GetActualSize() const override;
 
         void Render(RenderFunc renderFunc) override;
 

@@ -21,6 +21,8 @@ PipelineState::PipelineState(Renderer& renderer, const PipelineStateDescriptor& 
         auto buildingDepthStencilState = ConstructMetalObject<MTL::DepthStencilDescriptor>();
         buildingDepthStencilState->setDepthWriteEnabled(descriptor.GetDepthState().WriteEnabled);
         buildingDepthStencilState->setDepthCompareFunction(descriptor.GetDepthState().TestEnabled ? Mappings::TranslateCompareFunction(descriptor.GetDepthState().CompareFunc) : MTL::CompareFunctionAlways);
+
+        m_depthStencilState = Own(renderer.getDevice()->newDepthStencilState(buildingDepthStencilState.get()));
     }
 
     {
@@ -33,6 +35,9 @@ PipelineState::PipelineState(Renderer& renderer, const PipelineStateDescriptor& 
         attachment->setDestinationAlphaBlendFactor(Mappings::TranslateBlendFactor(descriptor.GetBlendMode().DestinationFactor));
         attachment->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
     }
+
+    buildingState->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+
     
     buildingState->setVertexDescriptor(m_vertexArray->GetVertexDescriptor().get());
 
@@ -48,4 +53,10 @@ PipelineState::PipelineState(Renderer& renderer, const PipelineStateDescriptor& 
         m_shaderProgram->OnStateCreated(reflection);
     }
 
+}
+
+void PipelineState::Apply(MTL::RenderCommandEncoder& renderEncoder)
+{
+    renderEncoder.setRenderPipelineState(m_pipelineState.get());
+    renderEncoder.setDepthStencilState(m_depthStencilState.get());
 }

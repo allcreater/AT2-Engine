@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Mesh.h>
 
 namespace AT2::Utils::MeshRenderer

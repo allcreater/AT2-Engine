@@ -126,8 +126,13 @@ void FrameBuffer::Render(RenderFunc renderFunc)
 
 void MetalScreenFrameBuffer::Render(RenderFunc renderFunc)
 {
+    PrepareAttachments();   
+    FrameBuffer::Render(std::move(renderFunc));
+}
+
+void MetalScreenFrameBuffer::PrepareAttachments()
+{
     m_drawable = m_swapChain->nextDrawable();
-    
     //TODO: is it a crutch or a feature?
     //colorAttachmentDescriptor->setPixelFormat(swapchain->pixelFormat());
     //SetAttachmentTexture(m_renderPassDescriptor->colorAttachments()->object(0), m_drawable->texture());
@@ -137,8 +142,12 @@ void MetalScreenFrameBuffer::Render(RenderFunc renderFunc)
         auto oldAttachment = GetColorAttachment(0);
         SetColorAttachment(0, ColorAttachment{std::move(texture), oldAttachment.ClearColor});
     }
-    
-    FrameBuffer::Render(std::move(renderFunc));
+
+    if (auto depthTexture = GetDepthAttachment().Texture; !depthTexture || glm::xy(depthTexture->GetSize()) != GetActualSize())
+    {
+        auto newTexture = GetVisualisationSystem().GetResourceFactory().CreateTexture(Texture2D{GetActualSize()}, AT2::ExternalTextureFormat{ AT2::TextureLayout::DepthComponent, AT2::BufferDataType::Float, true });
+        SetDepthAttachment({std::move(newTexture), 1.0f});
+    }
 }
 
 void MetalScreenFrameBuffer::OnCommit(MTL::CommandBuffer* commandBuffer)

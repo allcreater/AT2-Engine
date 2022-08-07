@@ -23,12 +23,12 @@ ResourceFactory::ResourceFactory(Renderer& renderer) : m_renderer(renderer)
 
 std::shared_ptr<ITexture> ResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const
 {
-    return std::make_shared<MtlTexture>(m_renderer, Texture2D{size}, MTL::PixelFormatRGBA8Unorm);
+    return std::make_shared<MtlTexture>(m_renderer, Texture2D{size}, MTL::PixelFormatRGBA8Unorm, false);
 }
 
 std::shared_ptr<ITexture> ResourceFactory::CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const
 {
-    return std::make_shared<MtlTexture>(m_renderer, declaration, Mappings::TranslateExternalFormat(desiredFormat));
+    return std::make_shared<MtlTexture>(m_renderer, declaration, Mappings::TranslateExternalFormat(desiredFormat), desiredFormat.RenderTarget);
 }
 
 std::shared_ptr<IFrameBuffer> ResourceFactory::CreateFrameBuffer() const
@@ -43,16 +43,21 @@ std::shared_ptr<IVertexArray> ResourceFactory::CreateVertexArray() const
 
 std::shared_ptr<IBuffer> ResourceFactory::CreateBuffer(VertexBufferType type) const
 {
-    if ((type & VertexBufferType{VertexBufferFlags::Dynamic, VertexBufferFlags::Stream}).Any() ) //TODO: also check size
-        return std::make_shared<ArrayBuffer>();
-
+    //Because of unknown buffer size we could not create array-based buffer
     return std::make_shared<Buffer>(m_renderer, type);
 }
 
 std::shared_ptr<IBuffer> ResourceFactory::CreateBuffer(VertexBufferType type, std::span<const std::byte> data) const
 {
-    auto buffer = CreateBuffer(type);
+    auto buffer = [&]() -> std::shared_ptr<IBuffer> {
+        if ((type & VertexBufferType{VertexBufferFlags::Dynamic, VertexBufferFlags::Stream}).Any() && data.size() < 1024)
+            return std::make_shared<ArrayBuffer>();
+        
+        return CreateBuffer(type);
+    }();
+
     buffer->SetDataRaw(data);
+    
     return buffer;
 }
 

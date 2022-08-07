@@ -46,6 +46,8 @@ void AT2::WindowBase::OnKeyRepeat(int key) const
 
 void AT2::WindowBase::OnResize(glm::ivec2 newSize) const
 {
+    assert(newSize.x > 0 && newSize.y > 0);
+
     if (ResizeCallback)
         ResizeCallback(newSize);
 

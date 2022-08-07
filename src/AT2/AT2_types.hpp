@@ -35,11 +35,13 @@ namespace AT2
         Immutable       = 0,
         Dynamic         = 1 << 0,
         Stream          = 1 << 1,
-
-        // actual types
-        ArrayBuffer     = 1 << 2,
-        IndexBuffer     = 1 << 3,
-        UniformBuffer   = 1 << 4,
+        
+        //StaticSize      = 1 << 2,
+        
+        // types hints (may be unused)
+        ArrayBuffer     = 1 << 3,
+        IndexBuffer     = 1 << 4,
+        UniformBuffer   = 1 << 5,
         
     };
     using VertexBufferType = EnumFlags<VertexBufferFlags>;
@@ -153,6 +155,8 @@ namespace AT2
     {
         TextureLayout ChannelsLayout;
         BufferDataType DataType;
+        //TODO: flags ? Also there should be usage options like for buffers
+        bool RenderTarget = false;
         bool PreferSRGB = false;
     };
 

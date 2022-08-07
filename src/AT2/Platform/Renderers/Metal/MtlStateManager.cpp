@@ -13,6 +13,66 @@
 using namespace AT2;
 using namespace AT2::Metal;
 
+namespace
+{
+
+void BindNativeBuffer(MTL::RenderCommandEncoder& renderEncoder, Buffer& buffer, unsigned int offset, ResourceBindingPoint bindingPoint)
+{
+    auto handle = buffer.getNativeHandle();
+    switch (bindingPoint.Target)
+    {
+        case AttachmentTarget::Vertex:
+            renderEncoder.setVertexBuffer(handle, offset, bindingPoint.Index);
+            break;
+        case AttachmentTarget::Fragment:
+            renderEncoder.setFragmentBuffer(handle, offset, bindingPoint.Index);
+            break;
+        case AttachmentTarget::Tile:
+            renderEncoder.setTileBuffer(handle, offset, bindingPoint.Index);
+            break;
+    }
+}
+
+void BindArray(MTL::RenderCommandEncoder& renderEncoder, AT2::IBuffer& buffer, ResourceBindingPoint bindingPoint)
+{
+    auto range = buffer.Map(BufferOperationFlags::Read);
+    
+    switch (bindingPoint.Target)
+    {
+        case AttachmentTarget::Vertex:
+            renderEncoder.setVertexBytes(range.data(), range.size(), bindingPoint.Index);
+            break;
+        case AttachmentTarget::Fragment:
+            renderEncoder.setFragmentBytes(range.data(), range.size(), bindingPoint.Index);
+            break;
+        case AttachmentTarget::Tile:
+            renderEncoder.setTileBytes(range.data(), range.size(), bindingPoint.Index);
+            break;
+    }
+
+    buffer.Unmap();
+}
+
+void BindTexture(MTL::RenderCommandEncoder& renderEncoder, MtlTexture& texture, ResourceBindingPoint bindingPoint)
+{
+    auto handle = texture.getNativeHandle();
+    switch (bindingPoint.Target)
+    {
+        case AttachmentTarget::Vertex:
+            renderEncoder.setVertexTexture(handle, bindingPoint.Index);
+            break;
+        case AttachmentTarget::Fragment:
+            renderEncoder.setFragmentTexture(handle, bindingPoint.Index);
+            break;
+        case AttachmentTarget::Tile:
+            renderEncoder.setTileTexture(handle, bindingPoint.Index);
+            break;
+    }
+}
+
+}
+
+
 MtlStateManager::MtlStateManager(Renderer& renderer, MTL::RenderCommandEncoder* encoder)
 : m_renderer{renderer}
 , m_renderEncoder{encoder}
@@ -43,16 +103,16 @@ void MtlStateManager::ApplyState(RenderState state)
     }, state);
 }
 
-[[nodiscard]] std::shared_ptr<IShaderProgram> MtlStateManager::GetActiveShader() const
+std::shared_ptr<IShaderProgram> MtlStateManager::GetActiveShader() const
 {
     return m_activeShader;
 }
-[[nodiscard]] std::shared_ptr<IVertexArray> MtlStateManager::GetActiveVertexArray() const
+std::shared_ptr<IVertexArray> MtlStateManager::GetActiveVertexArray() const
 {
     return m_activeVertexArray;
 }
 
-[[nodiscard]] std::optional<BufferDataType> MtlStateManager::GetIndexDataType() const noexcept
+std::optional<BufferDataType> MtlStateManager::GetIndexDataType() const noexcept
 {
     return m_activeVertexArray ? m_activeVertexArray->GetIndexBufferType() : std::nullopt;
 }
@@ -168,13 +228,22 @@ void MtlStateManager::ApplyPipelineState(const std::shared_ptr<IPipelineState>& 
     auto& mtlPipelineState = Utils::safe_dereference_cast<PipelineState&>(state);
     m_activeShader = mtlPipelineState.GetShaderProgram();
     
-    m_renderEncoder->setRenderPipelineState(mtlPipelineState.GetNativeHandle());
+    mtlPipelineState.Apply(*m_renderEncoder);
 }
 
 void MtlStateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray)
 {
     m_activeVertexArray = std::dynamic_pointer_cast<VertexArray>(vertexArray);
     
+    // {
+    //     auto buf = m_activeVertexArray->GetVertexBuffer(1);
+    //     auto span = buf->Map(AT2::BufferOperationFlags::Read);
+    //     for (auto byte : span)
+    //         std::cout << std::setw(2) << std::hex << static_cast<int>(byte) << ' ';
+    //     std::cout << std::endl;
+    //     buf->Unmap();
+    // }
+
     auto lastIndex = m_activeVertexArray->GetLastAttributeIndex();
     if (m_renderEncoder && lastIndex)
     {
@@ -193,58 +262,15 @@ void MtlStateManager::BindBuffer(std::shared_ptr<IBuffer> buffer, ResourceBindin
     auto&& bufferType = typeid(*buffer);
     
     if (bufferType == typeid(Buffer))
-    {
-        auto handle = static_cast<Buffer&>(*buffer).getNativeHandle();
-        switch (bindingPoint.Target)
-        {
-            case AttachmentTarget::Vertex:
-                m_renderEncoder->setVertexBuffer(handle, 0, bindingPoint.Index);
-                break;
-            case AttachmentTarget::Fragment:
-                m_renderEncoder->setFragmentBuffer(handle, 0, bindingPoint.Index);
-                break;
-            case AttachmentTarget::Tile:
-                m_renderEncoder->setTileBuffer(handle, 0, bindingPoint.Index);
-                break;
-        }
-    }
+        BindNativeBuffer(*m_renderEncoder, static_cast<Buffer&>(*buffer), 0, bindingPoint);
     else if (bufferType == typeid(ArrayBuffer))
-    {
-        auto range = buffer->Map(BufferOperationFlags::Read);
-        
-        switch (bindingPoint.Target)
-        {
-            case AttachmentTarget::Vertex:
-                m_renderEncoder->setVertexBytes(range.data(), range.size(), bindingPoint.Index);
-                break;
-            case AttachmentTarget::Fragment:
-                m_renderEncoder->setFragmentBytes(range.data(), range.size(), bindingPoint.Index);
-                break;
-            case AttachmentTarget::Tile:
-                m_renderEncoder->setTileBytes(range.data(), range.size(), bindingPoint.Index);
-                break;
-        }
-
-        buffer->Unmap();
-    }
+        BindArray(*m_renderEncoder, *buffer, bindingPoint);
     else
-    {
         assert(false);
-    }
 }
 
 void MtlStateManager::BindTexture(std::shared_ptr<MtlTexture> texture, ResourceBindingPoint bindingPoint)
 {
-    switch (bindingPoint.Target)
-    {
-        case AttachmentTarget::Vertex:
-            m_renderEncoder->setVertexTexture(texture->getNativeHandle(), bindingPoint.Index);
-            break;
-        case AttachmentTarget::Fragment:
-            m_renderEncoder->setFragmentTexture(texture->getNativeHandle(), bindingPoint.Index);
-            break;
-        case AttachmentTarget::Tile:
-            m_renderEncoder->setTileTexture(texture->getNativeHandle(), bindingPoint.Index);
-            break;
-    }
+    assert(texture);
+    ::BindTexture(*m_renderEncoder, *texture, bindingPoint);
 }

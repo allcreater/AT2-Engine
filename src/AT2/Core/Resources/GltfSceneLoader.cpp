@@ -499,7 +499,7 @@ namespace
             {
                 const auto& rf = m_renderer.GetResourceFactory();
                 auto vao = rf.CreateVertexArray();
-                auto vb = rf.CreateBuffer(VertexBufferFlags::ArrayBuffer);
+                auto vb = rf.CreateBuffer(VertexBufferType{VertexBufferFlags::ArrayBuffer,  VertexBufferFlags::Immutable});
 
 
                 std::vector<std::pair<uint32_t, BufferDataInfo>> buffersData;
@@ -513,7 +513,7 @@ namespace
                     std::accumulate(buffersData.begin(), buffersData.end(), size_t {},
                                     [](size_t size, const auto& bdi) { return size + bdi.second.data.size_bytes(); });
 
-                vb->SetDataRaw(std::span<const std::byte> {static_cast<const std::byte*>(nullptr), totalSize});
+                vb->ReserveSpace(totalSize);
 
                 for (size_t startPos = 0; auto& [attribIndex, bufferData] : buffersData)
                 {

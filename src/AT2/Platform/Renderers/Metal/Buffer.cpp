@@ -38,25 +38,31 @@ void Buffer::ReserveSpace(size_t size)
 
 std::span<std::byte> Buffer::Map(BufferOperation usage)
 {
-    assert(!m_mapped);
     
-    if (!m_buffer)
-        throw AT2BufferException("buffer is empty");
     //auto sem = dispatch_semaphore_create(1);
     //dispatch_semaphore_wait()
     //dispatch_semaphore_signal(sem);
     
-    m_mapped = true;
-    return {static_cast<std::byte*>(m_buffer->contents()), m_buffer->length()};
+    return MapRange(usage, 0, GetLength());
 }
 
 std::span<std::byte> Buffer::MapRange(BufferOperation usage, size_t offset, size_t length)
 {
-    return Map(usage).subspan(offset).first(length);
+    assert(!m_mappedRange);
+    if (!m_buffer)
+        throw AT2BufferException("buffer is empty");
+
+    if (offset + length > GetLength())
+        throw AT2BufferException("buffer mapping range is out of bounds");
+
+    m_mappedRange = {offset, length};
+    return std::span{static_cast<std::byte*>(m_buffer->contents()) + offset, length};
 }
 
 void Buffer::Unmap()
 {
-    assert(m_mapped);
-    m_mapped = false;
+    assert(m_mappedRange);
+
+    m_buffer->didModifyRange(*m_mappedRange); 
+    m_mappedRange.reset();
 }

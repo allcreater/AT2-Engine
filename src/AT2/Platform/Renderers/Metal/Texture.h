@@ -12,7 +12,7 @@ namespace AT2::Metal
     public:
         NON_COPYABLE_OR_MOVABLE(MtlTexture)
 
-        MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format);
+        MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format, bool render_target);
         MtlTexture(Renderer& renderer, MtlPtr<MTL::Texture> texture);
         ~MtlTexture() override;
 

@@ -89,7 +89,7 @@ Texture DetermineNativeTexureType(MTL::Texture* texture)
 
 }
 
-MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format)
+MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format, bool render_target)
 : m_renderer{renderer}
 , m_flavor{std::move(flavor)}
 {
@@ -101,9 +101,17 @@ MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat form
     descriptor->setArrayLength(1);
     descriptor->setSampleCount(1);
     descriptor->setCpuCacheMode(MTL::CPUCacheModeDefaultCache);
-    descriptor->setUsage(MTL::TextureUsageShaderWrite | MTL::TextureUsageShaderRead);
-    //descriptor->setResourceOptions(MTL::ResourceStorageModePrivate);
-    //descriptor->setStorageMode(MTL::StorageModePrivate);
+
+    if (render_target)
+    {
+        descriptor->setUsage(MTL::TextureUsageShaderWrite | MTL::TextureUsageShaderRead | MTL::TextureUsageRenderTarget);
+        descriptor->setResourceOptions(MTL::ResourceStorageModePrivate);
+        descriptor->setStorageMode(MTL::StorageModePrivate);
+    }
+    else
+    {
+        descriptor->setUsage(MTL::TextureUsageShaderWrite | MTL::TextureUsageShaderRead);
+    }
     
     //descriptor->setTextureType(Mappings::TranslateTextureTarget(flavor));
     

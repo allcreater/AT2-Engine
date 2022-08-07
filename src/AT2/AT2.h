@@ -158,7 +158,7 @@ namespace AT2
 
         //TODO: support stencil attachment
 
-        [[nodiscard]] virtual glm::ivec2 GetActualSize() const = 0;
+        [[nodiscard]] virtual glm::uvec2 GetActualSize() const = 0;
 
         virtual void Render(RenderFunc renderFunc) = 0;
     };
@@ -397,7 +397,7 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                                      const glm::uvec2& size) const = 0;
         [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration,
-                                                                      ExternalTextureFormat desiredFormat) const = 0;
+                                                                      ExternalTextureFormat desiredFormat) const = 0; //TODO: overload to create immutable textures!
         [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 
@@ -468,7 +468,7 @@ namespace AT2
         auto vertexArray = factory.CreateVertexArray();
         static_cast<void>(std::initializer_list<int> {
             (vertexArray->SetAttributeBinding(args.first,
-                                              factory.MakeBufferFrom(VertexBufferFlags::ArrayBuffer, args.second),
+                                              factory.MakeBufferFrom(VertexBufferType{VertexBufferFlags::ArrayBuffer/*, VertexBufferFlags::Immutable*/}, args.second),
                                               BufferDataTypes::BufferTypeOf<std::remove_cvref_t<decltype(args.second[0])>>),
              0)...});
 
