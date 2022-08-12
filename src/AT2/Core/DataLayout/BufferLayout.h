@@ -72,7 +72,8 @@ namespace AT2
     private:
         size_t m_alignment;
         std::vector<Field> m_fields;
-        std::unordered_map<std::string_view, const Field*> m_fieldsByName;
+         //TODO: May be std::unordered_map<std::string_view, const Field*>, but it require manual written constructors and =operators
+        Utils::UnorderedStringMap<size_t> m_fieldsByName;
     };
 
 }

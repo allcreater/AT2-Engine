@@ -28,7 +28,7 @@ void VertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared_p
 
     auto* attribute = m_vertexDescriptor->attributes()->object(attributeIndex);
     attribute->setFormat(Mappings::TranslateVertexFormat(binding));
-    attribute->setOffset(binding.Offset);
+    //attribute->setOffset(binding.Offset); //this could be useful only when multiple attibutes could binds to one buffer. We have 1 to 1 mapping, so that dynamic offsets are more flexible
     attribute->setBufferIndex(bindingIndex); //TODO:
     
     auto layout = m_vertexDescriptor->layouts()->object(bindingIndex);
@@ -67,4 +67,17 @@ std::optional<BufferBindingParams> VertexArray::GetVertexBufferBinding(unsigned 
 {
     const auto& [buffer, binding] = m_buffers.at(index);
     return buffer ? binding : std::optional<BufferBindingParams> {};
+}
+
+void VertexArray::Apply(MTL::RenderCommandEncoder& renderEncoder)
+{
+    auto lastIndex = GetLastAttributeIndex();
+    if (!lastIndex)
+        return;
+
+    for (size_t index = 0; index <= *lastIndex; ++index)
+    {
+        if (auto [buffer, binding] = m_buffers[index]; buffer != nullptr)
+            renderEncoder.setVertexBuffer(Utils::safe_dereference_cast<Buffer&>(buffer).getNativeHandle(), binding.Offset, index);
+    }
 }

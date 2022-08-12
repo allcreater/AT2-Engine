@@ -234,25 +234,7 @@ void MtlStateManager::ApplyPipelineState(const std::shared_ptr<IPipelineState>& 
 void MtlStateManager::BindVertexArray(const std::shared_ptr<IVertexArray>& vertexArray)
 {
     m_activeVertexArray = std::dynamic_pointer_cast<VertexArray>(vertexArray);
-    
-    // {
-    //     auto buf = m_activeVertexArray->GetVertexBuffer(1);
-    //     auto span = buf->Map(AT2::BufferOperationFlags::Read);
-    //     for (auto byte : span)
-    //         std::cout << std::setw(2) << std::hex << static_cast<int>(byte) << ' ';
-    //     std::cout << std::endl;
-    //     buf->Unmap();
-    // }
-
-    auto lastIndex = m_activeVertexArray->GetLastAttributeIndex();
-    if (m_renderEncoder && lastIndex)
-    {
-        for (size_t index = 0; index <= *lastIndex; ++index)
-        {
-            if (auto buffer = m_activeVertexArray->GetVertexBuffer(index))
-                m_renderEncoder->setVertexBuffer(Utils::safe_dereference_cast<Buffer&>(buffer).getNativeHandle(), 0, index);
-        }
-    }
+    m_activeVertexArray->Apply(*m_renderEncoder);
 }
 
 //TODO: track active textures and buffers, are we StateManager or not?

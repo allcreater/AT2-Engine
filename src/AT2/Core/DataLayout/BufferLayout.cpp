@@ -17,7 +17,7 @@ namespace
 BufferLayout::BufferLayout(std::vector<Field> fields, size_t alignment)
 : m_alignment {alignment}
 , m_fields {std::move(fields)}
-, m_fieldsByName {m_fields.size()}
+, m_fieldsByName {}
 {
     std::sort(m_fields.begin(), m_fields.end(), [](const Field& lhs, const Field& rhs) { return rhs.GetOffset() > lhs.GetOffset(); });
 
@@ -31,21 +31,21 @@ BufferLayout::BufferLayout(std::vector<Field> fields, size_t alignment)
     }
 
     using FieldsByNamePair = decltype(m_fieldsByName)::value_type;
-    std::transform(m_fields.begin(), m_fields.end(), std::inserter(m_fieldsByName, m_fieldsByName.end()), [](const Field& field) {
-        return FieldsByNamePair {field.GetName(), &field};
+    std::transform(m_fields.begin(), m_fields.end(), std::inserter(m_fieldsByName, m_fieldsByName.end()), [fieldIndex = 0](const Field& field) mutable {
+        return FieldsByNamePair {field.GetName(), fieldIndex++};
     });
 }
 
 const Field* BufferLayout::operator[]( std::string_view name ) const
 {
 	const auto it = m_fieldsByName.find(name);
-	return it != m_fieldsByName.end() ? it->second : nullptr;
+	return it != m_fieldsByName.end() ? &m_fields[it->second] : nullptr;
 }
 
 std::optional<size_t> BufferLayout::GetFieldNumber( std::string_view name ) const
 {
 	const auto it = m_fieldsByName.find(name);
-	return it != m_fieldsByName.end() ? std::optional {std::distance(m_fields.data(), it->second)} : std::nullopt;
+    return it != m_fieldsByName.end() ? std::optional{it->second} : std::nullopt;
 }
 
 size_t BufferLayout::GetSufficientSize() const
