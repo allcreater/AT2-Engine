@@ -7,6 +7,9 @@ option(USE_ASSIMP "Use ASSIMP library" ON)
 option(USE_SDL_INSTEADOF_GLFW "When enabled, SDL will be used instead of SFML" OFF)
 option(USE_PLATFORM_HACKS "speed-up execution in exchange for some non-portable code" OFF)
 
+set(ACTIVE_RENDERER "OpenGL" CACHE STRING "Renderer backend to use") # right now just one
+set_property(CACHE ACTIVE_RENDERER PROPERTY STRINGS OpenGL Metal)
+
 # Setup conan packet manager
 
 # Download automatically, you can also just copy the conan.cmake file
@@ -28,8 +31,8 @@ conan_cmake_run (   CONANFILE conanfile.py
 
 add_subdirectory ("src/AT2/")
 add_subdirectory ("applications/examples/")
-add_subdirectory ("applications/sandbox/")
-add_subdirectory ("applications/test_task/")
+# add_subdirectory ("applications/sandbox/")
+# add_subdirectory ("applications/test_task/")
 
 if(BUILD_TESTING)
     message ("Testing enabled")

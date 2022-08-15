@@ -2,28 +2,41 @@
     "version": 2,
     "configurePresets": [
         {
-            "name": "sdl",
-            "displayName": "SDL + Ninja",
+            "name": "sdl_metal_ninja",
+            "displayName": "SDL + Metal, Ninja",
             "description": "Sets Ninja generator, build and install directory",
             "generator": "Ninja",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "USE_SDL_INSTEADOF_GLFW": "ON"
+                "USE_SDL_INSTEADOF_GLFW": "ON",
+                "ACTIVE_RENDERER" : "Metal"
             }
         },
         {
-            "name": "xcode_sdl",
-            "displayName": "SDL XCode",
+            "name": "sdl_metal_xcode",
+            "displayName": "SDL + Metal, XCode",
             "description": "",
-            "binaryDir": "${sourceDir}/build",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Xcode",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "USE_SDL_INSTEADOF_GLFW": "ON"
+                "USE_SDL_INSTEADOF_GLFW": "ON",
+                "ACTIVE_RENDERER" : "Metal"
             },
             "inherits": []
+        },
+        {
+            "name": "sdl_opengl_ninja",
+            "displayName": "SDL + OpenGL, Ninja",
+            "description": "",
+            "inherits": [
+                "sdl_metal_ninja"
+            ],
+            "cacheVariables": {
+                "ACTIVE_RENDERER" : "OpenGL"
+            }
         }
     ],
     "buildPresets": [

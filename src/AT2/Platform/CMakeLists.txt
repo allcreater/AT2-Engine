@@ -1,74 +1,6 @@
-cmake_minimum_required (VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.14 FATAL_ERROR)
 
 project (AT2_Engine_Platform)
-
-
-set(GLFW_SOURCES_LIST
-    "GLFW/glfw_application.h"
-    "GLFW/glfw_application.cpp"
-    "GLFW/glfw_window.h"
-    "GLFW/glfw_window.cpp"
-)
-
-set (SDL_SOURCES_LIST
-    "SDL/application.h"
-    "SDL/application.cpp"
-    "SDL/graphics_context.h"
-    "SDL/graphics_context.cpp"
-    "SDL/window.h"
-    "SDL/window.cpp"
-)
-
-set(OPENGL_SOURCES_LIST
-    "Renderers/OpenGL/AT2lowlevel.h"
-    "Renderers/OpenGL/GlFrameBuffer.h"
-    "Renderers/OpenGL/GlFrameBuffer.cpp"
-    "Renderers/OpenGL/GlPipelineState.h"
-    "Renderers/OpenGL/GlProgramIntrospection.h"
-    "Renderers/OpenGL/GlProgramIntrospection.cpp"
-    "Renderers/OpenGL/GlRenderer.h"
-    "Renderers/OpenGL/GlRenderer.cpp"
-    "Renderers/OpenGL/GlResourceFactory.cpp"
-    "Renderers/OpenGL/GlShaderProgram.h"
-    "Renderers/OpenGL/GlShaderProgram.cpp"
-    "Renderers/OpenGL/GlStateManager.h"
-    "Renderers/OpenGL/GlStateManager.cpp"
-    "Renderers/OpenGL/GlTexture.h"
-    "Renderers/OpenGL/GlTexture.cpp"
-    "Renderers/OpenGL/GlTimerQuery.h"
-    "Renderers/OpenGL/GlTimerQuery.cpp"
-    "Renderers/OpenGL/GlVertexArray.h"
-    "Renderers/OpenGL/GlVertexArray.cpp"
-    "Renderers/OpenGL/GlBuffer.h"
-    "Renderers/OpenGL/GlBuffer.cpp"
-    "Renderers/OpenGL/Mappings.h"
-)
-
-set(METAL_SOURCES_LIST
-    "Renderers/Metal/AT2lowlevel.h"
-    "Renderers/Metal/FrameBuffer.h"
-    "Renderers/Metal/FrameBuffer.cpp"
-    "Renderers/Metal/Mappings.h"
-    "Renderers/Metal/Renderer.h"
-    "Renderers/Metal/Renderer.cpp"
-    "Renderers/Metal/ResourceFactory.h"
-    "Renderers/Metal/ResourceFactory.cpp"
-    "Renderers/Metal/ShaderProgram.h"
-    "Renderers/Metal/ShaderProgram.cpp"
-    "Renderers/Metal/MetalCpp.cpp"
-    "Renderers/Metal/MtlStateManager.h"
-    "Renderers/Metal/MtlStateManager.cpp"
-    "Renderers/Metal/PipelineState.h"
-    "Renderers/Metal/PipelineState.cpp"
-    "Renderers/Metal/ProgramIntrospection.h"
-    "Renderers/Metal/ProgramIntrospection.cpp"
-    "Renderers/Metal/Texture.h"
-    "Renderers/Metal/Texture.cpp"
-    "Renderers/Metal/VertexArray.h"
-    "Renderers/Metal/VertexArray.cpp"
-    "Renderers/Metal/Buffer.h"
-    "Renderers/Metal/Buffer.cpp"
-)
 
 set(COMMON_SOURCES_LIST
     "Application.h"
@@ -80,32 +12,30 @@ set(COMMON_SOURCES_LIST
     "GraphicsContextInterface.h"
 )
 
+add_library(${PROJECT_NAME} STATIC ${COMMON_SOURCES_LIST})
+
 if (USE_SDL_INSTEADOF_GLFW)
-    list(APPEND AT2_PLATFORM_SOURCES_LIST ${SDL_SOURCES_LIST})
+    add_subdirectory("SDL")
 else()
-    list(APPEND AT2_PLATFORM_SOURCES_LIST ${GLFW_SOURCES_LIST})
-endif()
-list(APPEND AT2_PLATFORM_SOURCES_LIST 
-    ${COMMON_SOURCES_LIST}
-    ${OPENGL_SOURCES_LIST}
-)
-
-# Gathering all together into AT2_PLATFORM_SOURCES_LIST
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    list(APPEND AT2_PLATFORM_SOURCES_LIST
-        ${METAL_SOURCES_LIST}
-        "Application_Metal.cpp"
-    )
-else()
-    list(APPEND AT2_PLATFORM_SOURCES_LIST
-        "Application.cpp"
-    )
+    add_subdirectory("GLFW")
 endif()
 
+#add_subdirectory("Renderers/${ACTIVE_RENDERER}")
+add_subdirectory("Renderers/OpenGL")
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX AT2 FILES ${AT2_PLATFORM_SOURCES_LIST})
+if (${ACTIVE_RENDERER} STREQUAL "Metal")
+    add_subdirectory("Renderers/Metal")
 
-add_library(${PROJECT_NAME} STATIC ${AT2_PLATFORM_SOURCES_LIST})
+    target_sources(${PROJECT_NAME} PRIVATE
+    "Application_Metal.cpp"
+    )
+else()
+    target_sources(${PROJECT_NAME} PRIVATE
+    "Application.cpp"
+    )
+endif()
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX AT2 FILES ${SOURCES})
 
 target_compile_definitions( ${PROJECT_NAME} PRIVATE
     $<$<BOOL:${USE_PLATFORM_HACKS}>:USE_PLATFORM_HACKS>
@@ -125,20 +55,3 @@ endif()
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-# MacOS - specific
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  message ("Apple frameworks will be linked")
-  target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/3rd_party/metal-cpp/")
-  
-  find_library(QUARTZ_CORE_LIB QuartzCore)
-  find_library(METAL_LIB Metal)
-  find_library(FOUNDATION_LIB Foundation)
-  
-  if ((NOT QUARTZ_CORE_LIB) OR (NOT METAL_LIB) OR (NOT FOUNDATION_LIB) )
-    message(FATAL_ERROR "Apple frameworks not found")
-  endif()
-
-  
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${QUARTZ_CORE_LIB} ${METAL_LIB} ${FOUNDATION_LIB})
-  
-endif()
