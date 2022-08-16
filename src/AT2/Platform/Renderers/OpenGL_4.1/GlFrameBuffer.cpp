@@ -2,7 +2,7 @@
 #include "GlRenderer.h"
 
 using namespace AT2;
-using namespace AT2::OpenGL;
+using namespace AT2::OpenGL41;
 
 namespace
 {

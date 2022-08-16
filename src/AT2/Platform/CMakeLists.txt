@@ -21,7 +21,9 @@ else()
 endif()
 
 #add_subdirectory("Renderers/${ACTIVE_RENDERER}")
+#  OpenGL will build everywhere for debug puproses
 add_subdirectory("Renderers/OpenGL")
+add_subdirectory("Renderers/OpenGL_4.1")
 
 if (${ACTIVE_RENDERER} STREQUAL "Metal")
     add_subdirectory("Renderers/Metal")

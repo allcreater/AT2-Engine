@@ -1,6 +1,6 @@
-#version 420 core
+#version 410 core
 
-layout(binding = 1) uniform CameraBlock
+uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
     double u_time;
@@ -83,8 +83,8 @@ void main()
 
 	vec3 normal = normalize(in_data.normal);
 
-	const vec3 matNormal = (texture(u_texNormalMap, texCoord).rgb*2.0 - 1.0);
-	const mat3 tbn = cotangent_frame(normal, -getFragPos(vec3(gl_FragCoord.xy*2.0 - 1.0, 0)), texCoord);
+	vec3 matNormal = (texture(u_texNormalMap, texCoord).rgb*2.0 - 1.0);
+	mat3 tbn = cotangent_frame(normal, -getFragPos(vec3(gl_FragCoord.xy*2.0 - 1.0, 0)), texCoord);
 
 	FragNormal = vec4(tbn * matNormal, 1.0);
 

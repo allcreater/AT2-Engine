@@ -11,7 +11,7 @@
 #include "Mappings.h"
 
 using namespace AT2;
-using namespace AT2::OpenGL;
+using namespace AT2::OpenGL41;
 
 
 GlStateManager::GlStateManager(IVisualizationSystem& renderer)
@@ -84,7 +84,10 @@ GlStateManager::TextureId GlStateManager::DoBind(std::shared_ptr<ITexture> textu
         assert(!m_freeTextureSlots.empty());
 
         const auto textureIndex = m_freeTextureSlots.back();
-        glBindTextureUnit(textureIndex, Utils::safe_dereference_cast<const GlTexture&>(texture).GetId());
+
+        const auto& glTexture = Utils::safe_dereference_cast<const GlTexture&>(texture);
+        glActiveTexture(GL_TEXTURE0 + textureIndex);
+        glBindTexture(glTexture.GetTarget(), glTexture.GetId());
 
         m_freeTextureSlots.pop_back();
         return std::tuple {textureIndex};

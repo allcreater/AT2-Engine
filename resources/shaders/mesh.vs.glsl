@@ -1,4 +1,4 @@
-#version 420 core
+#version 410 core
 
 layout(location = 1) in vec3 a_Position;
 layout(location = 2) in vec3 a_TexCoord;
@@ -10,7 +10,7 @@ layout(location = 5) in vec4 a_Weights;
 uniform bool u_useSkinning = false;
 uniform mat4 u_skeletonMatrices[200];
 
-layout (binding = 1) uniform CameraBlock
+uniform CameraBlock
 {
 	mat4 u_matView, u_matInverseView, u_matProjection, u_matInverseProjection, u_matViewProjection;
 	double u_time;

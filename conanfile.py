@@ -14,7 +14,7 @@ class AT2(ConanFile):
    default_options = {
       "glad:gl_version": "4.5",
       "glad:gl_profile" : "core",
-      "glad:extensions" : "GL_ARB_texture_filter_anisotropic, GL_ARB_seamless_cubemap_per_texture"
+      "glad:extensions" : "GL_ARB_texture_filter_anisotropic, GL_ARB_seamless_cubemap_per_texture, GL_ARB_debug_output"
     }
 
    def requirements(self):
