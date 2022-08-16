@@ -19,9 +19,9 @@ namespace
         [[nodiscard]] unsigned int GetMaxNumberOfVertexAttributes() const override { return m_maxNumberOfVertexAttributes; }
 
     private:
-        unsigned int m_maxNumberOfTextureUnits =        []{ return GetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, 1); }();
-        unsigned int m_maxNumberOfColorAttachments =    []{ return GetInteger(GL_MAX_COLOR_ATTACHMENTS, 1); } ();
-        unsigned int m_maxTextureSize =                 []{ return GetInteger(GL_MAX_TEXTURE_SIZE, 1); } ();
+        unsigned int m_maxNumberOfTextureUnits =        GetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, 1);
+        unsigned int m_maxNumberOfColorAttachments =    GetInteger(GL_MAX_COLOR_ATTACHMENTS, 1);
+        unsigned int m_maxTextureSize =                 GetInteger(GL_MAX_TEXTURE_SIZE, 1);
         unsigned int m_maxNumberOfVertexAttributes =    []
         {
             const auto maxAttribs = GetInteger(GL_MAX_VERTEX_ATTRIBS, 1);

@@ -1,4 +1,4 @@
-#version 420 core
+#version 400 core
 
 uniform sampler2D u_texAlbedo;
 

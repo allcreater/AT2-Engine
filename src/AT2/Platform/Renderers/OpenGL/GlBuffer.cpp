@@ -10,7 +10,7 @@ GlBuffer::GlBuffer(VertexBufferType bufferType)
 	, m_publicType{bufferType}
 {
     glCreateBuffers(1, &m_id);
-    //TODO: use glNamedBufferStorage ?
+    //TODO: use glNamedBufferStorage!
 }
 
 
@@ -23,7 +23,7 @@ void GlBuffer::SetDataRaw(std::span<const std::byte> data)
 {
     assert(!m_mapped);
 
-    glNamedBufferData(m_id, data.size(), data.data(), Mappings::TranslateBufferUsage(m_publicType));
+    glNamedBufferData(m_id, data.size(), data.data(), Mappings::TranslateBufferUsage(m_publicType)); //glNamedBufferSubdata
 
     m_length = data.size();
 }
@@ -56,7 +56,7 @@ std::span<std::byte> GlBuffer::MapRange(BufferOperation usage, size_t offset, si
 
     m_mapped = true;
 
-    const GLbitfield mapFlags = GL_MAP_INVALIDATE_RANGE_BIT
+    const GLbitfield mapFlags = (usage.Contains(BufferOperationFlags::InvalidateRange) ? GL_MAP_INVALIDATE_RANGE_BIT : 0)
         | (usage.Contains(BufferOperationFlags::Read) ? GL_MAP_READ_BIT : 0)
         | (usage.Contains(BufferOperationFlags::Write) ? GL_MAP_WRITE_BIT : 0);
 

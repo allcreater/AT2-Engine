@@ -27,10 +27,12 @@ private:
         {
            auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
             //    visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/BoxTextured/glTF/BoxTextured.gltf)");
-               visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf)");
-            //    visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf)");
-           scene->GetTransform().setScale({50.0, 50.0, 50.0}).setPosition({0, 0, 0});
-           m_scene.GetRoot().AddChild(scene);
+            //    visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf)");
+            //   visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/Lantern/glTF/Lantern.gltf)");
+                visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf)");
+           //scene->GetTransform().setScale({50.0, 50.0, 50.0}).setPosition({0, 0, 0});
+            //scene->GetTransform().setScale({0.1, 0.1, 0.1}).setPosition({0, 0, 0});
+            m_scene.GetRoot().AddChild(scene);
         }
         
 
@@ -55,11 +57,11 @@ private:
             for (auto* meshComponent : node.getComponents<AT2::Scene::MeshComponent>())
             {
                 //TODO: don't create duplicates
-                meshComponent->getMesh()->PipelineState = visualizationSystem.GetResourceFactory().CreatePipelineState(
-                    AT2::PipelineStateDescriptor()
-                    .SetShader(meshShader)
-                    .SetVertexArray(meshComponent->getMesh()->VertexArray)
-                    .SetDepthState({ AT2::CompareFunction::Less, true, true}));
+                    meshComponent->getMesh()->PipelineState = visualizationSystem.GetResourceFactory().CreatePipelineState(
+                        AT2::PipelineStateDescriptor()
+                        .SetShader(meshShader)
+                        .SetVertexArray(meshComponent->getMesh()->VertexArray)
+                        .SetDepthState({ AT2::CompareFunction::Less, true, true}));
 
                 appendVertexArrayWithEmptyAttributes(*meshComponent->getMesh()->VertexArray);
 
@@ -80,17 +82,8 @@ private:
         if (getWindow().isKeyDown(AT2::Keys::Key_Escape))
             getWindow().setCloseFlag(true);
 
-    	// m_cubeMesh.GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformsWriter& writer) {
-        //     writer.Write("u_matModelView", m_camera.getView());
-        //     writer.Write("u_matProjection", m_camera.getProjection());
-        // });
-
         AT2::Scene::SceneRenderer::SetupCamera(*cameraUniformBuffer, m_camera, nullptr);
 
-        using namespace std::chrono_literals;
-        const auto angularSpeed = glm::vec3 {1.0f, 1.3f, 1.2f} * static_cast<float>(dt/1s);
-        auto rotation = glm::normalize(m_scene.GetRoot().GetTransform().getRotation() * glm::quat {angularSpeed});
-        m_scene.GetRoot().GetTransform().setRotation(rotation);
     }
 
     void OnRender( AT2::Seconds dt, AT2::IVisualizationSystem& visualizationSystem ) override
@@ -119,6 +112,12 @@ private:
 
     void OnMouseMove(const AT2::MousePos& pos) override 
     {
+        const auto relativePos = pos.getPos() / static_cast<glm::dvec2>(getWindow().getSize());
+
+        m_camera.setRotation(glm::angleAxis(glm::mix(-glm::pi<float>(), glm::pi<float>(), relativePos.x),
+                                            glm::vec3 {0.0, -1.0, 0.0}) *
+                                glm::angleAxis(glm::mix(-glm::pi<float>() / 2, glm::pi<float>() / 2, relativePos.y),
+                                            glm::vec3 {1.0, 0.0, 0.0}));
     }
 
 private:

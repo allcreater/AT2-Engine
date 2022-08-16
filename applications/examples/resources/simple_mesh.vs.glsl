@@ -1,4 +1,4 @@
-#version 420 core
+#version 400 core
 
 layout(location = 1) in vec3 a_Position;
 layout(location = 2) in vec2 a_TexCoord;

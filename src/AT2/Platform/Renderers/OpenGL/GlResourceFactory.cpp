@@ -54,7 +54,6 @@ namespace
             }
 
         case TextureLayout::RGB:
-        case TextureLayout::BGR:
             switch (format.DataType)
             {
             case BufferDataType::Byte:
@@ -69,7 +68,6 @@ namespace
             }
 
         case TextureLayout::RGBA:
-        case TextureLayout::BGRA:
             switch (format.DataType)
             {
             case BufferDataType::Byte:
@@ -97,7 +95,13 @@ namespace
             case BufferDataType::Float: return GL_DEPTH_COMPONENT32F;
             default: throw AT2Exception("Unsupported external format DataType");
             }
-        case TextureLayout::StencilIndex: throw AT2NotImplementedException("StencilIndex buffers loading not implemented");
+        case TextureLayout::DepthStencil:
+            switch (format.DataType)
+            {
+            case BufferDataType::UInt: return GL_DEPTH24_STENCIL8;
+            case BufferDataType::Float: return GL_DEPTH32F_STENCIL8;
+            default: throw AT2Exception("Depth stencil texture could be UInt(for 24bit depth + 8 stencil) or Float (32 + 8)");
+            }
         default: throw AT2Exception("Unsupported external format ChannelsLayout");
         }
     }

@@ -44,14 +44,13 @@ constexpr size_t GetNumberOfChannelsInLayout(TextureLayout layout)
         case TextureLayout::RG:
             return 2;
         case TextureLayout::RGB:
-        case TextureLayout::BGR:
             return 3;
         case TextureLayout::RGBA:
-        case TextureLayout::BGRA:
             return 4;
         case TextureLayout::DepthComponent:
-        case TextureLayout::StencilIndex:
             return 1;
+        case TextureLayout::DepthStencil:
+            throw AT2NotImplementedException("Size computation must be remaked for such layouts");
     }
 }
 

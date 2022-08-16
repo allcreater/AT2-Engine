@@ -50,7 +50,6 @@ namespace AT2
         unsigned int m_matrixStride;
     };
 
-
     class BufferLayout
     {
     public:
@@ -73,6 +72,7 @@ namespace AT2
         size_t m_alignment;
         std::vector<Field> m_fields;
          //TODO: May be std::unordered_map<std::string_view, const Field*>, but it require manual written constructors and =operators
+         //TODO: specific user container like "Utils::NamedList" ?
         Utils::UnorderedStringMap<size_t> m_fieldsByName;
     };
 

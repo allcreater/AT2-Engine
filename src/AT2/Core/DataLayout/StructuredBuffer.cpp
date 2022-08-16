@@ -9,7 +9,7 @@ namespace
     {
     public:
         StructuredBufferWriter(IBuffer& buffer, const BufferLayout& layout) :
-            m_buffer {buffer}, m_layout {layout}, m_mappedBuffer {m_buffer.Map(BufferOperationFlags::ReadWrite)}
+            m_buffer {buffer}, m_layout {layout}, m_mappedBuffer {m_buffer.Map(BufferOperationFlags::Write)}
         {
         }
 

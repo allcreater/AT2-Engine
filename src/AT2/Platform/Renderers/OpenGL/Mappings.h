@@ -29,11 +29,9 @@ namespace AT2::Mappings
         case TextureLayout::Red: return GL_RED;
         case TextureLayout::RG: return GL_RG;
         case TextureLayout::RGB: return GL_RGB;
-        case TextureLayout::BGR: return GL_BGR;
-        case TextureLayout::BGRA: return GL_BGRA;
         case TextureLayout::RGBA: return GL_RGBA;
         case TextureLayout::DepthComponent: return GL_DEPTH_COMPONENT;
-        case TextureLayout::StencilIndex: return GL_STENCIL_INDEX;
+        case TextureLayout::DepthStencil: return GL_DEPTH_STENCIL;
         }
 
         assert(false);

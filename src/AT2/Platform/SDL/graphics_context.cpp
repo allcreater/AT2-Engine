@@ -47,7 +47,11 @@ std::unique_ptr<IPlatformGraphicsContext> MakeOpenglContext(SDL_Window* window, 
     class OpenglContext : public IPlatformGraphicsContext
     {
     public:
-        OpenglContext(SDL_Window* window) : window {window}, context {SDL_GL_CreateContext(window)} {}
+        OpenglContext(SDL_Window* window) : window {window}, context {SDL_GL_CreateContext(window)}
+        {
+            if (!context)
+                throw std::runtime_error("Can't create OpenGL context with given properties");
+        }
         ~OpenglContext() override { SDL_GL_DeleteContext(context); }
 
     private:

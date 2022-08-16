@@ -62,14 +62,12 @@ namespace AT2::Mappings
             }
 
         case TextureLayout::RGB:
-        case TextureLayout::BGR:
             switch (format.DataType)
             {
             default: throw AT2Exception("Unsupported external format DataType");
             }
 
         case TextureLayout::RGBA:
-        case TextureLayout::BGRA: //TODO: own branch
             switch (format.DataType)
             {
                 case BufferDataType::Byte: return MTL::PixelFormatRGBA8Snorm;//MTL::PixelFormatRGBA8Sint;
@@ -92,7 +90,13 @@ namespace AT2::Mappings
                 case BufferDataType::Float: return MTL::PixelFormatDepth32Float;
                 default: throw AT2Exception("Depth component could be short or float");
             }
-        case TextureLayout::StencilIndex: throw AT2NotImplementedException("StencilIndex buffers loading not implemented");
+        case TextureLayout::DepthStencil:
+            switch (format.DataType)
+            {
+                case BufferDataType::UInt: return MTL::PixelFormatDepth24Unorm_Stencil8;
+                case BufferDataType::Float: return MTL::PixelFormatDepth32Float_Stencil8;
+                default: throw AT2Exception("Depth stencil texture could be UInt(for 24bit depth + 8 stencil) or Float (32 + 8)");
+            }
         default: throw AT2Exception("Unsupported external format ChannelsLayout");
         }
     }
@@ -336,9 +340,10 @@ constexpr MTL::ResourceOptions TranslateBufferType(VertexBufferType bufferUsage)
     {
         switch (mode)
         {
-            //case PolygonRasterizationMode::Point:
             case PolygonRasterizationMode::Lines: return MTL::TriangleFillModeLines;
             case PolygonRasterizationMode::Fill: return MTL::TriangleFillModeFill;
+            case PolygonRasterizationMode::Point:
+                break;
         }
 
         throw AT2Exception("Unsupported PolygonRasterizationMode");

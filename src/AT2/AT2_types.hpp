@@ -130,27 +130,20 @@ namespace AT2
     /// <summary>
     /// Texture input data layout
     /// </summary>
-
-    //subset from https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml
     enum class TextureLayout
     {
-        //Index,
         Red,
-        //Green,
-        //Blue,
-        //Alpha,
         RG,
         RGB,
-        BGR,
         RGBA,
-        BGRA,
-
         //Luminance,
         //LuminanceAlpha
         DepthComponent,
-        StencilIndex
+        DepthStencil
     };
 
+    //pair TextureLayout + BufferDataType is bad abstraction(because of asymmetric formats like 10_10_10_2 and DepthStencil24_8) 
+    //TODO: Better to make PixelFormat enum or something like this 
     struct ExternalTextureFormat
     {
         TextureLayout ChannelsLayout;
@@ -215,6 +208,7 @@ namespace AT2
     {
         Read = 1 << 0,
         Write = 1 << 1,
+        InvalidateRange = 1 << 2,
         ReadWrite = Read | Write
     };
     using BufferOperation = EnumFlags<BufferOperationFlags>;
