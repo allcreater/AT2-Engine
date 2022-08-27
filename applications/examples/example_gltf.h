@@ -29,7 +29,7 @@ private:
             //    visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/BoxTextured/glTF/BoxTextured.gltf)");
             //    visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf)");
             //   visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/Lantern/glTF/Lantern.gltf)");
-                visualizationSystem, R"(/Volumes/DATA/git/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf)");
+                visualizationSystem, R"(../../../glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf)");
            //scene->GetTransform().setScale({50.0, 50.0, 50.0}).setPosition({0, 0, 0});
             //scene->GetTransform().setScale({0.1, 0.1, 0.1}).setPosition({0, 0, 0});
             m_scene.GetRoot().AddChild(scene);
@@ -53,28 +53,22 @@ private:
             vao.SetAttributeBinding(5, emptyBuffer, AT2::BufferBindingParams{AT2::BufferDataType::Float, 4, sizeof(emptydata), 0, false, 1});
         };
 
-        AT2::Scene::FuncNodeVisitor pipelineSetterVisitor {[&, this](AT2::Scene::Node& node) {
-            for (auto* meshComponent : node.getComponents<AT2::Scene::MeshComponent>())
-            {
-                //TODO: don't create duplicates
-                    meshComponent->getMesh()->PipelineState = visualizationSystem.GetResourceFactory().CreatePipelineState(
-                        AT2::PipelineStateDescriptor()
-                        .SetShader(meshShader)
-                        .SetVertexArray(meshComponent->getMesh()->VertexArray)
-                        .SetDepthState({ AT2::CompareFunction::Less, true, true}));
+        AT2::Scene::SceneRenderer::VisitAllMeshes(m_scene, [&, this](const AT2::MeshRef& mesh) {
+            //TODO: don't create duplicates
+            mesh->PipelineState = visualizationSystem.GetResourceFactory().CreatePipelineState(
+                                    AT2::PipelineStateDescriptor()
+                                    .SetShader(meshShader)
+                                    .SetVertexArray(mesh->VertexArray)
+                                    .SetDepthState({ AT2::CompareFunction::Less, true, true}));
 
-                appendVertexArrayWithEmptyAttributes(*meshComponent->getMesh()->VertexArray);
+            appendVertexArrayWithEmptyAttributes(*mesh->VertexArray);
 
-                if (!cameraUniformBuffer)
-                    cameraUniformBuffer = meshShader->CreateAssociatedUniformStorage("CameraBlock");
+            if (!cameraUniformBuffer)
+                cameraUniformBuffer = meshShader->CreateAssociatedUniformStorage("CameraBlock");
                     
-                meshComponent->getMesh()->GetOrCreateDefaultMaterial().SetUniform("CameraBlock", cameraUniformBuffer->GetBuffer());
-            }
-
-            return true;
-        }};
-
-        m_scene.GetRoot().Accept(pipelineSetterVisitor);        
+            mesh->GetOrCreateDefaultMaterial().SetUniform("CameraBlock", cameraUniformBuffer->GetBuffer());
+        });
+     
     }
 
     void OnUpdate(AT2::Seconds dt) override
