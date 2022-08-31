@@ -1,4 +1,6 @@
 #include "GlTexture.h"
+#include "GlRenderer.h"
+#include "GlStateManager.h"
 #include "Mappings.h"
 
 using namespace AT2;
@@ -75,14 +77,28 @@ namespace
     }
 }
 
-GlTexture::GlTexture(Texture flavor, GLint internalFormat, const ExternalTextureFormat& format) : m_flavor(flavor), m_internalFormat(internalFormat)
+std::shared_ptr<GlTexture> GlTexture::Make(GlRenderer& renderer, Texture flavor, GLint internalFormat, const ExternalTextureFormat& format)
+{
+    std::shared_ptr<GlTexture> texture{new GlTexture(renderer, flavor, internalFormat)};
+    texture->Init(format);
+
+    return texture;
+}
+
+GlTexture::GlTexture(GlRenderer& renderer, Texture flavor, GLint internalFormat)
+ : m_stateManager{Utils::safe_dereference_cast<GlStateManager&>(&renderer.GetStateManager())}
+ , m_flavor(flavor)
+ , m_internalFormat(internalFormat)
 {
     glGenTextures(1, &m_id);
     if (m_id == 0)
         throw AT2TextureException("Can't create new texture");
+}
 
+void GlTexture::Init(const ExternalTextureFormat& format)
+{
     const auto target = GetTarget();
-    glBindTexture(target, m_id);
+    m_stateManager.DoBind(shared_from_this());
 
     //TODO: test all cases
     std::visit(
@@ -164,7 +180,7 @@ GlTexture::GlTexture(Texture flavor, GLint internalFormat, const ExternalTexture
                 SetWrapMode(TextureWrapParams::Uniform(TextureWrapMode::Repeat));
                 SetSamplingMode(TextureSamplingParams::Uniform(TextureSamplingMode::Linear, texture.getLevels() > 1));
             }},
-        flavor);
+        m_flavor);
 
     ReadChannelSizes();
 }
@@ -174,21 +190,24 @@ GlTexture::~GlTexture()
     glDeleteTextures(1, &m_id);
 }
 
+GLenum GlTexture::Bind()
+{
+    m_stateManager.DoBind(shared_from_this());
+    return GetTarget();
+}
+
 void GlTexture::BindAsImage(unsigned unit, glm::u32 level, glm::u32 layer, bool isLayered, BufferOperation usage) const
 {
 }
 
 void GlTexture::BuildMipmaps()
 {
-    const auto target = GetTarget();
-    glBindTexture(target, m_id);
-    glGenerateMipmap(target);
+    glGenerateMipmap(Bind());
 }
 
 void GlTexture::SetWrapMode(TextureWrapParams wrapParams)
 {
-    const auto target = GetTarget();
-    glBindTexture(target, m_id);
+    const auto target = Bind();
     
     m_wrapParams = wrapParams;
 
@@ -199,8 +218,7 @@ void GlTexture::SetWrapMode(TextureWrapParams wrapParams)
 
 void GlTexture::SetSamplingMode(TextureSamplingParams samplingParams)
 {
-    const auto target = GetTarget();
-    glBindTexture(target, m_id);
+    const auto target = Bind();
     
     m_sampling_params = samplingParams;
 
@@ -213,10 +231,8 @@ void GlTexture::SetAnisotropy(float anisotropy)
     if (!GLAD_GL_ARB_texture_filter_anisotropic)
         return;
 
-    const auto target = GetTarget();
-    glBindTexture(target, m_id);
 
-    glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, m_anisotropy = std::min(anisotropy, max_anisotropy()));
+    glTexParameterf(Bind(), GL_TEXTURE_MAX_ANISOTROPY, m_anisotropy = std::min(anisotropy, max_anisotropy()));
 }
 
 float GlTexture::GetAnisotropy() const noexcept
@@ -241,10 +257,7 @@ void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, Ex
         if (size >= static_cast<int>(tex1D->getSize().x))
             throw AT2TextureException( "SubImage size more than texture actual size");
 
-        const auto target = GetTarget();
-        glBindTexture(target, m_id);
-    
-        glTexSubImage1D(target, level, m_internalFormat, size, externalFormat, externalType, data);
+        glTexSubImage1D(Bind(), level, m_internalFormat, size, externalFormat, externalType, data);
     }
     else
         throw AT2NotImplementedException(
@@ -270,10 +283,7 @@ void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level
         [=, id=m_id]<typename T>(T) {
             if constexpr (is_same_v<T, Texture1DArray> || is_same_v<T, Texture2D>)
             {
-                const auto target = GetTarget();
-                glBindTexture(target, m_id);
-    
-                glTexSubImage2D(target, level, offset.x, offset.y, size.x, size.y, externalFormat,
+                glTexSubImage2D(Bind(), level, offset.x, offset.y, size.x, size.y, externalFormat,
                                        externalType, data);
             }
             else
@@ -308,10 +318,7 @@ void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level
                         throw AT2Exception("GlTexture:SubImage3D cube map face must be in range [0-5]");
                 }
 
-                const auto target = GetTarget();
-                glBindTexture(target, m_id);
-                
-                glTexSubImage3D(target, level, offset.x, offset.y, offset.z, size.x, size.y, size.z, externalFormat,
+                glTexSubImage3D(Bind(), level, offset.x, offset.y, offset.z, size.x, size.y, size.z, externalFormat,
                                     externalType, data);
             }
             else
@@ -330,15 +337,13 @@ void GlTexture::CopyFromFramebuffer(GLint level, glm::ivec2 pos, glm::ivec2 size
 
     visit(
         [=, id = m_id]<typename T>(T) {
-            const auto target = GetTarget();
-            glBindTexture(target, m_id);
+            const auto target = Bind();
         
             if constexpr (is_same_v<T, Texture1DArray> || is_same_v<T, Texture2D> || is_same_v<T, Texture2DRectangle>)
                 glCopyTexSubImage2D(target, level, textureOffset.x, textureOffset.y, pos.x, pos.y, size.x, size.y);
-            else if constexpr (is_same_v<T, Texture3D> || is_same_v<T, Texture2DArray> ||
-                               is_same_v<T, TextureCubeArray> || is_same_v<T, TextureCube>)
+            else if constexpr (is_same_v<T, Texture3D> || is_same_v<T, Texture2DArray>)
                 glCopyTexSubImage3D(target, level, textureOffset.x, textureOffset.y, textureOffset.z, pos.x, pos.y, size.x, size.y);
-            else
+            else //is_same_v<T, TextureCubeArray> || is_same_v<T, TextureCube>
                 throw AT2NotImplementedException( "Probably not implemented");
         },
         GetType());

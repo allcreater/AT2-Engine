@@ -113,7 +113,7 @@ GlResourceFactory::GlResourceFactory(GlRenderer& renderer) : m_renderer(renderer
 std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                           const glm::uvec2& size) const
 {
-    auto texture = std::make_shared<GlTexture>(Texture2D {size},
+    auto texture = GlTexture::Make(m_renderer, Texture2D {size},
                                                DetermineInternalFormat(TextureFormats::RGBA8), TextureFormats::RGBA8); //TODO: choose formats?
     texture->CopyFromFramebuffer(0, pos, size, {});
     return texture;
@@ -122,7 +122,7 @@ std::shared_ptr<ITexture> GlResourceFactory::CreateTextureFromFramebuffer(const 
 std::shared_ptr<ITexture> GlResourceFactory::CreateTexture(const Texture& declaration,
                                                            ExternalTextureFormat desiredFormat) const
 {
-    return std::make_shared<GlTexture>(declaration, DetermineInternalFormat(desiredFormat), desiredFormat);
+    return GlTexture::Make(m_renderer, declaration, DetermineInternalFormat(desiredFormat), desiredFormat);
 }
 
 std::shared_ptr<IFrameBuffer> GlResourceFactory::CreateFrameBuffer() const

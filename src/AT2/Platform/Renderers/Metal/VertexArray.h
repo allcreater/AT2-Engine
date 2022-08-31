@@ -25,8 +25,8 @@ namespace AT2::Metal
         [[nodiscard]] std::optional<size_t> GetLastAttributeIndex() const noexcept override;
         [[nodiscard]] std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const override;
 
+        const VertexArrayDescriptor& GetVertexDescriptor() const override { return m_vertexDescriptor; }
         //TODO: remove
-        MtlPtr<MTL::VertexDescriptor> GetVertexDescriptor() { return m_vertexDescriptor; }
         void Apply(MTL::RenderCommandEncoder& renderEncoder);
 
     private:
@@ -34,7 +34,7 @@ namespace AT2::Metal
         std::vector<std::pair<std::shared_ptr<IBuffer>, BufferBindingParams>> m_buffers;
         std::pair<std::shared_ptr<IBuffer>, std::optional<BufferDataType>> m_indexBuffer;
         
-        MtlPtr<MTL::VertexDescriptor> m_vertexDescriptor;
+        VertexArrayDescriptor m_vertexDescriptor;
     };
 
 } // namespace AT2::Metal

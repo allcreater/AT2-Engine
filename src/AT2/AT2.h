@@ -163,6 +163,7 @@ namespace AT2
         virtual void Render(RenderFunc renderFunc) = 0;
     };
 
+    //latest TODO: Must be constructed from VertexArrayDescriptor and have immutable layout.
     class IVertexArray
     {
     public:
@@ -184,6 +185,8 @@ namespace AT2
         [[nodiscard]] virtual std::shared_ptr<IBuffer> GetVertexBuffer(unsigned int index) const = 0;
         [[nodiscard]] virtual std::optional<size_t> GetLastAttributeIndex() const noexcept = 0;
         [[nodiscard]] virtual std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const = 0;
+
+        [[nodiscard]] virtual const VertexArrayDescriptor& GetVertexDescriptor() const = 0;
     };
 
 
@@ -324,18 +327,19 @@ namespace AT2
 
         //TODO: think about removing Shader and VAO concepts, probably it should be part of Pipeline itself
         PipelineStateDescriptor& SetShader(std::shared_ptr<IShaderProgram> shader) { m_shader = std::move(shader); return *this; }
-        PipelineStateDescriptor& SetVertexArray(std::shared_ptr<IVertexArray> vertexArray) { m_vertexArray = std::move(vertexArray); return *this; }
+        PipelineStateDescriptor& SetVertexArray(std::shared_ptr<IVertexArray> vertexArray) { return SetVertexArrayDescriptor(vertexArray->GetVertexDescriptor()); }
+        PipelineStateDescriptor& SetVertexArrayDescriptor(const VertexArrayDescriptor& vertexArrayDescriptor) { m_vertexArrayDescriptor = vertexArrayDescriptor; return *this; }
         PipelineStateDescriptor& SetDepthState(DepthState depthState) { m_depthState = depthState; return *this; }
         PipelineStateDescriptor& SetBlendMode(BlendMode blendMode) { m_blendMode = blendMode; return *this; }
 
         std::shared_ptr<IShaderProgram>  GetShader() const { return m_shader; }
-        std::shared_ptr<IVertexArray>  GetVertexArray() const { return m_vertexArray; }
+        const VertexArrayDescriptor& GetVertexArrayDescriptor() const { return m_vertexArrayDescriptor; }
         DepthState GetDepthState() const { return m_depthState; }
         BlendMode GetBlendMode() const { return m_blendMode; }
 
     private:
         std::shared_ptr<IShaderProgram> m_shader;
-        std::shared_ptr<IVertexArray> m_vertexArray;
+        VertexArrayDescriptor m_vertexArrayDescriptor;
         DepthState m_depthState;
         BlendMode m_blendMode;
     };

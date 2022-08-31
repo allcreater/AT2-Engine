@@ -58,6 +58,81 @@ namespace AT2
         unsigned int Divisor = 0;
     };
 
+    enum class VertexStepFunc : uint8_t
+    {
+        PerVertex,
+        PerInstance
+    };
+
+    //TODO: rename to BufferBindingParams
+    struct BufferBindingParams2 final
+    {
+        constexpr BufferBindingParams2() = default;
+        constexpr BufferBindingParams2(unsigned int stride, VertexStepFunc stepFunc = VertexStepFunc::PerVertex, unsigned int stepRate = 0)
+            : Enabled{true}, StepFunc{stepFunc}, Stride{stride}, StepRate{stepRate} {}
+
+        bool Enabled = false; // intrusive version of optional<BufferBindingParams>
+        VertexStepFunc StepFunc;
+        unsigned int Stride;
+        unsigned int StepRate;
+    };
+
+    //TODO: !!! use just enum VertexFormat instead of tuples {Type, Count, IsNormalized} because they are not independent !!! 
+    //tuple is for compatibility only!
+
+    struct VertexAttributeLayout final
+    {
+        constexpr VertexAttributeLayout() = default;
+        constexpr VertexAttributeLayout(BufferDataType type, unsigned int count, bool normalized, unsigned int bufferIndex, unsigned int offset = 0)
+        : Enabled{true}, Type{type}, Count{static_cast<uint8_t>(count)}, IsNormalized{normalized}, BufferIndex{bufferIndex}, Offset{offset} {assert(count >= 1 && count <= 4);}
+
+        bool Enabled = false;
+        BufferDataType Type;
+        uint8_t Count;
+        bool IsNormalized = false;
+        unsigned int BufferIndex;
+        unsigned int Offset;
+    };
+
+    //TODO: separate VertexArrayDescriptorBuilder? 
+    class VertexArrayDescriptor final
+    {
+    public:
+        // TODO: determine limit on runtime.
+        constexpr static size_t MaxBuffers = 8;
+        constexpr static size_t MaxAttributes = 16;
+
+        constexpr VertexArrayDescriptor& SetBufferLayout(size_t i, BufferBindingParams2 layout)
+        {
+            m_bufferLayouts.at(i) = layout;
+            return *this;
+        }
+
+        constexpr VertexArrayDescriptor& SetVertexAttributeLayout(size_t i, VertexAttributeLayout layout)
+        {
+            m_vertexAttributes.at(i) = layout;
+            return *this;
+        }
+
+        [[nodiscard]] constexpr bool IsValid() const noexcept
+        {
+            return std::all_of(m_vertexAttributes.begin(), m_vertexAttributes.end(), [this](const VertexAttributeLayout& attribute){
+                if (!attribute.Enabled)
+                    return true;
+
+                const auto index = attribute.BufferIndex;
+                return index < m_bufferLayouts.size() && m_bufferLayouts[index].Enabled && attribute.Count >= 1 && attribute.Count <= 4;
+            });
+        }
+
+        [[nodiscard]] constexpr std::span<const BufferBindingParams2> GetBufferLayouts() const noexcept { return m_bufferLayouts; }
+        [[nodiscard]] constexpr std::span<const VertexAttributeLayout> GetVertexAttributeLayouts() const noexcept { return m_vertexAttributes; }
+
+    private:
+        std::array<BufferBindingParams2, MaxBuffers> m_bufferLayouts;
+        std::array<VertexAttributeLayout, MaxAttributes> m_vertexAttributes;
+    };
+
 
     //TODO: to separate header
     namespace BufferDataTypes

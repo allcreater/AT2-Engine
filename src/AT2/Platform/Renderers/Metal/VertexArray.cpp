@@ -7,7 +7,6 @@ using namespace Metal;
 VertexArray::VertexArray(const IRendererCapabilities& rendererCapabilities)
 : m_buffers(rendererCapabilities.GetMaxNumberOfVertexAttributes())
 {
-    m_vertexDescriptor = ConstructMetalObject<MTL::VertexDescriptor>();
 }
 
 VertexArray::~VertexArray()
@@ -22,28 +21,13 @@ void VertexArray::SetIndexBuffer(std::shared_ptr<IBuffer> buffer, BufferDataType
 void VertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared_ptr<IBuffer> buffer,
                                       const BufferBindingParams& binding)
 {
-    //const auto& mtlBuffer = Utils::safe_dereference_cast<Buffer&>(buffer.get());
-
     const auto bindingIndex = attributeIndex;
 
-    auto* attribute = m_vertexDescriptor->attributes()->object(attributeIndex);
-    attribute->setFormat(Mappings::TranslateVertexFormat(binding));
-    //attribute->setOffset(binding.Offset); //this could be useful only when multiple attibutes could binds to one buffer. We have 1 to 1 mapping, so that dynamic offsets are more flexible
-    attribute->setBufferIndex(bindingIndex); //TODO:
-    
-    auto layout = m_vertexDescriptor->layouts()->object(bindingIndex);
-    layout->setStride(binding.Stride);
-    
+    m_vertexDescriptor.SetVertexAttributeLayout(bindingIndex, VertexAttributeLayout{binding.Type, binding.Count, binding.IsNormalized, bindingIndex, 0});
     if (binding.Divisor > 0)
-    {
-        layout->setStepRate(binding.Divisor);
-        layout->setStepFunction(MTL::VertexStepFunctionPerInstance);
-    }
+        m_vertexDescriptor.SetBufferLayout(bindingIndex, BufferBindingParams2{binding.Stride, VertexStepFunc::PerInstance, binding.Divisor});
     else
-    {
-        layout->setStepRate(1);
-        layout->setStepFunction(MTL::VertexStepFunctionPerVertex);
-    }
+        m_vertexDescriptor.SetBufferLayout(bindingIndex, BufferBindingParams2{binding.Stride, VertexStepFunc::PerVertex, 1});
     
     
     m_buffers.at(attributeIndex) = { buffer, binding };

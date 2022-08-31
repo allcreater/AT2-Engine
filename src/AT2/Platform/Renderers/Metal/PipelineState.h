@@ -15,14 +15,12 @@ namespace AT2::Metal
 
 // For internal usage
         void Apply(MTL::RenderCommandEncoder& commandEncoder);
-        MTL::DepthStencilState* GetDepthStencilState() const noexcept { return m_depthStencilState.get(); }
-        const std::shared_ptr<VertexArray>& GetVertexArray() const noexcept { return m_vertexArray; }
+        // MTL::DepthStencilState* GetDepthStencilState() const noexcept { return m_depthStencilState.get(); }
         const std::shared_ptr<ShaderProgram>& GetShaderProgram() const noexcept { return m_shaderProgram; }
 
     private:
         MtlPtr<MTL::RenderPipelineState> m_pipelineState;
         MtlPtr<MTL::DepthStencilState> m_depthStencilState;
-        std::shared_ptr<VertexArray> m_vertexArray;
         std::shared_ptr<ShaderProgram> m_shaderProgram;
 
     };

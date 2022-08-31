@@ -19,7 +19,7 @@ void UiInputHandler::OnMouseMove(const MousePos& mousePos)
             if (auto& vector = m_mouseDownOnControl[0];
                 std::find_if(vector.begin(), vector.end(),
                              [&](const std::weak_ptr<Node>& n) { return n.lock() == node; }) != vector.end())
-                if (EventClicked)
+                if (EventMouseDrag)
                     eventCatched |= EventMouseDrag(node, m_mousePos);
         }
     });

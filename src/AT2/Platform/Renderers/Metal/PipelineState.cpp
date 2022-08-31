@@ -8,12 +8,46 @@
 using namespace AT2;
 using namespace AT2::Metal;
 
+namespace
+{
+    MtlPtr<MTL::VertexDescriptor> MakeVertexDescriptor(const VertexArrayDescriptor& descriptor)
+    {
+        auto vertexDescriptor = ConstructMetalObject<MTL::VertexDescriptor>();
+
+        for (size_t index = 0; const auto& layout : descriptor.GetBufferLayouts())
+        {
+            auto mtlBufferLayout = vertexDescriptor->layouts()->object(index++);
+
+            if (!layout.Enabled)
+                continue;
+
+            mtlBufferLayout->setStride(layout.Stride);
+            mtlBufferLayout->setStepRate(layout.StepRate);
+            mtlBufferLayout->setStepFunction(Mappings::TranslateVertexStepFunc(layout.StepFunc));
+        }
+
+        for (size_t index = 0; const auto& layout : descriptor.GetVertexAttributeLayouts())
+        {
+            auto* mtlAttribute = vertexDescriptor->attributes()->object(index++);
+
+            if (!layout.Enabled)
+                continue;
+
+            mtlAttribute->setFormat(Mappings::TranslateVertexFormat(layout.Type, layout.Count, layout.IsNormalized));
+            mtlAttribute->setOffset(layout.Offset);
+            mtlAttribute->setBufferIndex(layout.BufferIndex);
+        }
+
+
+        return vertexDescriptor;
+    }
+}
+
+
 PipelineState::PipelineState(Renderer& renderer, const PipelineStateDescriptor& descriptor)
     : m_shaderProgram{std::dynamic_pointer_cast<ShaderProgram>(descriptor.GetShader())}
-    , m_vertexArray{std::dynamic_pointer_cast<VertexArray>(descriptor.GetVertexArray())}
 {
     assert(descriptor.GetShader());
-    assert(descriptor.GetVertexArray());
 
     auto buildingState = ConstructMetalObject<MTL::RenderPipelineDescriptor>();
 
@@ -37,9 +71,8 @@ PipelineState::PipelineState(Renderer& renderer, const PipelineStateDescriptor& 
     }
 
     buildingState->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-
     
-    buildingState->setVertexDescriptor(m_vertexArray->GetVertexDescriptor().get());
+    buildingState->setVertexDescriptor(MakeVertexDescriptor(descriptor.GetVertexArrayDescriptor()).get());
 
     m_shaderProgram->Apply(*buildingState);
 

@@ -301,11 +301,12 @@ namespace AT2::Utils
 
         std::string newString;
         newString.reserve(totalLength);
+        [[maybe_unused]] const auto initial_capacity = newString.capacity();
 
 	    for (const auto& view : viewsList)
             newString.append(view);
 
-        assert(newString.capacity() == totalLength);
+        assert(newString.capacity() == initial_capacity);
 
         return newString;
     }

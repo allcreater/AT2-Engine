@@ -30,10 +30,11 @@ public:
 
     std::optional<unsigned> GetActiveTextureIndex(std::shared_ptr<ITexture> texture) const noexcept override;
 
-private:
+// for internal usage
     using TextureId = unsigned int;
     TextureId DoBind(std::shared_ptr<ITexture> texture);
 
+private:
     void DoBind(unsigned int index, const std::shared_ptr<IBuffer>& buffer);
     void DoBind(IShaderProgram& shader);
     void DoBind(IVertexArray& vertexArray);

@@ -48,6 +48,8 @@ void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared
     const auto platformDataType = Mappings::TranslateExternalType(binding.Type);
     const auto bindingIndex = attributeIndex;
 
+    glEnableVertexAttribArray(attributeIndex);
+    glBindBuffer(GL_ARRAY_BUFFER, glBuffer.GetId());
     glVertexAttribDivisor(bindingIndex, binding.Divisor);
 
     switch (binding.Type)
@@ -69,8 +71,12 @@ void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared
             glVertexAttribPointer(attributeIndex, static_cast<GLint>(binding.Count), platformDataType, Mappings::TranslateBool(binding.IsNormalized), binding.Stride, reinterpret_cast<const void*>(binding.Offset));
     }
 
-    glEnableVertexAttribArray(attributeIndex);
-
+    m_vertexDescriptor.SetVertexAttributeLayout(bindingIndex, VertexAttributeLayout{binding.Type, binding.Count, binding.IsNormalized, bindingIndex, 0});
+    if (binding.Divisor > 0)
+        m_vertexDescriptor.SetBufferLayout(bindingIndex, BufferBindingParams2{binding.Stride, VertexStepFunc::PerInstance, binding.Divisor});
+    else
+        m_vertexDescriptor.SetBufferLayout(bindingIndex, BufferBindingParams2{binding.Stride, VertexStepFunc::PerVertex, 1});
+    
 
     m_buffers.at(attributeIndex) = {std::move(buffer), binding};
 }

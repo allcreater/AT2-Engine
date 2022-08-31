@@ -27,12 +27,16 @@ namespace AT2::OpenGL
         [[nodiscard]] std::optional<size_t> GetLastAttributeIndex() const noexcept override;
         [[nodiscard]] std::optional<BufferBindingParams> GetVertexBufferBinding(unsigned int index) const override;
 
+        const VertexArrayDescriptor& GetVertexDescriptor() const override { return m_vertexDescriptor; }
+
     private:
         GLuint m_id;
 
         //we are sure that all buffer will be at least GlBuffer or derived types
         std::vector<std::pair<std::shared_ptr<IBuffer>, BufferBindingParams>> m_buffers;
         std::pair<std::shared_ptr<IBuffer>, std::optional<BufferDataType>> m_indexBuffer;
+
+        VertexArrayDescriptor m_vertexDescriptor;
     };
 
 } // namespace AT2::OpenGL

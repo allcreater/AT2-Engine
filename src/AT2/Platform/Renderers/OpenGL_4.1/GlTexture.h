@@ -6,12 +6,15 @@
 
 namespace AT2::OpenGL41
 {
-    class GlTexture : public ITexture
+    class GlRenderer;
+    class GlStateManager;
+
+    class GlTexture : public ITexture, public std::enable_shared_from_this<GlTexture>
     {
     public:
         NON_COPYABLE_OR_MOVABLE(GlTexture)
 
-        GlTexture(Texture flavor, GLint internalFormat, const ExternalTextureFormat& format);
+        static std::shared_ptr<GlTexture> Make(GlRenderer& renderer, Texture flavor, GLint internalFormat, const ExternalTextureFormat& format);
         ~GlTexture() override;
 
         void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
@@ -46,10 +49,15 @@ namespace AT2::OpenGL41
         void SetAnisotropy(float anisotropy) override;
         [[nodiscard]] float GetAnisotropy() const noexcept override;
 
-    protected:
+    private:
+        GlTexture(GlRenderer& renderer, Texture flavor, GLint internalFormat);
+        void Init(const ExternalTextureFormat& format);
+        //Binds texture to StateManager and returns GetTarget for usability
+        GLenum Bind();
         void ReadChannelSizes();
 
-    protected:
+    private:
+        GlStateManager& m_stateManager;
         Texture m_flavor;
         TextureWrapParams m_wrapParams;
         TextureSamplingParams m_sampling_params;
