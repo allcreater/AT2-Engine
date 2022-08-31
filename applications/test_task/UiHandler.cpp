@@ -83,7 +83,13 @@ UiRenderer::UiRenderer(IVisualizationSystem& renderer, std::shared_ptr<Node> nod
 
     const auto texture = Resources::TextureLoader::LoadTexture(renderer, R"(resources/helix_nebula.jpg)");
     m_quadDrawable = Utils::MakeFullscreenQuadMesh(renderer);
-    m_quadDrawable->Shader = postprocessShader;
+    m_quadDrawable->PipelineState = renderer.GetResourceFactory().CreatePipelineState(
+            AT2::PipelineStateDescriptor().SetShader(postprocessShader)
+                .SetVertexArray(m_quadDrawable->VertexArray)
+                .SetDepthState({ AT2::CompareFunction::Always, false, false})
+                .SetBlendMode(AT2::BlendMode {AT2::BlendFactor::SourceAlpha, AT2::BlendFactor::OneMinusSourceAlpha})
+        );
+
     {
         auto& uniformStorage = m_quadDrawable->GetOrCreateDefaultMaterial();
         uniformStorage.SetUniform("u_BackgroundTexture", texture);
@@ -94,7 +100,7 @@ void UiRenderer::Draw(IRenderer& renderer)
 {
     renderer.SetViewport(AABB2d {{}, m_windowSize});
     m_quadDrawable->GetOrCreateDefaultMaterial().SetUniform("u_Color", glm::vec4(1.0f));
-    Utils::MeshRenderer::DrawMesh(renderer, *m_quadDrawable, m_quadDrawable->Shader);
+    Utils::MeshRenderer::DrawMesh(renderer, *m_quadDrawable, m_quadDrawable->PipelineState);
 
     m_uiRoot->TraverseBreadthFirst([&](const std::shared_ptr<Node>& node) { RenderNode(renderer, * node); });
 }
@@ -141,8 +147,14 @@ void UiHub::Init(AT2::IVisualizationSystem& renderer)
         curve.SetColor(glm::vec4(0.0, 0.0, 1.0, 1.0));
     }
     auto mesh = MeshRef {Utils::MakeFullscreenQuadMesh(renderer)};
-    mesh->Shader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
+    auto shader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
         {R"(resources/shaders/window.vs.glsl)", R"(resources/shaders/window.fs.glsl)"});
+
+    mesh->PipelineState = renderer.GetResourceFactory().CreatePipelineState(
+            AT2::PipelineStateDescriptor().SetShader(shader)
+                .SetVertexArray(mesh->VertexArray)
+                .SetDepthState({ AT2::CompareFunction::Always, false, false})
+        );
 
     m_plotNode->SetNodeRenderer(std::make_shared<PlotRenderer>(m_plotNode));
     panel->SetNodeRenderer(std::make_shared<WindowRenderer>(panel, mesh, glm::vec2(0, 0),

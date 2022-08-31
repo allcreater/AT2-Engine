@@ -63,17 +63,17 @@ private:
 
 void PlotRenderer::Draw(IRenderer& renderer)
 {
-    if (m_uiShader == nullptr)
+    if (m_uiPipeline == nullptr)
         Init(renderer);
 
     auto& stateManager = renderer.GetStateManager();
 
-    stateManager.BindShader(m_uiShader);
+    stateManager.ApplyPipelineState(m_uiPipeline);
     m_uniformBuffer->Bind(stateManager);
     LinesHelper::Draw(renderer);
 
 
-    stateManager.BindShader(m_curveShader);
+    stateManager.ApplyPipelineState(m_curvePipeline);
     PrepareData(renderer);
 
     for (const auto& pair : m_curves)
@@ -130,11 +130,34 @@ void PlotRenderer::UpdateCanvasGeometry(const AABB2d& observingRange)
 
 void PlotRenderer::Init(const IVisualizationSystem& renderer)
 {
-    m_uiShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
+    auto uiShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
         {"resources//shaders//simple.vs.glsl", "resources//shaders//simple.fs.glsl"});
 
-    m_curveShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
+    auto curveShader = renderer.GetResourceFactory().CreateShaderProgramFromFiles(
         {"resources//shaders//curve.vs.glsl", "resources//shaders//curve.fs.glsl"});
+
+    
+    auto uiVad = VertexArrayDescriptor()
+        .SetVertexAttributeLayout(0, VertexAttributeLayout{BufferDataType::Float, 2, false, 0})
+        .SetBufferLayout(0, {sizeof(glm::vec2)})
+        .SetVertexAttributeLayout(1, VertexAttributeLayout{BufferDataType::Float, 4, false, 0})
+        .SetBufferLayout(1, {sizeof(glm::vec4)});
+    
+    auto curveVad = VertexArrayDescriptor().SetVertexAttributeLayout(0, VertexAttributeLayout{BufferDataType::Float, 1, false, 0})
+        .SetBufferLayout(0, {sizeof(float)});
+
+
+    m_uiPipeline = renderer.GetResourceFactory().CreatePipelineState(
+            AT2::PipelineStateDescriptor().SetShader(uiShader)
+                .SetVertexArrayDescriptor(uiVad)
+                .SetDepthState({ AT2::CompareFunction::Always, false, false})
+        );
+
+    m_curvePipeline = renderer.GetResourceFactory().CreatePipelineState(
+            AT2::PipelineStateDescriptor().SetShader(curveShader)
+                .SetVertexArrayDescriptor(curveVad)
+                .SetDepthState({ AT2::CompareFunction::Always, false, false})
+        );
 
 
     m_uniformBuffer = std::make_shared<UniformContainer>();
@@ -157,6 +180,6 @@ void WindowRenderer::Draw(IRenderer& renderer)
             writer.Write("u_BorderThickness", m_borderThickness);
             writer.Write("u_BlurDirection", m_blurDirection);
         });
-        Utils::MeshRenderer::DrawMesh(renderer, *m_Mesh, m_Mesh->Shader);
+        Utils::MeshRenderer::DrawMesh(renderer, *m_Mesh, m_Mesh->PipelineState);
     }
 }

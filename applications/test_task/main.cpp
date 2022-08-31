@@ -14,7 +14,6 @@ private:
 
         m_uiHub = std::make_unique<UiHub>();
         m_uiHub->Init(visualizationSystem);
-        m_uiHub->Resize(getWindow().getSize());
 
         visualizationSystem.GetDefaultFramebuffer().SetClearColor(glm::vec4{});
         visualizationSystem.GetDefaultFramebuffer().SetClearDepth(0.0f);
@@ -26,9 +25,11 @@ private:
 
     void OnRender( const AT2::Seconds dt, AT2::IVisualizationSystem& visualizationSystem ) override
     {
+        if (std::exchange(m_needResize, false))
+            m_uiHub->Resize(visualizationSystem.GetDefaultFramebuffer().GetActualSize());
+
         visualizationSystem.GetDefaultFramebuffer().Render([&](AT2::IRenderer& renderer) {
-            renderer.GetStateManager().ApplyState(
-                AT2::BlendMode {AT2::BlendFactor::SourceAlpha, AT2::BlendFactor::OneMinusSourceAlpha, glm::vec4 {1}});
+            renderer.GetStateManager().ApplyState(AT2::BlendColor{glm::vec4 {1}});
             renderer.GetStateManager().ApplyState(AT2::FaceCullMode {});
 
             m_uiHub->Render(renderer, dt);
@@ -52,8 +53,7 @@ private:
     void OnResize (glm::ivec2 newSize) override
     {
         std::cout << "Size " << newSize.x << "x" << newSize.y << std::endl;
-        if (m_uiHub)
-            m_uiHub->Resize(newSize);
+        m_needResize = true;
     };
 
     void OnMouseDown(int key) override { m_uiHub->GetInputHandler().OnMouseDown(key); }
@@ -73,8 +73,8 @@ private:
     };
 
 private:
-
     std::unique_ptr<UiHub> m_uiHub;
+    bool m_needResize = true;
 };
 
 int main(int argc, char* argv[])

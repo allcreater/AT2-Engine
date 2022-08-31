@@ -1,4 +1,4 @@
-#version 420 core
+#version 410 core
 
 layout(location = 1) in vec3 a_Position;
 

@@ -28,7 +28,7 @@ namespace AT2::UI
     private:
         std::weak_ptr<Plot> m_Control;
 
-        std::shared_ptr<IShaderProgram> m_uiShader, m_curveShader;
+        std::shared_ptr<IPipelineState> m_uiPipeline, m_curvePipeline;
         std::shared_ptr<IUniformContainer> m_uniformBuffer;
 
         std::map<std::string, std::shared_ptr<CurveDrawable>> m_curves;

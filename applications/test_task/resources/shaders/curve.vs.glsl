@@ -1,4 +1,4 @@
-#version 420 core
+#version 410 core
 
 uniform vec2 u_BoundsX;
 uniform uint u_NumberOfPoints;
