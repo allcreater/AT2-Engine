@@ -82,6 +82,7 @@ namespace AT2::Scene
         void RenderScene(IRenderer& renderer, const RenderParameters& params, const ITime& time);
 
         static void SetupCamera(StructuredBuffer& cameraUniformBuffer, const Camera& camera, const ITime* time);
+        static void VisitAllMeshes(Scene& scene, const std::function<void(const MeshRef&)>& meshVisitor);
 
     private:
         void DrawPointLights(IRenderer& renderer, const LightRenderVisitor& lrv) const;

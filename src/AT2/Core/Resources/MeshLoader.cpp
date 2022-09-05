@@ -1,5 +1,6 @@
 #include "MeshLoader.h"
 
+#ifdef USE_ASSIMP
 
 #include <assimp/Importer.hpp>
 #include <assimp/pbrmaterial.h>
@@ -189,3 +190,16 @@ std::shared_ptr<Node> MeshLoader::LoadNode(IVisualizationSystem& renderer, const
     MeshBuilder builder {renderer, scene};
     return builder.Build();
 }
+
+#else
+
+using namespace AT2;
+using namespace AT2::Scene;
+using namespace AT2::Resources;
+
+std::shared_ptr<Node> MeshLoader::LoadNode(IVisualizationSystem& renderer, const str& filename)
+{
+    return nullptr;
+}
+
+#endif

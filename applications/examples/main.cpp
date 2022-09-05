@@ -11,7 +11,7 @@ int main(const int argc, const char* argv[])
         app.Run(std::make_unique<CubeExample>());
         app.Run(std::make_unique<GltfSceneExample>());
     }
-    catch (AT2::AT2Exception& exception)
+    catch (const AT2::AT2Exception& exception)
     {
         std::cout << "Runtime exception:" << exception.what() << std::endl;
     }

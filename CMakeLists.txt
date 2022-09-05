@@ -3,7 +3,8 @@ cmake_minimum_required (VERSION 3.8 FATAL_ERROR)
 project (AT2_all)
 
 option(BUILD_TESTING "Use GTest" OFF)
-option(USE_ASSIMP "Use ASSIMP library" ON)
+option(USE_ASSIMP "Use ASSIMP library" OFF)
+# option(DO_CLONE_GLTF_SAMPLE_MODELS "Automatically clone the https://github.com/KhronosGroup/glTF-Sample-Models.git to resources folder" OFF)
 option(USE_SDL_INSTEADOF_GLFW "When enabled, SDL will be used instead of SFML" OFF)
 option(USE_PLATFORM_HACKS "speed-up execution in exchange for some non-portable code" OFF)
 
@@ -27,6 +28,7 @@ conan_cmake_run (   CONANFILE conanfile.py
                     OPTIONS
                         "use_sdl = ${USE_SDL_INSTEADOF_GLFW}"
                         "use_gtest = ${BUILD_TESTING}"
+                        "use_assimp = ${USE_ASSIMP}"
 )
 
 add_subdirectory ("src/AT2/")

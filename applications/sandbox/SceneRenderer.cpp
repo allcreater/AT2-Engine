@@ -198,7 +198,7 @@ namespace AT2::Scene
 
         resources.skyLightsPipeline = rf.CreatePipelineState(
                     AT2::PipelineStateDescriptor()
-                    .SetShader(resources.sphereLightsShader)
+                    .SetShader(resources.skyLightsShader)
                     .SetVertexArray(quadMesh->VertexArray)
                     .SetBlendMode({BlendFactor::SourceAlpha, BlendFactor::One})
                     .SetDepthState({CompareFunction::Greater, false, false}));
@@ -268,8 +268,11 @@ namespace AT2::Scene
         if (!cameraUniformBuffer)
             cameraUniformBuffer = resources.sphereLightsShader->CreateAssociatedUniformStorage("CameraBlock");
 
+        VisitAllMeshes(*params.Scene, [&](const MeshRef& mesh) {
+            mesh->GetOrCreateDefaultMaterial().SetUniform("CameraBlock", cameraUniformBuffer->GetBuffer());
+        });
+
         SetupCamera(*cameraUniformBuffer, *params.Camera, &time);
-        renderer.GetStateManager().SetUniform("CameraBlock", cameraUniformBuffer->GetBuffer());
 
 
         // G-buffer pass
@@ -316,6 +319,17 @@ namespace AT2::Scene
             writer.Write("u_matViewProjection", camera.getProjection() * camera.getView());
             writer.Write("u_time", time ? time->getTime().count() : 0.0 );
         });
+    }
+
+    void SceneRenderer::VisitAllMeshes(Scene& scene, const std::function<void(const MeshRef&)>& meshVisitor)
+    {
+        AT2::Scene::FuncNodeVisitor visitor {[&meshVisitor](AT2::Scene::Node& node) {
+            for (auto* meshComponent : node.getComponents<AT2::Scene::MeshComponent>())
+                meshVisitor(meshComponent->getMesh());
+
+            return true;
+        }};
+        scene.GetRoot().Accept(visitor);
     }
 
     void SceneRenderer::DrawQuad(IRenderer& renderer, const IUniformContainer& uniformBuffer) const noexcept

@@ -4,11 +4,12 @@ import shutil, os
 
 class AT2(ConanFile):
    settings = "os", "compiler", "build_type", "arch"
-   requires = ["glm/0.9.9.8", "stb/20200203", "assimp/5.0.1", "glad/0.1.34", "nlohmann_json/3.9.1"]
+   requires = ["glm/0.9.9.8", "stb/20200203", "glad/0.1.34", "nlohmann_json/3.9.1"]
 
    generators = "cmake"
    options = {
       "use_sdl": ["ON", "OFF", "True", "False"],
+      "use_assimp": ["ON", "OFF", "True", "False"],
       "use_gtest": ["ON", "OFF", "True", "False"]
    }
    default_options = {
@@ -25,6 +26,9 @@ class AT2(ConanFile):
 
       if self.options.use_gtest in ["ON", "True"]:
          self.requires("gtest/[>=1.10.0]")
+
+      if self.options.use_assimp in ["ON", "True"]:
+         self.requires("assimp/[>=5.0.1]")
 
    def imports(self):
       self.copy("*.dll", dst="bin", src="bin")

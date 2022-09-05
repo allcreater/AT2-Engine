@@ -102,9 +102,9 @@ private:
                                                                      glm::vec3(500.0f), "SkyLight"));
 
         //m_scene
-        auto matBallNode = MeshLoader::LoadNode(visualizationSystem, "resources/matball.glb");
-        matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform().asMatrix(), {100, 50, 0}), {100, 100, 100}));
-        m_scene.GetRoot().AddChild(std::move(matBallNode));
+        //auto matBallNode = MeshLoader::LoadNode(visualizationSystem, "resources/matball.glb");
+        //matBallNode->SetTransform(glm::scale(glm::translate(matBallNode->GetTransform().asMatrix(), {100, 50, 0}), {100, 100, 100}));
+        //m_scene.GetRoot().AddChild(std::move(matBallNode));
 
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\RiggedFigure\glTF\RiggedFigure.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\CesiumMan\glTF\CesiumMan.gltf)"s);
@@ -114,13 +114,17 @@ private:
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\MetalRoughSpheres\glTF\MetalRoughSpheres.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\SciFiHelmet\glTF\SciFiHelmet.gltf)"s);
 
-        //castle
-        //{
-        //    auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
-        //        visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Sponza\glTF\Sponza.gltf)"s);
-        //    scene->GetTransform().setScale({20.0, 20.0, 20.0}).setPosition({1000, 300, 0});
-        //    m_scene.GetRoot().AddChild(scene);
-        //}
+        try
+        {
+            auto scene = AT2::Resources::GltfMeshLoader::LoadScene(
+                visualizationSystem, R"(../glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf)"s);
+            scene->GetTransform().setScale({20.0, 20.0, 20.0}).setPosition({1000, 500, 0});
+            m_scene.GetRoot().AddChild(scene);
+        }
+        catch (const AT2::AT2IOException& exception)
+        {
+            std::cout << exception.what() << std::endl;
+        }
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\Fox\glTF\Fox.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\BoxAnimated\glTF\BoxAnimated.gltf)"s);
         //auto scene = AT2::Resources::GltfMeshLoader::LoadScene(visualizationSystem, R"(G:\Git\fx-gltf\test\data\glTF-Sample-Models\2.0\InterpolationTest\glTF\InterpolationTest.gltf)"s);
@@ -129,14 +133,13 @@ private:
         //scene->GetTransform().setPosition({0, -20.0, 0});
         //m_scene.GetRoot().AddChild(scene);
 
-        AT2::Scene::FuncNodeVisitor shaderSetter {[&](AT2::Scene::Node& node) {
-            // DepthState {CompareFunction::Less, true, true}
-            
-            for (auto* meshComponent : node.getComponents<AT2::Scene::MeshComponent>())
-                meshComponent->getMesh()->Shader = MeshShader;
-            return true;
-        }};
-        m_scene.GetRoot().Accept(shaderSetter);
+        auto opaqueStateDescriptor = AT2::PipelineStateDescriptor()
+                                         .SetShader(MeshShader)
+                                         .SetDepthState({AT2::CompareFunction::Less, true, true});
+
+        AT2::Scene::SceneRenderer::VisitAllMeshes(m_scene, [&](const AT2::MeshRef& mesh) {
+            mesh->PipelineState = visualizationSystem.GetResourceFactory().CreatePipelineState(opaqueStateDescriptor.SetShader(MeshShader));    
+        });
 
 
         auto terrainNode = AT2::Utils::MakeTerrain(visualizationSystem, glm::vec2(HeightMapTex->GetSize()) / glm::vec2(64));
@@ -144,7 +147,7 @@ private:
             terrainNode->SetTransform(glm::scale(glm::mat4 {1.0}, {10000, 800, 10000}));
 
             auto mesh = terrainNode->getComponent<AT2::Scene::MeshComponent>()->getMesh();
-            mesh->Shader = TerrainShader;
+            mesh->PipelineState = visualizationSystem.GetResourceFactory().CreatePipelineState(opaqueStateDescriptor.SetShader(TerrainShader));
             mesh->GetOrCreateDefaultMaterial().Commit([&](AT2::IUniformsWriter& writer) {
                 writer.Write("u_texNoise", Noise3Tex);
                 writer.Write("u_texHeight", HeightMapTex);
