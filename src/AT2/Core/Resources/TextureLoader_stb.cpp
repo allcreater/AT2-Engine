@@ -23,38 +23,42 @@ using namespace AT2::Resources;
 #ifndef USE_DEVIL
 namespace
 {
-    std::tuple<ExternalTextureFormat, glm::ivec2> DetermineExternalFormat(std::span<const stbi_uc> buffer) 
+    using DescriptorDataPair = std::pair<Texture2D, void*>;
+    DescriptorDataPair LoadFromBuffer(std::span<const stbi_uc> buffer) 
     { 
+        constexpr static std::array layouts_8 {TextureFormat::R8Unorm, TextureFormat::RG8Unorm, TextureFormat::RGBA8Unorm, TextureFormat::RGBA8Unorm};
+        constexpr static std::array layouts_16 {TextureFormat::R16Unorm, TextureFormat::RG16Unorm, TextureFormat::RGBA16Unorm, TextureFormat::RGBA16Unorm};
+        constexpr static std::array layouts_32f {TextureFormat::R32Float, TextureFormat::RG32Float, TextureFormat::RGBA32Float, TextureFormat::RGBA32Float};
+
         assert(buffer.size_bytes() < std::numeric_limits<int>::max());
         const auto intSize = static_cast<int>(buffer.size_bytes());
 
-        ExternalTextureFormat format {TextureLayout::Red, BufferDataType::UByte};
+        int width = 0, height = 0, numOfChannels = 0;
+        stbi_info_from_memory(buffer.data(), intSize, &width, &height, &numOfChannels);
 
-        if (stbi_is_16_bit_from_memory(buffer.data(), intSize))
-        {
-            format.DataType = BufferDataType::UShort;
-        }
-        else if (stbi_is_hdr_from_memory(buffer.data(), intSize))
-        {
-            format.DataType = BufferDataType::Float;
-        }
+        assert(numOfChannels > 0 && numOfChannels <= 4);
 
-        int w = 0, h = 0, c = 0;
-        stbi_info_from_memory(buffer.data(), intSize, &w, &h, &c);
+        return [&]{
+            const auto doRead = [&](const auto& loaderFunc, const auto& layoutLookup)
+            {
+                int readed_width = 0, readed_height = 0;
+                void* readedData = loaderFunc(buffer.data(), buffer.size_bytes(), &readed_width, &readed_height, nullptr, numOfChannels == 3 ? 4 : 0);
 
-        switch (c)
-        {
-            case 1: format.ChannelsLayout = TextureLayout::Red; break;
-            case 2: format.ChannelsLayout = TextureLayout::RG; break;
-            case 3: format.ChannelsLayout = TextureLayout::RGB; break;
-            case 4: format.ChannelsLayout = TextureLayout::RGBA; break;
-            default:
-                throw std::logic_error("unsupported texture channel layout");
-        };
+                assert(readed_height == height && readed_width == width);
 
-        return {format, {w, h}};
+                const auto numMipmaps = static_cast<unsigned>(log(std::max(readed_height, readed_width)) / log(2));
+                return DescriptorDataPair{Texture2D{ layoutLookup[numOfChannels-1], {readed_width, readed_height}, numMipmaps}, readedData};
+            };
+
+            if (stbi_is_16_bit_from_memory(buffer.data(), intSize))
+                return doRead(stbi_load_16_from_memory, layouts_16);
+            else if (stbi_is_hdr_from_memory(buffer.data(), intSize))
+                return doRead(stbi_loadf_from_memory, layouts_32f);
+            else 
+                return doRead(stbi_load_from_memory, layouts_8);
+        }();
     }
-}; // namespace
+} // namespace
 
 TextureRef TextureLoader::LoadTexture(IVisualizationSystem& renderer, const std::filesystem::path& path)
 {
@@ -85,40 +89,15 @@ TextureRef TextureLoader::LoadTexture(IVisualizationSystem& renderer, const std:
 
 TextureRef TextureLoader::LoadTexture(IVisualizationSystem& renderer, std::span<const std::byte> rawData)
 {
-    auto data = Utils::reinterpret_span_cast<const stbi_uc>(rawData);
-    auto [format, size] = DetermineExternalFormat(data);
-    
-    int requiredNumberOfChannels = 0; // default, no transformations
-#ifdef __APPLE__
-    if (format.ChannelsLayout == TextureLayout::RGB)
-    {
-        format.ChannelsLayout = TextureLayout::RGBA;
-        requiredNumberOfChannels = 4;
-    }
-#endif
-    
-    auto parsedData = [&, format=format]() -> void* {
-        int width, height;
-
-        switch (format.DataType)
-        {
-        case BufferDataType::UByte: return stbi_load_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, requiredNumberOfChannels);
-        case BufferDataType::UShort: return stbi_load_16_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, requiredNumberOfChannels);
-        case BufferDataType::Float: return stbi_loadf_from_memory(data.data(), data.size_bytes(), &width, &height, nullptr, requiredNumberOfChannels);
-        }
-
-        return nullptr;
-    }();
+    auto [texDesc, data] = LoadFromBuffer(Utils::reinterpret_span_cast<const stbi_uc>(rawData));
 
     TextureRef result = nullptr;
-    if (parsedData)
+    if (data)
     {
-        const auto numMipmaps = static_cast<unsigned>(log(std::max(size.x, size.y)) / log(2));
-
-        result = renderer.GetResourceFactory().CreateTexture(Texture2D {size, numMipmaps}, format);
-        result->SubImage2D({0, 0}, glm::xy(size), 0, format, parsedData);
+        result = renderer.GetResourceFactory().CreateTexture(texDesc, false);
+        result->SubImage2D({0, 0}, texDesc.getSize(), 0, texDesc.getFormat(), data);
         result->BuildMipmaps();
-        stbi_image_free(parsedData);
+        stbi_image_free(data);
     }
 
     return result;

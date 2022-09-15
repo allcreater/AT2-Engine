@@ -11,7 +11,7 @@ namespace AT2::OpenGL
     public:
         NON_COPYABLE_OR_MOVABLE(GlTexture)
 
-        GlTexture(Texture flavor, GLint internalFormat);
+        GlTexture(Texture flavor);
         ~GlTexture() override;
 
         void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
@@ -25,12 +25,9 @@ namespace AT2::OpenGL
 
         const Texture& GetType() const noexcept override { return m_flavor; }
 
-        void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
-        void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
-        void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
+        void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
+        void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
+        void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
 
         void CopyFromFramebuffer(int _level, glm::ivec2 pos, glm::ivec2 size, glm::ivec3 textureOffset = {});
 

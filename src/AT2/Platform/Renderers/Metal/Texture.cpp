@@ -8,79 +8,34 @@ using namespace AT2::Metal;
 namespace
 {
 
-constexpr size_t GetSizeofType(BufferDataType dataType)
+constexpr size_t GetRowLength(TextureFormat format, size_t width)
 {
-    switch(dataType)
-    {
-        case BufferDataType::Byte:
-        case BufferDataType::UByte:
-            return 1;
-            
-        case BufferDataType::Short:
-        case BufferDataType::UShort:
-        case BufferDataType::HalfFloat:
-            return 2;
-            
-        case BufferDataType::Int:
-        case BufferDataType::UInt:
-        case BufferDataType::Float:
-        case BufferDataType::Fixed:
-            return 4;
-        
-        case BufferDataType::Double:
-            return 8;
-            
-        default:
-            throw AT2Exception("Invalid BufferDataType");
-    }
-}
-
-constexpr size_t GetNumberOfChannelsInLayout(TextureLayout layout)
-{
-    switch(layout)
-    {
-        case TextureLayout::Red:
-            return 1;
-        case TextureLayout::RG:
-            return 2;
-        case TextureLayout::RGB:
-            return 3;
-        case TextureLayout::RGBA:
-            return 4;
-        case TextureLayout::DepthComponent:
-            return 1;
-        case TextureLayout::DepthStencil:
-            throw AT2NotImplementedException("Size computation must be remaked for such layouts");
-    }
-}
-
-constexpr size_t GetRowLength(ExternalTextureFormat format, size_t width)
-{
-    return width * GetSizeofType(format.DataType)*GetNumberOfChannelsInLayout(format.ChannelsLayout);
+    return width * getPixelSize(format);
 }
 
 Texture DetermineNativeTexureType(MTL::Texture* texture)
 {
+    const auto type = Mappings::TranslateTextureFormatBack(texture->pixelFormat());
     switch (texture->textureType())
     {
         case MTL::TextureType1D:
-            return Texture1D{glm::uvec1{static_cast<unsigned int>(texture->width())}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+            return Texture1D{type, glm::uvec1{static_cast<unsigned int>(texture->width())}, static_cast<unsigned int>(texture->mipmapLevelCount())};
         case MTL::TextureType1DArray:
-            return Texture1DArray{glm::uvec2{texture->width(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+            return Texture1DArray{type, glm::uvec2{texture->width(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
         case MTL::TextureType2D:
-            return Texture2D{glm::uvec2{texture->width(), texture->height()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+            return Texture2D{type, glm::uvec2{texture->width(), texture->height()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
         case MTL::TextureType2DArray:
-            return Texture2DArray{glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+            return Texture2DArray{type, glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
         case MTL::TextureType2DMultisample:
-            return Texture2DMultisample{glm::uvec2{texture->width(), texture->height()}, static_cast<uint8_t>(texture->sampleCount()), false};
+            return Texture2DMultisample{type, glm::uvec2{texture->width(), texture->height()}, static_cast<uint8_t>(texture->sampleCount()), false};
         case MTL::TextureTypeCube:
-            return TextureCube{glm::uvec2{texture->width(), texture->height()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+            return TextureCube{type, glm::uvec2{texture->width(), texture->height()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
         case MTL::TextureTypeCubeArray:
-            return TextureCubeArray{glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+            return TextureCubeArray{type, glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
         case MTL::TextureType3D:
-            return Texture3D{glm::uvec3{texture->width(), texture->height(), texture->depth()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
+            return Texture3D{type, glm::uvec3{texture->width(), texture->height(), texture->depth()}, static_cast<unsigned int>(texture->mipmapLevelCount())};
         case MTL::TextureType2DMultisampleArray:
-            return Texture2DMultisampleArray{glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<uint8_t>(texture->sampleCount())};
+            return Texture2DMultisampleArray{type, glm::uvec3{texture->width(), texture->height(), texture->arrayLength()}, static_cast<uint8_t>(texture->sampleCount())};
         case MTL::TextureTypeTextureBuffer:
             throw AT2NotImplementedException("TextureTypeTextureBuffer is not supported");
     }
@@ -88,12 +43,12 @@ Texture DetermineNativeTexureType(MTL::Texture* texture)
 
 }
 
-MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format, bool render_target)
+MtlTexture::MtlTexture(Renderer& renderer, Texture flavor, bool render_target)
 : m_renderer{renderer}
 , m_flavor{std::move(flavor)}
 {
     auto descriptor = ConstructMetalObject<MTL::TextureDescriptor>();
-    descriptor->setPixelFormat(format);
+    descriptor->setPixelFormat(Mappings::TranslateTextureFormat(getTextureFormat(flavor)));
     descriptor->setMipmapLevelCount(1);
     descriptor->setHeight(1);
     descriptor->setDepth(1);
@@ -260,9 +215,9 @@ void MtlTexture::BuildMipmaps()
     commandBuffer->commit();
 }
 
-void MtlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat, const void* data)
+void MtlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, TextureFormat dataFormat, const void* data)
 {
-    if (Mappings::TranslateExternalFormat(dataFormat) != m_texture->pixelFormat())
+    if (Mappings::TranslateTextureFormat(dataFormat) != m_texture->pixelFormat())
         throw AT2TextureException("SubImage's data format must be same as texture's internal format");
     
     assert(std::holds_alternative<Texture1D>(m_flavor));//TODO: properly support all alternatives
@@ -270,9 +225,9 @@ void MtlTexture::SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, Exte
     m_texture->replaceRegion(MTL::Region(offset, size), level, data, 0);
 }
 
-void MtlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat, const void* data)
+void MtlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, TextureFormat dataFormat, const void* data)
 {
-    if (Mappings::TranslateExternalFormat(dataFormat) != m_texture->pixelFormat())
+    if (Mappings::TranslateTextureFormat(dataFormat) != m_texture->pixelFormat())
         throw AT2TextureException("SubImage's data format must be same as texture's internal format");
     
     assert(std::holds_alternative<Texture2D>(m_flavor) || std::holds_alternative<Texture2DRectangle>(m_flavor));
@@ -280,9 +235,9 @@ void MtlTexture::SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, 
     m_texture->replaceRegion(MTL::Region(offset.x, offset.y, size.x, size.y), level, data, GetRowLength(dataFormat, size.x));
 }
 
-void MtlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat, const void* data)
+void MtlTexture::SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, TextureFormat dataFormat, const void* data)
 {
-    if (Mappings::TranslateExternalFormat(dataFormat) != m_texture->pixelFormat())
+    if (Mappings::TranslateTextureFormat(dataFormat) != m_texture->pixelFormat())
         throw AT2TextureException("SubImage's data format must be same as texture's internal format");
     
     assert(std::holds_alternative<Texture3D>(m_flavor));

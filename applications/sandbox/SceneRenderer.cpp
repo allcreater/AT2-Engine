@@ -218,13 +218,14 @@ namespace AT2::Scene
             const auto& rf = renderer.GetResourceFactory();
 
             gBufferFBO = renderer.GetResourceFactory().CreateFrameBuffer();
-            gBufferFBO->SetColorAttachment(0,{ rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8   ), glm::vec4{0.0, 0.0, 1.0, 0.0}});   //FragColor
-            gBufferFBO->SetColorAttachment(1,  rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F ) );                                  //FragNormal
-            gBufferFBO->SetColorAttachment(2,  rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA8   ) );                                  //RoughnessMetallic
-            gBufferFBO->SetDepthAttachment(  { rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::DEPTH32F), 1.0f});
+            //TODO: create textures automatically by descriptor
+            gBufferFBO->SetColorAttachment(0,{ rf.CreateTexture(Texture2D {TextureFormat::RGBA8Unorm,   framebuffer_size}, true), glm::vec4{0.0, 0.0, 1.0, 0.0}});  //FragColor
+            gBufferFBO->SetColorAttachment(1,  rf.CreateTexture(Texture2D {TextureFormat::RGBA32Float,  framebuffer_size}, true ) );                                //FragNormal
+            gBufferFBO->SetColorAttachment(2,  rf.CreateTexture(Texture2D {TextureFormat::RGBA8Unorm,   framebuffer_size}, true ) );                                //RoughnessMetallic
+            gBufferFBO->SetDepthAttachment(  { rf.CreateTexture(Texture2D {TextureFormat::Depth32Float, framebuffer_size}, true), 1.0f});
 
             postProcessFBO = renderer.GetResourceFactory().CreateFrameBuffer();
-            postProcessFBO->SetColorAttachment(0, {rf.CreateTexture(Texture2D {framebuffer_size}, TextureFormats::RGBA32F), glm::vec4{}});
+            postProcessFBO->SetColorAttachment(0, {rf.CreateTexture(Texture2D {TextureFormat::RGBA32Float, framebuffer_size}, true), glm::vec4{}});
             postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment().Texture); //depth is common with previous stage
 
             {

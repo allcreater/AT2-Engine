@@ -14,7 +14,7 @@ namespace AT2::OpenGL41
     public:
         NON_COPYABLE_OR_MOVABLE(GlTexture)
 
-        static std::shared_ptr<GlTexture> Make(GlRenderer& renderer, Texture flavor, GLint internalFormat, const ExternalTextureFormat& format);
+        static std::shared_ptr<GlTexture> Make(GlRenderer& renderer, Texture flavor);
         ~GlTexture() override;
 
         void BindAsImage(unsigned int unit, glm::u32 level, glm::u32 layer, bool isLayered,
@@ -28,12 +28,9 @@ namespace AT2::OpenGL41
 
         const Texture& GetType() const noexcept override { return m_flavor; }
 
-        void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
-        void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
-        void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
+        void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
+        void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
+        void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
 
         void CopyFromFramebuffer(int _level, glm::ivec2 pos, glm::ivec2 size, glm::ivec3 textureOffset = {});
 
@@ -50,8 +47,8 @@ namespace AT2::OpenGL41
         [[nodiscard]] float GetAnisotropy() const noexcept override;
 
     private:
-        GlTexture(GlRenderer& renderer, Texture flavor, GLint internalFormat);
-        void Init(const ExternalTextureFormat& format);
+        GlTexture(GlRenderer& renderer, Texture flavor);
+        void Init();
         //Binds texture to StateManager and returns GetTarget for usability
         GLenum Bind();
         void ReadChannelSizes();

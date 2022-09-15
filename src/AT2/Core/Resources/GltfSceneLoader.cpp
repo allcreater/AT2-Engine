@@ -152,8 +152,8 @@ namespace
             if (auto it = m_textures.find(packedColor); it != m_textures.end())
                 return it->second;
 
-            auto texture = m_renderer.GetResourceFactory().CreateTexture(Texture2D {{1, 1}}, AT2::TextureFormats::RGBA8);
-            texture->SubImage2D({}, {1, 1}, 0, TextureFormats::RGBA8, &packedColor);
+            auto texture = m_renderer.GetResourceFactory().CreateTexture(Texture2D {TextureFormat::RGBA8Unorm, {1, 1}}, false);
+            texture->SubImage2D({}, {1, 1}, 0, TextureFormat::RGBA8Unorm, &packedColor);
 
             m_textures.emplace(packedColor, texture);
 

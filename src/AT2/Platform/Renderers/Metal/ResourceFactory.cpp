@@ -23,12 +23,12 @@ ResourceFactory::ResourceFactory(Renderer& renderer) : m_renderer(renderer)
 
 std::shared_ptr<ITexture> ResourceFactory::CreateTextureFromFramebuffer(const glm::ivec2& pos, const glm::uvec2& size) const
 {
-    return std::make_shared<MtlTexture>(m_renderer, Texture2D{size}, MTL::PixelFormatRGBA8Unorm, false);
+    return std::make_shared<MtlTexture>(m_renderer, Texture2D{TextureFormat::RGBA8Uint, size}, false);
 }
 
-std::shared_ptr<ITexture> ResourceFactory::CreateTexture(const Texture& declaration, ExternalTextureFormat desiredFormat) const
+std::shared_ptr<ITexture> ResourceFactory::CreateTexture(const Texture& declaration, bool renderTarget) const
 {
-    return std::make_shared<MtlTexture>(m_renderer, declaration, Mappings::TranslateExternalFormat(desiredFormat), desiredFormat.RenderTarget);
+    return std::make_shared<MtlTexture>(m_renderer, declaration, renderTarget);
 }
 
 std::shared_ptr<IFrameBuffer> ResourceFactory::CreateFrameBuffer() const

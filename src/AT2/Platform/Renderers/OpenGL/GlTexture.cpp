@@ -37,7 +37,7 @@ void GlTexture::ReadChannelSizes()
 }
 
 
-GlTexture::GlTexture(Texture flavor, GLint internalFormat) : m_flavor(flavor), m_internalFormat(internalFormat)
+GlTexture::GlTexture(Texture flavor) : m_flavor(flavor), m_internalFormat(Mappings::TranslateTextureFormat(getTextureFormat(flavor)))
 {
     glCreateTextures(GetTarget(), 1, &m_id);
 
@@ -169,10 +169,9 @@ float GlTexture::GetAnisotropy() const noexcept
     return m_anisotropy;
 }
 
-void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, ExternalTextureFormat dataFormat, const void* data)
+void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, TextureFormat dataFormat, const void* data)
 {
-    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
+    const auto [externalFormat, externalType] = Mappings::TranslateTextureExternalFormatAndType(dataFormat);
 
     const auto offset = static_cast<GLint> (_offset);
     const auto size = static_cast<GLint> (_size);
@@ -193,12 +192,9 @@ void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, Ex
                            "SubImage1D operation could be performed only at Texture1D target");
 }
 
-void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level, ExternalTextureFormat dataFormat,
+void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level, TextureFormat dataFormat,
                            const void* data)
 {
-    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
-
     const auto offset = glm::ivec2 {_offset};
     const auto size = glm::ivec2 {_size};
     const auto level = static_cast<GLint>(_level);
@@ -211,20 +207,20 @@ void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level
     visit(
         [=, id=m_id]<typename T>(T) {
             if constexpr (is_same_v<T, Texture1DArray> || is_same_v<T, Texture2D>)
+            {
+                const auto [externalFormat, externalType] = Mappings::TranslateTextureExternalFormatAndType(dataFormat);
                 glTextureSubImage2D(id, level, offset.x, offset.y, size.x, size.y, externalFormat,
                                        externalType, data);
+            }
             else
                 throw AT2NotImplementedException("SubImage2D supports only Texture1DArray, Texture2D, TextureCube");
         },
         GetType());
 }
 
-void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level, ExternalTextureFormat dataFormat,
+void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level, TextureFormat dataFormat,
                            const void* data)
 {
-    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
-
     const auto offset = glm::ivec3{_offset};
     const auto size = glm::ivec3{_size};
     const auto level = static_cast<GLint>(_level);
@@ -245,6 +241,7 @@ void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level
                         throw AT2Exception("GlTexture:SubImage3D cube map face must be in range [0-5]");
                 }
 
+                const auto [externalFormat, externalType] = Mappings::TranslateTextureExternalFormatAndType(dataFormat);
                 glTextureSubImage3D(id, level, offset.x, offset.y, offset.z, size.x, size.y, size.z, externalFormat,
                                     externalType, data);
             }

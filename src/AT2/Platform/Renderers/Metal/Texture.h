@@ -12,7 +12,7 @@ namespace AT2::Metal
     public:
         NON_COPYABLE_OR_MOVABLE(MtlTexture)
 
-        MtlTexture(Renderer& renderer, Texture flavor, MTL::PixelFormat format, bool render_target);
+        MtlTexture(Renderer& renderer, Texture flavor, bool render_target);
         MtlTexture(Renderer& renderer, MtlPtr<MTL::Texture> texture);
         ~MtlTexture() override;
 
@@ -27,12 +27,9 @@ namespace AT2::Metal
 
         const Texture& GetType() const noexcept override { return m_flavor; }
 
-        void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
-        void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
-        void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                        const void* data) override;
+        void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
+        void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
+        void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, TextureFormat dataFormat, const void* data) override;
 
         void CopyFromFramebuffer(int _level, glm::ivec2 pos, glm::ivec2 size, glm::ivec3 textureOffset = {});
 

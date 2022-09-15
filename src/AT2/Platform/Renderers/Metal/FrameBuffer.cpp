@@ -145,7 +145,7 @@ void MetalScreenFrameBuffer::PrepareAttachments()
 
     if (auto depthTexture = GetDepthAttachment().Texture; !depthTexture || glm::xy(depthTexture->GetSize()) != GetActualSize())
     {
-        auto newTexture = GetVisualisationSystem().GetResourceFactory().CreateTexture(Texture2D{GetActualSize()}, AT2::ExternalTextureFormat{ AT2::TextureLayout::DepthComponent, AT2::BufferDataType::Float, true });
+        auto newTexture = GetVisualisationSystem().GetResourceFactory().CreateTexture(Texture2D{TextureFormat::Depth32Float, GetActualSize()}, true);
         SetDepthAttachment({std::move(newTexture), 1.0f});
     }
 }

@@ -229,14 +229,11 @@ namespace AT2
 
         //TODO: think how to make better
         // Set data of a Texture1d
-        virtual void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                                const void* data) = 0;
+        virtual void SubImage1D(glm::u32 offset, glm::u32 size, glm::u32 level, TextureFormat dataFormat, const void* data) = 0;
         // Set data of a Texture1DArray and Texture2D
-        virtual void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                                const void* data) = 0;
+        virtual void SubImage2D(glm::uvec2 offset, glm::uvec2 size, glm::u32 level, TextureFormat dataFormat, const void* data) = 0;
         // Set data of a Texture2DArray, Texture3D, TextureCubeArray, TextureCube
-        virtual void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, ExternalTextureFormat dataFormat,
-                                const void* data) = 0;
+        virtual void SubImage3D(glm::uvec3 offset, glm::uvec3 size, glm::u32 level, TextureFormat dataFormat, const void* data) = 0;
     };
 
     class StructuredBuffer;
@@ -400,8 +397,7 @@ namespace AT2
     public:
         [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                                      const glm::uvec2& size) const = 0;
-        [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration,
-                                                                      ExternalTextureFormat desiredFormat) const = 0; //TODO: overload to create immutable textures!
+        [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const Texture& declaration, bool renderTarget) const = 0; //TODO: overload to create immutable textures!
         [[nodiscard]] virtual std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const = 0;
         [[nodiscard]] virtual std::shared_ptr<IVertexArray> CreateVertexArray() const = 0;
 

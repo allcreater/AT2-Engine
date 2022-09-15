@@ -37,12 +37,12 @@ void GlTexture::ReadChannelSizes()
 
     // m_dataSize = static_cast<size_t>(m_size.x) * m_size.y * m_size.z * m_channelSizes.InBytes();
 
-    m_dataSize = 0; // TODO: is it even possible to compute?
+    m_dataSize = static_cast<size_t>(m_size.x) * m_size.y * m_size.z * getPixelSize(getTextureFormat(m_flavor)); // TODO: check correctness
 }
 
 namespace 
 {
-    void glTexStorage2D_internal(GLenum target, GLsizei levels, GLint internalFormat, GLint width, GLint height, const ExternalTextureFormat& format)
+    void glTexStorage2D_internal(GLenum target, GLsizei levels, GLint internalFormat, GLint width, GLint height, TextureFormat format)
     {
         if (glad_glTexStorage2D)
         {
@@ -50,15 +50,16 @@ namespace
             return;
         }
 
+        const auto [externalFormat, externalType] = Mappings::TranslateTextureExternalFormatAndType(format);
         for (GLint i = 0; i < levels; i++)
         {
-            glTexImage2D(target, i, internalFormat, width, height, 0, Mappings::TranslateExternalFormat(format.ChannelsLayout), Mappings::TranslateExternalType(format.DataType), nullptr);
+            glTexImage2D(target, i, internalFormat, width, height, 0, externalFormat, externalType, nullptr);
             width = std::max(1, (width / 2));
             height = std::max(1, (height / 2));
         }
     }   
     
-    void glTexStorage3D_internal(GLenum target, GLsizei levels, GLint internalFormat, GLint width, GLint height, GLint depth, const ExternalTextureFormat& format)
+    void glTexStorage3D_internal(GLenum target, GLsizei levels, GLint internalFormat, GLint width, GLint height, GLint depth, TextureFormat format)
     {
         if (glad_glTexStorage3D)
         {
@@ -66,9 +67,10 @@ namespace
             return;
         }
 
+        const auto [externalFormat, externalType] = Mappings::TranslateTextureExternalFormatAndType(format);
         for (GLint i = 0; i < levels; i++)
         {
-            glTexImage3D(target, i, internalFormat, width, height, depth, 0, Mappings::TranslateExternalFormat(format.ChannelsLayout), Mappings::TranslateExternalType(format.DataType), nullptr);
+            glTexImage3D(target, i, internalFormat, width, height, depth, 0, externalFormat, externalType, nullptr);
 
             width = std::max(1, (width / 2));
             height = std::max(1, (height / 2));
@@ -77,27 +79,28 @@ namespace
     }
 }
 
-std::shared_ptr<GlTexture> GlTexture::Make(GlRenderer& renderer, Texture flavor, GLint internalFormat, const ExternalTextureFormat& format)
+std::shared_ptr<GlTexture> GlTexture::Make(GlRenderer& renderer, Texture flavor)
 {
-    std::shared_ptr<GlTexture> texture{new GlTexture(renderer, flavor, internalFormat)};
-    texture->Init(format);
+    std::shared_ptr<GlTexture> texture{new GlTexture(renderer, flavor)};
+    texture->Init();
 
     return texture;
 }
 
-GlTexture::GlTexture(GlRenderer& renderer, Texture flavor, GLint internalFormat)
+GlTexture::GlTexture(GlRenderer& renderer, Texture flavor)
  : m_stateManager{Utils::safe_dereference_cast<GlStateManager&>(&renderer.GetStateManager())}
  , m_flavor(flavor)
- , m_internalFormat(internalFormat)
+ , m_internalFormat(Mappings::TranslateTextureFormat(getTextureFormat(flavor)))
 {
     glGenTextures(1, &m_id);
     if (m_id == 0)
         throw AT2TextureException("Can't create new texture");
 }
 
-void GlTexture::Init(const ExternalTextureFormat& format)
+void GlTexture::Init()
 {
     const auto target = GetTarget();
+    const auto format = getTextureFormat(m_flavor);
     m_stateManager.DoBind(shared_from_this());
 
     //TODO: test all cases
@@ -240,10 +243,9 @@ float GlTexture::GetAnisotropy() const noexcept
     return m_anisotropy;
 }
 
-void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, ExternalTextureFormat dataFormat, const void* data)
+void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, TextureFormat dataFormat, const void* data)
 {
-    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
+    const auto [externalFormat, externalType] = Mappings::TranslateTextureExternalFormatAndType(dataFormat);
 
     const auto offset = static_cast<GLint> (_offset);
     const auto size = static_cast<GLint> (_size);
@@ -264,12 +266,9 @@ void GlTexture::SubImage1D(glm::u32 _offset, glm::u32 _size, glm::u32 _level, Ex
                            "SubImage1D operation could be performed only at Texture1D target");
 }
 
-void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level, ExternalTextureFormat dataFormat,
+void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level, TextureFormat dataFormat,
                            const void* data)
 {
-    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
-
     const auto offset = glm::ivec2 {_offset};
     const auto size = glm::ivec2 {_size};
     const auto level = static_cast<GLint>(_level);
@@ -283,6 +282,7 @@ void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level
         [=, id=m_id]<typename T>(T) {
             if constexpr (is_same_v<T, Texture1DArray> || is_same_v<T, Texture2D>)
             {
+                const auto [externalFormat, externalType] = Mappings::TranslateTextureExternalFormatAndType(dataFormat);
                 glTexSubImage2D(Bind(), level, offset.x, offset.y, size.x, size.y, externalFormat,
                                        externalType, data);
             }
@@ -292,12 +292,9 @@ void GlTexture::SubImage2D(glm::uvec2 _offset, glm::uvec2 _size, glm::u32 _level
         GetType());
 }
 
-void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level, ExternalTextureFormat dataFormat,
+void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level, TextureFormat dataFormat,
                            const void* data)
 {
-    const auto externalFormat = Mappings::TranslateExternalFormat(dataFormat.ChannelsLayout);
-    const auto externalType = Mappings::TranslateExternalType(dataFormat.DataType);
-
     const auto offset = glm::ivec3{_offset};
     const auto size = glm::ivec3{_size};
     const auto level = static_cast<GLint>(_level);
@@ -318,6 +315,7 @@ void GlTexture::SubImage3D(glm::uvec3 _offset, glm::uvec3 _size, glm::u32 _level
                         throw AT2Exception("GlTexture:SubImage3D cube map face must be in range [0-5]");
                 }
 
+                const auto [externalFormat, externalType] = Mappings::TranslateTextureExternalFormatAndType(dataFormat);
                 glTexSubImage3D(Bind(), level, offset.x, offset.y, offset.z, size.x, size.y, size.z, externalFormat,
                                     externalType, data);
             }

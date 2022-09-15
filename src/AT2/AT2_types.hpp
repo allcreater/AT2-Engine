@@ -217,16 +217,6 @@ namespace AT2
         DepthStencil
     };
 
-    //pair TextureLayout + BufferDataType is bad abstraction(because of asymmetric formats like 10_10_10_2 and DepthStencil24_8) 
-    //TODO: Better to make PixelFormat enum or something like this 
-    struct ExternalTextureFormat
-    {
-        TextureLayout ChannelsLayout;
-        BufferDataType DataType;
-        //TODO: flags ? Also there should be usage options like for buffers
-        bool RenderTarget = false;
-        bool PreferSRGB = false;
-    };
 
     enum class TextureWrapMode
     {
@@ -287,14 +277,6 @@ namespace AT2
         ReadWrite = Read | Write
     };
     using BufferOperation = EnumFlags<BufferOperationFlags>;
-
-    namespace TextureFormats
-    {
-        constexpr auto RGBA8 = ExternalTextureFormat{ TextureLayout::RGBA, BufferDataType::UByte };
-        constexpr auto RGBA16F = ExternalTextureFormat{ TextureLayout::RGBA, BufferDataType::HalfFloat };
-        constexpr auto RGBA32F = ExternalTextureFormat{ TextureLayout::RGBA, BufferDataType::Float };
-        constexpr auto DEPTH32F = ExternalTextureFormat{ TextureLayout::DepthComponent, BufferDataType::Float };
-    }
 
     namespace Primitives
     {

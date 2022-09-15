@@ -22,23 +22,105 @@ namespace AT2::Mappings
         return 0;
     }
 
-    constexpr GLenum TranslateExternalFormat(TextureLayout layout)
+    constexpr GLint TranslateTextureFormat(TextureFormat format)
     {
-        switch (layout)
+        switch (format)
         {
-        case TextureLayout::Red: return GL_RED;
-        case TextureLayout::RG: return GL_RG;
-        case TextureLayout::RGB: return GL_RGB;
-        case TextureLayout::RGBA: return GL_RGBA;
-        case TextureLayout::DepthComponent: return GL_DEPTH_COMPONENT;
-        case TextureLayout::DepthStencil: return GL_DEPTH_STENCIL;
+        case TextureFormat::R8Snorm:        return GL_R8;
+        case TextureFormat::R8Unorm:        return GL_R8;
+        case TextureFormat::R16Snorm:       return GL_R16;
+        case TextureFormat::R16Unorm:       return GL_R16;
+        case TextureFormat::R16Sint:        return GL_R16I;
+        case TextureFormat::R16Uint:        return GL_R16UI;
+        case TextureFormat::R32Sint:        return GL_R32I;
+        case TextureFormat::R32Uint:        return GL_R32UI;
+        case TextureFormat::R16Float:       return GL_R16F;
+        case TextureFormat::R32Float:       return GL_R32F;
+        case TextureFormat::RG8Snorm:       return GL_RG8;
+        case TextureFormat::RG8Unorm:       return GL_RG8;
+        case TextureFormat::RG16Snorm:      return GL_RG16;
+        case TextureFormat::RG16Unorm:      return GL_RG16;
+        case TextureFormat::RG16Sint:       return GL_RG16I;
+        case TextureFormat::RG16Uint:       return GL_RG16UI;
+        case TextureFormat::RG32Sint:       return GL_RG32I;
+        case TextureFormat::RG32Uint:       return GL_RG32UI;
+        case TextureFormat::RG16Float:      return GL_RG16F;
+        case TextureFormat::RG32Float:      return GL_RG32F;
+        case TextureFormat::RGBA8Snorm:     return GL_RGBA8;
+        case TextureFormat::RGBA8Unorm:     return GL_RGBA8;
+        case TextureFormat::RGBA8Unorm_sRGB:return GL_SRGB8_ALPHA8;
+        case TextureFormat::BGRA8Unorm:     return GL_RGBA8;
+        case TextureFormat::BGRA8Unorm_sRGB:return GL_SRGB8_ALPHA8;
+        case TextureFormat::RGBA16Snorm:    return GL_RGBA16;
+        case TextureFormat::RGBA16Unorm:    return GL_RGBA16;
+        case TextureFormat::RGBA8Sint:      return GL_RGBA8I;
+        case TextureFormat::RGBA8Uint:      return GL_RGBA8UI;
+        case TextureFormat::RGBA16Sint:     return GL_RGBA16I;
+        case TextureFormat::RGBA16Uint:     return GL_RGBA16UI;
+        case TextureFormat::RGBA32Sint:     return GL_RGBA32I;
+        case TextureFormat::RGBA32Uint:     return GL_RGBA32UI;
+        case TextureFormat::RGBA16Float:    return GL_RGBA16F;
+        case TextureFormat::RGBA32Float:    return GL_RGBA32F;
+        case TextureFormat::Depth16Unorm:   return GL_DEPTH_COMPONENT16;
+        case TextureFormat::Depth32Float:   return GL_DEPTH_COMPONENT32F;
+        case TextureFormat::Depth24Unorm_Stencil8: return GL_DEPTH24_STENCIL8;
+        case TextureFormat::Depth32Float_Stencil8: return GL_DEPTH32F_STENCIL8;
         }
 
         assert(false);
         return 0;
     }
 
-    constexpr GLenum TranslateExternalType(BufferDataType type)
+    constexpr std::pair<GLenum, GLenum> TranslateTextureExternalFormatAndType(TextureFormat format)
+    {
+        switch (format)
+        {
+        case TextureFormat::R8Snorm:        return {GL_RED, GL_BYTE};
+        case TextureFormat::R8Unorm:        return {GL_RED, GL_UNSIGNED_BYTE};
+        case TextureFormat::R16Snorm:       return {GL_RED, GL_BYTE};
+        case TextureFormat::R16Unorm:       return {GL_RED, GL_UNSIGNED_BYTE};
+        case TextureFormat::R16Sint:        return {GL_RED_INTEGER, GL_SHORT};
+        case TextureFormat::R16Uint:        return {GL_RED_INTEGER, GL_UNSIGNED_SHORT};
+        case TextureFormat::R32Sint:        return {GL_RED_INTEGER, GL_INT};
+        case TextureFormat::R32Uint:        return {GL_RED_INTEGER, GL_UNSIGNED_INT};
+        case TextureFormat::R16Float:       return {GL_RED, GL_HALF_FLOAT};
+        case TextureFormat::R32Float:       return {GL_RED, GL_FLOAT};
+        case TextureFormat::RG8Snorm:       return {GL_RG, GL_BYTE};
+        case TextureFormat::RG8Unorm:       return {GL_RG, GL_UNSIGNED_BYTE};
+        case TextureFormat::RG16Snorm:      return {GL_RG, GL_BYTE};
+        case TextureFormat::RG16Unorm:      return {GL_RG, GL_UNSIGNED_BYTE};
+        case TextureFormat::RG16Sint:       return {GL_RG_INTEGER, GL_SHORT};
+        case TextureFormat::RG16Uint:       return {GL_RG_INTEGER, GL_UNSIGNED_SHORT};
+        case TextureFormat::RG32Sint:       return {GL_RG_INTEGER, GL_INT};
+        case TextureFormat::RG32Uint:       return {GL_RG_INTEGER, GL_UNSIGNED_INT};
+        case TextureFormat::RG16Float:      return {GL_RG, GL_HALF_FLOAT};
+        case TextureFormat::RG32Float:      return {GL_RG, GL_FLOAT};
+        case TextureFormat::RGBA8Snorm:     return {GL_RGBA, GL_BYTE};
+        case TextureFormat::RGBA8Unorm:     return {GL_RGBA, GL_UNSIGNED_BYTE};
+        case TextureFormat::RGBA8Unorm_sRGB:return {GL_RGBA, GL_UNSIGNED_BYTE};
+        case TextureFormat::BGRA8Unorm:     return {GL_BGRA, GL_UNSIGNED_BYTE};
+        case TextureFormat::BGRA8Unorm_sRGB:return {GL_BGRA, GL_UNSIGNED_BYTE};
+        case TextureFormat::RGBA16Snorm:    return {GL_RGBA, GL_SHORT};
+        case TextureFormat::RGBA16Unorm:    return {GL_RGBA, GL_UNSIGNED_SHORT};
+        case TextureFormat::RGBA8Sint:      return {GL_RGBA_INTEGER, GL_BYTE};
+        case TextureFormat::RGBA8Uint:      return {GL_RGBA_INTEGER, GL_UNSIGNED_BYTE};
+        case TextureFormat::RGBA16Sint:     return {GL_RGBA_INTEGER, GL_SHORT};
+        case TextureFormat::RGBA16Uint:     return {GL_RGBA_INTEGER, GL_UNSIGNED_SHORT};
+        case TextureFormat::RGBA32Sint:     return {GL_RGBA_INTEGER, GL_INT};
+        case TextureFormat::RGBA32Uint:     return {GL_RGBA_INTEGER, GL_UNSIGNED_INT};
+        case TextureFormat::RGBA16Float:    return {GL_RGBA, GL_HALF_FLOAT};
+        case TextureFormat::RGBA32Float:    return {GL_RGBA, GL_FLOAT};
+        case TextureFormat::Depth16Unorm:   return {GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT};
+        case TextureFormat::Depth32Float:   return {GL_DEPTH_COMPONENT, GL_FLOAT};
+        case TextureFormat::Depth24Unorm_Stencil8: return {GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8};
+        case TextureFormat::Depth32Float_Stencil8: return {GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV};
+        }
+
+        assert(false);
+        return {0, 0};
+    }
+
+constexpr GLenum TranslateExternalType(BufferDataType type)
     {
         switch (type)
         {

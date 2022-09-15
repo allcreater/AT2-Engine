@@ -22,8 +22,7 @@ namespace AT2::OpenGL
     public:
         std::shared_ptr<ITexture> CreateTextureFromFramebuffer(const glm::ivec2& pos,
                                                                const glm::uvec2& size) const override;
-        std::shared_ptr<ITexture> CreateTexture(const Texture& declaration,
-                                                ExternalTextureFormat desiredFormat) const override;
+        std::shared_ptr<ITexture> CreateTexture(const Texture& declaration, bool renderTarget) const override;
         std::shared_ptr<IFrameBuffer> CreateFrameBuffer() const override;
         std::shared_ptr<IVertexArray> CreateVertexArray() const override;
         std::shared_ptr<IBuffer> CreateBuffer(VertexBufferType type) const override;
