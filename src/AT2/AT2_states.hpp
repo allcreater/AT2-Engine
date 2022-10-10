@@ -43,18 +43,31 @@ namespace AT2
         OneMinusConstantAlpha
     };
 
-    //TODO: support separate blend functions, blend equations, per-buffer blending
+    //TODO: support separate blend functions, blend equations
     struct BlendMode
     {
         BlendFactor SourceFactor = BlendFactor::One;
         BlendFactor DestinationFactor = BlendFactor::Zero;
         bool Enabled = true;
+
+        constexpr auto operator <=> (const BlendMode& ) const = default;
     };
 
     struct BlendColor
     {
         glm::vec4 Color {0.0f};
     };
+
+    enum class ColorWriteFlags : std::uint8_t
+    {
+        None    = 0,
+        Red     = 1 << 0,
+        Green   = 1 << 2,
+        Blue    = 1 << 3,
+        Alpha   = 1 << 4,
+        All     = Red | Green | Blue | Alpha,
+    };
+    using ColorMask = EnumFlags<ColorWriteFlags>;
 
     struct FaceCullMode
     {

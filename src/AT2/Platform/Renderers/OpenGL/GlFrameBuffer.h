@@ -18,12 +18,13 @@ namespace AT2::OpenGL
         ~GlFrameBuffer() override;
 
     public:
-        void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) override;
+        void SetColorAttachment(unsigned int attachmentNumber, std::shared_ptr<ITexture> attachment) override;
         [[nodiscard]] ColorAttachment GetColorAttachment(unsigned int attachmentNumber) const override;
         void SetDepthAttachment(DepthAttachment attachment) override;
         [[nodiscard]] DepthAttachment GetDepthAttachment() const override;
 
         void SetClearColor(std::optional<glm::vec4> color) override;
+        void SetClearColor(unsigned int attachmentNumber, std::optional<glm::vec4> color) override;
         void SetClearDepth(std::optional<float> depth) override;
 
         [[nodiscard]] glm::uvec2 GetActualSize() const noexcept override { return m_size; }
@@ -50,12 +51,13 @@ namespace AT2::OpenGL
 
         GlScreenFrameBuffer(GlRenderer &renderer);
 
-        void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) override;
+        void SetColorAttachment(unsigned int attachmentNumber, std::shared_ptr<ITexture> attachment) override;
         [[nodiscard]] ColorAttachment GetColorAttachment(unsigned int attachmentNumber) const override;
         void SetDepthAttachment(DepthAttachment attachment) override;
         [[nodiscard]] DepthAttachment GetDepthAttachment() const override;
 
         void SetClearColor(std::optional<glm::vec4> color) override;
+        void SetClearColor(unsigned int attachmentNumber, std::optional<glm::vec4> color) override;
         void SetClearDepth(std::optional<float> depth) override;
 
         [[nodiscard]] glm::uvec2 GetActualSize() const override;

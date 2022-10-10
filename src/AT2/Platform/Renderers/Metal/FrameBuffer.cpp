@@ -62,16 +62,15 @@ FrameBuffer::FrameBuffer(Renderer& renderer, size_t maxAttachments)
 {
 }
 
-void FrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) 
+void FrameBuffer::SetColorAttachment(unsigned int attachmentNumber, std::shared_ptr<ITexture> attachment) 
 {
     if (attachmentNumber >= m_colorAttachments.size())
         throw AT2BufferException( "FrameBuffer: unsupported attachment number");
     
     auto* colorAttachment = m_renderPassDescriptor->colorAttachments()->object(attachmentNumber);
-    SetAttachmentClearColor(colorAttachment, attachment.ClearColor);
-    SetAttachmentTexture(colorAttachment, attachment.Texture.get());
+    SetAttachmentTexture(colorAttachment, attachment.get());
     
-    m_colorAttachments[attachmentNumber] = std::move(attachment);
+    m_colorAttachments[attachmentNumber].Texture = std::move(attachment);
 }
 
 IFrameBuffer::ColorAttachment FrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
@@ -96,10 +95,16 @@ IFrameBuffer::DepthAttachment FrameBuffer::GetDepthAttachment() const
 void FrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
 {
     for (size_t i = 0; i < m_colorAttachments.size(); ++i)
-    {
-        SetAttachmentClearColor(m_renderPassDescriptor->colorAttachments()->object(i), color);
-        m_colorAttachments[i].ClearColor = color;
-    }
+        SetClearColor(i, color);
+}
+
+void FrameBuffer::SetClearColor(unsigned int attachmentNumber, std::optional<glm::vec4> color) 
+{
+    if (attachmentNumber >= m_colorAttachments.size())
+        throw std::out_of_range("attachmentNumber");
+
+    SetAttachmentClearColor(m_renderPassDescriptor->colorAttachments()->object(attachmentNumber), color);
+    m_colorAttachments[attachmentNumber].ClearColor = std::move(color);
 }
 
 void FrameBuffer::SetClearDepth(std::optional<float> depth) 
@@ -139,8 +144,7 @@ void MetalScreenFrameBuffer::PrepareAttachments()
     
     {
         auto texture = std::make_shared<MtlTexture>(GetVisualisationSystem(), m_drawable->texture());
-        auto oldAttachment = GetColorAttachment(0);
-        SetColorAttachment(0, ColorAttachment{std::move(texture), oldAttachment.ClearColor});
+        SetColorAttachment(0, std::move(texture));
     }
 
     if (auto depthTexture = GetDepthAttachment().Texture; !depthTexture || glm::xy(depthTexture->GetSize()) != GetActualSize())

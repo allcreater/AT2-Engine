@@ -122,6 +122,7 @@ void GlStateManager::DoBind( IVertexArray& vertexArray )
     }
 }
 
+// TODO: track states
 void GlStateManager::ApplyPipelineState(const std::shared_ptr<IPipelineState>& state)
 {
     auto& stateDescriptor = Utils::safe_dereference_cast<PipelineState&>(state).GetDescriptor();
@@ -138,14 +139,39 @@ void GlStateManager::ApplyPipelineState(const std::shared_ptr<IPipelineState>& s
         glDepthFunc(AT2::Mappings::TranslateCompareFunction(state.CompareFunc));
     }();
     
-    [state = stateDescriptor.GetBlendMode()](){
-        SetGlState(GL_BLEND, state.Enabled);
-        if (!state.Enabled)
-            return;
+    if (stateDescriptor.AttachmentDescriptorsAreSame()) //TODO: OR OpenGL ES?
+    {
+        [desc = stateDescriptor.GetAttachmentDescriptor(0)](){
+            auto colorMask = desc.Mask;
+            glColorMask(colorMask.Contains(ColorWriteFlags::Red), colorMask.Contains(ColorWriteFlags::Green), colorMask.Contains(ColorWriteFlags::Blue), colorMask.Contains(ColorWriteFlags::Alpha));
 
-        glBlendFunc(Mappings::TranslateBlendFactor(state.SourceFactor),
-                Mappings::TranslateBlendFactor(state.DestinationFactor));
-    }();
+            SetGlState(GL_BLEND, desc.BlendMode.Enabled);
+            if (!desc.BlendMode.Enabled)
+                return;
+
+            glBlendFunc(Mappings::TranslateBlendFactor(desc.BlendMode.SourceFactor),
+                    Mappings::TranslateBlendFactor(desc.BlendMode.DestinationFactor));
+        }();
+    }
+    else
+    {
+        bool isBlendPresent = false;
+        for (size_t fbIndex = 0; fbIndex < stateDescriptor.GetVertexArrayDescriptor().GetVertexAttributeLayouts().size(); ++fbIndex)
+        {
+            auto colorDesc = stateDescriptor.GetAttachmentDescriptor(fbIndex);
+            if (colorDesc.BlendMode.Enabled)
+            {
+                isBlendPresent = true;
+                glBlendFunci(fbIndex, Mappings::TranslateBlendFactor(colorDesc.BlendMode.SourceFactor), Mappings::TranslateBlendFactor(colorDesc.BlendMode.DestinationFactor));
+            }
+            else
+                glBlendFunci(fbIndex, GL_ZERO, GL_ONE);
+
+            glColorMaski(fbIndex, colorDesc.Mask.Contains(ColorWriteFlags::Red), colorDesc.Mask.Contains(ColorWriteFlags::Green), colorDesc.Mask.Contains(ColorWriteFlags::Blue), colorDesc.Mask.Contains(ColorWriteFlags::Alpha));
+        }
+
+        SetGlState(GL_BLEND, isBlendPresent);
+    }
 
 }
 

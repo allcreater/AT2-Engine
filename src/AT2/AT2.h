@@ -145,15 +145,16 @@ namespace AT2
         using RenderFunc = std::function<void(IRenderer&)>;
 
     public:
-        //TODO: the Builder pattern, or encapsulate params in special descriptor class?
+        //TODO: move clear colors to Render()'s params, make format immutable according to descriptor
 
-        virtual void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) = 0;
+        virtual void SetColorAttachment(unsigned int attachmentNumber, std::shared_ptr<ITexture> attachment) = 0;
         [[nodiscard]] virtual ColorAttachment GetColorAttachment(unsigned int attachmentNumber) const = 0;
         virtual void SetDepthAttachment(DepthAttachment attachment) = 0;
         [[nodiscard]] virtual DepthAttachment GetDepthAttachment() const = 0;
 
-        // set clear color for all attachments
         virtual void SetClearColor(std::optional<glm::vec4> color) = 0;
+        virtual void SetClearColor(unsigned int attachmentNumber, std::optional<glm::vec4> color) = 0;
+
         virtual void SetClearDepth(std::optional<float> depth) = 0;
 
         //TODO: support stencil attachment
@@ -316,29 +317,98 @@ namespace AT2
         [[nodiscard]] virtual unsigned int GetMaxNumberOfColorAttachments() const = 0;
     };
 
-    //TODO: move to separate header?
+    class FramebufferDescriptor
+    {
+    public:
+        FramebufferDescriptor() = default;
+
+        struct ColorAttachmentDescriptor
+        {
+            TextureFormat DesiredFormat;
+        };
+
+        FramebufferDescriptor& Attachment(TextureFormat format)
+        {
+            m_colorAttachmentDescriptors.push_back({format});
+            return *this;
+        }
+
+        FramebufferDescriptor& DepthAttachment(TextureFormat format)
+        {
+            assert(!m_depthAttachmentDescriptor.has_value());
+            m_depthAttachmentDescriptor = format;
+
+            return *this;
+        }
+
+        std::span<const ColorAttachmentDescriptor> GetColorAttachmentDescriptors() const 
+        {
+            return m_colorAttachmentDescriptors;
+        }
+
+        std::optional<TextureFormat> GetDepthAttachmentDescriptor() const
+        {
+            return m_depthAttachmentDescriptor;
+        }
+
+        bool IsValid() const { return !m_colorAttachmentDescriptors.empty(); }
+
+    private:
+        std::vector<ColorAttachmentDescriptor> m_colorAttachmentDescriptors;
+        std::optional<TextureFormat> m_depthAttachmentDescriptor;
+    };
+
     class PipelineStateDescriptor
     {
     public:
+        struct ColorAttachmentDescriptor
+        {
+            BlendMode BlendMode;
+            ColorMask Mask = ColorWriteFlags::All;
+        };
+
         PipelineStateDescriptor() = default;
 
         //TODO: think about removing Shader and VAO concepts, probably it should be part of Pipeline itself
         PipelineStateDescriptor& SetShader(std::shared_ptr<IShaderProgram> shader) { m_shader = std::move(shader); return *this; }
+        [[deprecated]]
         PipelineStateDescriptor& SetVertexArray(std::shared_ptr<IVertexArray> vertexArray) { return SetVertexArrayDescriptor(vertexArray->GetVertexDescriptor()); }
         PipelineStateDescriptor& SetVertexArrayDescriptor(const VertexArrayDescriptor& vertexArrayDescriptor) { m_vertexArrayDescriptor = vertexArrayDescriptor; return *this; }
         PipelineStateDescriptor& SetDepthState(DepthState depthState) { m_depthState = depthState; return *this; }
-        PipelineStateDescriptor& SetBlendMode(BlendMode blendMode) { m_blendMode = blendMode; return *this; }
-
-        std::shared_ptr<IShaderProgram>  GetShader() const { return m_shader; }
+        
+        PipelineStateDescriptor& SetFramebufferDescriptor(FramebufferDescriptor descriptor) { m_framebufferDescriptor = descriptor; return *this; }
+        PipelineStateDescriptor& SetBlendMode(BlendMode blendMode) { m_commonColorAttachmentProperties.BlendMode = blendMode; return *this; }
+        PipelineStateDescriptor& SetColorMask(ColorMask colorMask) { m_commonColorAttachmentProperties.Mask = colorMask; return *this; }
+        PipelineStateDescriptor& OverrideAttachmentParams(size_t attachmentIndex, ColorAttachmentDescriptor descriptor) 
+        {
+            assert(attachmentIndex <= 16);
+            m_framebufferAttachmentOverrides.resize(std::max(m_framebufferAttachmentOverrides.size(), attachmentIndex+1));
+            m_framebufferAttachmentOverrides[attachmentIndex] = std::move(descriptor);
+            return *this; 
+        }
+        
+        std::shared_ptr<IShaderProgram> GetShader() const { return m_shader; }
         const VertexArrayDescriptor& GetVertexArrayDescriptor() const { return m_vertexArrayDescriptor; }
         DepthState GetDepthState() const { return m_depthState; }
-        BlendMode GetBlendMode() const { return m_blendMode; }
+        const FramebufferDescriptor& GetFramebufferDescriptor() const { return m_framebufferDescriptor; }
+
+        bool AttachmentDescriptorsAreSame() const { return m_framebufferAttachmentOverrides.size() > 0; }
+        ColorAttachmentDescriptor GetAttachmentDescriptor(size_t attachmentIndex) const
+        {
+            if (attachmentIndex >= m_framebufferAttachmentOverrides.size())
+                return m_commonColorAttachmentProperties;
+
+            return m_framebufferAttachmentOverrides[attachmentIndex].value_or(m_commonColorAttachmentProperties);
+        }
 
     private:
         std::shared_ptr<IShaderProgram> m_shader;
         VertexArrayDescriptor m_vertexArrayDescriptor;
         DepthState m_depthState;
-        BlendMode m_blendMode;
+        FramebufferDescriptor m_framebufferDescriptor;
+
+        ColorAttachmentDescriptor m_commonColorAttachmentProperties;
+        std::vector<std::optional<ColorAttachmentDescriptor>> m_framebufferAttachmentOverrides{ColorAttachmentDescriptor{}}; // first descriptor is always available
     };
 
     //TODO: should not be an interface?
@@ -473,6 +543,22 @@ namespace AT2
              0)...});
 
         return vertexArray;
+    }
+
+    inline std::shared_ptr<IFrameBuffer> MakeFrameBuffer(const IResourceFactory& factory,
+                                                         const FramebufferDescriptor& descriptor, glm::uvec2 size)
+    {
+        auto framebuffer = factory.CreateFrameBuffer();
+        if (!framebuffer)
+            return nullptr;
+
+        if (auto depthAttachment = descriptor.GetDepthAttachmentDescriptor())
+            framebuffer->SetDepthAttachment(factory.CreateTexture(Texture2D{*depthAttachment, size}, true));
+
+        for (size_t index = 0; const auto& colorTarget: descriptor.GetColorAttachmentDescriptors())
+            framebuffer->SetColorAttachment(index++, factory.CreateTexture(Texture2D{colorTarget.DesiredFormat, size}, true));
+
+        return framebuffer;
     }
 
 } // namespace AT2

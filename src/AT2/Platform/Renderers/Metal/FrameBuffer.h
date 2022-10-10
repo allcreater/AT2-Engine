@@ -16,11 +16,12 @@ namespace AT2::Metal
         FrameBuffer(Renderer& renderer, size_t maxAttachments);
 
     public:
-        void SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment) override;
+        void SetColorAttachment(unsigned int attachmentNumber, std::shared_ptr<ITexture> attachment) override;
         [[nodiscard]] ColorAttachment GetColorAttachment(unsigned int attachmentNumber) const override;
         void SetDepthAttachment(DepthAttachment attachment) override;
         [[nodiscard]] DepthAttachment GetDepthAttachment() const override;
 
+        void SetClearColor(unsigned int attachmentNumber, std::optional<glm::vec4> color) override;
         void SetClearColor(std::optional<glm::vec4> color) override;
         void SetClearDepth(std::optional<float> depth) override;
 

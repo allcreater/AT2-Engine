@@ -182,17 +182,21 @@ namespace AT2::Scene
         lightMesh = Utils::MakeSphere(visualizationSystem, {32, 16});
         quadMesh = Utils::MakeFullscreenQuadMesh(visualizationSystem);
 
+        const auto lightFboDescriptor = FramebufferDescriptor{}
+            .Attachment(TextureFormat::RGBA32Float)
+            .DepthAttachment(TextureFormat::Depth32Float);
+
         resources.postprocessPipeline = rf.CreatePipelineState(
                     AT2::PipelineStateDescriptor()
                     .SetShader(resources.postprocessShader)
                     .SetVertexArray(quadMesh->VertexArray)
-                    .SetBlendMode({})
                     .SetDepthState({}));
 
         resources.sphereLightsPipeline = rf.CreatePipelineState(
                     AT2::PipelineStateDescriptor()
                     .SetShader(resources.sphereLightsShader)
                     .SetVertexArray(lightMesh->VertexArray)
+                    .SetFramebufferDescriptor(lightFboDescriptor)
                     .SetBlendMode({BlendFactor::SourceAlpha, BlendFactor::One})
                     .SetDepthState({CompareFunction::Greater, true, false})); //false, false?
 
@@ -200,6 +204,7 @@ namespace AT2::Scene
                     AT2::PipelineStateDescriptor()
                     .SetShader(resources.skyLightsShader)
                     .SetVertexArray(quadMesh->VertexArray)
+                    .SetFramebufferDescriptor(lightFboDescriptor)
                     .SetBlendMode({BlendFactor::SourceAlpha, BlendFactor::One})
                     .SetDepthState({CompareFunction::Greater, false, false}));
     }
@@ -216,16 +221,19 @@ namespace AT2::Scene
         if (dirtyFramebuffers)
         {
             const auto& rf = renderer.GetResourceFactory();
+            const auto gbufferFboDescriptor = FramebufferDescriptor{}
+                .Attachment(TextureFormat::RGBA8Unorm)  //FragColor
+                .Attachment(TextureFormat::RGBA32Float) //FragNormal
+                .Attachment(TextureFormat::RGBA8Unorm)  //RoughnessMetallic
+                .DepthAttachment(TextureFormat::Depth32Float);
 
-            gBufferFBO = renderer.GetResourceFactory().CreateFrameBuffer();
-            //TODO: create textures automatically by descriptor
-            gBufferFBO->SetColorAttachment(0,{ rf.CreateTexture(Texture2D {TextureFormat::RGBA8Unorm,   framebuffer_size}, true), glm::vec4{0.0, 0.0, 1.0, 0.0}});  //FragColor
-            gBufferFBO->SetColorAttachment(1,  rf.CreateTexture(Texture2D {TextureFormat::RGBA32Float,  framebuffer_size}, true ) );                                //FragNormal
-            gBufferFBO->SetColorAttachment(2,  rf.CreateTexture(Texture2D {TextureFormat::RGBA8Unorm,   framebuffer_size}, true ) );                                //RoughnessMetallic
-            gBufferFBO->SetDepthAttachment(  { rf.CreateTexture(Texture2D {TextureFormat::Depth32Float, framebuffer_size}, true), 1.0f});
+            gBufferFBO = MakeFrameBuffer(rf, gbufferFboDescriptor, framebuffer_size);
+            gBufferFBO->SetClearColor(0, glm::vec4{0.0, 0.0, 1.0, 0.0});
+            gBufferFBO->SetClearDepth(1.0f);
 
             postProcessFBO = renderer.GetResourceFactory().CreateFrameBuffer();
-            postProcessFBO->SetColorAttachment(0, {rf.CreateTexture(Texture2D {TextureFormat::RGBA32Float, framebuffer_size}, true), glm::vec4{}});
+            postProcessFBO->SetColorAttachment(0, {rf.CreateTexture(Texture2D {TextureFormat::RGBA32Float, framebuffer_size}, true)});
+            postProcessFBO->SetClearColor(0, glm::vec4{});
             postProcessFBO->SetDepthAttachment(gBufferFBO->GetDepthAttachment().Texture); //depth is common with previous stage
 
             {

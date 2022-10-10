@@ -86,6 +86,14 @@ namespace AT2::Mappings
         return it->first;
     }
 
+    constexpr MTL::ColorWriteMask TranslateColorMask(ColorMask colorWriteMask)
+    {
+        return MTL::ColorWriteMaskRed * colorWriteMask.Contains(ColorWriteFlags::Red)
+            | MTL::ColorWriteMaskGreen * colorWriteMask.Contains(ColorWriteFlags::Green)
+            | MTL::ColorWriteMaskBlue * colorWriteMask.Contains(ColorWriteFlags::Blue)
+            | MTL::ColorWriteMaskAlpha * colorWriteMask.Contains(ColorWriteFlags::Alpha);
+    }
+
     constexpr MTL::VertexFormat TranslateVertexFormat(BufferDataType type, uint8_t count, bool normalized)
     {
         switch (count)

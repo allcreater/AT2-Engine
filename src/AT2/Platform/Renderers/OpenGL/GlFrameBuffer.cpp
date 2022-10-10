@@ -27,15 +27,15 @@ GlFrameBuffer::~GlFrameBuffer()
     glDeleteFramebuffers(1, &m_id);
 }
 
-void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment)
+void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, std::shared_ptr<ITexture> attachment)
 {
     if (attachmentNumber >= m_colorAttachments.size())
         throw AT2BufferException( "GlFrameBuffer: unsupported attachment number");
 
     m_dirtyFlag = true;
 
-    auto glTexture = std::dynamic_pointer_cast<GlTexture>(attachment.Texture);
-    const bool isError = attachment.Texture && !glTexture;
+    auto glTexture = std::dynamic_pointer_cast<GlTexture>(attachment);
+    const bool isError = attachment && !glTexture;
 
     const auto attachmentId = GL_COLOR_ATTACHMENT0 + attachmentNumber;
     if (glTexture)
@@ -61,7 +61,7 @@ void GlFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttac
         }
     }
 
-    m_colorAttachments[attachmentNumber] = std::move(attachment);
+    m_colorAttachments[attachmentNumber].Texture = std::move(attachment);
 }
 
 IFrameBuffer::ColorAttachment GlFrameBuffer::GetColorAttachment(unsigned int attachmentNumber) const
@@ -99,7 +99,11 @@ void GlFrameBuffer::SetClearColor(std::optional<glm::vec4> color)
 {
     for (auto& attachment : m_colorAttachments)
         attachment.ClearColor = color;
+}
 
+void GlFrameBuffer::SetClearColor(unsigned int attachmentNumber, std::optional<glm::vec4> color)
+{
+    m_colorAttachments.at(attachmentNumber).ClearColor = std::move(color);
 }
 
 void GlFrameBuffer::SetClearDepth(std::optional<float> depth) 
@@ -151,7 +155,7 @@ void GlFrameBuffer::Render(RenderFunc renderFunc)
 
 GlScreenFrameBuffer::GlScreenFrameBuffer(GlRenderer& renderer) : m_renderer(renderer) {}
 
-void GlScreenFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, ColorAttachment attachment)
+void GlScreenFrameBuffer::SetColorAttachment(unsigned int attachmentNumber, std::shared_ptr<ITexture> attachment)
 {
     throw AT2NotImplementedException("GlScreenFrameBuffer dont'support attachements");
 }
@@ -173,6 +177,11 @@ void GlScreenFrameBuffer::SetDepthAttachment(DepthAttachment attachment)
 void GlScreenFrameBuffer::SetClearColor(std::optional<glm::vec4> color) 
 {
     m_clearColor = color;
+}
+
+void GlScreenFrameBuffer::SetClearColor(unsigned int attachmentNumber, std::optional<glm::vec4> color)
+{
+    SetClearColor(std::move(color));
 }
 
 void GlScreenFrameBuffer::SetClearDepth(std::optional<float> depth) 

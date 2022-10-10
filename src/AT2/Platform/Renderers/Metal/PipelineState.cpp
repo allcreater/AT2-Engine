@@ -41,6 +41,40 @@ namespace
 
         return vertexDescriptor;
     }
+
+    void SetupFramebufferDescriptor(MTL::RenderPipelineDescriptor& buildingPipelineState, const PipelineStateDescriptor& descriptor)
+    {
+        const auto& framebufferDescriptor = descriptor.GetFramebufferDescriptor();
+
+        if (!framebufferDescriptor.IsValid())
+        {
+            auto* defaultAttachment = buildingPipelineState.colorAttachments()->object(0);
+            defaultAttachment->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
+            buildingPipelineState.setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+
+            return;
+        }
+
+        for (size_t index = 0; const auto& colorDesc : framebufferDescriptor.GetColorAttachmentDescriptors())
+        {
+            auto* attachment = buildingPipelineState.colorAttachments()->object(index);
+            
+            attachment->setPixelFormat(Mappings::TranslateTextureFormat(colorDesc.DesiredFormat));
+
+            auto attachmentDescParams = descriptor.GetAttachmentDescriptor(index);
+            attachment->setBlendingEnabled(attachmentDescParams.BlendMode.Enabled);
+            attachment->setSourceRGBBlendFactor(Mappings::TranslateBlendFactor(attachmentDescParams.BlendMode.SourceFactor));
+            attachment->setSourceAlphaBlendFactor(Mappings::TranslateBlendFactor(attachmentDescParams.BlendMode.SourceFactor));
+            attachment->setDestinationRGBBlendFactor(Mappings::TranslateBlendFactor(attachmentDescParams.BlendMode.DestinationFactor));
+            attachment->setDestinationAlphaBlendFactor(Mappings::TranslateBlendFactor(attachmentDescParams.BlendMode.DestinationFactor));
+            attachment->setWriteMask(Mappings::TranslateColorMask(attachmentDescParams.Mask));
+            
+            index++;
+        }
+
+        if (framebufferDescriptor.GetDepthAttachmentDescriptor())
+            buildingPipelineState.setDepthAttachmentPixelFormat(Mappings::TranslateTextureFormat(*framebufferDescriptor.GetDepthAttachmentDescriptor()));
+    }
 }
 
 
@@ -59,18 +93,7 @@ PipelineState::PipelineState(Renderer& renderer, const PipelineStateDescriptor& 
         m_depthStencilState = Own(renderer.getDevice()->newDepthStencilState(buildingDepthStencilState.get()));
     }
 
-    {
-        //TODO take actual attachment layout from active render stage?
-        auto* attachment = buildingState->colorAttachments()->object(0);
-        attachment->setBlendingEnabled(descriptor.GetBlendMode().Enabled);
-        attachment->setSourceRGBBlendFactor(Mappings::TranslateBlendFactor(descriptor.GetBlendMode().SourceFactor));
-        attachment->setSourceAlphaBlendFactor(Mappings::TranslateBlendFactor(descriptor.GetBlendMode().SourceFactor));
-        attachment->setDestinationRGBBlendFactor(Mappings::TranslateBlendFactor(descriptor.GetBlendMode().DestinationFactor));
-        attachment->setDestinationAlphaBlendFactor(Mappings::TranslateBlendFactor(descriptor.GetBlendMode().DestinationFactor));
-        attachment->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-    }
-
-    buildingState->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+    SetupFramebufferDescriptor(*buildingState, descriptor);
     
     buildingState->setVertexDescriptor(MakeVertexDescriptor(descriptor.GetVertexArrayDescriptor()).get());
 
@@ -82,8 +105,10 @@ PipelineState::PipelineState(Renderer& renderer, const PipelineStateDescriptor& 
         m_pipelineState = Own(renderer.getDevice()->newRenderPipelineState(buildingState.get(), MTL::PipelineOptionArgumentInfo | MTL::PipelineOptionBufferTypeInfo, &reflection, &error));
         
         CheckErrors(error);
-        
-        m_shaderProgram->OnStateCreated(reflection);
+
+       m_shaderProgram->OnStateCreated(reflection); 
+        // m_introspection = std::make_shared<Introspection::ProgramIntrospection>(reflection);
+        // m_defaultUniformBlock = CreateAssociatedUniformStorage(DefaultUniformBlockName);
     }
 
 }
