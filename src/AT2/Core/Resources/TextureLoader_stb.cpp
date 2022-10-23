@@ -78,12 +78,17 @@ TextureRef TextureLoader::LoadTexture(IVisualizationSystem& renderer, const std:
 
     return nullptr;
 #else
-    std::basic_ifstream<char> stream {path, std::ios::binary};
-    std::vector< char> data (static_cast<size_t>(file_size(path)));
-    stream.read(data.data(), data.size());
+    std::basic_ifstream<char> stream {path, std::ios::binary | std::ios::in | std::ios::ate};
+    const auto dataLength = [&stream](){
+        auto pos = stream.tellg();
+        stream.seekg(std::ios::beg);
+        return static_cast<size_t>(pos);
+    }();
 
-    //std::vector<std::byte> data{std::istreambuf_iterator<std::byte>(file), {}};
-    return LoadTexture(renderer, std::span{reinterpret_cast<const std::byte*>(data.data()), data.size()} );
+    std::vector<char> data(dataLength);
+    data.assign(std::istreambuf_iterator<char>{stream}, std::istreambuf_iterator<char>{});
+
+    return LoadTexture(renderer, std::as_bytes(std::span{data}));
 #endif
 }
 
