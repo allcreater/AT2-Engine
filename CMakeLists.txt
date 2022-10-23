@@ -8,9 +8,6 @@ option(USE_ASSIMP "Use ASSIMP library" OFF)
 option(USE_SDL_INSTEADOF_GLFW "When enabled, SDL will be used instead of SFML" OFF)
 option(USE_PLATFORM_HACKS "speed-up execution in exchange for some non-portable code" OFF)
 
-set(ACTIVE_RENDERER "OpenGL" CACHE STRING "Renderer backend to use") # right now just one
-set_property(CACHE ACTIVE_RENDERER PROPERTY STRINGS OpenGL Metal)
-
 # Setup conan packet manager
 
 # Download automatically, you can also just copy the conan.cmake file

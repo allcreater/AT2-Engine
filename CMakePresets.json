@@ -37,7 +37,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "USE_SDL_INSTEADOF_GLFW": "ON",
-        "ACTIVE_RENDERER": "OpenGL"
+        "ACTIVE_RENDERER": "OpenGL4_1"
       }
     }
   ],

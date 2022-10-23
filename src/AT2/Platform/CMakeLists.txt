@@ -1,9 +1,13 @@
 cmake_minimum_required (VERSION 3.14 FATAL_ERROR)
 
+set(ACTIVE_RENDERER "OpenGL4_1" CACHE STRING "Renderer backend to use") # right now just one
+set_property(CACHE ACTIVE_RENDERER PROPERTY STRINGS OpenGL4_5 OpenGL4_1 Metal)
+
 project (AT2_Engine_Platform)
 
 set(COMMON_SOURCES_LIST
     "Application.h"
+    "Application.cpp"
     "callback_types.h"
     "callback_types.cpp"
     "Common.h"
@@ -27,14 +31,11 @@ add_subdirectory("Renderers/OpenGL_4.1")
 
 if (${ACTIVE_RENDERER} STREQUAL "Metal")
     add_subdirectory("Renderers/Metal")
-
-    target_sources(${PROJECT_NAME} PRIVATE
-    "Application_Metal.cpp"
-    )
+    target_compile_definitions(${PROJECT_NAME} PRIVATE AT2_ACTIVE_RENDERER_METAL)
+elseif(${ACTIVE_RENDERER} STREQUAL "OpenGL4_5")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE AT2_ACTIVE_RENDERER_OPENGL_4_5)
 else()
-    target_sources(${PROJECT_NAME} PRIVATE
-    "Application.cpp"
-    )
+    target_compile_definitions(${PROJECT_NAME} PRIVATE AT2_ACTIVE_RENDERER_OPENGL_4_1)
 endif()
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX AT2 FILES ${SOURCES})
