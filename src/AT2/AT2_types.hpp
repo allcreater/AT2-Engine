@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 
+#include <array>
 #include <chrono>
 #include <type_traits>
 #include <span>

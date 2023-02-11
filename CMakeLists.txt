@@ -30,7 +30,12 @@ conan_cmake_run (   CONANFILE conanfile.py
 
 add_subdirectory ("src/AT2/")
 add_subdirectory ("applications/examples/")
-# add_subdirectory ("applications/sandbox/")
+
+# Crutch, but sandbox requires compute shaders that are implemented only at GL4.5 backend
+if(${ACTIVE_RENDERER} STREQUAL "OpenGL4_5")
+    add_subdirectory ("applications/sandbox/")
+endif()
+
 # add_subdirectory ("applications/test_task/")
 
 if(BUILD_TESTING)

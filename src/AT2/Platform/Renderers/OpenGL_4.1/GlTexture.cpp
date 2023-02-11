@@ -225,7 +225,7 @@ void GlTexture::SetSamplingMode(TextureSamplingParams samplingParams)
     
     m_sampling_params = samplingParams;
 
-    glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, Mappings::TranslateTextureSamplingModes(samplingParams.Magnification));
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, Mappings::TranslateTextureSamplingModes(samplingParams.Magnification));
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, std::apply(Mappings::TranslateTextureSamplingModes, samplingParams.Minification));
 }
 

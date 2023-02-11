@@ -37,7 +37,7 @@ private:
         constexpr auto localGroupSize = glm::uvec3 {32, 32, 1};
 
         auto resultTex =
-            visualizationSystem.GetResourceFactory().CreateTexture(Texture2D {resolution}, AT2::TextureFormats::RGBA16F);
+            visualizationSystem.GetResourceFactory().CreateTexture(AT2::Texture2D {AT2::TextureFormat::RGBA16Float, resolution}, false);
         resultTex->SetWrapMode(AT2::TextureWrapParams::Uniform(AT2::TextureWrapMode::ClampToBorder));
         auto shader =
             visualizationSystem.GetResourceFactory().CreateShaderProgramFromFiles({"resources/shaders/generate.cs.glsl"});
@@ -63,7 +63,7 @@ private:
             {"resources/shaders/mesh.vs.glsl", "resources/shaders/mesh.fs.glsl"});
 
 
-        Noise3Tex = visualizationSystem.GetResourceFactory().CreateTexture(Texture3D {{64, 64, 64}, 1}, AT2::TextureFormats::RGBA8);
+        Noise3Tex = visualizationSystem.GetResourceFactory().CreateTexture(AT2::Texture3D {AT2::TextureFormat::RGBA8Unorm, {64, 64, 64}, 1}, false);
         {
             const auto arr = std::make_unique<std::uint8_t[]>(Noise3Tex->GetDataLength());
             
@@ -72,7 +72,7 @@ private:
                               return std::uniform_int_distribution {0, 255}(rng);
                           });
             
-            Noise3Tex->SubImage3D({}, Noise3Tex->GetSize(), 0, AT2::TextureFormats::RGBA8, arr.get());
+            Noise3Tex->SubImage3D({}, Noise3Tex->GetSize(), 0, AT2::TextureFormat::RGBA8Unorm, arr.get());
         }
 
         auto GrassTex = TextureLoader::LoadTexture(visualizationSystem, "resources/Ground037_2K-JPG/Ground037_2K_Color.jpg");

@@ -29,8 +29,8 @@
       "inherits": []
     },
     {
-      "name": "sdl_opengl_ninja",
-      "displayName": "SDL + OpenGL, Ninja",
+      "name": "sdl_opengl41_ninja",
+      "displayName": "SDL + OpenGL4.1, Ninja",
       "description": "",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
@@ -39,6 +39,18 @@
         "USE_SDL_INSTEADOF_GLFW": "ON",
         "ACTIVE_RENDERER": "OpenGL4_1"
       }
+    },
+    {
+      "name": "sdl_opengl45_ninja",
+      "displayName": "SDL + OpenGL4.5, Ninja",
+      "description": "",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "USE_SDL_INSTEADOF_GLFW": "ON",
+        "ACTIVE_RENDERER": "OpenGL4_5"
+      }
     }
   ],
   "buildPresets": [
@@ -46,7 +58,7 @@
       "name": "examples",
       "description": "Build examples",
       "displayName": "Examples",
-      "configurePreset": "sdl_opengl_ninja",
+      "configurePreset": "sdl_opengl41_ninja",
       "targets": [
         "AT2_cube_example"
       ]
