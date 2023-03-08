@@ -1,29 +1,23 @@
-project (AT2_UnitTests)
-
 enable_testing()
-
-find_package(GTest MODULE REQUIRED)
 
 include(GoogleTest)
 
-include_directories ("${CMAKE_SOURCE_DIR}/src/")
-
-file (GLOB ${PROJECT_NAME}_SOURCES
-"*.cpp"
+set (TEST_SOURCES
+"AABB.cpp"
+"UI.cpp"
 )
 
-add_executable(${PROJECT_NAME}
-    ${${PROJECT_NAME}_SOURCES}
+add_executable(AT2_Core_tests
+    ${TEST_SOURCES}
 )
 
-target_link_libraries(${PROJECT_NAME} 
-    PRIVATE AT2_Engine GTest::gtest GTest::gtest_main 
-)
+target_include_directories (AT2_Core_tests PRIVATE "${CMAKE_SOURCE_DIR}/src/AT2/Core")
 
+target_link_libraries(AT2_Core_tests PRIVATE AT2_Engine_Platform )
 
-gtest_add_tests(TARGET      ${PROJECT_NAME}
+gtest_add_tests(TARGET      AT2_Core_tests
                 TEST_SUFFIX .noArgs
                 TEST_LIST   noArgsTests
 )
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(AT2_Core_tests PUBLIC cxx_std_20)

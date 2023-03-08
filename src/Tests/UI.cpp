@@ -1,7 +1,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <AT2/UI/UI.h>
+#include <UI/UI.h>
 #include <memory>
 
 using namespace AT2::UI;

@@ -226,3 +226,4 @@ CMakeSettings.json
 .vs
 *.dll
 /solution
+.vscode
