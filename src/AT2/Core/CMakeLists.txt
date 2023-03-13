@@ -33,6 +33,8 @@ set (${PROJECT_NAME}_SOURCES
     "AABB.h"
     "BufferMapperGuard.h"
     "Camera.h"
+    "flags.hpp"
+    "generator.hpp"
     "log.cpp"
     "log.h"
     "lru_cache.h"

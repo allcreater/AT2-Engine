@@ -4,6 +4,7 @@ include(GoogleTest)
 
 set (TEST_SOURCES
 "AABB.cpp"
+"generator.cpp"
 "UI.cpp"
 )
 
