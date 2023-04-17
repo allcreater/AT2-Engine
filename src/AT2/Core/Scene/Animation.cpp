@@ -24,15 +24,18 @@ void AnimationCollection::updateNode(AnimationNodeId nodeId, Node& nodeInstance,
     if (!m_activeAnimation)
         return;
     
-    m_activeAnimation->updateNode(nodeId, nodeInstance, time.getTime().count());
+    m_activeAnimation->updateNode(nodeId, nodeInstance, time.getTime());
 }
 
 
-void Animation::updateNode(AnimationNodeId nodeId, Node& nodeInstance, double time)
+void Animation::updateNode(AnimationNodeId nodeId, Node& nodeInstance, Seconds time)
 {
+    using namespace std::chrono_literals;
+    const auto ftime = static_cast<float>(time / 1.0s);
+
     auto [rangeBegin, rangeEnd] = m_channelsByNode.equal_range(nodeId);
     for (auto it = rangeBegin; it != rangeEnd; ++it)
-        it->second->performUpdate(nodeInstance, wrapValue(time, m_timeRange.first, m_timeRange.second));
+        it->second->performUpdate(nodeInstance, wrapValue(ftime, m_timeRange.first, m_timeRange.second));
 }
 
 const ChannelBase& Animation::getTrack(size_t trackIndex) const

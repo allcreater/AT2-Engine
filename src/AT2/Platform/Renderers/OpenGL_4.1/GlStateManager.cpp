@@ -159,7 +159,7 @@ void GlStateManager::ApplyPipelineState(const std::shared_ptr<IPipelineState>& s
     else
     {
         bool isBlendPresent = false;
-        for (size_t fbIndex = 0; fbIndex < stateDescriptor.GetVertexArrayDescriptor().GetVertexAttributeLayouts().size(); ++fbIndex)
+        for (GLuint fbIndex = 0; fbIndex < stateDescriptor.GetVertexArrayDescriptor().GetVertexAttributeLayouts().size(); ++fbIndex)
         {
             auto colorDesc = stateDescriptor.GetAttachmentDescriptor(fbIndex);
             if (colorDesc.BlendMode.Enabled)

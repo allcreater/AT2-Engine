@@ -522,7 +522,9 @@ namespace
                         BufferMapperGuard guard {*vb, startPos, currentDataLength, BufferOperationFlags::Write};
                         std::memcpy(guard.data(), bufferData.data.data(), currentDataLength);
                     }
-                    bufferData.bindingParams.Offset = startPos;
+
+                    assert(startPos < std::numeric_limits<unsigned>::max());
+                    bufferData.bindingParams.Offset = static_cast<unsigned>(startPos);
 
                     vao->SetAttributeBinding(attribIndex, vb, bufferData.bindingParams);
                     startPos += currentDataLength;

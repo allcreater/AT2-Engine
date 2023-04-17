@@ -16,9 +16,6 @@ target_include_directories (AT2_Core_tests PRIVATE "${CMAKE_SOURCE_DIR}/src/AT2/
 
 target_link_libraries(AT2_Core_tests PRIVATE AT2_Engine_Platform )
 
-gtest_add_tests(TARGET      AT2_Core_tests
-                TEST_SUFFIX .noArgs
-                TEST_LIST   noArgsTests
-)
+gtest_discover_tests(AT2_Core_tests)
 
 target_compile_features(AT2_Core_tests PUBLIC cxx_std_20)

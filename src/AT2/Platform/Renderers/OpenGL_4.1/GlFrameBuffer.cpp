@@ -128,6 +128,8 @@ void GlFrameBuffer::Render(RenderFunc renderFunc)
     }
 
     const auto numAttachments = m_colorAttachments.size();
+    assert(m_colorAttachments.size() < (GL_MAX_COLOR_ATTACHMENTS - GL_COLOR_ATTACHMENT0));
+
     std::vector<GLenum> buffers(numAttachments);
     for (GLenum i = 0; i < numAttachments; ++i)
         buffers[i] = (m_colorAttachments[i].Texture) ? GL_COLOR_ATTACHMENT0 + i : GL_NONE;
@@ -138,7 +140,7 @@ void GlFrameBuffer::Render(RenderFunc renderFunc)
     for (size_t i = 0; i < numAttachments; ++i)
     {
         if (m_colorAttachments[i].ClearColor)
-            glClearBufferfv(GL_COLOR, i, glm::value_ptr(m_colorAttachments[i].ClearColor.value()));
+            glClearBufferfv(GL_COLOR, static_cast<GLint>(i), glm::value_ptr(m_colorAttachments[i].ClearColor.value()));
     }
 
     if (m_depthAttachment.ClearDepth)

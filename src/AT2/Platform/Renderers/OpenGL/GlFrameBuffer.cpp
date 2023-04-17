@@ -74,15 +74,12 @@ void GlFrameBuffer::SetDepthAttachment(DepthAttachment attachment)
     m_dirtyFlag = true;
 
     const auto* glTexture = dynamic_cast<GlTexture*>(attachment.Texture.get());
-    const bool isError = attachment.Texture && !glTexture;
+    assert(!(attachment.Texture && !glTexture));
 
     m_depthAttachment = attachment;
     if (!m_depthAttachment.Texture)
     {
         glNamedFramebufferTexture(m_id, GL_DEPTH_ATTACHMENT, 0, 0);
-        if (isError)
-            throw AT2BufferException(
-                               "GlFrameBuffer: attachment texture should be GlTexture");
     }
     else if (std::holds_alternative<Texture2D>(glTexture->GetType()))
         glNamedFramebufferTexture(m_id, GL_DEPTH_ATTACHMENT, glTexture->GetId(), 0);
@@ -138,7 +135,7 @@ void GlFrameBuffer::Render(RenderFunc renderFunc)
     for (size_t i = 0; i < numAttachments; ++i)
     {
         if (m_colorAttachments[i].ClearColor)
-            glClearBufferfv(GL_COLOR, i, glm::value_ptr(m_colorAttachments[i].ClearColor.value()));
+            glClearBufferfv(GL_COLOR, static_cast<GLuint>(i), glm::value_ptr(m_colorAttachments[i].ClearColor.value()));
     }
 
     if (m_depthAttachment.ClearDepth)

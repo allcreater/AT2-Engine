@@ -73,9 +73,9 @@ namespace AT2
             : Enabled{true}, StepFunc{stepFunc}, Stride{stride}, StepRate{stepRate} {}
 
         bool Enabled = false; // intrusive version of optional<BufferBindingParams>
-        VertexStepFunc StepFunc;
-        unsigned int Stride;
-        unsigned int StepRate;
+        VertexStepFunc StepFunc = VertexStepFunc::PerVertex;
+        unsigned int Stride = 0;
+        unsigned int StepRate = 0;
     };
 
     //TODO: !!! use just enum VertexFormat instead of tuples {Type, Count, IsNormalized} because they are not independent !!! 
@@ -88,11 +88,11 @@ namespace AT2
         : Enabled{true}, Type{type}, Count{static_cast<uint8_t>(count)}, IsNormalized{normalized}, BufferIndex{bufferIndex}, Offset{offset} {assert(count >= 1 && count <= 4);}
 
         bool Enabled = false;
-        BufferDataType Type;
-        uint8_t Count;
+        BufferDataType Type = BufferDataType::Byte;
+        uint8_t Count = 0;
         bool IsNormalized = false;
-        unsigned int BufferIndex;
-        unsigned int Offset;
+        unsigned int BufferIndex = 0;
+        unsigned int Offset = 0;
     };
 
     //TODO: separate VertexArrayDescriptorBuilder? 
@@ -126,8 +126,14 @@ namespace AT2
             });
         }
 
-        [[nodiscard]] constexpr std::span<const BufferBindingParams2> GetBufferLayouts() const noexcept { return m_bufferLayouts; }
-        [[nodiscard]] constexpr std::span<const VertexAttributeLayout> GetVertexAttributeLayouts() const noexcept { return m_vertexAttributes; }
+        [[nodiscard]] constexpr std::span<const BufferBindingParams2, MaxBuffers> GetBufferLayouts() const noexcept
+        {
+            return m_bufferLayouts;
+        }
+        [[nodiscard]] constexpr std::span<const VertexAttributeLayout, MaxAttributes> GetVertexAttributeLayouts() const noexcept
+        {
+            return m_vertexAttributes;
+        }
 
     private:
         std::array<BufferBindingParams2, MaxBuffers> m_bufferLayouts;

@@ -225,15 +225,16 @@ private:
 
     void OnUpdate(AT2::Seconds dt) override
     {
+        const auto float_dt = static_cast<float>(dt / 1.0s);
         m_time.Update(dt);
         m_scene.Update(m_time);
 
         if (getWindow().isKeyDown(AT2::Keys::Key_LShift))
-            acceleration = std::min(acceleration + static_cast<float>(dt.count()), 200.0f);
+            acceleration = std::min(acceleration + float_dt, 200.0f);
         else
             acceleration *= 0.98f;
 
-        const float moveSpeed = static_cast<float>(dt.count()) * 50.0f + acceleration;
+        const float moveSpeed = float_dt * 50.0f + acceleration;
         if (getWindow().isKeyDown(AT2::Keys::Key_W))
             m_camera.setPosition(m_camera.getPosition() + m_camera.getForward() * moveSpeed);
         if (getWindow().isKeyDown(AT2::Keys::Key_S))
@@ -246,7 +247,7 @@ private:
         if (getWindow().isKeyDown(AT2::Keys::Key_Escape))
             getWindow().setCloseFlag(true);
 
-		const float expositionSpeed = 1 + 2 * dt.count();
+		const float expositionSpeed = 1 + 2.0f * float_dt;
         if (getWindow().isKeyDown(AT2::Keys::Key_Equal))
             m_renderParameters.Exposure *= expositionSpeed;
         if (getWindow().isKeyDown(AT2::Keys::Key_Minus))

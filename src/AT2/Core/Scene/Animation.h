@@ -107,7 +107,7 @@ namespace AT2::Animation
             return m_channels.size() - 1;
         }
 
-        void updateNode(AnimationNodeId nodeId, Scene::Node& nodeInstance, double time);
+        void updateNode(AnimationNodeId nodeId, Scene::Node& nodeInstance, Seconds time);
         [[nodiscard]] std::pair<float, float> getTimeRange() const noexcept { return m_timeRange; }
         [[nodiscard]] float getDuration() const noexcept { return m_timeRange.second - m_timeRange.first; }
         [[nodiscard]] const ChannelBase& getTrack(size_t trackIndex) const;

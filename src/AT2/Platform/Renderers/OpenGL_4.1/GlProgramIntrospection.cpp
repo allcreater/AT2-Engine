@@ -9,8 +9,10 @@ namespace
 {
     std::vector<GLint> getActiveUniformsParams(GLuint program, std::span<GLuint> uniformIndices, GLenum paramName)
     {
+        assert(uniformIndices.size() < static_cast<size_t>(std::numeric_limits<GLsizei>::max()));
+
         std::vector<GLint> params(uniformIndices.size());
-        glGetActiveUniformsiv(program, uniformIndices.size(), uniformIndices.data(), paramName,
+        glGetActiveUniformsiv(program, static_cast<GLsizei>(uniformIndices.size()), uniformIndices.data(), paramName,
                             params.data());
         return params;
     }
@@ -87,10 +89,11 @@ std::unique_ptr<ProgramInfo> ProgramInfo::Request(GLuint program)
 
     const auto freeUniformsIndices = [&]{
         std::vector<GLint> result;
-        for (GLuint uniformIndex = 0; uniformIndex < numActiveUniforms; ++uniformIndex)
+        for (GLint uniformIndex = 0; uniformIndex < numActiveUniforms; ++uniformIndex)
         {
+            const GLuint uniformIndexU = static_cast<GLuint>(uniformIndex);
             GLint blockIndex;
-            glGetActiveUniformsiv(program, 1, &uniformIndex, GL_UNIFORM_BLOCK_INDEX, &blockIndex);
+            glGetActiveUniformsiv(program, 1, &uniformIndexU, GL_UNIFORM_BLOCK_INDEX, &blockIndex);
 
             if(blockIndex == GL_INVALID_INDEX)
                 result.push_back(uniformIndex);

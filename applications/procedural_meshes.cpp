@@ -107,7 +107,7 @@ namespace AT2::Utils
 
         
         SubMesh subMesh;
-        subMesh.Primitives.push_back({Primitives::Triangles {}, 0, indices.size()});
+        subMesh.Primitives.push_back({Primitives::Triangles {}, 0, static_cast<unsigned>(indices.size())});
 
         auto mesh = std::make_unique<Mesh>();
         mesh->VertexArray = vao;
@@ -164,7 +164,7 @@ namespace AT2::Utils
         vao->SetIndexBuffer(resourceFactory.MakeBufferFrom(AT2::VertexBufferFlags::IndexBuffer, cubeIndices), AT2::BufferDataType::UInt);
 
         AT2::SubMesh subMesh;
-        subMesh.Primitives.push_back({AT2::Primitives::Triangles {}, 0, std::size(cubeIndices)});
+        subMesh.Primitives.push_back({AT2::Primitives::Triangles {}, 0, static_cast<unsigned>(std::size(cubeIndices))});
 
         auto mesh = std::make_unique<Mesh>();
         mesh->VertexArray = std::move(vao);

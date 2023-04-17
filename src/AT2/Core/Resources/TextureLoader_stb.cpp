@@ -41,8 +41,10 @@ namespace
         return [&]{
             const auto doRead = [&](const auto& loaderFunc, const auto& layoutLookup)
             {
+                assert(buffer.size_bytes() < std::numeric_limits<int>::max());
+
                 int readed_width = 0, readed_height = 0;
-                void* readedData = loaderFunc(buffer.data(), buffer.size_bytes(), &readed_width, &readed_height, nullptr, numOfChannels == 3 ? 4 : 0);
+                void* readedData = loaderFunc(buffer.data(), static_cast<int>(buffer.size_bytes()), &readed_width, &readed_height, nullptr, numOfChannels == 3 ? 4 : 0);
 
                 assert(readed_height == height && readed_width == width);
 

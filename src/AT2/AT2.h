@@ -555,7 +555,7 @@ namespace AT2
         if (auto depthAttachment = descriptor.GetDepthAttachmentDescriptor())
             framebuffer->SetDepthAttachment(factory.CreateTexture(Texture2D{*depthAttachment, size}, true));
 
-        for (size_t index = 0; const auto& colorTarget: descriptor.GetColorAttachmentDescriptors())
+        for (unsigned index = 0; const auto& colorTarget: descriptor.GetColorAttachmentDescriptors())
             framebuffer->SetColorAttachment(index++, factory.CreateTexture(Texture2D{colorTarget.DesiredFormat, size}, true));
 
         return framebuffer;

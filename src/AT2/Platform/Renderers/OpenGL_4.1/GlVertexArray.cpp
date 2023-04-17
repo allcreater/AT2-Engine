@@ -52,6 +52,8 @@ void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared
     glBindBuffer(GL_ARRAY_BUFFER, glBuffer.GetId());
     glVertexAttribDivisor(bindingIndex, binding.Divisor);
 
+    const auto offset = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(binding.Offset));
+
     switch (binding.Type)
     {
         case BufferDataType::Double:
@@ -63,12 +65,13 @@ void GlVertexArray::SetAttributeBinding(unsigned int attributeIndex, std::shared
         case BufferDataType::Short:
         case BufferDataType::UShort:
         case BufferDataType::Int:
-        case BufferDataType::UInt:
-            glVertexAttribIPointer(attributeIndex, static_cast<GLint>(binding.Count), platformDataType, binding.Stride, reinterpret_cast<const void*>(binding.Offset));
+    case BufferDataType::UInt:
+        glVertexAttribIPointer(attributeIndex, static_cast<GLint>(binding.Count), platformDataType, binding.Stride, offset);
             break;
 
         default:
-            glVertexAttribPointer(attributeIndex, static_cast<GLint>(binding.Count), platformDataType, Mappings::TranslateBool(binding.IsNormalized), binding.Stride, reinterpret_cast<const void*>(binding.Offset));
+            glVertexAttribPointer(attributeIndex, static_cast<GLint>(binding.Count), platformDataType,
+                                  Mappings::TranslateBool(binding.IsNormalized), binding.Stride, offset);
     }
 
     m_vertexDescriptor.SetVertexAttributeLayout(bindingIndex, VertexAttributeLayout{binding.Type, binding.Count, binding.IsNormalized, bindingIndex, 0});
