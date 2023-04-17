@@ -19,6 +19,7 @@ namespace detail
 template <typename T>
 class [[nodiscard]] generator
 {
+public:
     struct promise_type
     {
         T current_value;
@@ -35,7 +36,7 @@ class [[nodiscard]] generator
         generator get_return_object() { return generator{ coroutines::coroutine_handle<promise_type>::from_promise(*this) }; }
         void unhandled_exception() { exception = std::current_exception(); }
 
-        void rethrow_if_exception()
+        void rethrow_if_exception() const
         {
             if (exception)
                 std::rethrow_exception(exception);
@@ -46,10 +47,9 @@ class [[nodiscard]] generator
     explicit generator(coroutines::coroutine_handle<promise_type> coroutine_handle) : coroutine_handle(coroutine_handle) {}
 
 public:
-    using promise_type = promise_type;
+    //using promise_type = promise_type;
     using handle_type = coroutines::coroutine_handle<promise_type>;
 
-    generator() = default;
     generator(const generator& other) = delete;
     generator& operator=(const generator& other) = delete;
 
